@@ -6,29 +6,44 @@ import { supabase } from '@/lib/supabase-server'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// server/.env 파일에서 OPENAI_API_KEY 로드 (런타임)
+// server/.env 또는 server/env.example 파일에서 OPENAI_API_KEY 로드 (런타임)
 function loadServerEnv() {
   try {
-    const serverEnvPath = path.join(process.cwd(), '..', 'server', '.env')
-    if (fs.existsSync(serverEnvPath)) {
-      const envFile = fs.readFileSync(serverEnvPath, 'utf8')
-      envFile.split('\n').forEach(line => {
-        const trimmedLine = line.trim()
-        if (trimmedLine && !trimmedLine.startsWith('#')) {
-          const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
-          if (match) {
-            const key = match[1].trim()
-            const value = match[2].trim().replace(/^["']|["']$/g, '')
-            if (key === 'OPENAI_API_KEY' && value && !process.env.OPENAI_API_KEY) {
-              process.env.OPENAI_API_KEY = value
+    const serverDir = path.join(process.cwd(), '..', 'server')
+    const envPaths = [
+      path.join(serverDir, '.env'),
+      path.join(serverDir, 'env.example'),
+      path.join(serverDir, '.env.example')
+    ]
+    
+    for (const envPath of envPaths) {
+      if (fs.existsSync(envPath)) {
+        const envFile = fs.readFileSync(envPath, 'utf8')
+        envFile.split('\n').forEach(line => {
+          const trimmedLine = line.trim()
+          if (trimmedLine && !trimmedLine.startsWith('#')) {
+            const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
+            if (match) {
+              const key = match[1].trim()
+              const value = match[2].trim().replace(/^["']|["']$/g, '')
+              if (key === 'OPENAI_API_KEY' && value && !process.env.OPENAI_API_KEY) {
+                process.env.OPENAI_API_KEY = value
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`✅ 초기 로드: ${path.basename(envPath)}에서 OPENAI_API_KEY 발견`)
+                }
+                return // 키를 찾았으면 중단
+              }
             }
           }
-        }
-      })
+        })
+        if (process.env.OPENAI_API_KEY) break // 키를 찾았으면 다른 파일 확인 불필요
+      }
     }
   } catch (error) {
     // 환경 변수 로드 실패해도 계속 진행
-    console.warn('server/.env 파일 로드 실패:', error)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('server 환경 변수 파일 로드 실패:', error)
+    }
   }
 }
 
@@ -48,35 +63,47 @@ async function generateAIResponse(
   intent: string
   confidence: number
 }> {
-  // 런타임에 server/.env 파일에서 환경 변수 로드
+  // 런타임에 server/.env 또는 server/env.example 파일에서 환경 변수 로드
   try {
-    const serverEnvPath = path.join(process.cwd(), '..', 'server', '.env')
-    if (fs.existsSync(serverEnvPath)) {
-      const envFile = fs.readFileSync(serverEnvPath, 'utf8')
-      envFile.split('\n').forEach(line => {
-        const trimmedLine = line.trim()
-        if (trimmedLine && !trimmedLine.startsWith('#')) {
-          const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
-          if (match) {
-            const key = match[1].trim()
-            const value = match[2].trim().replace(/^["']|["']$/g, '')
-            if (key === 'OPENAI_API_KEY' && value) {
-              process.env.OPENAI_API_KEY = value
-              if (process.env.NODE_ENV === 'development') {
-                console.log('✅ server/.env에서 OPENAI_API_KEY 로드됨')
+    const serverDir = path.join(process.cwd(), '..', 'server')
+    const envPaths = [
+      path.join(serverDir, '.env'),
+      path.join(serverDir, 'env.example'),
+      path.join(serverDir, '.env.example')
+    ]
+    
+    let envLoaded = false
+    for (const envPath of envPaths) {
+      if (fs.existsSync(envPath)) {
+        const envFile = fs.readFileSync(envPath, 'utf8')
+        envFile.split('\n').forEach(line => {
+          const trimmedLine = line.trim()
+          if (trimmedLine && !trimmedLine.startsWith('#')) {
+            const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
+            if (match) {
+              const key = match[1].trim()
+              const value = match[2].trim().replace(/^["']|["']$/g, '')
+              if (key === 'OPENAI_API_KEY' && value && !process.env.OPENAI_API_KEY) {
+                process.env.OPENAI_API_KEY = value
+                envLoaded = true
+                if (process.env.NODE_ENV === 'development') {
+                  console.log(`✅ ${path.basename(envPath)}에서 OPENAI_API_KEY 로드됨`)
+                }
               }
             }
           }
-        }
-      })
-    } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('⚠️ server/.env 파일을 찾을 수 없습니다:', serverEnvPath)
+        })
+        if (envLoaded) break
       }
+    }
+    
+    if (!envLoaded && process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ server/.env 또는 server/env.example 파일을 찾을 수 없습니다.')
+      console.warn('시도한 경로:', envPaths)
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('server/.env 파일 로드 중 오류:', error)
+      console.warn('server 환경 변수 파일 로드 중 오류:', error)
     }
   }
 
