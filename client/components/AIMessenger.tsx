@@ -39,9 +39,10 @@ import {
 interface AIMessengerProps {
   isOpen: boolean
   onClose: () => void
+  context?: 'portfolio' | 'blog' // 포트폴리오 또는 블로그 구분
 }
 
-export default function AIMessenger({ isOpen, onClose }: AIMessengerProps) {
+export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: AIMessengerProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string>('')
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
@@ -137,7 +138,8 @@ export default function AIMessenger({ isOpen, onClose }: AIMessengerProps) {
           message: currentInput,
           tone: selectedTone,
           sessionId: sessionId,
-          userId: 'anonymous'
+          userId: 'anonymous',
+          context: context // 포트폴리오/블로그 구분 전달
         }),
       })
 

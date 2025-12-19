@@ -6,8 +6,8 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'Okuma - Portfolio',
-    template: '%s | Okuma 포트폴리오'
+    default: 'iykyk blog',
+    template: '%s | iykyk blog'
   },
   description: '프론트엔드 개발자 Okuma 포트폴리오 웹사이트. Next.js, React, TypeScript, Tailwind CSS 등을 활용한 프로젝트들과 개발 경험을 공유합니다.',
   keywords: [

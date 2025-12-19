@@ -229,6 +229,7 @@ export default function Header() {
       <AIMessenger
         isOpen={isAIMessengerOpen}
         onClose={() => setIsAIMessengerOpen(false)}
+        context="portfolio"
       />
     </>
   )

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
 import Link from 'next/link'
-import SearchBar from '../../components/SearchBar'
+import BlogSearchBar from '../../components/BlogSearchBar'
 
 interface Post {
   _id: string
@@ -33,11 +33,13 @@ export default function PostsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false)
 
   const categories = [
-    { id: 'all', name: '전체' },
-    { id: 'general', name: '일반' },
-    { id: 'tech', name: '기술' },
-    { id: 'project', name: '프로젝트' },
-    { id: 'update', name: '업데이트' }
+    { id: 'all', name: 'All' },
+    { id: 'tech', name: 'Tech' },
+    { id: 'economy', name: 'Economy' },
+    { id: 'coin', name: 'Coin' },
+    { id: 'travel', name: 'Travel' },
+    { id: 'food', name: 'Food' },
+    { id: 'lottery', name: 'Lottery' }
   ]
 
   // API에서 포스트 데이터 가져오기
@@ -188,7 +190,7 @@ export default function PostsPage() {
                 <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 border-r-primary-600 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                게시글을 불러오는 중...
+                Loading posts...
               </h3>
               <div className="flex items-center justify-center space-x-1">
                 <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"></div>
@@ -203,68 +205,97 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
-      {/* 헤더 */}
-      <div className="bg-white dark:bg-dark-900 shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 via-purple-50/30 to-pink-50/20 dark:from-slate-950 dark:via-indigo-950/50 dark:via-purple-950/30 dark:to-slate-950 relative overflow-hidden">
+      {/* 배경 애니메이션 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/30 to-pink-400/20 dark:from-purple-500/20 dark:to-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/30 to-cyan-400/20 dark:from-blue-500/20 dark:to-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
+        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-gradient-to-br from-pink-400/25 to-orange-400/20 dark:from-pink-500/15 dark:to-orange-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+      </div>
+      
+      {/* 그리드 패턴 오버레이 */}
+      <div className="fixed inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
+        backgroundSize: '50px 50px'
+      }}></div>
+
+      {/* 헤더 - 글래스모피즘 */}
+      <motion.div
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        className="sticky top-0 z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 border-b border-white/20 dark:border-slate-700/30"
+      >
         <div className="container-custom py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link 
                 href="/"
-                className="flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 border border-white/30 dark:border-slate-700/30"
               >
-                <FiArrowLeft size={20} className="mr-2" />
-                홈으로
+                <FiArrowLeft size={20} />
+                <span className="font-medium">Home</span>
               </Link>
-              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-                게시판
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+                Posts
               </h1>
             </div>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowCreateForm(true)}
-              className="btn-primary inline-flex items-center space-x-2"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/50"
             >
               <FiPlus size={20} />
-              <span>글쓰기</span>
-            </button>
+              <span>New Post</span>
+            </motion.button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="container-custom py-8">
+      <div className="container-custom py-12 relative z-10">
         {/* 검색 및 필터 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-10 relative z-30"
         >
-          <SearchBar
-            onSearch={handleSearch}
-            onFilterChange={handleFilterChange}
-            placeholder="게시글을 검색하세요..."
-            filters={activeFilters}
-            className="max-w-4xl mx-auto"
-          />
+          <div className="max-w-4xl mx-auto relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>
+            <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-slate-700/30 shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 overflow-visible">
+              <BlogSearchBar
+                onSearch={handleSearch}
+                onFilterChange={handleFilterChange}
+                placeholder="Search posts..."
+                filters={activeFilters}
+                className="max-w-4xl mx-auto"
+              />
+            </div>
+          </div>
         </motion.div>
 
         {/* 카테고리 필터 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap justify-center gap-4 mb-8"
+          className="flex flex-wrap justify-center gap-3 mb-12 relative z-10"
         >
-          {categories.map((category) => (
-            <button
+          {categories.map((category, index) => (
+            <motion.button
               key={category.id}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.05 }}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handleCategoryChange(category.id)}
-              className={`px-6 py-2 rounded-full font-medium transition-all duration-200 ${
+              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
                 selectedCategory === category.id
-                  ? 'bg-primary-600 text-white shadow-lg'
-                  : 'bg-white dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
+                  : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 hover:border-purple-300/50 dark:hover:border-purple-700/50 shadow-lg shadow-purple-500/5 dark:shadow-purple-900/10'
               }`}
             >
               {category.name}
-            </button>
+            </motion.button>
           ))}
         </motion.div>
 
@@ -273,44 +304,57 @@ export default function PostsPage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
+            className="text-center mb-10"
           >
-            <p className="text-gray-600 dark:text-gray-400">
-              "<span className="font-semibold text-primary-600 dark:text-primary-400">{searchQuery}</span>" 검색 결과: 
-              <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredPosts.length}</span>개
-            </p>
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-full border border-white/30 dark:border-slate-700/30 shadow-lg">
+              <p className="text-gray-600 dark:text-gray-400">
+                "<span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{searchQuery}</span>" search results: 
+                <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredPosts.length}</span>
+              </p>
+            </div>
           </motion.div>
         )}
 
         {/* 포스트 그리드 */}
         {filteredPosts.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredPosts.map((post, index) => (
               <motion.div
                 key={post._id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
-                className="card overflow-hidden group hover:shadow-xl transition-all duration-300"
+                whileHover={{ y: -8 }}
+                className="relative group"
               >
+                {/* 그라데이션 테두리 효과 */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700"></div>
+                <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/30 dark:border-slate-700/30 group-hover:border-purple-300/50 dark:group-hover:border-purple-700/50">
                 {/* 포스트 헤더 */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {post.featured && (
-                        <span className="px-2 py-1 bg-primary-600 text-white text-xs rounded-full font-medium">
-                          Featured
+                        <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full font-semibold shadow-lg">
+                          ⭐ Featured
                         </span>
                       )}
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        post.category === 'tech' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-                        post.category === 'project' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                        post.category === 'update' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                        'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        post.category === 'tech' ? 'bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 backdrop-blur-sm' :
+                        post.category === 'economy' ? 'bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 backdrop-blur-sm' :
+                        post.category === 'coin' ? 'bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 backdrop-blur-sm' :
+                        post.category === 'travel' ? 'bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-400 backdrop-blur-sm' :
+                        post.category === 'food' ? 'bg-orange-100/80 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 backdrop-blur-sm' :
+                        post.category === 'lottery' ? 'bg-pink-100/80 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400 backdrop-blur-sm' :
+                        'bg-gray-100/80 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 backdrop-blur-sm'
                       }`}>
-                        {post.category === 'tech' ? '기술' :
-                         post.category === 'project' ? '프로젝트' :
-                         post.category === 'update' ? '업데이트' : '일반'}
+                        {post.category === 'tech' ? 'Tech' :
+                         post.category === 'economy' ? 'Economy' :
+                         post.category === 'coin' ? 'Coin' :
+                         post.category === 'travel' ? 'Travel' :
+                         post.category === 'food' ? 'Food' :
+                         post.category === 'lottery' ? 'Lottery' :
+                         'General'}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -395,10 +439,12 @@ export default function PostsPage() {
                 <div className="px-6 pb-6">
                   <Link
                     href={`/posts/${post._id}`}
-                    className="w-full btn-outline py-2 text-sm group-hover:bg-primary-600 group-hover:text-white transition-all duration-200 inline-block text-center"
+                    className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                   >
-                    자세히 읽기
+                    Read More
+                    <FiArrowLeft size={16} className="rotate-180" />
                   </Link>
+                </div>
                 </div>
               </motion.div>
             ))}
@@ -413,10 +459,10 @@ export default function PostsPage() {
               <FiMessageSquare size={64} className="mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              게시글을 찾을 수 없습니다
+              No posts found
             </h3>
             <p className="text-gray-500 dark:text-gray-600">
-              검색어나 필터를 변경해보세요.
+              Try changing your search or filters.
             </p>
           </motion.div>
         )}
@@ -426,37 +472,43 @@ export default function PostsPage() {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center space-x-2"
+            className="flex justify-center gap-2 mt-12"
           >
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-4 py-2 rounded-lg bg-white dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
-              이전
-            </button>
+              Previous
+            </motion.button>
             
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
+              <motion.button
                 key={page}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
                 onClick={() => handlePageChange(page)}
-                className={`px-4 py-2 rounded-lg ${
+                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
                   currentPage === page
-                    ? 'bg-primary-600 text-white'
-                    : 'bg-white dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-110'
+                    : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg'
                 }`}
               >
                 {page}
-              </button>
+              </motion.button>
             ))}
             
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-4 py-2 rounded-lg bg-white dark:bg-dark-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-5 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
-              다음
-            </button>
+              Next
+            </motion.button>
           </motion.div>
         )}
       </div>
