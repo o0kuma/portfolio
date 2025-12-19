@@ -122,18 +122,23 @@ async function generateAIResponse(
   }
 
   // 환경 변수 확인 (여러 가능한 이름 시도)
+  // Vercel 환경 변수가 우선적으로 사용됨
   const openaiApiKey = process.env.OPENAI_API_KEY?.trim() || 
                        process.env.NEXT_PUBLIC_OPENAI_API_KEY?.trim() ||
                        process.env.OPENAI_KEY?.trim()
   
-  // 디버깅: 환경 변수 확인 (개발 모드에서만)
-  if (process.env.NODE_ENV === 'development') {
+  // 디버깅: 환경 변수 확인
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  const isVercel = !!process.env.VERCEL
+  
+  if (isDevelopment || isVercel) {
     console.log('=== OpenAI 환경 변수 디버깅 ===')
-    console.log('현재 작업 디렉토리:', process.cwd())
-    console.log('server/.env 경로:', path.join(process.cwd(), '..', 'server', '.env'))
+    console.log('환경:', isVercel ? 'Vercel (Production)' : 'Local (Development)')
     console.log('OPENAI_API_KEY 존재:', !!process.env.OPENAI_API_KEY)
     console.log('OPENAI_API_KEY 길이:', process.env.OPENAI_API_KEY?.length || 0)
-    console.log('OPENAI_API_KEY 값 (처음 20자):', process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.substring(0, 20) + '...' : '없음')
+    if (process.env.OPENAI_API_KEY) {
+      console.log('OPENAI_API_KEY 값 (처음 20자):', process.env.OPENAI_API_KEY.substring(0, 20) + '...')
+    }
     console.log('NEXT_PUBLIC_OPENAI_API_KEY 존재:', !!process.env.NEXT_PUBLIC_OPENAI_API_KEY)
     console.log('OPENAI_KEY 존재:', !!process.env.OPENAI_KEY)
     console.log('모든 OPENAI 관련 환경 변수:', 
