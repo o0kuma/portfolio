@@ -63,47 +63,61 @@ async function generateAIResponse(
   intent: string
   confidence: number
 }> {
-  // 런타임에 server/.env 또는 server/env.example 파일에서 환경 변수 로드
-  try {
-    const serverDir = path.join(process.cwd(), '..', 'server')
-    const envPaths = [
-      path.join(serverDir, '.env'),
-      path.join(serverDir, 'env.example'),
-      path.join(serverDir, '.env.example')
-    ]
-    
-    let envLoaded = false
-    for (const envPath of envPaths) {
-      if (fs.existsSync(envPath)) {
-        const envFile = fs.readFileSync(envPath, 'utf8')
-        envFile.split('\n').forEach(line => {
-          const trimmedLine = line.trim()
-          if (trimmedLine && !trimmedLine.startsWith('#')) {
-            const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
-            if (match) {
-              const key = match[1].trim()
-              const value = match[2].trim().replace(/^["']|["']$/g, '')
-              if (key === 'OPENAI_API_KEY' && value && !process.env.OPENAI_API_KEY) {
-                process.env.OPENAI_API_KEY = value
-                envLoaded = true
-                if (process.env.NODE_ENV === 'development') {
-                  console.log(`✅ ${path.basename(envPath)}에서 OPENAI_API_KEY 로드됨`)
+  // 환경 변수가 이미 설정되어 있지 않은 경우에만 파일에서 로드 시도
+  // 배포 환경(Vercel 등)에서는 환경 변수가 직접 설정되어 있어야 함
+  if (!process.env.OPENAI_API_KEY) {
+    try {
+      const serverDir = path.join(process.cwd(), '..', 'server')
+      const envPaths = [
+        path.join(serverDir, '.env'),
+        path.join(serverDir, 'env.example'),
+        path.join(serverDir, '.env.example')
+      ]
+      
+      let envLoaded = false
+      for (const envPath of envPaths) {
+        try {
+          if (fs.existsSync(envPath)) {
+            const envFile = fs.readFileSync(envPath, 'utf8')
+            envFile.split('\n').forEach(line => {
+              const trimmedLine = line.trim()
+              if (trimmedLine && !trimmedLine.startsWith('#')) {
+                const match = trimmedLine.match(/^([^=:#]+)=(.*)$/)
+                if (match) {
+                  const key = match[1].trim()
+                  const value = match[2].trim().replace(/^["']|["']$/g, '')
+                  if (key === 'OPENAI_API_KEY' && value) {
+                    process.env.OPENAI_API_KEY = value
+                    envLoaded = true
+                    if (process.env.NODE_ENV === 'development') {
+                      console.log(`✅ ${path.basename(envPath)}에서 OPENAI_API_KEY 로드됨`)
+                    }
+                  }
                 }
               }
-            }
+            })
+            if (envLoaded) break
           }
-        })
-        if (envLoaded) break
+        } catch (fileError) {
+          // 개별 파일 로드 실패는 무시하고 다음 파일 시도
+          continue
+        }
       }
-    }
-    
-    if (!envLoaded && process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ server/.env 또는 server/env.example 파일을 찾을 수 없습니다.')
-      console.warn('시도한 경로:', envPaths)
-    }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('server 환경 변수 파일 로드 중 오류:', error)
+      
+      if (!envLoaded) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('⚠️ server/.env 또는 server/env.example 파일을 찾을 수 없습니다.')
+          console.warn('시도한 경로:', envPaths)
+        } else {
+          // 프로덕션 환경에서는 Vercel 환경 변수 설정을 확인하도록 안내
+          console.warn('⚠️ OPENAI_API_KEY가 설정되지 않았습니다.')
+          console.warn('Vercel 환경 변수 설정에서 OPENAI_API_KEY를 추가해주세요.')
+        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('server 환경 변수 파일 로드 중 오류:', error)
+      }
     }
   }
 
