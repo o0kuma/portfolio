@@ -11,7 +11,10 @@
     "seed": "node scripts/seed.js",
     "generate-token": "node scripts/web-oauth.js",
     "migrate-to-supabase": "node scripts/migrate-data.js",
-    "test-supabase": "node scripts/test-supabase.js"
+    "test-supabase": "node scripts/test-supabase.js",
+    "create-sample-posts": "node scripts/create-sample-posts.js",
+    "check-posts-table": "node scripts/check-posts-table.js",
+    "fix-posts-table": "node scripts/auto-fix-posts-table.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.77.0",

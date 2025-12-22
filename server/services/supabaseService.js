@@ -91,8 +91,14 @@ class SupabaseService {
     if (filters.category) {
       query = query.eq('category', filters.category);
     }
+    // featured 컬럼이 있으면 필터링 (없으면 무시)
     if (filters.featured !== undefined) {
-      query = query.eq('featured', filters.featured);
+      try {
+        query = query.eq('featured', filters.featured);
+      } catch (error) {
+        // featured 컬럼이 없으면 필터 제거
+        console.warn('featured 컬럼이 없어 필터링을 건너뜁니다.');
+      }
     }
     if (filters.search) {
       query = query.textSearch('title,content', filters.search);
@@ -123,13 +129,69 @@ class SupabaseService {
 
   // 포스트 생성
   async createPost(postData) {
+    // author가 없으면 기본값 설정
+    if (!postData.author) {
+      postData.author = 'iykyk';
+    }
+    
+    // 테이블 구조에 맞게 데이터 변환
+    // 테이블에 있는 컬럼만 사용 (views, featured는 선택사항)
+    const insertData = {
+      title: postData.title,
+      content: postData.content,
+      author: postData.author,
+      category: postData.category || 'general',
+      tags: postData.tags || [],
+      likes: postData.likes || 0
+    };
+    
+    // 테이블에 컬럼이 있으면 추가
+    // views 컬럼이 있으면 추가
+    if (postData.views !== undefined) {
+      insertData.views = postData.views;
+    }
+    
+    // featured 컬럼이 있으면 추가
+    if (postData.featured !== undefined) {
+      insertData.featured = postData.featured;
+    }
+    
+    // cover_image_url이 있으면 추가
+    if (postData.cover_image_url) {
+      insertData.cover_image_url = postData.cover_image_url;
+    }
+    
+    // status가 있으면 추가
+    if (postData.status) {
+      insertData.status = postData.status;
+    }
+
     const { data, error } = await this.supabase
       .from('posts')
-      .insert([postData])
+      .insert([insertData])
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // author 컬럼 오류인 경우 더 자세한 정보 제공
+      if (error.message && (error.message.includes('author') || error.message.includes('column') || error.code === '42703')) {
+        const errorMsg = `❌ Supabase 테이블에 'author' 컬럼이 없습니다.\n\n` +
+          `해결 방법:\n` +
+          `1. Supabase Dashboard (https://app.supabase.com) 접속\n` +
+          `2. SQL Editor 열기\n` +
+          `3. 다음 SQL 실행:\n\n` +
+          `ALTER TABLE posts ADD COLUMN IF NOT EXISTS author VARCHAR(100) NOT NULL DEFAULT 'iykyk';\n\n` +
+          `또는 server/scripts/add-author-column.sql 파일의 내용을 실행하세요.`;
+        throw new Error(errorMsg);
+      }
+      
+      // 다른 컬럼 오류도 처리
+      if (error.code === '42703') {
+        throw new Error(`테이블 컬럼 오류: ${error.message}\nSupabase SQL Editor에서 server/supabase-migration.sql을 실행하세요.`);
+      }
+      
+      throw error;
+    }
     return data;
   }
 
@@ -216,8 +278,14 @@ class SupabaseService {
     if (filters.category) {
       query = query.eq('category', filters.category);
     }
+    // featured 컬럼이 있으면 필터링 (없으면 무시)
     if (filters.featured !== undefined) {
-      query = query.eq('featured', filters.featured);
+      try {
+        query = query.eq('featured', filters.featured);
+      } catch (error) {
+        // featured 컬럼이 없으면 필터 제거
+        console.warn('featured 컬럼이 없어 필터링을 건너뜁니다.');
+      }
     }
     if (filters.search) {
       query = query.textSearch('title,description,content', filters.search);

@@ -52,6 +52,8 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const [selectedTone, setSelectedTone] = useState('친근하게')
   const [isRecording, setIsRecording] = useState(false)
   const [showAIFeatures, setShowAIFeatures] = useState(false)
+  const [subscription, setSubscription] = useState<any>(null)
+  const [showUsageLimit, setShowUsageLimit] = useState(false)
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -70,8 +72,22 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
       const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       setSessionId(newSessionId)
       loadConversationHistory(newSessionId)
+      checkSubscription(newSessionId)
     }
   }, [isOpen, sessionId])
+
+  // 구독 상태 확인
+  const checkSubscription = async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/subscription/check?sessionId=${sessionId}`)
+      const data = await response.json()
+      if (data.success) {
+        setSubscription(data.subscription)
+      }
+    } catch (error) {
+      console.error('구독 상태 확인 오류:', error)
+    }
+  }
 
   // 대화 히스토리 로드
   const loadConversationHistory = async (sessionId: string) => {
@@ -146,6 +162,9 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
       const data = await response.json()
       
       if (data.success && data.response) {
+        // 구독 상태 업데이트
+        await checkSubscription(sessionId)
+        
         const aiResponse: ChatMessage = {
           id: (Date.now() + 1).toString(),
           content: data.response,
@@ -160,6 +179,16 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           }
         }
         setMessages(prev => [...prev, aiResponse])
+      } else if (data.errorCode === 'DAILY_LIMIT_EXCEEDED') {
+        // 일일 한도 초과
+        const limitMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          content: `일일 무료 메시지 한도(${data.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
+          isUser: false,
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, limitMessage])
+        setShowUsageLimit(true)
       } else {
         // API 오류 시 기본 응답
         const fallbackResponse: ChatMessage = {
@@ -314,11 +343,37 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               <FiZap className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-semibold">AI 어시스턴트</h3>
-              <p className="text-xs text-white/80">온라인</p>
+              <h3 className="font-semibold flex items-center gap-2">
+                AI 어시스턴트
+                {subscription?.isPremium && (
+                  <span className="text-xs bg-yellow-500 text-yellow-900 px-2 py-0.5 rounded-full font-bold">
+                    PRO
+                  </span>
+                )}
+              </h3>
+              <p className="text-xs text-white/80">
+                {subscription ? (
+                  subscription.isPremium ? (
+                    '프리미엄 - 무제한'
+                  ) : (
+                    `일일 ${subscription.usage?.chat || 0}/${subscription.limits?.dailyChatMessages || 10}`
+                  )
+                ) : (
+                  '온라인'
+                )}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            {!subscription?.isPremium && (
+              <button
+                onClick={() => window.open('/subscription', '_blank')}
+                className="px-2 py-1 text-xs bg-yellow-500 text-yellow-900 rounded font-semibold hover:bg-yellow-400 transition-colors"
+                title="프리미엄으로 업그레이드"
+              >
+                업그레이드
+              </button>
+            )}
             <button
               onClick={() => setIsMinimized(!isMinimized)}
               className="p-1 hover:bg-white/20 rounded"
@@ -336,8 +391,8 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
         {!isMinimized && (
           <>
-            {/* 톤 선택 */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600">
+            {/* 톤 선택 및 사용량 표시 */}
+            <div className="p-3 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 space-y-2">
               <div className="flex items-center space-x-2">
                 <span className="text-sm font-medium text-slate-600 dark:text-slate-300">톤:</span>
                 <div className="flex space-x-1">
@@ -356,6 +411,24 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                   ))}
                 </div>
               </div>
+              {!subscription?.isPremium && subscription && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-400">일일 사용량:</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-slate-600 dark:text-slate-400">
+                      채팅: {subscription.usage?.chat || 0}/{subscription.limits?.dailyChatMessages || 10}
+                    </span>
+                    {(subscription.usage?.chat || 0) >= (subscription.limits?.dailyChatMessages || 10) * 0.8 && (
+                      <button
+                        onClick={() => window.open('/subscription', '_blank')}
+                        className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                      >
+                        업그레이드 →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 메시지 영역 */}

@@ -71,7 +71,7 @@ router.post('/', [
   body('title').notEmpty().withMessage('제목은 필수입니다.'),
   body('content').notEmpty().withMessage('내용은 필수입니다.'),
   body('author').notEmpty().withMessage('작성자는 필수입니다.'),
-  body('category').optional().isIn(['general', 'tech', 'project', 'update']).withMessage('유효하지 않은 카테고리입니다.'),
+  body('category').optional().isIn(['general', 'tech', 'economy', 'coin', 'travel', 'food', 'lottery', 'project', 'update']).withMessage('유효하지 않은 카테고리입니다.'),
   body('tags').optional().isArray().withMessage('태그는 배열이어야 합니다.'),
   body('featured').optional().isBoolean().withMessage('featured는 불린 값이어야 합니다.')
 ], async (req, res) => {
@@ -97,7 +97,27 @@ router.post('/', [
     });
   } catch (error) {
     console.error('포스트 생성 오류:', error);
-    res.status(500).json({ message: error.message });
+    
+    // author 컬럼 오류인 경우 더 자세한 안내
+    if (error.message && error.message.includes('author')) {
+      return res.status(500).json({ 
+        success: false,
+        error: '테이블 구조 오류',
+        message: error.message,
+        solution: {
+          step1: 'Supabase Dashboard (https://app.supabase.com) 접속',
+          step2: 'SQL Editor 열기',
+          step3: '다음 SQL 실행:',
+          sql: "ALTER TABLE posts ADD COLUMN IF NOT EXISTS author VARCHAR(100) NOT NULL DEFAULT 'iykyk';"
+        }
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false,
+      error: '포스트 생성 실패',
+      message: error.message 
+    });
   }
 });
 
@@ -105,7 +125,7 @@ router.post('/', [
 router.put('/:id', [
   body('title').optional().notEmpty().withMessage('제목은 비어있을 수 없습니다.'),
   body('content').optional().notEmpty().withMessage('내용은 비어있을 수 없습니다.'),
-  body('category').optional().isIn(['general', 'tech', 'project', 'update']).withMessage('유효하지 않은 카테고리입니다.'),
+  body('category').optional().isIn(['general', 'tech', 'economy', 'coin', 'travel', 'food', 'lottery', 'project', 'update']).withMessage('유효하지 않은 카테고리입니다.'),
   body('tags').optional().isArray().withMessage('태그는 배열이어야 합니다.'),
   body('featured').optional().isBoolean().withMessage('featured는 불린 값이어야 합니다.')
 ], async (req, res) => {

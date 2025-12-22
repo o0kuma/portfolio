@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowRight, FiCalendar, FiUser, FiTag, FiEye, FiHeart, FiMessageSquare, FiSearch, FiSun, FiMoon, FiArrowUp, FiStar, FiZap } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../components/BlogSearchBar'
 import BlogFooter from '../components/BlogFooter'
 import AIMessenger from '../components/AIMessenger'
+import AdBanner from '../components/AdBanner'
 
 interface Post {
   _id: string
@@ -173,13 +174,45 @@ export default function BlogPageClient() {
   const regularPosts = filteredPosts.filter(post => !post.featured)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 via-purple-50/30 to-pink-50/20 dark:from-slate-950 dark:via-indigo-950/50 dark:via-purple-950/30 dark:to-slate-950 relative overflow-hidden">
-      {/* 배경 애니메이션 - 더 역동적인 효과 */}
+    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 via-blue-950 to-slate-950 dark:from-slate-950 dark:via-purple-950 dark:via-indigo-950 dark:to-slate-950 relative overflow-hidden">
+      {/* 강렬한 배경 애니메이션 */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/30 to-pink-400/20 dark:from-purple-500/20 dark:to-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/30 to-cyan-400/20 dark:from-blue-500/20 dark:to-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-gradient-to-br from-pink-400/25 to-orange-400/20 dark:from-pink-500/15 dark:to-orange-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-indigo-400/20 to-purple-400/15 dark:from-indigo-500/15 dark:to-purple-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '0.5s'}}></div>
+        <motion.div
+          animate={{
+            x: [0, 100, -100, 0],
+            y: [0, -100, 100, 0],
+            scale: [1, 1.2, 0.8, 1]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute top-20 left-10 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/40 to-pink-500/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -150, 150, 0],
+            y: [0, 150, -150, 0],
+            scale: [1, 0.9, 1.1, 1]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/40 to-cyan-500/30 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, 80, -80, 0],
+            y: [0, -80, 80, 0],
+            scale: [1, 1.1, 0.9, 1]
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-gradient-to-br from-pink-500/35 to-orange-500/25 rounded-full blur-3xl"
+        />
+        <motion.div
+          animate={{
+            x: [0, -120, 120, 0],
+            y: [0, 120, -120, 0],
+            scale: [1, 0.8, 1.2, 1]
+          }}
+          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+          className="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-gradient-to-br from-indigo-500/30 to-purple-500/25 rounded-full blur-3xl"
+        />
       </div>
       
       {/* 그리드 패턴 오버레이 */}
@@ -280,24 +313,63 @@ export default function BlogPageClient() {
             </motion.div>
 
             <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-6xl md:text-7xl lg:text-8xl font-extrabold mb-6 leading-tight"
+              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.3, type: "spring", stiffness: 100 }}
+              className="text-7xl md:text-8xl lg:text-9xl xl:text-[12rem] font-black mb-8 leading-[0.9]"
             >
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent animate-gradient">
-                iykyk blog
+              <span 
+                className="relative inline-block bg-gradient-to-r from-purple-500 via-pink-500 via-red-500 to-orange-500 bg-clip-text text-transparent"
+                style={{
+                  backgroundSize: '200% auto',
+                  animation: 'gradient 3s ease infinite',
+                  filter: 'drop-shadow(0 0 40px rgba(139, 92, 246, 0.6))',
+                  WebkitTextStroke: '2px transparent'
+                }}
+              >
+                iykyk
               </span>
+              <br />
+              <motion.span
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.5 }}
+                className="relative inline-block bg-gradient-to-r from-blue-500 via-cyan-500 to-teal-500 bg-clip-text text-transparent text-6xl md:text-7xl lg:text-8xl"
+                style={{
+                  filter: 'drop-shadow(0 0 30px rgba(59, 130, 246, 0.5))'
+                }}
+              >
+                blog
+              </motion.span>
+              <motion.span
+                animate={{ 
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 10, -10, 0]
+                }}
+                transition={{ 
+                  duration: 2, 
+                  repeat: Infinity,
+                  repeatDelay: 1
+                }}
+                className="inline-block ml-4 text-6xl md:text-7xl lg:text-8xl"
+              >
+                ⚡
+              </motion.span>
             </motion.h1>
             
             <motion.p 
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-12 leading-relaxed"
+              transition={{ delay: 0.6 }}
+              className="text-2xl md:text-3xl lg:text-4xl font-bold mb-16 leading-relaxed"
             >
-              A space for sharing thoughts, experiences, and insights<br className="hidden md:block" />
-              across various topics and interests.
+              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
+                A space for sharing thoughts, experiences, and insights
+              </span>
+              <br className="hidden md:block" />
+              <span className="text-gray-700 dark:text-gray-200 text-xl md:text-2xl lg:text-3xl">
+                across various topics and interests.
+              </span>
             </motion.p>
             
             {/* 검색바 - 글래스모피즘 */}
@@ -502,8 +574,18 @@ export default function BlogPageClient() {
           ) : regularPosts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {regularPosts.map((post, index) => (
+                <React.Fragment key={post._id}>
+                {/* 3개 포스트마다 광고 삽입 */}
+                {index > 0 && index % 3 === 0 && (
+                  <div className="col-span-full my-6">
+                    <AdBanner
+                      adType="banner"
+                      position="middle"
+                      className="my-4"
+                    />
+                  </div>
+                )}
                 <motion.div
-                  key={post._id}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -599,7 +681,8 @@ export default function BlogPageClient() {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                </React.Fragment>
+              ))}
               </div>
           ) : (
             <div className="text-center py-16">

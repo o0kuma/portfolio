@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../../components/BlogSearchBar'
+import AdBanner from '../../components/AdBanner'
+import CreatePostForm from '../../components/CreatePostForm'
 
 interface Post {
   _id: string
@@ -179,6 +181,10 @@ export default function PostsPage() {
     }
   }
 
+  const handleCreateSuccess = () => {
+    fetchPosts(currentPage, selectedCategory, searchQuery)
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
@@ -319,8 +325,18 @@ export default function PostsPage() {
         {filteredPosts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {filteredPosts.map((post, index) => (
-              <motion.div
-                key={post._id}
+              <React.Fragment key={post._id}>
+                {/* 3개 포스트마다 광고 삽입 */}
+                {index > 0 && index % 3 === 0 && (
+                  <div className="col-span-full my-6">
+                    <AdBanner
+                      adType="banner"
+                      position="middle"
+                      className="my-4"
+                    />
+                  </div>
+                )}
+                <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: index * 0.1 }}
@@ -447,6 +463,7 @@ export default function PostsPage() {
                 </div>
                 </div>
               </motion.div>
+              </React.Fragment>
             ))}
           </div>
         ) : (
@@ -512,6 +529,13 @@ export default function PostsPage() {
           </motion.div>
         )}
       </div>
+
+      {/* 게시글 작성 폼 */}
+      <CreatePostForm
+        isOpen={showCreateForm}
+        onClose={() => setShowCreateForm(false)}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   )
 }

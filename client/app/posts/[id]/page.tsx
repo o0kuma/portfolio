@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiSend } from 'react-icons/fi'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
+import AdBanner from '@/components/AdBanner'
+import { insertAdsInContent } from '@/components/InArticleAd'
 
 interface Post {
   _id: string
@@ -308,8 +310,31 @@ export default function PostDetailPage() {
 
             {/* 게시글 내용 */}
             <div className="prose prose-lg max-w-none text-gray-700 dark:text-gray-300">
+              {/* 상단 광고 */}
+              <div className="mb-8">
+                <AdBanner
+                  adType="banner"
+                  position="top"
+                  postId={post._id}
+                  postCategory={post.category}
+                  postTags={post.tags}
+                />
+              </div>
+
+              {/* 게시물 내용 (단락 사이에 광고 삽입) */}
               <div className="whitespace-pre-wrap">
-                {post.content}
+                {insertAdsInContent(post.content, post._id, post.category, post.tags)}
+              </div>
+
+              {/* 하단 광고 */}
+              <div className="mt-8">
+                <AdBanner
+                  adType="banner"
+                  position="bottom"
+                  postId={post._id}
+                  postCategory={post.category}
+                  postTags={post.tags}
+                />
               </div>
             </div>
           </div>

@@ -473,6 +473,35 @@ export async function POST(request: Request) {
       )
     }
 
+    // 구독 상태 확인 및 사용량 제한 체크
+    try {
+      const subscriptionCheck = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/check?userId=${userId}&sessionId=${sessionId}`)
+      const subscriptionData = await subscriptionCheck.json()
+      
+      if (subscriptionData.success && subscriptionData.subscription) {
+        const { subscription: sub } = subscriptionData
+        const { usage, limits } = sub
+        
+        // 무료 사용자의 일일 메시지 제한 체크
+        if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: '일일 무료 메시지 한도를 초과했습니다.',
+              errorCode: 'DAILY_LIMIT_EXCEEDED',
+              limit: limits.dailyChatMessages,
+              used: usage.chat,
+              upgradeRequired: true
+            },
+            { status: 403 }
+          )
+        }
+      }
+    } catch (subError) {
+      console.warn('구독 상태 확인 실패 (계속 진행):', subError)
+      // 구독 확인 실패해도 계속 진행 (기본 동작)
+    }
+
     const startTime = Date.now()
 
     // 1. 대화 세션 가져오기 또는 생성
@@ -508,6 +537,23 @@ export async function POST(request: Request) {
     // 4. AI 응답 생성 (ChatGPT API 사용)
     const aiResponse = await generateAIResponse(message, tone, context, conversationHistory)
     const responseTime = Date.now() - startTime
+
+    // 4-1. 사용량 기록
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/usage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId !== 'anonymous' ? userId : null,
+          sessionId: sessionId,
+          usageType: 'chat',
+          messageCount: 1,
+          tokensUsed: aiResponse.response.length / 4 // 대략적인 토큰 수 추정
+        })
+      })
+    } catch (usageError) {
+      console.warn('사용량 기록 실패 (계속 진행):', usageError)
+    }
 
     // 5. AI 응답 저장
     try {

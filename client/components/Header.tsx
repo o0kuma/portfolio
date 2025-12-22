@@ -80,22 +80,29 @@ export default function Header() {
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        style={{boxShadow: '0 1px 20px rgb(63 62 62 / 30%)' }}
+        style={{boxShadow: isScrolled ? '0 4px 30px rgba(139, 92, 246, 0.3)' : 'none' }}
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/90 dark:bg-dark-900/90 backdrop-blur-md shadow-lg'
+            ? 'bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl border-b border-purple-500/20'
             : 'bg-transparent'
         }`}
       >
         <div className="container-custom">
           <div className="flex items-center justify-between h-16">
-            {/* 로고 */}
+            {/* 강렬한 로고 */}
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer"
+              whileHover={{ scale: 1.1, rotate: 2 }}
+              className="relative text-3xl font-black cursor-pointer"
               onClick={() => scrollToSection('hero')}
             >
-              Portfolio
+              <span className="relative z-10 bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent">
+                Portfolio
+              </span>
+              <motion.span
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 bg-gradient-to-r from-purple-400 via-pink-400 to-red-400 blur-xl opacity-50"
+              />
             </motion.div>
 
             {/* 데스크톱 네비게이션 */}
@@ -103,12 +110,16 @@ export default function Header() {
               {navItems.map((item) => (
                 <motion.button
                   key={item.id}
-                  whileHover={{ y: -2 }}
+                  whileHover={{ y: -3, scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => scrollToSection(item.id)}
-                  className="text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium"
+                  className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all font-bold text-sm uppercase tracking-wider group"
                 >
                   {item.label}
+                  <motion.span
+                    className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300"
+                    initial={false}
+                  />
                 </motion.button>
               ))}
             </nav>
