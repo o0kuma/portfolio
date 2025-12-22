@@ -7,7 +7,13 @@ import * as fs from 'fs'
 import * as path from 'path'
 
 // server/.env 또는 server/env.example 파일에서 OPENAI_API_KEY 로드 (런타임)
+// 프로덕션 환경에서는 파일 시스템 접근을 시도하지 않음 (Vercel 등에서는 환경 변수 직접 설정 필요)
 function loadServerEnv() {
+  // 프로덕션 환경에서는 파일 시스템 접근 시도하지 않음
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    return
+  }
+
   try {
     const serverDir = path.join(process.cwd(), '..', 'server')
     const envPaths = [
@@ -65,7 +71,8 @@ async function generateAIResponse(
 }> {
   // 환경 변수가 이미 설정되어 있지 않은 경우에만 파일에서 로드 시도
   // 배포 환경(Vercel 등)에서는 환경 변수가 직접 설정되어 있어야 함
-  if (!process.env.OPENAI_API_KEY) {
+  // 프로덕션 환경에서는 파일 시스템 접근을 시도하지 않음
+  if (!process.env.OPENAI_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
     try {
       const serverDir = path.join(process.cwd(), '..', 'server')
       const envPaths = [
@@ -108,10 +115,6 @@ async function generateAIResponse(
         if (process.env.NODE_ENV === 'development') {
           console.warn('⚠️ server/.env 또는 server/env.example 파일을 찾을 수 없습니다.')
           console.warn('시도한 경로:', envPaths)
-        } else {
-          // 프로덕션 환경에서는 Vercel 환경 변수 설정을 확인하도록 안내
-          console.warn('⚠️ OPENAI_API_KEY가 설정되지 않았습니다.')
-          console.warn('Vercel 환경 변수 설정에서 OPENAI_API_KEY를 추가해주세요.')
         }
       }
     } catch (error) {
@@ -149,8 +152,15 @@ async function generateAIResponse(
   }
   
   if (!openaiApiKey || openaiApiKey.length < 10) {
-    console.warn('[1] OPENAI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
-    if (process.env.NODE_ENV === 'development') {
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL
+    console.error('[ERROR] OPENAI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
+    
+    if (isProduction) {
+      console.error('프로덕션 환경에서는 환경 변수를 플랫폼에서 직접 설정해야 합니다:')
+      console.error('1. Vercel: 프로젝트 설정 > Environment Variables에서 OPENAI_API_KEY 추가')
+      console.error('2. 다른 플랫폼: 해당 플랫폼의 환경 변수 설정에서 OPENAI_API_KEY 추가')
+      console.error('3. 환경 변수 이름: OPENAI_API_KEY (또는 NEXT_PUBLIC_OPENAI_API_KEY)')
+    } else {
       console.warn('해결 방법:')
       console.warn('1. server/.env 파일을 확인하세요 (경로:', path.join(process.cwd(), '..', 'server', '.env'), ')')
       console.warn('2. 파일에 OPENAI_API_KEY=your-api-key-here 형식으로 추가하세요')
