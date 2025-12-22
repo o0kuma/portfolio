@@ -62,11 +62,14 @@ export async function POST(request: Request) {
       .single()
     
     if (currentAd) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('advertisements')
         .update({ current_clicks: (currentAd.current_clicks || 0) + 1 })
         .eq('id', advertisementId)
-        .catch(console.error)
+      
+      if (updateError) {
+        console.error('클릭 수 업데이트 오류:', updateError)
+      }
     }
 
     // 노출 기록 업데이트

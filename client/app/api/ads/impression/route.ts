@@ -46,11 +46,14 @@ export async function POST(request: Request) {
       .single()
     
     if (currentAd) {
-      await supabase
+      const { error: updateError } = await supabase
         .from('advertisements')
         .update({ current_impressions: (currentAd.current_impressions || 0) + 1 })
         .eq('id', advertisementId)
-        .catch(console.error)
+      
+      if (updateError) {
+        console.error('노출 수 업데이트 오류:', updateError)
+      }
     }
 
     return NextResponse.json({
