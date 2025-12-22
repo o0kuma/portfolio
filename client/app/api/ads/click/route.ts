@@ -74,11 +74,14 @@ export async function POST(request: Request) {
 
     // 노출 기록 업데이트
     if (impressionId) {
-      await supabase
+      const { error: impressionUpdateError } = await supabase
         .from('ad_impressions')
         .update({ is_clicked: true })
         .eq('id', impressionId)
-        .catch(console.error)
+      
+      if (impressionUpdateError) {
+        console.error('노출 기록 업데이트 오류:', impressionUpdateError)
+      }
     }
 
     return NextResponse.json({
