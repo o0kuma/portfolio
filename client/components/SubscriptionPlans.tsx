@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FiCheck, FiZap, FiStar, FiCrown, FiArrowRight } from 'react-icons/fi'
+import { FiCheck, FiZap, FiStar, FiArrowRight } from 'react-icons/fi'
 import { supabase } from '@/lib/supabase'
 
 interface SubscriptionPlan {
@@ -237,7 +237,7 @@ export default function SubscriptionPlans() {
             className="mt-8 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6"
           >
             <div className="flex items-center gap-3 mb-2">
-              <FiCrown className="w-6 h-6 text-yellow-500" />
+              <FiStar className="w-6 h-6 text-yellow-500 fill-yellow-500" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                 프리미엄 멤버십 활성화됨
               </h3>
