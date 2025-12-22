@@ -54,11 +54,20 @@ export async function POST(request: Request) {
     }
 
     // 광고의 현재 클릭 수 증가
-    await supabase
+    // 먼저 현재 값을 가져온 후 증가
+    const { data: currentAd } = await supabase
       .from('advertisements')
-      .update({ current_clicks: supabase.raw('current_clicks + 1') })
+      .select('current_clicks')
       .eq('id', advertisementId)
-      .catch(console.error)
+      .single()
+    
+    if (currentAd) {
+      await supabase
+        .from('advertisements')
+        .update({ current_clicks: (currentAd.current_clicks || 0) + 1 })
+        .eq('id', advertisementId)
+        .catch(console.error)
+    }
 
     // 노출 기록 업데이트
     if (impressionId) {

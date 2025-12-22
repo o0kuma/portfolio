@@ -38,15 +38,20 @@ export async function POST(request: Request) {
     }
 
     // 광고의 현재 노출 수 증가
-    await supabase.rpc('increment_ad_impressions', {
-      ad_id: advertisementId
-    }).catch(() => {
-      // RPC 함수가 없으면 직접 업데이트
-      supabase
+    // 먼저 현재 값을 가져온 후 증가
+    const { data: currentAd } = await supabase
+      .from('advertisements')
+      .select('current_impressions')
+      .eq('id', advertisementId)
+      .single()
+    
+    if (currentAd) {
+      await supabase
         .from('advertisements')
-        .update({ current_impressions: supabase.raw('current_impressions + 1') })
+        .update({ current_impressions: (currentAd.current_impressions || 0) + 1 })
         .eq('id', advertisementId)
-    })
+        .catch(console.error)
+    }
 
     return NextResponse.json({
       success: true,
