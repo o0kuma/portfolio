@@ -1,6 +1,19 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+// 프로덕션 환경에서 환경 변수 확인을 위한 헬퍼 함수
+function getOpenAIApiKey(): string | null {
+  // 프로덕션 환경에서는 process.env에서 직접 읽기
+  // Vercel 등에서는 환경 변수가 자동으로 주입됨
+  const key = process.env.OPENAI_API_KEY?.trim()
+  
+  if (key && key.length >= 10) {
+    return key
+  }
+  
+  return null
+}
+
 import { NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase-server'
 import * as fs from 'fs'
@@ -124,10 +137,10 @@ async function generateAIResponse(
     }
   }
 
-  // 환경 변수 확인 (여러 가능한 이름 시도)
-  // 프로덕션에서는 process.env에서 직접 읽기
-  const openaiApiKey = process.env.OPENAI_API_KEY?.trim() || 
-                       process.env.NEXT_PUBLIC_OPENAI_API_KEY?.trim() ||
+  // 환경 변수 확인 (프로덕션에서는 process.env에서 직접 읽기)
+  // 주의: NEXT_PUBLIC_ 접두사는 사용하지 않음 (보안상 클라이언트에 노출되면 안됨)
+  const openaiApiKey = getOpenAIApiKey() || 
+                       process.env.OPENAI_API_KEY?.trim() ||
                        process.env.OPENAI_KEY?.trim()
   
   // 디버깅: 환경 변수 확인 (프로덕션에서도 로깅)
@@ -225,8 +238,21 @@ async function generateAIResponse(
     })
 
     if (!response.ok) {
-      const errorData = await response.json()
-      console.error('OpenAI API 오류:', errorData)
+      const errorData = await response.json().catch(() => ({}))
+      console.error('OpenAI API 오류:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorData
+      })
+      
+      // API 키 관련 오류인 경우 더 자세한 로그
+      if (response.status === 401 || response.status === 403) {
+        console.error('=== OpenAI API 인증 오류 ===')
+        console.error('API 키가 유효하지 않거나 만료되었을 수 있습니다.')
+        console.error('환경 변수 OPENAI_API_KEY를 확인하세요.')
+        console.error('============================')
+      }
+      
       return generateFallbackResponse(message, tone)
     }
 
@@ -245,7 +271,17 @@ async function generateAIResponse(
       confidence: 0.9
     }
   } catch (error: any) {
-    console.error('ChatGPT API 호출 오류:', error)
+    console.error('ChatGPT API 호출 오류:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    })
+    
+    // 네트워크 오류인 경우
+    if (error.message?.includes('fetch') || error.message?.includes('network')) {
+      console.error('네트워크 오류: OpenAI API에 연결할 수 없습니다.')
+    }
+    
     return generateFallbackResponse(message, tone)
   }
 }
@@ -598,6 +634,10 @@ export async function POST(request: Request) {
       // 메시지 저장 실패해도 계속 진행
     }
 
+    // fallback 응답인지 확인 (응답이 기본 메시지인 경우)
+    const isFallback = aiResponse.response.includes('더 자세히 알려주시면 도와드리겠습니다') || 
+                       aiResponse.confidence === 0.7
+    
     return NextResponse.json({
       success: aiResponse.success,
       response: aiResponse.response,
@@ -605,7 +645,11 @@ export async function POST(request: Request) {
       intent: aiResponse.intent,
       confidence: aiResponse.confidence,
       responseTime: responseTime,
-      sessionId: sessionId
+      sessionId: sessionId,
+      isFallback: isFallback,
+      ...(isFallback && {
+        warning: 'OpenAI API를 사용할 수 없어 기본 응답을 반환했습니다. 환경 변수 OPENAI_API_KEY를 확인하세요.'
+      })
     })
 
   } catch (error: any) {

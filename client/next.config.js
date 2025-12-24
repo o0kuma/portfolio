@@ -48,10 +48,9 @@ const nextConfig = {
     };
     return config;
   },
-  // 환경 변수를 빌드 타임에 포함
-  env: {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-  },
+  // 주의: env 설정은 클라이언트 사이드에 노출됩니다
+  // OPENAI_API_KEY는 서버 사이드 전용이므로 env에 포함하지 않습니다
+  // API 라우트에서는 process.env.OPENAI_API_KEY를 직접 사용합니다
 }
 
 module.exports = nextConfig
