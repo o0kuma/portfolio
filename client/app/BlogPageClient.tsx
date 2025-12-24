@@ -288,7 +288,7 @@ export default function BlogPageClient() {
       </motion.header>
 
       {/* 히어로 섹션 */}
-      <section className="relative pt-32 pb-24 overflow-hidden">
+      <section className="relative pt-32 pb-24 overflow-visible">
         <div className="container-custom relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -377,7 +377,7 @@ export default function BlogPageClient() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="max-w-2xl mx-auto relative z-30 mb-8"
+              className="max-w-2xl mx-auto relative z-[100] mb-8"
             >
               <div className="relative group">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>

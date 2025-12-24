@@ -263,7 +263,7 @@ export default function PostsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-10 relative z-30"
+          className="mb-10 relative z-[100]"
         >
           <div className="max-w-4xl mx-auto relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>

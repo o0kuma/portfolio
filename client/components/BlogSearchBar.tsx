@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiSearch, FiX, FiFilter } from 'react-icons/fi'
 
@@ -25,7 +26,9 @@ export default function BlogSearchBar({
   const [isExpanded, setIsExpanded] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState(filters)
+  const [mounted, setMounted] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
+  const filterRef = useRef<HTMLDivElement>(null)
 
   // 검색어 변경 시 디바운스 적용
   useEffect(() => {
@@ -47,12 +50,46 @@ export default function BlogSearchBar({
     }
   }, [localFilters, onFilterChange])
 
+  // 컴포넌트 마운트 확인
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // 필터 패널 위치 계산 및 업데이트
+  useEffect(() => {
+    if (!showFilters || !searchRef.current || !filterRef.current) return
+
+    const updatePosition = () => {
+      const searchRect = searchRef.current!.getBoundingClientRect()
+      const filterPanel = filterRef.current!
+      filterPanel.style.position = 'fixed'
+      filterPanel.style.top = `${searchRect.bottom + 12}px`
+      filterPanel.style.left = `${searchRect.left}px`
+      filterPanel.style.width = `${searchRect.width}px`
+      filterPanel.style.maxHeight = `${window.innerHeight - searchRect.bottom - 24}px`
+      filterPanel.style.overflowY = 'auto'
+    }
+
+    updatePosition()
+    
+    // 스크롤 및 리사이즈 시 위치 업데이트
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [showFilters])
+
   // 외부 클릭 시 검색바 축소
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setIsExpanded(false)
-        setShowFilters(false)
+        if (filterRef.current && !filterRef.current.contains(event.target as Node)) {
+          setIsExpanded(false)
+          setShowFilters(false)
+        }
       }
     }
 
@@ -89,11 +126,11 @@ export default function BlogSearchBar({
   const hasActiveFilters = Object.values(localFilters).some(value => value && value !== 'all')
 
   return (
-    <div ref={searchRef} className={`relative z-50 ${className}`}>
+    <div ref={searchRef} className={`relative z-[100] ${className}`}>
       <motion.div
         initial={false}
         animate={{ width: isExpanded ? '100%' : 'auto' }}
-        className="relative"
+        className="relative overflow-visible"
       >
         <form onSubmit={handleSearch} className="relative">
           <div className="relative flex items-center">
@@ -139,16 +176,17 @@ export default function BlogSearchBar({
         </form>
 
         {/* 필터 패널 - 글래스모피즘 */}
-        <AnimatePresence>
-          {showFilters && (
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              className="absolute top-full left-0 right-0 mt-3 bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl shadow-purple-500/20 dark:shadow-purple-900/30 z-[100] overflow-hidden"
-              style={{ minWidth: '100%', maxWidth: '100%' }}
-            >
+        {mounted && (
+          <AnimatePresence>
+            {showFilters && createPortal(
+              <motion.div
+                ref={filterRef}
+                initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="fixed bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl shadow-purple-500/20 dark:shadow-purple-900/30 z-[9999] overflow-hidden"
+              >
                 <div className="p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filters</h3>
@@ -179,12 +217,14 @@ export default function BlogSearchBar({
                         <option value="this-month">This Month</option>
                         <option value="last-month">Last Month</option>
                       </select>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>,
+              document.body
+            )}
+          </AnimatePresence>
+        )}
       </motion.div>
     </div>
   )

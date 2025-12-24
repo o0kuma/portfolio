@@ -125,46 +125,67 @@ async function generateAIResponse(
   }
 
   // 환경 변수 확인 (여러 가능한 이름 시도)
-  // Vercel 환경 변수가 우선적으로 사용됨
+  // 프로덕션에서는 process.env에서 직접 읽기
   const openaiApiKey = process.env.OPENAI_API_KEY?.trim() || 
                        process.env.NEXT_PUBLIC_OPENAI_API_KEY?.trim() ||
                        process.env.OPENAI_KEY?.trim()
   
-  // 디버깅: 환경 변수 확인
+  // 디버깅: 환경 변수 확인 (프로덕션에서도 로깅)
   const isDevelopment = process.env.NODE_ENV === 'development'
   const isVercel = !!process.env.VERCEL
+  const isProduction = process.env.NODE_ENV === 'production' || isVercel
   
-  if (isDevelopment || isVercel) {
-    console.log('=== OpenAI 환경 변수 디버깅 ===')
-    console.log('환경:', isVercel ? 'Vercel (Production)' : 'Local (Development)')
-    console.log('OPENAI_API_KEY 존재:', !!process.env.OPENAI_API_KEY)
-    console.log('OPENAI_API_KEY 길이:', process.env.OPENAI_API_KEY?.length || 0)
-    if (process.env.OPENAI_API_KEY) {
-      console.log('OPENAI_API_KEY 값 (처음 20자):', process.env.OPENAI_API_KEY.substring(0, 20) + '...')
-    }
-    console.log('NEXT_PUBLIC_OPENAI_API_KEY 존재:', !!process.env.NEXT_PUBLIC_OPENAI_API_KEY)
-    console.log('OPENAI_KEY 존재:', !!process.env.OPENAI_KEY)
-    console.log('모든 OPENAI 관련 환경 변수:', 
-      Object.keys(process.env).filter(key => key.toUpperCase().includes('OPENAI'))
-    )
-    console.log('최종 선택된 키:', openaiApiKey ? openaiApiKey.substring(0, 20) + '...' : '없음')
-    console.log('================================')
+  // 프로덕션에서도 에러 로깅
+  console.log('=== OpenAI 환경 변수 디버깅 ===')
+  console.log('환경:', isVercel ? 'Vercel (Production)' : isProduction ? 'Production' : 'Local (Development)')
+  console.log('NODE_ENV:', process.env.NODE_ENV)
+  console.log('VERCEL:', process.env.VERCEL)
+  console.log('OPENAI_API_KEY 존재:', !!process.env.OPENAI_API_KEY)
+  console.log('OPENAI_API_KEY 길이:', process.env.OPENAI_API_KEY?.length || 0)
+  if (process.env.OPENAI_API_KEY) {
+    console.log('OPENAI_API_KEY 값 (처음 10자):', process.env.OPENAI_API_KEY.substring(0, 10) + '...')
   }
+  console.log('NEXT_PUBLIC_OPENAI_API_KEY 존재:', !!process.env.NEXT_PUBLIC_OPENAI_API_KEY)
+  console.log('OPENAI_KEY 존재:', !!process.env.OPENAI_KEY)
+  console.log('모든 OPENAI 관련 환경 변수:', 
+    Object.keys(process.env).filter(key => key.toUpperCase().includes('OPENAI'))
+  )
+  console.log('최종 선택된 키 존재:', !!openaiApiKey)
+  console.log('최종 선택된 키 길이:', openaiApiKey?.length || 0)
+  if (openaiApiKey) {
+    console.log('최종 선택된 키 (처음 10자):', openaiApiKey.substring(0, 10) + '...')
+  }
+  console.log('================================')
   
   if (!openaiApiKey || openaiApiKey.length < 10) {
     const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL
     console.error('[ERROR] OPENAI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
+    console.error('현재 환경:', isProduction ? 'Production' : 'Development')
+    console.error('process.env.OPENAI_API_KEY:', process.env.OPENAI_API_KEY ? '존재함' : '없음')
+    console.error('process.env.NEXT_PUBLIC_OPENAI_API_KEY:', process.env.NEXT_PUBLIC_OPENAI_API_KEY ? '존재함' : '없음')
     
     if (isProduction) {
+      console.error('=== 프로덕션 환경 변수 설정 가이드 ===')
       console.error('프로덕션 환경에서는 환경 변수를 플랫폼에서 직접 설정해야 합니다:')
-      console.error('1. Vercel: 프로젝트 설정 > Environment Variables에서 OPENAI_API_KEY 추가')
-      console.error('2. 다른 플랫폼: 해당 플랫폼의 환경 변수 설정에서 OPENAI_API_KEY 추가')
-      console.error('3. 환경 변수 이름: OPENAI_API_KEY (또는 NEXT_PUBLIC_OPENAI_API_KEY)')
+      console.error('1. Vercel:')
+      console.error('   - 프로젝트 설정 > Environment Variables로 이동')
+      console.error('   - Key: OPENAI_API_KEY')
+      console.error('   - Value: sk-proj-... (OpenAI API 키)')
+      console.error('   - Environment: Production (또는 All)')
+      console.error('   - 저장 후 재배포 필요')
+      console.error('2. 다른 플랫폼:')
+      console.error('   - 해당 플랫폼의 환경 변수 설정에서 OPENAI_API_KEY 추가')
+      console.error('3. 환경 변수 이름: OPENAI_API_KEY (서버 사이드 전용)')
+      console.error('   - NEXT_PUBLIC_ 접두사 사용 시 클라이언트에 노출되므로 주의!')
+      console.error('=====================================')
     } else {
-      console.warn('해결 방법:')
-      console.warn('1. server/.env 파일을 확인하세요 (경로:', path.join(process.cwd(), '..', 'server', '.env'), ')')
-      console.warn('2. 파일에 OPENAI_API_KEY=your-api-key-here 형식으로 추가하세요')
+      console.warn('=== 개발 환경 해결 방법 ===')
+      console.warn('1. server/.env 파일을 확인하세요')
+      console.warn('   경로:', path.join(process.cwd(), '..', 'server', '.env'))
+      console.warn('2. 파일에 다음 형식으로 추가하세요:')
+      console.warn('   OPENAI_API_KEY=sk-proj-your-api-key-here')
       console.warn('3. Next.js 개발 서버를 재시작하세요 (npm run dev)')
+      console.warn('========================')
     }
     return generateFallbackResponse(message, tone)
   }
