@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
 import SearchBar from './SearchBar'
@@ -122,6 +123,12 @@ export default function Header() {
                   />
                 </motion.button>
               ))}
+              <Link
+                href="/tetris"
+                className="text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 font-bold text-sm uppercase tracking-wider"
+              >
+                Tetris
+              </Link>
             </nav>
 
             {/* 우측 버튼들 */}
@@ -223,6 +230,13 @@ export default function Header() {
                       {item.label}
                     </button>
                   ))}
+                  <Link
+                    href="/tetris"
+                    onClick={closeMenu}
+                    className="text-left text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium py-2"
+                  >
+                    Tetris
+                  </Link>
                 </nav>
               </div>
             </motion.div>

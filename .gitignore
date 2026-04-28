@@ -22,6 +22,7 @@ lerna-debug.log*
 out/
 build/
 dist/
+*.tsbuildinfo
 
 # Runtime data
 pids
