@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import TetrisClient from './TetrisClient'
+import TetrisPageClient from './TetrisPageClient'
 
 export const metadata: Metadata = {
   title: 'Tetris',
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 }
 
 export default function TetrisPage() {
-  return <TetrisClient />
+  return <TetrisPageClient />
 }

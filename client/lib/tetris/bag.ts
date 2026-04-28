@@ -20,3 +20,22 @@ export function pullFromBag(bag: TetrominoType[]): TetrominoType {
   }
   return bag.shift()!
 }
+
+/** Legacy compatibility class used by the existing engine */
+export class PieceBag {
+  private queue: TetrominoType[] = []
+
+  next(): TetrominoType {
+    if (this.queue.length === 0) {
+      this.queue.push(...newBag())
+    }
+    return this.queue.shift()!
+  }
+
+  peek(count = 5): TetrominoType[] {
+    while (this.queue.length < count) {
+      this.queue.push(...newBag())
+    }
+    return this.queue.slice(0, count)
+  }
+}

@@ -1,5 +1,6 @@
 import type {
   ActivePiece,
+  Cell,
   GameSettings,
   GameState,
   RotationIndex,
@@ -23,7 +24,7 @@ import {
 } from './srs'
 import { computeClearScore, getDropIntervalMs } from './scoring'
 
-function cloneBoard(board: number[][]): number[][] {
+function cloneBoard(board: Cell[][]): Cell[][] {
   return board.map((row) => [...row])
 }
 
@@ -120,11 +121,11 @@ export function setPaused(state: GameState, paused: boolean): GameState {
   }
 }
 
-function onGround(board: number[][], piece: ActivePiece): boolean {
+function onGround(board: Cell[][], piece: ActivePiece): boolean {
   return !isValidPosition(board, piece, 0, 1)
 }
 
-function cornerOcc(board: number[][], cx: number, cy: number): boolean {
+function cornerOcc(board: Cell[][], cx: number, cy: number): boolean {
   if (cx < 0 || cx >= BOARD_WIDTH || cy >= BOARD_HEIGHT) return true
   if (cy < 0) return false
   return board[cy][cx] !== 0
@@ -132,7 +133,7 @@ function cornerOcc(board: number[][], cx: number, cy: number): boolean {
 
 /** Guideline-style T-spin detection using 4 corners around T center */
 function detectTSpin(
-  board: number[][],
+  board: Cell[][],
   piece: ActivePiece,
 ): { kind: TSpinType } {
   if (piece.type !== 'T' || !piece.wasRotatedLast) return { kind: 'none' }
@@ -167,7 +168,7 @@ function applyLevelUp(
 
 function spawnOrGameOver(
   state: GameState,
-  board: number[][],
+  board: Cell[][],
 ): GameState {
   const piece = spawnPiece(dequeueSpawn(state.nextQueue, state.bag))
   if (!isValidPosition(board, piece)) {
@@ -505,7 +506,7 @@ export function getGhostPiece(state: GameState): ActivePiece | null {
 
 /** Occupied cells for rendering including ghost outline */
 export function getOccupiedForRender(state: GameState): {
-  board: number[][]
+  board: Cell[][]
   current: ActivePiece | null
   ghost: ActivePiece | null
 } {

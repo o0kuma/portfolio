@@ -1,4 +1,5 @@
 import type { Point, RotationIndex, TetrominoType } from './types'
+import { COLS, ROWS } from './constants'
 
 /** 4x4 grids per rotation (0-3 CW). 1 = filled. Pivot for SRS is typically cell (1,1) for J,L,S,T,Z or (1,2) for I - we use standard offsets. */
 
@@ -214,4 +215,17 @@ export function tetrominoColorIndex(type: TetrominoType): number {
     Z: 7,
   }
   return map[type]
+}
+
+/** Legacy compatibility: returns tuple cells used by collision/game modules */
+export function getShapeCells(
+  type: TetrominoType,
+  rotation: RotationIndex,
+): [number, number][] {
+  return getPieceCells(type, rotation).map((p) => [p.x, p.y])
+}
+
+/** Legacy compatibility: create empty board matrix */
+export function emptyBoard(): (0 | TetrominoType)[][] {
+  return Array.from({ length: ROWS }, () => Array<0 | TetrominoType>(COLS).fill(0))
 }

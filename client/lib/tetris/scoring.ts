@@ -1,6 +1,24 @@
 import type { GameSettings } from './types'
 import type { TSpinType } from './types'
 
+export const SOFT_DROP_PER_CELL = 1
+export const HARD_DROP_PER_CELL = 2
+
+export function lineClearPoints(linesCleared: number, level: number): number {
+  switch (linesCleared) {
+    case 1:
+      return 100 * level
+    case 2:
+      return 300 * level
+    case 3:
+      return 500 * level
+    case 4:
+      return 800 * level
+    default:
+      return 0
+  }
+}
+
 export interface ClearScoreInput {
   linesCleared: number
   level: number
