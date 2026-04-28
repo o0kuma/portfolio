@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
+import { dbQuery } from '@/lib/neon-server'
 
 // Stripe 결제 세션 생성 (예시 - 실제 Stripe 연동 필요)
 export async function POST(request: Request) {
@@ -37,8 +38,6 @@ export async function POST(request: Request) {
 
     // 개발 환경에서는 직접 구독 생성
     if (process.env.NODE_ENV === 'development') {
-      const { supabase } = await import('@/lib/supabase-server')
-      
       const now = new Date()
       const periodEnd = new Date(now)
       if (planId === 'premium_monthly') {
@@ -48,44 +47,29 @@ export async function POST(request: Request) {
       }
 
       // 기존 구독 취소
-      await supabase
-        .from('subscriptions')
-        .update({ status: 'canceled' })
-        .eq('user_id', userId)
-        .eq('status', 'active')
+      await dbQuery(
+        `UPDATE subscriptions
+         SET status = 'canceled'
+         WHERE user_id = $1 AND status = 'active'`,
+        [userId]
+      )
 
       // 새 구독 생성
-      const { data: subscription, error } = await supabase
-        .from('subscriptions')
-        .insert({
-          user_id: userId,
-          plan_type: planId,
-          status: 'active',
-          current_period_start: now.toISOString(),
-          current_period_end: periodEnd.toISOString()
-        })
-        .select()
-        .single()
-
-      if (error) {
-        console.error('구독 생성 오류:', error)
-        return NextResponse.json(
-          { success: false, error: '구독 생성에 실패했습니다.' },
-          { status: 500 }
-        )
-      }
+      const subscriptionResult = await dbQuery<any>(
+        `INSERT INTO subscriptions (
+          user_id, plan_type, status, current_period_start, current_period_end
+        ) VALUES ($1,$2,'active',$3,$4)
+        RETURNING *`,
+        [userId, planId, now.toISOString(), periodEnd.toISOString()]
+      )
+      const subscription = subscriptionResult.rows[0]
 
       // 결제 내역 기록
-      await supabase
-        .from('payments')
-        .insert({
-          user_id: userId,
-          subscription_id: subscription.id,
-          amount: price,
-          currency: 'KRW',
-          status: 'completed',
-          description: `${planId === 'premium_monthly' ? '월간' : '연간'} 프리미엄 구독`
-        })
+      await dbQuery(
+        `INSERT INTO payments (user_id, subscription_id, amount, currency, status, description)
+         VALUES ($1,$2,$3,'KRW','completed',$4)`,
+        [userId, subscription.id, price, `${planId === 'premium_monthly' ? '월간' : '연간'} 프리미엄 구독`]
+      )
 
       return NextResponse.json({
         success: true,

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
+import Link from 'next/link'
 import SearchBar from './SearchBar'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
@@ -67,12 +68,15 @@ export default function Header() {
     closeMenu()
   }
 
-  const navItems = [
-    { id: 'about', label: 'About' },
-    { id: 'skills', label: 'Skills' },
-    { id: 'projects', label: 'Projects' },
-    { id: 'posts', label: 'Posts' },
-    { id: 'contact', label: 'Contact' }
+  const navItems: Array<
+    { label: string; kind: 'section'; id: string } | { label: string; kind: 'path'; href: string }
+  > = [
+    { label: 'About', kind: 'section', id: 'about' },
+    { label: 'Skills', kind: 'section', id: 'skills' },
+    { label: 'Projects', kind: 'section', id: 'projects' },
+    { label: 'Posts', kind: 'section', id: 'posts' },
+    { label: 'Contact', kind: 'section', id: 'contact' },
+    { label: 'Tetris', kind: 'path', href: '/tetris' },
   ]
 
   return (
@@ -108,19 +112,36 @@ export default function Header() {
             {/* 데스크톱 네비게이션 */}
             <nav className="hidden md:flex items-center space-x-8">
               {navItems.map((item) => (
-                <motion.button
-                  key={item.id}
-                  whileHover={{ y: -3, scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => scrollToSection(item.id)}
-                  className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all font-bold text-sm uppercase tracking-wider group"
-                >
-                  {item.label}
-                  <motion.span
-                    className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300"
-                    initial={false}
-                  />
-                </motion.button>
+                item.kind === 'section' ? (
+                  <motion.button
+                    key={item.id}
+                    whileHover={{ y: -3, scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => scrollToSection(item.id)}
+                    className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all font-bold text-sm uppercase tracking-wider group"
+                  >
+                    {item.label}
+                    <motion.span
+                      className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300"
+                      initial={false}
+                    />
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key={item.href}
+                    whileHover={{ y: -3, scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="group"
+                  >
+                    <Link
+                      href={item.href}
+                      className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all font-bold text-sm uppercase tracking-wider"
+                    >
+                      {item.label}
+                      <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300" />
+                    </Link>
+                  </motion.div>
+                )
               ))}
             </nav>
 
@@ -215,13 +236,24 @@ export default function Header() {
               <div className="container-custom py-4">
                 <nav className="flex flex-col space-y-4">
                   {navItems.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => scrollToSection(item.id)}
-                      className="text-left text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium py-2"
-                    >
-                      {item.label}
-                    </button>
+                    item.kind === 'section' ? (
+                      <button
+                        key={item.id}
+                        onClick={() => scrollToSection(item.id)}
+                        className="text-left text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium py-2"
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={closeMenu}
+                        className="text-left text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors font-medium py-2"
+                      >
+                        {item.label}
+                      </Link>
+                    )
                   ))}
                 </nav>
               </div>

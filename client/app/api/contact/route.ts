@@ -1,41 +1,12 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 import { sendContactEmail } from '@/lib/email'
-
-// 서버 사이드에서 Supabase 클라이언트 생성
-// Service Role Key가 있으면 우선 사용 (RLS 우회), 없으면 Anon Key 사용
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-// Service Role Key가 있으면 사용 (RLS 우회), 없으면 Anon Key 사용
-const supabaseKey = supabaseServiceKey || supabaseAnonKey
-
-const supabase = createClient(
-  supabaseUrl || '',
-  supabaseKey || '',
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+import { dbQuery } from '@/lib/neon-server'
 
 // 연락처 메시지 전송 API - Supabase에 저장만 수행
 export async function POST(request: Request) {
   try {
-    // 디버깅: 환경 변수 확인
-    console.log('=== API Route 환경 변수 확인 ===');
-    console.log('URL 존재:', !!supabaseUrl);
-    console.log('Service Role Key 존재:', !!supabaseServiceKey);
-    console.log('Anon Key 존재:', !!supabaseAnonKey);
-    console.log('사용 중인 Key:', supabaseServiceKey ? 'Service Role Key (RLS 우회)' : 'Anon Key');
-    if (supabaseUrl) console.log('URL (처음 30자):', supabaseUrl.substring(0, 30));
-    console.log('================================');
-    
     const body = await request.json()
 
     // 유효성 검사
@@ -51,30 +22,12 @@ export async function POST(request: Request) {
     const ip_address = headers.get('x-forwarded-for') || headers.get('x-real-ip') || 'unknown'
     const user_agent = headers.get('user-agent') || 'unknown'
 
-    // Supabase에 연락처 메시지 저장
-    const { data, error } = await supabase
-      .from('contacts')
-      .insert([
-        {
-          name: body.name,
-          email: body.email,
-          subject: body.subject,
-          message: body.message,
-          status: 'unread',
-          ip_address,
-          user_agent
-        }
-      ])
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Supabase 저장 오류:', error)
-      return NextResponse.json(
-        { success: false, message: '메시지 저장 중 오류가 발생했습니다.', error: error.message },
-        { status: 500 }
-      )
-    }
+    const insertResult = await dbQuery<{ id: string }>(
+      `INSERT INTO contacts (name, email, subject, message, status, ip_address, user_agent)
+       VALUES ($1, $2, $3, $4, 'unread', $5, $6)
+       RETURNING id`,
+      [body.name, body.email, body.subject, body.message, ip_address, user_agent]
+    )
 
     // 이메일 전송 시도 (선택 사항)
     let emailSent = false
@@ -117,7 +70,7 @@ export async function POST(request: Request) {
       {
         success: true,
         message: '메시지가 성공적으로 저장되었습니다.',
-        contactId: data?.id,
+        contactId: insertResult.rows[0]?.id,
         emailSent,
         emailError: emailError || undefined
       },

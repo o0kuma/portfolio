@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 
 export async function GET(
   request: Request,
@@ -21,11 +21,11 @@ export async function GET(
     }
 
     // 먼저 conversation의 UUID(id)를 가져와야 함
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('session_id', sessionId)
-      .single()
+    const conversationResult = await dbQuery<{ id: string }>(
+      'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+      [sessionId]
+    )
+    const conversation = conversationResult.rows[0]
 
     if (!conversation) {
       return NextResponse.json({
@@ -37,24 +37,11 @@ export async function GET(
     }
 
     // 대화 히스토리 조회 (conversation_id는 UUID)
-    const { data: messages, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversation.id)  // UUID 사용
-      .order('timestamp', { ascending: true })
-      .limit(limit)
-
-    if (error) {
-      console.error('대화 히스토리 조회 오류:', error)
-      return NextResponse.json(
-        {
-          success: false,
-          error: '대화 히스토리 조회 중 오류가 발생했습니다.',
-          details: error.message
-        },
-        { status: 500 }
-      )
-    }
+    const messageResult = await dbQuery<any>(
+      'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC LIMIT $2',
+      [conversation.id, limit]
+    )
+    const messages = messageResult.rows
 
     // 메시지를 ChatMessage 형식으로 변환
     const formattedMessages = (messages || []).map((msg: any) => ({

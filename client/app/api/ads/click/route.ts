@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 
 // 광고 클릭 기록 API
 export async function POST(request: Request) {
@@ -16,12 +16,11 @@ export async function POST(request: Request) {
       )
     }
 
-    // 광고 정보 조회 (수익 계산용)
-    const { data: ad } = await supabase
-      .from('advertisements')
-      .select('cpc, cpm')
-      .eq('id', advertisementId)
-      .single()
+    const adResult = await dbQuery<{ cpc: number; cpm: number }>(
+      'SELECT cpc, cpm FROM advertisements WHERE id = $1 LIMIT 1',
+      [advertisementId]
+    )
+    const ad = adResult.rows[0]
 
     // 수익 계산
     let revenue = 0
@@ -31,62 +30,24 @@ export async function POST(request: Request) {
       revenue = Number(ad.cpm) / 1000 // CPM을 클릭당 수익으로 추정
     }
 
-    // 클릭 기록 생성
-    const { data: click, error } = await supabase
-      .from('ad_clicks')
-      .insert({
-        advertisement_id: advertisementId,
-        impression_id: impressionId || null,
-        post_id: postId || null,
-        session_id: sessionId || null,
-        clicked_at: new Date().toISOString(),
-        revenue: revenue
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('클릭 기록 오류:', error)
-      return NextResponse.json(
-        { success: false, error: '클릭 기록 중 오류가 발생했습니다.' },
-        { status: 500 }
-      )
-    }
-
-    // 광고의 현재 클릭 수 증가
-    // 먼저 현재 값을 가져온 후 증가
-    const { data: currentAd } = await supabase
-      .from('advertisements')
-      .select('current_clicks')
-      .eq('id', advertisementId)
-      .single()
-    
-    if (currentAd) {
-      const { error: updateError } = await supabase
-        .from('advertisements')
-        .update({ current_clicks: (currentAd.current_clicks || 0) + 1 })
-        .eq('id', advertisementId)
-      
-      if (updateError) {
-        console.error('클릭 수 업데이트 오류:', updateError)
-      }
-    }
+    const click = await dbQuery<{ id: string }>(
+      `INSERT INTO ad_clicks (advertisement_id, impression_id, post_id, session_id, clicked_at, revenue)
+       VALUES ($1,$2,$3,$4,NOW(),$5) RETURNING id`,
+      [advertisementId, impressionId || null, postId || null, sessionId || null, revenue]
+    )
+    await dbQuery(
+      'UPDATE advertisements SET current_clicks = COALESCE(current_clicks, 0) + 1 WHERE id = $1',
+      [advertisementId]
+    )
 
     // 노출 기록 업데이트
     if (impressionId) {
-      const { error: impressionUpdateError } = await supabase
-        .from('ad_impressions')
-        .update({ is_clicked: true })
-        .eq('id', impressionId)
-      
-      if (impressionUpdateError) {
-        console.error('노출 기록 업데이트 오류:', impressionUpdateError)
-      }
+      await dbQuery('UPDATE ad_impressions SET is_clicked = true WHERE id = $1', [impressionId])
     }
 
     return NextResponse.json({
       success: true,
-      clickId: click.id,
+      clickId: click.rows[0]?.id,
       revenue: revenue
     })
   } catch (error: any) {

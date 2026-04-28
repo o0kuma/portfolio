@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 
 // AI 사용량 기록 및 확인
 export async function POST(request: Request) {
@@ -27,28 +27,20 @@ export async function POST(request: Request) {
     const today = new Date().toISOString().split('T')[0]
 
     // 사용량 기록
-    const { data, error } = await supabase
-      .from('ai_usage')
-      .upsert({
-        user_id: userId || null,
-        session_id: sessionId || null,
-        usage_type: usageType,
-        message_count: messageCount,
-        tokens_used: tokensUsed,
-        date: today
-      }, {
-        onConflict: 'user_id,date,usage_type'
-      })
-      .select()
-
-    if (error) {
-      console.error('사용량 기록 오류:', error)
-      // 사용량 기록 실패해도 계속 진행
-    }
+    const data = await dbQuery<any>(
+      `INSERT INTO ai_usage (user_id, session_id, usage_type, message_count, tokens_used, date)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       ON CONFLICT (user_id, date, usage_type)
+       DO UPDATE SET
+         message_count = ai_usage.message_count + EXCLUDED.message_count,
+         tokens_used = ai_usage.tokens_used + EXCLUDED.tokens_used
+       RETURNING *`,
+      [userId || null, sessionId || null, usageType, messageCount, tokensUsed, today]
+    )
 
     return NextResponse.json({
       success: true,
-      usage: data?.[0] || null
+      usage: data.rows[0] || null
     })
   } catch (error: any) {
     console.error('사용량 기록 오류:', error)
@@ -78,30 +70,16 @@ export async function GET(request: Request) {
       )
     }
 
-    let query = supabase
-      .from('ai_usage')
-      .select('*')
-      .eq('date', date)
-
-    if (userId) {
-      query = query.eq('user_id', userId)
-    } else if (sessionId) {
-      query = query.eq('session_id', sessionId)
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('사용량 조회 오류:', error)
-      return NextResponse.json(
-        { success: false, error: '사용량 조회 중 오류가 발생했습니다.' },
-        { status: 500 }
-      )
-    }
+    const data = await dbQuery<any>(
+      userId
+        ? 'SELECT * FROM ai_usage WHERE date = $1 AND user_id = $2'
+        : 'SELECT * FROM ai_usage WHERE date = $1 AND session_id = $2',
+      [date, userId || sessionId]
+    )
 
     const usageMap: Record<string, number> = {}
-    if (data) {
-      data.forEach(u => {
+    if (data.rows) {
+      data.rows.forEach(u => {
         usageMap[u.usage_type] = (usageMap[u.usage_type] || 0) + u.message_count
       })
     }
@@ -110,7 +88,7 @@ export async function GET(request: Request) {
       success: true,
       date,
       usage: usageMap,
-      details: data || []
+      details: data.rows || []
     })
   } catch (error: any) {
     console.error('사용량 조회 오류:', error)

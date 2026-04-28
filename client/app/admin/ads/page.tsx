@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiPlus, FiEdit, FiTrash2, FiEye, FiMousePointer, FiDollarSign, FiTrendingUp } from 'react-icons/fi'
-import { supabase } from '@/lib/supabase'
 
 interface Advertisement {
   id: string
@@ -33,13 +32,10 @@ export default function AdsManagementPage() {
   const fetchAds = async () => {
     try {
       setIsLoading(true)
-      const { data, error } = await supabase
-        .from('advertisements')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) throw error
-      setAds(data || [])
+      const response = await fetch('/api/admin/ads', { cache: 'no-store' })
+      const data = await response.json()
+      if (!data.success) throw new Error(data.error || '광고 조회 실패')
+      setAds(data.ads || [])
     } catch (error) {
       console.error('광고 조회 오류:', error)
     } finally {
@@ -234,11 +230,9 @@ export default function AdsManagementPage() {
                       <button
                         onClick={async () => {
                           if (confirm('이 광고를 삭제하시겠습니까?')) {
-                            const { error } = await supabase
-                              .from('advertisements')
-                              .delete()
-                              .eq('id', ad.id)
-                            if (!error) fetchAds()
+                            const response = await fetch(`/api/admin/ads/${ad.id}`, { method: 'DELETE' })
+                            const result = await response.json()
+                            if (result.success) fetchAds()
                           }
                         }}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"

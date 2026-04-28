@@ -260,6 +260,13 @@ export default function BlogPageClient() {
                 Portfolio
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
               </Link>
+              <Link 
+                href="/tetris" 
+                className="relative text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 group"
+              >
+                Tetris
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+              </Link>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

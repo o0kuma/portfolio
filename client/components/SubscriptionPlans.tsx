@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiCheck, FiZap, FiStar, FiArrowRight } from 'react-icons/fi'
-import { supabase } from '@/lib/supabase'
 
 interface SubscriptionPlan {
   id: string
@@ -80,15 +79,17 @@ export default function SubscriptionPlans() {
 
   const checkUser = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      const localUserId = localStorage.getItem('portfolio_user_id') || 'anonymous'
+      const localUser = localUserId === 'anonymous' ? null : { id: localUserId }
+      setUser(localUser)
 
-      if (user) {
-        const response = await fetch(`/api/subscription/check?userId=${user.id}`)
-        const data = await response.json()
-        if (data.success) {
-          setCurrentSubscription(data.subscription)
-        }
+      const query = localUser
+        ? `/api/subscription/check?userId=${localUser.id}`
+        : '/api/subscription/check?sessionId=anonymous'
+      const response = await fetch(query)
+      const data = await response.json()
+      if (data.success) {
+        setCurrentSubscription(data.subscription)
       }
     } catch (error) {
       console.error('사용자 확인 오류:', error)
@@ -101,8 +102,7 @@ export default function SubscriptionPlans() {
     if (plan.id === 'free') return
 
     if (!user) {
-      alert('로그인이 필요합니다.')
-      // 로그인 페이지로 리다이렉트
+      alert('구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
       return
     }
 

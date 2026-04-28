@@ -6,8 +6,8 @@ const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
 
-// Supabase 연결
-const { testConnection } = require('./config/supabase');
+// Neon(PostgreSQL) 연결
+const { testConnection } = require('./config/db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -111,8 +111,7 @@ app.get('/api/test-email-config', async (req, res) => {
   }
 });
 
-// 라우트 (Supabase 버전)
-app.use('/api/auth', require('./routes/auth-supabase'));
+// 라우트
 app.use('/api/projects', require('./routes/projects-supabase'));
 app.use('/api/posts', require('./routes/posts-supabase'));
 app.use('/api/contact', require('./routes/contact-supabase'));
@@ -162,16 +161,16 @@ app.use('*', (req, res) => {
 // 서버 시작
 const startServer = async () => {
   try {
-    // Supabase 연결 테스트
+    // Neon 연결 테스트
     try {
       const isConnected = await testConnection();
       if (isConnected) {
-        console.log('✅ Supabase에 연결되었습니다.');
+        console.log('✅ Neon(PostgreSQL)에 연결되었습니다.');
       } else {
-        console.log('ℹ️ Supabase 연결을 건너뛰었습니다. 환경변수를 확인해주세요.');
+        console.log('ℹ️ Neon 연결을 건너뛰었습니다. DATABASE_URL을 확인해주세요.');
       }
     } catch (dbError) {
-      console.error('⚠️ Supabase 연결 실패, 서버는 계속 실행됩니다:', dbError.message);
+      console.error('⚠️ Neon 연결 실패, 서버는 계속 실행됩니다:', dbError.message);
     }
     
     app.listen(PORT, () => {

@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 
 // 사용자의 구독 상태 확인
 export async function GET(request: Request) {
@@ -21,11 +21,11 @@ export async function GET(request: Request) {
     // 세션 ID로 사용자 찾기 (익명 사용자 처리)
     let targetUserId = userId
     if (!targetUserId && sessionId) {
-      const { data: conversation } = await supabase
-        .from('conversations')
-        .select('user_id')
-        .eq('session_id', sessionId)
-        .single()
+      const conversationResult = await dbQuery<{ user_id: string }>(
+        'SELECT user_id FROM conversations WHERE session_id = $1 LIMIT 1',
+        [sessionId]
+      )
+      const conversation = conversationResult.rows[0]
       
       if (conversation && conversation.user_id !== 'anonymous') {
         targetUserId = conversation.user_id
@@ -52,30 +52,24 @@ export async function GET(request: Request) {
     }
 
     // 활성 구독 확인
-    const { data: subscription, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', targetUserId)
-      .eq('status', 'active')
-      .gt('current_period_end', new Date().toISOString())
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single()
-
-    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
-      console.error('구독 조회 오류:', error)
-    }
+    const subscriptionResult = await dbQuery<any>(
+      `SELECT * FROM subscriptions
+       WHERE user_id = $1 AND status = 'active' AND current_period_end > NOW()
+       ORDER BY created_at DESC LIMIT 1`,
+      [targetUserId]
+    )
+    const subscription = subscriptionResult.rows[0]
 
     const isPremium = subscription && subscription.current_period_end > new Date().toISOString()
     const plan = isPremium ? subscription.plan_type : 'free'
 
     // 일일 사용량 확인
     const today = new Date().toISOString().split('T')[0]
-    const { data: usage } = await supabase
-      .from('ai_usage')
-      .select('usage_type, message_count')
-      .eq('user_id', targetUserId)
-      .eq('date', today)
+    const usageResult = await dbQuery<{ usage_type: string; message_count: number }>(
+      'SELECT usage_type, message_count FROM ai_usage WHERE user_id = $1 AND date = $2',
+      [targetUserId, today]
+    )
+    const usage = usageResult.rows
 
     const usageMap: Record<string, number> = {}
     if (usage) {

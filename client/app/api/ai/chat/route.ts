@@ -15,7 +15,7 @@ function getOpenAIApiKey(): string | null {
 }
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -334,57 +334,36 @@ function analyzeIntent(message: string): string {
 async function getOrCreateConversation(sessionId: string, userId: string) {
   try {
     // 먼저 session_id로 기존 대화 찾기
-    const { data: existing, error: findError } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('session_id', sessionId)
-      .single()
-
-    if (existing && !findError) {
-      return existing
+    const existing = await dbQuery<{ id: string }>(
+      'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+      [sessionId]
+    )
+    if (existing.rows[0]) {
+      return existing.rows[0]
     }
 
     // 없으면 새로 생성 (id는 자동 생성, session_id는 제공한 값 사용)
-    const { data: newConv, error } = await supabase
-      .from('conversations')
-      .insert([{
-        session_id: sessionId,  // session_id 컬럼 사용
-        user_id: userId,
-        settings: {
-          selectedTone: '친근하게',
-          language: 'ko',
-          isActive: true
-        },
-        statistics: {
+    const newConv = await dbQuery<{ id: string }>(
+      `INSERT INTO conversations (session_id, user_id, settings, statistics, is_active)
+       VALUES ($1, $2, $3::jsonb, $4::jsonb, true)
+       ON CONFLICT (session_id) DO UPDATE SET user_id = EXCLUDED.user_id
+       RETURNING id`,
+      [
+        sessionId,
+        userId,
+        JSON.stringify({ selectedTone: '친근하게', language: 'ko', isActive: true }),
+        JSON.stringify({
           totalMessages: 0,
           userMessages: 0,
           aiMessages: 0,
           averageResponseTime: 0,
           mostUsedTone: '친근하게',
           lastActivity: new Date().toISOString()
-        }
-      }])
-      .select()
-      .single()
+        })
+      ]
+    )
 
-    if (error) {
-      // unique_violation (23505) = 이미 존재하는 경우, 다시 조회
-      if (error.code === '23505' || error.code === 'P2002') {
-        const { data: retryExisting } = await supabase
-          .from('conversations')
-          .select('id')
-          .eq('session_id', sessionId)
-          .single()
-        if (retryExisting) {
-          return retryExisting
-        }
-      }
-      console.error('대화 생성 오류:', error)
-      // 오류가 발생해도 계속 진행 (메시지 저장은 선택 사항)
-      return null
-    }
-
-    return newConv || existing
+    return newConv.rows[0] || null
   } catch (error: any) {
     console.error('getOrCreateConversation 전체 오류:', error)
     return null
@@ -395,13 +374,13 @@ async function getOrCreateConversation(sessionId: string, userId: string) {
 async function addMessage(sessionId: string, message: any) {
   try {
     // 먼저 conversation의 UUID(id)를 가져와야 함
-    const { data: conversation, error: convError } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('session_id', sessionId)
-      .single()
+    const conversationResult = await dbQuery<{ id: string }>(
+      'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+      [sessionId]
+    )
+    const conversation = conversationResult.rows[0]
 
-    if (convError || !conversation) {
+    if (!conversation) {
       // 대화가 없으면 새로 생성 시도
       console.warn('대화를 찾을 수 없습니다. 새로 생성 시도:', sessionId)
       try {
@@ -411,37 +390,33 @@ async function addMessage(sessionId: string, message: any) {
           return
         }
         // 새로 생성된 대화로 다시 시도
-        const { data: retryConv, error: retryError } = await supabase
-          .from('conversations')
-          .select('id')
-          .eq('session_id', sessionId)
-          .single()
+        const retryResult = await dbQuery<{ id: string }>(
+          'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+          [sessionId]
+        )
+        const retryConv = retryResult.rows[0]
         
-        if (retryError || !retryConv) {
+        if (!retryConv) {
           console.warn('대화를 여전히 찾을 수 없습니다. 메시지 저장을 건너뜁니다:', sessionId)
           return
         }
         
         // 메시지 저장 계속 진행
-        const { error } = await supabase
-          .from('messages')
-          .insert([{
-            conversation_id: retryConv.id,
-            message_id: message.id || Date.now().toString(),
-            content: message.content,
-            is_user: message.isUser,
-            ai_features: message.aiFeatures || {},
-            metadata: { 
-              responseTime: message.responseTime || 0,
-              context: message.context || 'portfolio'
-            },
-            response_time: message.responseTime || 0,
-            timestamp: new Date().toISOString()
-          }])
-        
-        if (error) {
-          console.error('메시지 저장 오류:', error)
-        }
+        await dbQuery(
+          `INSERT INTO messages (
+            conversation_id, message_id, content, is_user, ai_features, metadata, response_time, timestamp
+          ) VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8)`,
+          [
+            retryConv.id,
+            message.id || Date.now().toString(),
+            message.content,
+            message.isUser,
+            JSON.stringify(message.aiFeatures || {}),
+            JSON.stringify({ responseTime: message.responseTime || 0, context: message.context || 'portfolio' }),
+            message.responseTime || 0,
+            new Date().toISOString()
+          ]
+        )
         return
       } catch (createError: any) {
         console.warn('대화 생성 중 오류 (메시지 저장을 건너뜁니다):', createError?.message || createError)
@@ -449,26 +424,21 @@ async function addMessage(sessionId: string, message: any) {
       }
     }
 
-    const { error } = await supabase
-        .from('messages')
-        .insert([{
-          conversation_id: conversation.id,  // UUID 사용
-          message_id: message.id || Date.now().toString(),
-          content: message.content,
-          is_user: message.isUser,
-          ai_features: message.aiFeatures || {},
-          metadata: { 
-            responseTime: message.responseTime || 0,
-            context: message.context || 'portfolio' // 포트폴리오/블로그 구분 저장
-          },
-          response_time: message.responseTime || 0,
-          timestamp: new Date().toISOString()
-        }])
-
-    if (error) {
-      console.error('메시지 저장 오류:', error)
-      // 메시지 저장 실패해도 계속 진행
-    }
+    await dbQuery(
+      `INSERT INTO messages (
+        conversation_id, message_id, content, is_user, ai_features, metadata, response_time, timestamp
+      ) VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb,$7,$8)`,
+      [
+        conversation.id,
+        message.id || Date.now().toString(),
+        message.content,
+        message.isUser,
+        JSON.stringify(message.aiFeatures || {}),
+        JSON.stringify({ responseTime: message.responseTime || 0, context: message.context || 'portfolio' }),
+        message.responseTime || 0,
+        new Date().toISOString()
+      ]
+    )
   } catch (error: any) {
     console.error('addMessage 전체 오류:', error)
     // 메시지 저장 실패해도 계속 진행
@@ -478,22 +448,21 @@ async function addMessage(sessionId: string, message: any) {
 // 대화 히스토리 가져오기
 async function getConversationHistory(sessionId: string, limit: number = 20) {
   try {
-    const { data: conversation } = await supabase
-      .from('conversations')
-      .select('id')
-      .eq('session_id', sessionId)
-      .single()
+    const conversationResult = await dbQuery<{ id: string }>(
+      'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+      [sessionId]
+    )
+    const conversation = conversationResult.rows[0]
 
     if (!conversation) {
       return []
     }
 
-    const { data: messages } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('conversation_id', conversation.id)
-      .order('timestamp', { ascending: true })
-      .limit(limit)
+    const messageResult = await dbQuery<any>(
+      'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC LIMIT $2',
+      [conversation.id, limit]
+    )
+    const messages = messageResult.rows
 
     if (!messages) {
       return []

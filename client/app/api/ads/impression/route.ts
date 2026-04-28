@@ -2,7 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase-server'
+import { dbQuery } from '@/lib/neon-server'
 
 // 광고 노출 기록 API
 export async function POST(request: Request) {
@@ -16,49 +16,19 @@ export async function POST(request: Request) {
       )
     }
 
-    // 노출 기록 생성
-    const { data: impression, error } = await supabase
-      .from('ad_impressions')
-      .insert({
-        advertisement_id: advertisementId,
-        post_id: postId || null,
-        session_id: sessionId || null,
-        position: position || null,
-        viewed_at: new Date().toISOString()
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.error('노출 기록 오류:', error)
-      return NextResponse.json(
-        { success: false, error: '노출 기록 중 오류가 발생했습니다.' },
-        { status: 500 }
-      )
-    }
-
-    // 광고의 현재 노출 수 증가
-    // 먼저 현재 값을 가져온 후 증가
-    const { data: currentAd } = await supabase
-      .from('advertisements')
-      .select('current_impressions')
-      .eq('id', advertisementId)
-      .single()
-    
-    if (currentAd) {
-      const { error: updateError } = await supabase
-        .from('advertisements')
-        .update({ current_impressions: (currentAd.current_impressions || 0) + 1 })
-        .eq('id', advertisementId)
-      
-      if (updateError) {
-        console.error('노출 수 업데이트 오류:', updateError)
-      }
-    }
+    const impression = await dbQuery<{ id: string }>(
+      `INSERT INTO ad_impressions (advertisement_id, post_id, session_id, position, viewed_at)
+       VALUES ($1, $2, $3, $4, NOW()) RETURNING id`,
+      [advertisementId, postId || null, sessionId || null, position || null]
+    )
+    await dbQuery(
+      'UPDATE advertisements SET current_impressions = COALESCE(current_impressions, 0) + 1 WHERE id = $1',
+      [advertisementId]
+    )
 
     return NextResponse.json({
       success: true,
-      impressionId: impression.id
+      impressionId: impression.rows[0]?.id
     })
   } catch (error: any) {
     console.error('노출 기록 오류:', error)

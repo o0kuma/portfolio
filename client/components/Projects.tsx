@@ -42,6 +42,24 @@ export default function Projects() {
   // 실제 프로젝트 데이터 (이력서 기반)
   const sampleProjects: Project[] = [
     {
+      id: 'tetris-web',
+      title: '테트리스 (웹 데모)',
+      description: '브라우저에서 플레이하는 테트리스 — SRS 회전, 홀드, 모바일 제스처',
+      content:
+        'Next.js와 순수 TypeScript 게임 로직으로 구현했습니다. 7-bag 랜덤, 고스트 블록, 레벨별 중력, 로컬 하이스코어를 지원하며 데스크톱 키보드와 모바일 스와이프·버튼 입력을 모두 제공합니다.',
+      technologies: ['Next.js', 'TypeScript', 'Tailwind CSS'],
+      images: ['/images/placeholder.svg'],
+      githubUrl: '',
+      liveUrl: '/tetris',
+      featured: true,
+      category: 'web',
+      startDate: '2026-04-01',
+      endDate: '',
+      status: 'completed',
+      participants: '개인',
+      role: '기획·구현'
+    },
+    {
       id: '1',
       title: '바바옵션',
       description: '이지트로스/ 옵션 관련 브랜드 사이트',
@@ -549,8 +567,14 @@ export default function Projects() {
                     {project.liveUrl && (
                       <a
                         href={project.liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        target={
+                          project.liveUrl.startsWith('/') ? undefined : '_blank'
+                        }
+                        rel={
+                          project.liveUrl.startsWith('/')
+                            ? undefined
+                            : 'noopener noreferrer'
+                        }
                         className="flex-1 btn-primary text-center py-2 text-sm"
                       >
                         <FiExternalLink className="inline mr-2" size={16} />
