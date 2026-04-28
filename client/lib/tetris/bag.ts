@@ -1,34 +1,22 @@
-import type { PieceId } from './types'
-import { PIECE_IDS } from './types'
+import type { TetrominoType } from './types'
+import { TETROMINO_TYPES } from './types'
 
-export function createBag(): PieceId[] {
-  const bag = [...PIECE_IDS]
-  shuffleInPlace(bag)
-  return bag
-}
-
-function shuffleInPlace(arr: PieceId[]): void {
-  for (let i = arr.length - 1; i > 0; i--) {
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1))
-    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+    ;[a[i], a[j]] = [a[j], a[i]]
   }
+  return a
 }
 
-/** 7-bag randomizer with peek support */
-export class PieceBag {
-  private queue: PieceId[] = []
+export function newBag(): TetrominoType[] {
+  return shuffle([...TETROMINO_TYPES])
+}
 
-  private refill(): void {
-    this.queue.push(...createBag())
+export function pullFromBag(bag: TetrominoType[]): TetrominoType {
+  if (bag.length === 0) {
+    bag.push(...newBag())
   }
-
-  next(): PieceId {
-    if (this.queue.length === 0) this.refill()
-    return this.queue.shift()!
-  }
-
-  peek(n: number): PieceId[] {
-    while (this.queue.length < n) this.refill()
-    return this.queue.slice(0, n)
-  }
+  return bag.shift()!
 }

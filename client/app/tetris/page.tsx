@@ -1,17 +1,16 @@
 import type { Metadata } from 'next'
-import TetrisPageClient from './TetrisPageClient'
+import TetrisClient from './TetrisClient'
 
 export const metadata: Metadata = {
-  title: '테트리스',
+  title: 'Tetris',
   description:
-    '브라우저에서 플레이하는 테트리스. 키보드와 터치를 지원합니다.',
+    'Play Tetris in the browser: SRS, 7-bag, hold, ghost, and customizable difficulty. Touch or keyboard.',
   openGraph: {
-    title: '테트리스 | iykyk blog',
-    description: '포트폴리오 데모 — 테트리스',
-    type: 'website',
+    title: 'Tetris | Portfolio',
+    description: 'Guideline-style Tetris with mobile swipe controls',
   },
 }
 
 export default function TetrisPage() {
-  return <TetrisPageClient />
+  return <TetrisClient />
 }

@@ -1,10 +1,10 @@
-import { COLS, ROWS } from './constants'
-import type { PieceId, Rotation } from './types'
+import type { Point, RotationIndex, TetrominoType } from './types'
 
-/**
- * 4x4 grids per rotation; 1 = filled. Rotation order follows SRS (spawn = rotation 0).
- */
-const SHAPES: Record<PieceId, number[][][]> = {
+/** 4x4 grids per rotation (0-3 CW). 1 = filled. Pivot for SRS is typically cell (1,1) for J,L,S,T,Z or (1,2) for I - we use standard offsets. */
+
+type ShapeGrid = number[][]
+
+const SHAPES: Record<TetrominoType, ShapeGrid[]> = {
   I: [
     [
       [0, 0, 0, 0],
@@ -29,32 +29,6 @@ const SHAPES: Record<PieceId, number[][][]> = {
       [0, 1, 0, 0],
       [0, 1, 0, 0],
       [0, 1, 0, 0],
-    ],
-  ],
-  O: [
-    [
-      [0, 1, 1, 0],
-      [0, 1, 1, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 1, 1, 0],
-      [0, 1, 1, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 1, 1, 0],
-      [0, 1, 1, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 1, 1, 0],
-      [0, 1, 1, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
     ],
   ],
   J: [
@@ -109,6 +83,32 @@ const SHAPES: Record<PieceId, number[][][]> = {
       [0, 0, 0, 0],
     ],
   ],
+  O: [
+    [
+      [0, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+  ],
   S: [
     [
       [0, 1, 1, 0],
@@ -130,6 +130,32 @@ const SHAPES: Record<PieceId, number[][][]> = {
     ],
     [
       [1, 0, 0, 0],
+      [1, 1, 0, 0],
+      [0, 1, 0, 0],
+      [0, 0, 0, 0],
+    ],
+  ],
+  T: [
+    [
+      [0, 1, 0, 0],
+      [1, 1, 1, 0],
+      [0, 0, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 1, 0, 0],
+      [0, 1, 1, 0],
+      [0, 1, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 0, 0, 0],
+      [1, 1, 1, 0],
+      [0, 1, 0, 0],
+      [0, 0, 0, 0],
+    ],
+    [
+      [0, 1, 0, 0],
       [1, 1, 0, 0],
       [0, 1, 0, 0],
       [0, 0, 0, 0],
@@ -161,45 +187,31 @@ const SHAPES: Record<PieceId, number[][][]> = {
       [0, 0, 0, 0],
     ],
   ],
-  T: [
-    [
-      [0, 1, 0, 0],
-      [1, 1, 1, 0],
-      [0, 0, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 1, 0, 0],
-      [0, 1, 1, 0],
-      [0, 1, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 0, 0, 0],
-      [1, 1, 1, 0],
-      [0, 1, 0, 0],
-      [0, 0, 0, 0],
-    ],
-    [
-      [0, 1, 0, 0],
-      [1, 1, 0, 0],
-      [0, 1, 0, 0],
-      [0, 0, 0, 0],
-    ],
-  ],
 }
 
-export function getShapeCells(id: PieceId, rotation: Rotation): [number, number][] {
-  const grid = SHAPES[id][rotation]
-  const cells: [number, number][] = []
+export function getPieceCells(
+  type: TetrominoType,
+  rotation: RotationIndex,
+): Point[] {
+  const grid = SHAPES[type][rotation]
+  const cells: Point[] = []
   for (let r = 0; r < 4; r++) {
     for (let c = 0; c < 4; c++) {
-      if (grid[r][c]) cells.push([c, r])
+      if (grid[r][c]) cells.push({ x: c, y: r })
     }
   }
   return cells
 }
 
-export function emptyBoard(): (0 | PieceId)[][] {
-  return Array.from({ length: ROWS }, () => Array<0 | PieceId>(COLS).fill(0))
+export function tetrominoColorIndex(type: TetrominoType): number {
+  const map: Record<TetrominoType, number> = {
+    I: 1,
+    J: 2,
+    L: 3,
+    O: 4,
+    S: 5,
+    T: 6,
+    Z: 7,
+  }
+  return map[type]
 }

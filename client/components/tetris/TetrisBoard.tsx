@@ -1,81 +1,99 @@
 'use client'
 
-import { COLS, VISIBLE_ROW_START, VISIBLE_ROWS } from '@/lib/tetris/constants'
-import { getShapeCells } from '@/lib/tetris/tetrominoes'
-import type { GameSnapshot, PieceId } from '@/lib/tetris/types'
-import { pieceGhostClass, pieceSolidClass } from './cellColors'
+import { motion } from 'framer-motion'
+import type { ActivePiece, Cell } from '@/lib/tetris/types'
+import { BOARD_WIDTH, VISIBLE_TOP_ROW } from '@/lib/tetris/types'
+import { pieceWorldCells } from '@/lib/tetris/board'
+import { tetrominoColorIndex } from '@/lib/tetris/tetrominoes'
 
-function cellAt(
-  snap: GameSnapshot,
-  boardRow: number,
-  col: number
-): { kind: 'empty' } | { kind: 'ghost'; id: PieceId } | { kind: 'piece'; id: PieceId } | { kind: 'board'; id: PieceId } {
-  const b = snap.board[boardRow]?.[col]
-  if (b !== undefined && b !== 0) return { kind: 'board', id: b }
+const ROW_OFFSET = VISIBLE_TOP_ROW
+const VISIBLE_ROWS = 20
 
-  if (!snap.piece || snap.gameOver || snap.paused) {
-    return { kind: 'empty' }
-  }
+const COL_CLASSES: Record<number, string> = {
+  0: '',
+  1: 'bg-cyan-400 shadow-inner border border-cyan-300',
+  2: 'bg-blue-600 shadow-inner border border-blue-400',
+  3: 'bg-orange-500 shadow-inner border border-orange-400',
+  4: 'bg-yellow-400 shadow-inner border border-yellow-300',
+  5: 'bg-green-500 shadow-inner border border-green-400',
+  6: 'bg-purple-600 shadow-inner border border-purple-400',
+  7: 'bg-red-600 shadow-inner border border-red-400',
+}
 
-  const { piece } = snap
-  const cells = getShapeCells(piece.id, piece.rotation)
-  const ghostY = snap.ghostY ?? piece.y
-
-  for (const [cx, cy] of cells) {
-    if (piece.x + cx === col && piece.y + cy === boardRow) {
-      return { kind: 'piece', id: piece.id }
+function pieceOverlaySet(piece: ActivePiece | null): Set<string> {
+  const s = new Set<string>()
+  if (!piece) return s
+  for (const { x, y } of pieceWorldCells(piece)) {
+    if (y >= ROW_OFFSET && y < ROW_OFFSET + VISIBLE_ROWS && x >= 0 && x < BOARD_WIDTH) {
+      s.add(`${x},${y}`)
     }
   }
+  return s
+}
 
-  if (ghostY !== piece.y) {
-    for (const [cx, cy] of cells) {
-      if (piece.x + cx === col && ghostY + cy === boardRow) {
-        return { kind: 'ghost', id: piece.id }
-      }
-    }
-  }
-
-  return { kind: 'empty' }
+export interface TetrisBoardProps {
+  board: Cell[][]
+  current: ActivePiece | null
+  ghost: ActivePiece | null
+  /** Visible row indices 0..19 to flash */
+  flashVisibleRows?: number[]
 }
 
 export default function TetrisBoard({
-  snapshot,
-  className = '',
-}: {
-  snapshot: GameSnapshot
-  className?: string
-}) {
+  board,
+  current,
+  ghost,
+  flashVisibleRows = [],
+}: TetrisBoardProps) {
+  const currentSet = pieceOverlaySet(current)
+  const ghostSet = pieceOverlaySet(ghost)
+  const ghostOnly = new Set<string>()
+  ghostSet.forEach((k) => {
+    if (!currentSet.has(k)) ghostOnly.add(k)
+  })
+
+  const flashRows = new Set(flashVisibleRows)
+
   return (
     <div
-      className={`inline-block rounded-lg border-2 border-slate-300 bg-slate-100 p-1 shadow-sm dark:border-slate-600 dark:bg-slate-900 ${className}`}
-      style={{ touchAction: 'none' }}
-      role="img"
-      aria-label="테트리스 보드"
+      className="inline-grid gap-px p-2 rounded-xl bg-slate-900/80 border border-slate-600 shadow-xl touch-none select-none"
+      style={{
+        gridTemplateColumns: `repeat(${BOARD_WIDTH}, minmax(0, 1fr))`,
+        gridTemplateRows: `repeat(${VISIBLE_ROWS}, minmax(0, 1fr))`,
+      }}
     >
-      <div
-        className="grid gap-px bg-slate-300 dark:bg-slate-700"
-        style={{
-          gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${VISIBLE_ROWS}, minmax(0, 1fr))`,
-          width: 'min(92vw, 360px)',
-          aspectRatio: `${COLS} / ${VISIBLE_ROWS}`,
-        }}
-      >
-        {Array.from({ length: VISIBLE_ROWS * COLS }).map((_, i) => {
-          const vi = Math.floor(i / COLS)
-          const col = i % COLS
-          const boardRow = VISIBLE_ROW_START + vi
-          const c = cellAt(snapshot, boardRow, col)
-          let cls =
-            'rounded-[1px] min-h-0 min-w-0 aspect-square bg-slate-50 dark:bg-slate-800/80'
-          if (c.kind === 'board' || c.kind === 'piece') {
-            cls = `rounded-[2px] min-h-0 min-w-0 aspect-square ${pieceSolidClass(c.id)}`
-          } else if (c.kind === 'ghost') {
-            cls = `rounded-[2px] min-h-0 min-w-0 aspect-square ${pieceGhostClass(c.id)}`
-          }
-          return <div key={i} className={cls} />
-        })}
-      </div>
+      {Array.from({ length: VISIBLE_ROWS * BOARD_WIDTH }, (_, i) => {
+        const vr = Math.floor(i / BOARD_WIDTH)
+        const x = i % BOARD_WIDTH
+        const y = vr + ROW_OFFSET
+        const key = `${x},${y}`
+        let cellVal = board[y]?.[x] ?? 0
+
+        if (currentSet.has(key)) {
+          if (current) cellVal = tetrominoColorIndex(current.type)
+        } else if (ghostOnly.has(key) && current) {
+          cellVal = tetrominoColorIndex(current.type)
+        }
+
+        const ghostMode = ghostOnly.has(key)
+        const cls = COL_CLASSES[cellVal] ?? 'bg-slate-800'
+        const flash = flashRows.has(y)
+
+        return (
+          <motion.div
+            key={`${vr}-${x}`}
+            className={`aspect-square min-w-[14px] max-w-[36px] w-full rounded-sm ${cls} ${
+              ghostMode ? 'opacity-35 border border-dashed border-white/40' : ''
+            } ${flash ? 'ring-2 ring-white/90 z-10' : ''}`}
+            animate={
+              flash
+                ? { scale: [1, 1.08, 1], opacity: [1, 0.7, 1] }
+                : {}
+            }
+            transition={{ duration: 0.35 }}
+          />
+        )
+      })}
     </div>
   )
 }
