@@ -107,14 +107,7 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const contactId = req.params.id;
-    
-    const { data: contact, error } = await supabaseService.supabase
-      .from('contacts')
-      .select('*')
-      .eq('id', contactId)
-      .single();
-
-    if (error) throw error;
+    const contact = await supabaseService.getContact(contactId);
     
     if (!contact) {
       return res.status(404).json({ message: '연락처 메시지를 찾을 수 없습니다.' });

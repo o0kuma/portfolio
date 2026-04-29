@@ -136,15 +136,8 @@ router.get('/conversation/:sessionId/stats', async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    const { data: conversation, error } = await supabaseService.supabase
-      .from('conversations')
-      .select('statistics')
-      .eq('session_id', sessionId)
-      .single();
-
-    if (error) throw error;
-
-    if (!conversation) {
+    const statistics = await supabaseService.getConversationStats(sessionId);
+    if (!statistics) {
       return res.status(404).json({ 
         success: false,
         error: '대화를 찾을 수 없습니다.' 
@@ -154,7 +147,7 @@ router.get('/conversation/:sessionId/stats', async (req, res) => {
     res.json({
       success: true,
       sessionId: sessionId,
-      statistics: conversation.statistics
+      statistics
     });
 
   } catch (error) {
@@ -173,41 +166,23 @@ router.put('/conversation/:sessionId/settings', async (req, res) => {
     const { sessionId } = req.params;
     const { selectedTone, language, isActive } = req.body;
 
-    const { data: conversation, error } = await supabaseService.supabase
-      .from('conversations')
-      .select('settings')
-      .eq('session_id', sessionId)
-      .single();
-
-    if (error) throw error;
-
-    if (!conversation) {
+    const patch = {
+      ...(selectedTone && { selectedTone }),
+      ...(language && { language }),
+      ...(isActive !== undefined && { isActive })
+    };
+    const settings = await supabaseService.updateConversationSettings(sessionId, patch);
+    if (!settings) {
       return res.status(404).json({ 
         success: false,
         error: '대화를 찾을 수 없습니다.' 
       });
     }
 
-    const updatedSettings = {
-      ...conversation.settings,
-      ...(selectedTone && { selectedTone }),
-      ...(language && { language }),
-      ...(isActive !== undefined && { isActive })
-    };
-
-    const { data: updatedConversation, error: updateError } = await supabaseService.supabase
-      .from('conversations')
-      .update({ settings: updatedSettings })
-      .eq('session_id', sessionId)
-      .select()
-      .single();
-
-    if (updateError) throw updateError;
-
     res.json({
       success: true,
       sessionId: sessionId,
-      settings: updatedConversation.settings
+      settings
     });
 
   } catch (error) {
@@ -225,12 +200,7 @@ router.delete('/conversation/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
 
-    const { error } = await supabaseService.supabase
-      .from('conversations')
-      .delete()
-      .eq('session_id', sessionId);
-
-    if (error) throw error;
+    await supabaseService.deleteConversation(sessionId);
 
     res.json({
       success: true,

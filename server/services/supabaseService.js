@@ -348,7 +348,7 @@ class DatabaseService {
 
   async getConversationStats(sessionId) {
     const result = await query('SELECT statistics FROM conversations WHERE session_id = $1 LIMIT 1', [sessionId]);
-    return result.rows[0]?.statistics || null;
+    return result.rows[0] ? (result.rows[0].statistics || {}) : null;
   }
 
   async updateConversationSettings(sessionId, patch) {
