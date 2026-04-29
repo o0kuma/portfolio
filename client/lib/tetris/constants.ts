@@ -1,11 +1,11 @@
 /** Playfield width (cells) */
 export const COLS = 10
-/** Total rows including 2 hidden rows at top for spawn */
+/** Total rows (spawn uses top rows as buffer; all rows are drawn so 스폰 조각이 보임) */
 export const ROWS = 22
-/** First row shown in UI (0-based); rows 0-1 are buffer */
-export const VISIBLE_ROW_START = 2
-/** Visible row count */
-export const VISIBLE_ROWS = ROWS - VISIBLE_ROW_START
+/** First row index rendered (0 = 스폰 버퍼 포함 전 행 표시) */
+export const VISIBLE_ROW_START = 0
+/** Rows drawn in the UI — matches engine ROWS */
+export const VISIBLE_ROWS = ROWS
 
 export const HIGH_SCORE_KEY = 'tetris-high-score'
 
