@@ -2,16 +2,8 @@
 
 import Link from 'next/link'
 import type { HomePost } from '@/components/home/post-types'
-import { useHomeMotion } from '@/components/home/useHomeScrollProgress'
-import {
-  FiArrowRight,
-  FiCalendar,
-  FiEye,
-  FiHeart,
-  FiMessageSquare,
-  FiTag,
-  FiUser,
-} from 'react-icons/fi'
+import BlogPostsCarousel3D from '@/components/home/BlogPostsCarousel3D'
+import { FiArrowRight } from 'react-icons/fi'
 
 type Props = {
   posts: HomePost[]
@@ -41,8 +33,6 @@ export default function BlogPostsAtmosphere({
   formatNumber,
   categoryLabel,
 }: Props) {
-  const { tilt, reduced } = useHomeMotion()
-
   return (
     <section
       className="relative min-h-screen overflow-hidden bg-[#030014] text-white"
@@ -115,18 +105,11 @@ export default function BlogPostsAtmosphere({
           </Link>
         </aside>
 
-        {/* Floating glass cards — vertical journey */}
-        <div className="min-w-0 flex-1 [perspective:1600px]">
+        {/* 3D carousel or empty */}
+        <div className="min-w-0 flex-1">
           {loading ? (
-            <div className="space-y-12">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`h-56 animate-pulse rounded-[2rem] border border-white/5 bg-white/[0.04] backdrop-blur-md ${
-                    i % 2 === 0 ? 'md:-rotate-1' : 'md:rotate-1 md:translate-x-6'
-                  }`}
-                />
-              ))}
+            <div className="flex min-h-[min(52vh,480px)] items-center justify-center py-8">
+              <div className="h-56 w-full max-w-[440px] animate-pulse rounded-[2rem] border border-white/5 bg-white/[0.04] backdrop-blur-md" />
             </div>
           ) : posts.length === 0 ? (
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.03] px-8 py-20 text-center backdrop-blur-sm">
@@ -142,102 +125,12 @@ export default function BlogPostsAtmosphere({
               </Link>
             </div>
           ) : (
-            <div className="space-y-14 md:space-y-20">
-              {posts.map((post, i) => {
-                const staticTilt =
-                  i % 2 === 0
-                    ? 'md:-translate-x-2 md:rotate-[-0.6deg]'
-                    : 'md:translate-x-4 md:rotate-[0.5deg]'
-                const depth = 1 + i * 0.1
-                return (
-                  <article
-                    key={post._id}
-                    className={`group relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.02] to-transparent shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition duration-500 hover:border-white/20 hover:from-white/[0.1] hover:shadow-[0_35px_100px_-25px_rgba(79,70,229,0.15)] ${staticTilt}`}
-                    style={{ transformStyle: 'preserve-3d' }}
-                  >
-                    <div
-                      className="relative p-8 transition-transform duration-150 ease-out will-change-transform md:p-12 md:[transform-style:preserve-3d]"
-                      style={
-                        reduced
-                          ? undefined
-                          : {
-                              transform: `perspective(1400px) rotateX(${-tilt.y * 4.5 * depth}deg) rotateY(${tilt.x * 4.5 * depth}deg)`,
-                            }
-                      }
-                    >
-                    <div className="pointer-events-none absolute -right-6 -top-6 h-40 w-40 rounded-full bg-gradient-to-br from-fuchsia-500/10 via-violet-500/5 to-transparent blur-3xl transition-opacity group-hover:opacity-100 md:opacity-70" />
-
-                    <div className="relative flex flex-wrap items-center gap-3">
-                      {post.featured && (
-                        <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-0.5 font-mono text-[9px] uppercase tracking-[0.25em] text-amber-200/90">
-                          Featured
-                        </span>
-                      )}
-                      <span className="rounded-full border border-white/10 px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
-                        {categoryLabel(post.category)}
-                      </span>
-                    </div>
-
-                    <h3 className="relative mt-6 font-display text-3xl font-semibold leading-[1.15] tracking-tight text-white md:text-4xl lg:text-[2.75rem]">
-                      <Link
-                        href={`/posts/${post._id}`}
-                        className="transition-colors hover:text-indigo-200"
-                      >
-                        {post.title}
-                      </Link>
-                    </h3>
-
-                    <p className="relative mt-5 max-w-3xl text-base leading-relaxed text-white/45 line-clamp-3 md:text-lg">
-                      {post.content}
-                    </p>
-
-                    <div className="relative mt-6 flex flex-wrap gap-2">
-                      {post.tags.slice(0, 5).map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-black/20 px-2.5 py-1 font-mono text-[10px] tracking-wide text-white/40"
-                        >
-                          <FiTag size={11} aria-hidden />
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="relative mt-8 flex flex-wrap items-center gap-x-8 gap-y-2 border-t border-white/10 pt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
-                      <span className="inline-flex items-center gap-2">
-                        <FiUser size={12} className="text-white/25" aria-hidden />
-                        {post.author}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <FiCalendar size={12} className="text-white/25" aria-hidden />
-                        {formatDate(post.createdAt)}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <FiEye size={12} className="text-white/25" aria-hidden />
-                        {formatNumber(post.views)}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <FiHeart size={12} className="text-white/25" aria-hidden />
-                        {formatNumber(post.likes)}
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        <FiMessageSquare size={12} className="text-white/25" aria-hidden />
-                        {formatNumber(post.comments?.length ?? 0)}
-                      </span>
-                    </div>
-
-                    <Link
-                      href={`/posts/${post._id}`}
-                      className="relative mt-10 inline-flex items-center gap-3 border-b border-white/25 pb-1 font-mono text-[11px] tracking-[0.35em] text-white/70 transition hover:border-white/60 hover:text-white"
-                    >
-                      READ ENTRY
-                      <FiArrowRight size={16} aria-hidden />
-                    </Link>
-                    </div>
-                  </article>
-                )
-              })}
-            </div>
+            <BlogPostsCarousel3D
+              posts={posts}
+              formatDate={formatDate}
+              formatNumber={formatNumber}
+              categoryLabel={categoryLabel}
+            />
           )}
         </div>
       </div>
