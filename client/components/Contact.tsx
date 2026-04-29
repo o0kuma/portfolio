@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
 import { FiMail, FiPhone, FiMapPin, FiSend, FiCheckCircle } from 'react-icons/fi'
 
 export default function Contact() {
@@ -80,46 +79,27 @@ export default function Contact() {
   }
 
   return (
-    <section id="contact" className="section-padding bg-white dark:bg-dark-900">
+    <section id="contact" className="section-padding bg-canvas">
       <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="text-gradient">연락</span>해 주세요
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-textMuted max-w-2xl mx-auto">
             프로젝트 협업이나 궁금한 점이 있으시다면 언제든 연락주세요.
             빠른 시일 내에 답변드리도록 하겠습니다.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 gap-12">
-          {/* 왼쪽: 연락처 정보 */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <h3 className="text-2xl font-bold mb-8 text-gray-800 dark:text-white">
               Contact Information
             </h3>
             
             <div className="space-y-6">
-              {contactInfo.map((info, index) => (
-                <motion.div
-                  key={info.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                  className="flex items-start space-x-4"
-                >
+              {contactInfo.map((info) => (
+                <div key={info.title} className="flex items-start space-x-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-primary-100 dark:bg-primary-900/20 rounded-lg flex items-center justify-center">
                     <info.icon className="text-primary-600 dark:text-primary-400" size={24} />
                   </div>
@@ -140,7 +120,7 @@ export default function Contact() {
                       </p>
                     )}
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
@@ -181,25 +161,15 @@ export default function Contact() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* 오른쪽: 연락처 폼 */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
+          <div>
             <h3 className="text-2xl font-bold mb-8 text-gray-800 dark:text-white">
               Send Message
             </h3>
 
             {isSubmitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center p-8 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800"
-              >
+              <div className="text-center p-8 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
                 <FiCheckCircle className="w-16 h-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
                 <h4 className="text-xl font-semibold text-green-800 dark:text-green-200 mb-2">
                   메시지가 전송되었습니다!
@@ -213,7 +183,7 @@ export default function Contact() {
                 >
                   새 메시지 작성
                 </button>
-              </motion.div>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -281,12 +251,10 @@ export default function Contact() {
                   />
                 </div>
 
-                <motion.button
+                <button
                   type="submit"
                   disabled={isSubmitting}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full btn-primary py-3 text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full btn-primary py-3 text-lg transition-transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center space-x-2">
@@ -299,10 +267,10 @@ export default function Contact() {
                       <span>Submit</span>
                     </div>
                   )}
-                </motion.button>
+                </button>
               </form>
             )}
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

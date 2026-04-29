@@ -1,32 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiSend } from 'react-icons/fi'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import AdBanner from '@/components/AdBanner'
 import { insertAdsInContent } from '@/components/InArticleAd'
+import { normalizePostDetail, type PostDetail } from '@/lib/postApi'
 
-interface Post {
-  _id: string
-  title: string
-  content: string
-  author: string
-  category: string
-  tags: string[]
-  featured: boolean
-  views: number
-  likes: number
-  comments: {
-    _id: string
-    author: string
-    content: string
-    createdAt: string
-  }[]
-  createdAt: string
-  updatedAt: string
-}
+type Post = PostDetail
 
 interface Comment {
   author: string
@@ -51,7 +33,7 @@ export default function PostDetailPage() {
       const data = await response.json()
       
       if (response.ok) {
-        setPost(data)
+        setPost(normalizePostDetail(data as Record<string, unknown>))
       } else {
         console.error('Failed to fetch post:', data.message)
       }
@@ -162,8 +144,8 @@ export default function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
-        <div className="container-custom py-16">
+      <div className="min-h-screen bg-canvas text-textPrimary">
+        <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
@@ -182,8 +164,8 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
-        <div className="container-custom py-16">
+      <div className="min-h-screen bg-canvas text-textPrimary">
+        <div className="page-shell py-16">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
               게시글을 찾을 수 없습니다
@@ -205,10 +187,9 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
-      {/* 헤더 */}
-      <div className="bg-white dark:bg-dark-900 shadow-sm">
-        <div className="container-custom py-6">
+    <div className="min-h-screen bg-canvas text-textPrimary">
+      <div className="border-b border-border glass-panel">
+        <div className="page-shell py-6">
           <div className="flex items-center justify-between">
             <Link 
               href="/posts"
@@ -237,12 +218,8 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      <div className="container-custom py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="max-w-4xl mx-auto"
-        >
+      <div className="page-shell py-8">
+        <div className="mx-auto max-w-4xl">
           {/* 게시글 헤더 */}
           <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-2 mb-4">
@@ -405,7 +382,7 @@ export default function PostDetailPage() {
               )}
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   )

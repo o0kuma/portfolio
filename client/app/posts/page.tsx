@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../../components/BlogSearchBar'
 import AdBanner from '../../components/AdBanner'
 import CreatePostForm from '../../components/CreatePostForm'
+import { normalizePostBoardItem } from '@/lib/postApi'
 
 interface Post {
   _id: string
@@ -60,8 +60,11 @@ export default function PostsPage() {
       const data = await response.json()
       
       if (response.ok) {
-        setPosts(data.posts)
-        setFilteredPosts(data.posts)
+        const mapped = (data.posts as Record<string, unknown>[]).map((row) =>
+          normalizePostBoardItem(row),
+        )
+        setPosts(mapped)
+        setFilteredPosts(mapped)
         setTotalPages(data.totalPages)
         setCurrentPage(data.currentPage)
       } else {
@@ -187,8 +190,8 @@ export default function PostsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-800">
-        <div className="container-custom py-16">
+      <div className="min-h-screen bg-canvas text-textPrimary">
+        <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
@@ -211,27 +214,9 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/40 via-purple-50/30 to-pink-50/20 dark:from-slate-950 dark:via-indigo-950/50 dark:via-purple-950/30 dark:to-slate-950 relative overflow-hidden">
-      {/* 배경 애니메이션 */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-96 h-96 bg-gradient-to-br from-purple-400/30 to-pink-400/20 dark:from-purple-500/20 dark:to-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-[500px] h-[500px] bg-gradient-to-br from-blue-400/30 to-cyan-400/20 dark:from-blue-500/20 dark:to-cyan-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}}></div>
-        <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-gradient-to-br from-pink-400/25 to-orange-400/20 dark:from-pink-500/15 dark:to-orange-500/10 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-      </div>
-      
-      {/* 그리드 패턴 오버레이 */}
-      <div className="fixed inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
-        backgroundSize: '50px 50px'
-      }}></div>
-
-      {/* 헤더 - 글래스모피즘 */}
-      <motion.div
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="sticky top-0 z-40 bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 border-b border-white/20 dark:border-slate-700/30"
-      >
-        <div className="container-custom py-6">
+    <div className="relative min-h-screen overflow-hidden bg-canvas text-textPrimary">
+      <header className="sticky top-0 z-40 glass-panel border-b border-border shadow-lg">
+        <div className="page-shell py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Link 
@@ -245,26 +230,20 @@ export default function PostsPage() {
                 Posts
               </h1>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            <button
+              type="button"
               onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl shadow-purple-500/30 hover:shadow-2xl hover:shadow-purple-500/50"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:brightness-105"
             >
               <FiPlus size={20} />
               <span>New Post</span>
-            </motion.button>
+            </button>
           </div>
         </div>
-      </motion.div>
+      </header>
 
-      <div className="container-custom py-12 relative z-10">
-        {/* 검색 및 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-10 relative z-[100]"
-        >
+      <div className="page-shell relative z-10 py-12">
+        <div className="relative z-[100] mb-10">
           <div className="max-w-4xl mx-auto relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>
             <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-slate-700/30 shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 overflow-visible">
@@ -277,48 +256,34 @@ export default function PostsPage() {
               />
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* 카테고리 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap justify-center gap-3 mb-12 relative z-10"
-        >
-          {categories.map((category, index) => (
-            <motion.button
+        <div className="relative z-10 mb-12 flex flex-wrap justify-center gap-3">
+          {categories.map((category) => (
+            <button
               key={category.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
+              type="button"
               onClick={() => handleCategoryChange(category.id)}
-              className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+              className={`rounded-full px-6 py-3 font-semibold transition-all duration-300 ${
                 selectedCategory === category.id
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-                  : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 hover:border-purple-300/50 dark:hover:border-purple-700/50 shadow-lg shadow-purple-500/5 dark:shadow-purple-900/10'
+                  ? 'scale-105 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl'
+                  : 'glass-panel text-textPrimary hover:border-primary-500/40'
               }`}
             >
               {category.name}
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
 
-        {/* 검색 결과 표시 */}
         {searchQuery && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-10"
-          >
+          <div className="mb-10 text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-full border border-white/30 dark:border-slate-700/30 shadow-lg">
               <p className="text-gray-600 dark:text-gray-400">
                 "<span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{searchQuery}</span>" search results: 
                 <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredPosts.length}</span>
               </p>
             </div>
-          </motion.div>
+          </div>
         )}
 
         {/* 포스트 그리드 */}
@@ -336,16 +301,10 @@ export default function PostsPage() {
                     />
                   </div>
                 )}
-                <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                whileHover={{ y: -8 }}
-                className="relative group"
-              >
+                <div className="relative group transition-transform duration-300 hover:-translate-y-1">
                 {/* 그라데이션 테두리 효과 */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700"></div>
-                <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/30 dark:border-slate-700/30 group-hover:border-purple-300/50 dark:group-hover:border-purple-700/50">
+                <div className="relative glass-panel rounded-3xl overflow-hidden border border-border shadow-xl transition-all duration-500 group-hover:border-primary-500/40">
                 {/* 포스트 헤더 */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
@@ -462,71 +421,60 @@ export default function PostsPage() {
                   </Link>
                 </div>
                 </div>
-              </motion.div>
+              </div>
               </React.Fragment>
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
-          >
+          <div className="py-16 text-center">
             <div className="text-gray-400 dark:text-gray-500 mb-4">
               <FiMessageSquare size={64} className="mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
               No posts found
             </h3>
-            <p className="text-gray-500 dark:text-gray-600">
+            <p className="text-textMuted">
               Try changing your search or filters.
             </p>
-          </motion.div>
+          </div>
         )}
 
         {/* 페이지네이션 */}
         {totalPages > 1 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-center gap-2 mt-12"
-          >
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+          <div className="mt-12 flex justify-center gap-2">
+            <button
+              type="button"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage === 1}
-              className="px-5 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
             >
               Previous
-            </motion.button>
-            
+            </button>
+
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <motion.button
+              <button
                 key={page}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                type="button"
                 onClick={() => handlePageChange(page)}
-                className={`px-5 py-2.5 rounded-xl font-semibold transition-all duration-300 ${
+                className={`rounded-xl px-5 py-2.5 font-semibold transition ${
                   currentPage === page
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-110'
-                    : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg'
+                    ? 'scale-105 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl'
+                    : 'glass-panel text-textPrimary hover:border-primary-500/40'
                 }`}
               >
                 {page}
-              </motion.button>
+              </button>
             ))}
-            
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+
+            <button
+              type="button"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage === totalPages}
-              className="px-5 py-2.5 rounded-xl bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
             >
               Next
-            </motion.button>
-          </motion.div>
+            </button>
+          </div>
         )}
       </div>
 

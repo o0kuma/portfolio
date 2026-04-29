@@ -43,26 +43,24 @@ export default function TetrisPageClient() {
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 pb-8 dark:from-dark-900 dark:to-dark-900">
-      <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-700/80 dark:bg-dark-900/90">
+    <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
+      <header className="sticky top-0 z-30 glass-panel border-b border-border">
         <div
-          className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3"
+          className="page-shell flex max-w-6xl items-center gap-4 py-3"
           style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
         >
           <Link
             href="/portfolio"
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 transition hover:text-primary-600 dark:text-slate-200 dark:hover:text-primary-400"
+            className="inline-flex items-center gap-2 text-sm font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
             포트폴리오로
           </Link>
-          <span className="text-sm font-semibold text-slate-900 dark:text-white">
-            테트리스
-          </span>
+          <span className="text-sm font-semibold text-textPrimary">테트리스</span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 pt-6">
+      <main className="page-shell max-w-6xl pt-6">
         <div
           ref={surfaceRef}
           tabIndex={-1}

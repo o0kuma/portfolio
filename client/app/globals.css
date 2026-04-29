@@ -2,20 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap');
 
 @layer base {
+  :root {
+    --color-canvas: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-surface-elevated: 255 255 255;
+    --color-border: 226 232 240;
+    --color-text-primary: 15 23 42;
+    --color-text-muted: 100 116 139;
+    --color-accent: 37 99 235;
+    --color-accent-muted: 59 130 246;
+    --section-padding-y: 4rem;
+    --page-shell-max: 80rem;
+  }
+
+  html.dark {
+    --color-canvas: 15 23 42;
+    --color-surface: 30 41 59;
+    --color-surface-elevated: 51 65 85;
+    --color-border: 71 85 105;
+    --color-text-primary: 248 250 252;
+    --color-text-muted: 148 163 184;
+    --color-accent: 96 165 250;
+    --color-accent-muted: 59 130 246;
+  }
+
   html {
     scroll-behavior: smooth;
   }
-  
+
   body {
-    font-family: 'Inter', sans-serif;
+    @apply bg-canvas text-textPrimary antialiased;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
-    font-weight: 600;
+
+  h1 {
+    @apply font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-textPrimary;
+  }
+
+  h2 {
+    @apply font-display text-3xl md:text-4xl font-semibold tracking-tight text-textPrimary;
+  }
+
+  h3 {
+    @apply font-display text-xl md:text-2xl font-semibold text-textPrimary;
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-textPrimary;
   }
 }
 
@@ -23,35 +60,65 @@
   .btn-primary {
     @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+    @apply bg-surfaceElevated hover:opacity-90 text-textPrimary border border-border font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-  
+
   .btn-outline {
-    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-medium py-2 px-4 rounded-lg transition-all duration-200;
+    @apply border-2 border-primary-600 text-primary-600 hover:bg-primary-600 hover:text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 dark:border-accent dark:text-accent dark:hover:bg-accent dark:hover:text-canvas;
   }
-  
+
   .card {
-    @apply bg-white dark:bg-dark-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300;
+    @apply bg-surface text-textPrimary rounded-xl border border-border shadow-lg hover:shadow-xl transition-shadow duration-300;
   }
-  
+
   .input-field {
-    @apply w-full px-4 py-3 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-dark-700 dark:text-white;
+    @apply w-full px-4 py-3 border border-border rounded-lg bg-surface text-textPrimary focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
-  
+
   .section-padding {
     @apply py-16 px-4 sm:px-6 lg:px-8;
   }
-  
+
   .container-custom {
-    @apply max-w-7xl mx-auto;
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Shared page layout: max width + horizontal padding */
+  .page-shell {
+    @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply py-12 md:py-16 lg:py-20;
+  }
+
+  /* Glass 2.0: blur + low-opacity fill + thin border */
+  .glass-panel {
+    @apply backdrop-blur-xl bg-white/70 dark:bg-white/5 border border-white/25 dark:border-white/10 shadow-lg;
+  }
+
+  /* Legacy alias — prefer .glass-panel */
+  .glass-effect {
+    @apply glass-panel;
+  }
+
+  /* Hero-only: slow gradient shift (use inside hero blocks only) */
+  .hero-animate-gradient {
+    background-size: 200% auto;
+    animation: hero-gradient-shift 12s ease infinite;
+  }
+
+  .hero-animate-glow {
+    animation: hero-glow 3s ease-in-out infinite;
   }
 }
 
-/* 강렬한 그라데이션 애니메이션 */
+/* Legacy name — hero title gradients may reference `gradient` */
 @keyframes gradient {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -59,35 +126,33 @@
   }
 }
 
-.animate-gradient {
-  background-size: 200% auto;
-  animation: gradient 3s ease infinite;
-}
-
-/* 글로우 효과 */
-@keyframes glow {
-  0%, 100% {
-    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.5));
+/* Hero-scoped gradient animation */
+@keyframes hero-gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
   }
   50% {
-    filter: drop-shadow(0 0 40px rgba(139, 92, 246, 0.8));
+    background-position: 100% 50%;
   }
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+@keyframes hero-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px rgb(var(--color-accent-muted) / 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgb(var(--color-accent) / 0.55));
+  }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent dark:from-accent dark:to-purple-400;
   }
-  
+
   .bg-gradient-primary {
     @apply bg-gradient-to-br from-primary-600 to-purple-600;
-  }
-  
-  .glass-effect {
-    @apply bg-white/10 backdrop-blur-md border border-white/20;
   }
 }

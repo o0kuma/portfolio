@@ -1,8 +1,18 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+})
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: {
@@ -79,8 +89,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
+  const fontVars = `${inter.variable} ${fraunces.variable}`
+
   return (
-    <html lang="ko" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="ko" className={`scroll-smooth dark ${fontVars}`} suppressHydrationWarning>
       <head>
         {/* 구조화된 데이터 */}
         <script
@@ -113,50 +125,41 @@ export default function RootLayout({
             })
           }}
         />
-        
-        {/* 추가 메타 태그 */}
-        <meta name="theme-color" content="#3B82F6" />
-        <meta name="msapplication-TileColor" content="#3B82F6" />
+
+        <meta name="theme-color" content="#0f172a" />
+        <meta name="msapplication-TileColor" content="#0f172a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Okuma 포트폴리오" />
-        
-        {/* 다크모드 스크립트 */}
+
+        {/* Default dark; only remove when user chose light (localStorage) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
                 try {
-                  const theme = localStorage.getItem('theme');
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  
-                  if (theme === 'dark' || (!theme && prefersDark)) {
-                    document.documentElement.classList.add('dark');
-                  } else {
+                  var theme = localStorage.getItem('theme');
+                  if (theme === 'light') {
                     document.documentElement.classList.remove('dark');
+                  } else {
+                    document.documentElement.classList.add('dark');
                   }
                 } catch (e) {
-                  console.log('Theme initialization failed:', e);
+                  document.documentElement.classList.add('dark');
                 }
               })();
             `,
           }}
         />
-        
-        {/* 파비콘 */}
+
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
         <link rel="manifest" href="/site.webmanifest" />
-        
-        {/* Google Fonts */}
+
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
-          rel="stylesheet"
-        />
       </head>
-      <body className={`${inter.className} antialiased bg-white dark:bg-dark-900 text-gray-900 dark:text-white`}>
+      <body className={`${inter.className} font-sans antialiased`}>
         {children}
       </body>
     </html>

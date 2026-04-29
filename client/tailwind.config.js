@@ -32,10 +32,19 @@ module.exports = {
           700: '#334155',
           800: '#1e293b',
           900: '#0f172a',
-        }
+        },
+        canvas: 'rgb(var(--color-canvas) / <alpha-value>)',
+        surface: 'rgb(var(--color-surface) / <alpha-value>)',
+        surfaceElevated: 'rgb(var(--color-surface-elevated) / <alpha-value>)',
+        border: 'rgb(var(--color-border) / <alpha-value>)',
+        textPrimary: 'rgb(var(--color-text-primary) / <alpha-value>)',
+        textMuted: 'rgb(var(--color-text-muted) / <alpha-value>)',
+        accent: 'rgb(var(--color-accent) / <alpha-value>)',
+        accentMuted: 'rgb(var(--color-accent-muted) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
+        display: ['var(--font-display)', 'Georgia', 'serif'],
         mono: ['Fira Code', 'monospace'],
       },
       animation: {

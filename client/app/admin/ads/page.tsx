@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FiPlus, FiEdit, FiTrash2, FiEye, FiMousePointer, FiDollarSign, FiTrendingUp } from 'react-icons/fi'
+import { FiPlus, FiEdit, FiTrash2, FiEye, FiMousePointer, FiDollarSign } from 'react-icons/fi'
 
 interface Advertisement {
   id: string
@@ -54,8 +53,8 @@ export default function AdsManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-canvas px-4 py-8 text-textPrimary">
+      <div className="page-shell max-w-7xl">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             광고 관리
@@ -74,11 +73,7 @@ export default function AdsManagementPage() {
 
         {/* 통계 카드 */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-          >
+          <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">총 광고 수</p>
@@ -88,14 +83,9 @@ export default function AdsManagementPage() {
               </div>
               <FiEye className="w-8 h-8 text-blue-500" />
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-          >
+          <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">총 노출 수</p>
@@ -105,14 +95,9 @@ export default function AdsManagementPage() {
               </div>
               <FiEye className="w-8 h-8 text-green-500" />
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-          >
+          <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">총 클릭 수</p>
@@ -122,14 +107,9 @@ export default function AdsManagementPage() {
               </div>
               <FiMousePointer className="w-8 h-8 text-purple-500" />
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6"
-          >
+          <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 dark:text-gray-400 text-sm">총 수익</p>
@@ -139,7 +119,7 @@ export default function AdsManagementPage() {
               </div>
               <FiDollarSign className="w-8 h-8 text-yellow-500" />
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* 광고 목록 */}

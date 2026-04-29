@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import BlogPageClient from './BlogPageClient'
+import ImmersiveHome from '@/components/home/ImmersiveHome'
 
 export const metadata: Metadata = {
   title: 'iykyk blog',
@@ -27,5 +27,5 @@ export const metadata: Metadata = {
 }
 
 export default function BlogHome() {
-  return <BlogPageClient />
+  return <ImmersiveHome />
 }

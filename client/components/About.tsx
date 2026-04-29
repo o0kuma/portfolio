@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { FiUser, FiCode, FiHeart, FiTarget } from 'react-icons/fi'
 
 export default function About() {
@@ -28,33 +27,20 @@ export default function About() {
   ]
 
   return (
-    <section id="about" className="section-padding bg-white dark:bg-dark-900">
+    <section id="about" className="section-padding bg-canvas">
       <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="text-gradient">저에 대해</span> 알아보세요
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-textMuted max-w-2xl mx-auto">
             프론트엔드 개발자로 화면 구성과 화면에 필요한 데이터 작업을 진행합니다.
             HTML5, CSS3, JavaScript부터 Next.js, Svelte, React까지 다양한 기술을 활용한 프로젝트 경험을 보유하고 있습니다.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
-          {/* 왼쪽: 개인 정보 */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="relative"
-          >
+          <div className="relative">
             {/* 프로필 이미지 */}
             <div className="mb-8 flex justify-center md:justify-start">
               <div className="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center">
@@ -98,24 +84,13 @@ export default function About() {
                 <div className="font-semibold">1990년생</div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* 오른쪽: 특징 */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-            className="space-y-6"
-          >
-            {features.map((feature, index) => (
-              <motion.div
+          <div className="space-y-6">
+            {features.map((feature) => (
+              <div
                 key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="flex items-start space-x-4 p-6 bg-gray-50 dark:bg-dark-800 rounded-xl hover:shadow-lg transition-shadow duration-300"
+                className="flex items-start space-x-4 p-6 bg-surface/80 dark:bg-surfaceElevated/40 rounded-xl border border-border hover:shadow-lg transition-shadow duration-300"
               >
                 <div className="flex-shrink-0 w-12 h-12 bg-primary-100 dark:bg-primary-900/20 rounded-lg flex items-center justify-center">
                   <feature.icon className="text-primary-600 dark:text-primary-400" size={24} />
@@ -128,19 +103,12 @@ export default function About() {
                     {feature.description}
                   </p>
                 </div>
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         </div>
 
-        {/* 기술 스택 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="mb-16"
-        >
+        <div className="mb-16">
           <h3 className="text-2xl font-bold text-center mb-8 text-gray-800 dark:text-white">
             기술 스택
           </h3>
@@ -257,16 +225,9 @@ export default function About() {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        {/* 추가 정보 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center"
-        >
+        <div className="text-center">
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
             항상 새로운 프론트엔드 기술을 배우고 적용하는 것에 대한 열정을 가지고 있으며, 
             사용자에게 최고의 경험을 제공하는 것이 제 목표입니다.
@@ -278,7 +239,7 @@ export default function About() {
             <span>함께 일하고 싶으시다면 연락주세요</span>
             <FiTarget size={20} />
           </a>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

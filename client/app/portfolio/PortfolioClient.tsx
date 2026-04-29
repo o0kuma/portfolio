@@ -24,7 +24,7 @@ export default function PortfolioClient() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-indigo-900 relative overflow-hidden">
+      <div className="min-h-screen flex items-center justify-center bg-canvas text-textPrimary relative overflow-hidden">
         {/* 배경 애니메이션 */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 dark:bg-blue-400/10 rounded-full animate-pulse"></div>
@@ -33,7 +33,7 @@ export default function PortfolioClient() {
         </div>
         
         {/* 메인 로딩 컨텐츠 */}
-        <div className="text-center text-slate-800 dark:text-white relative z-10">
+        <div className="text-center text-textPrimary relative z-10">
           {/* 로고/아이콘 */}
           <div className="mb-8">
             <div className="relative">
@@ -55,7 +55,7 @@ export default function PortfolioClient() {
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
               Okuma
             </h1>
-            <h2 className="text-xl md:text-2xl font-semibold text-slate-700 dark:text-slate-300">
+            <h2 className="text-xl md:text-2xl font-semibold text-textMuted">
               포트폴리오
             </h2>
             <div className="flex items-center justify-center space-x-2">
@@ -63,7 +63,7 @@ export default function PortfolioClient() {
               <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
               <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
             </div>
-            <p className="text-slate-600 dark:text-slate-400 text-sm mt-4">
+            <p className="text-textMuted text-sm mt-4">
               로딩 중...
             </p>
           </div>
@@ -83,7 +83,7 @@ export default function PortfolioClient() {
   }
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-canvas text-textPrimary">
       <Header />
       <Hero />
       <About />

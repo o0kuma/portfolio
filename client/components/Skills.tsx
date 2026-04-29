@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { FiCode, FiDatabase, FiServer, FiSmartphone, FiCloud } from 'react-icons/fi'
 
 export default function Skills() {
@@ -70,35 +69,22 @@ export default function Skills() {
   ]
 
   return (
-    <section id="skills" className="section-padding bg-gray-50 dark:bg-dark-800">
+    <section id="skills" className="section-padding bg-surface/50 dark:bg-canvas">
       <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="text-gradient">기술 스택</span>을 소개합니다
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-textMuted max-w-2xl mx-auto">
             퍼블리싱은 누구보다 자신 있습니다. HTML/CSS는 물론, JavaScript와 Web Component, 
             jQuery, Bootstrap 등 다양한 UI 컴포넌트 구현에 익숙합니다. 최근에는 Svelte와 React도 
             활용하며, 반응형 UI 및 상태 기반 인터랙션 구현에도 능숙합니다.
           </p>
-        </motion.div>
+        </div>
 
         <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {skillCategories.map((category, categoryIndex) => (
-            <motion.div
-              key={category.title}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: categoryIndex * 0.1 }}
-              viewport={{ once: true }}
-              className="card p-6"
-            >
+          {skillCategories.map((category) => (
+            <div key={category.title} className="card p-6">
               {/* 카테고리 헤더 */}
               <div className="flex items-center mb-6">
                 <div className={`w-12 h-12 bg-gradient-to-r ${category.color} rounded-lg flex items-center justify-center mr-4`}>
@@ -111,14 +97,8 @@ export default function Skills() {
 
               {/* 스킬 리스트 */}
               <div className="space-y-4">
-                {category.skills.map((skill, skillIndex) => (
-                  <motion.div
-                    key={skill.name}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.5, delay: skillIndex * 0.05 }}
-                    viewport={{ once: true }}
-                  >
+                {category.skills.map((skill) => (
+                  <div key={skill.name}>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                         {skill.name}
@@ -128,29 +108,19 @@ export default function Skills() {
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-dark-700 rounded-full h-2">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${skill.level}%` }}
-                        transition={{ duration: 1, delay: skillIndex * 0.05 }}
-                        viewport={{ once: true }}
-                        className={`h-2 bg-gradient-to-r ${category.color} rounded-full transition-all duration-300`}
+                      <div
+                        className={`h-2 bg-gradient-to-r ${category.color} rounded-full`}
+                        style={{ width: `${skill.level}%` }}
                       />
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
 
-        {/* 추가 정보 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mt-16"
-        >
+        <div className="text-center mt-16">
           <div className="bg-white dark:bg-dark-900 rounded-2xl p-8 shadow-lg">
             <h3 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
               지속적인 학습과 성장
@@ -168,7 +138,7 @@ export default function Skills() {
               <span className="px-3 py-1 bg-gray-100 dark:bg-dark-800 rounded-full">API Design</span>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

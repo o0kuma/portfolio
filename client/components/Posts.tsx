@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
 import { FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiFileText, FiPlus, FiEdit, FiTrash2 } from 'react-icons/fi'
 import SearchBar from './SearchBar'
 import PostForm from './PostForm'
@@ -213,7 +212,7 @@ export default function Posts() {
 
   if (isLoading) {
     return (
-      <section id="posts" className="section-padding bg-gray-50 dark:bg-dark-800">
+      <section id="posts" className="section-padding bg-canvas">
         <div className="container-custom">
           <div className="text-center mb-16">
             <div className="inline-block">
@@ -237,32 +236,19 @@ export default function Posts() {
   }
 
   return (
-    <section id="posts" className="section-padding bg-gray-50 dark:bg-dark-800">
+    <section id="posts" className="section-padding bg-canvas">
       <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="text-gradient">게시판</span>에서 정보를 공유합니다
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-textMuted max-w-2xl mx-auto">
             개발 과정에서 배운 점들과 새로운 기술에 대한 정보를 공유합니다.
             함께 성장하고 지식을 나누는 공간입니다.
           </p>
-        </motion.div>
+        </div>
 
-        {/* 검색 및 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-12"
-        >
+        <div className="mb-12">
           <SearchBar
             onSearch={handleSearch}
             onFilterChange={handleFilterChange}
@@ -270,16 +256,9 @@ export default function Posts() {
             filters={activeFilters}
             className="max-w-4xl mx-auto"
           />
-        </motion.div>
+        </div>
 
-        {/* 카테고리 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-4 mb-12"
-        >
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
           {categories.map((category) => (
             <button
               key={category.id}
@@ -293,34 +272,22 @@ export default function Posts() {
               {category.name}
             </button>
           ))}
-        </motion.div>
+        </div>
 
-        {/* 검색 결과 표시 */}
         {searchQuery && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
-          >
+          <div className="text-center mb-8">
             <p className="text-gray-600 dark:text-gray-400">
               "<span className="font-semibold text-primary-600 dark:text-primary-400">{searchQuery}</span>" 검색 결과: 
               <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredPosts.length}</span>개
             </p>
-          </motion.div>
+          </div>
         )}
 
         {/* 포스트 그리드 */}
         {filteredPosts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post, index) => (
-              <motion.div
-                key={post._id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="card overflow-hidden group hover:shadow-xl transition-all duration-300"
-              >
+            {filteredPosts.map((post) => (
+              <div key={post._id} className="card overflow-hidden group hover:shadow-xl transition-all duration-300">
                 {/* 포스트 헤더 */}
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-3">
@@ -426,15 +393,11 @@ export default function Posts() {
                     자세히 읽기
                   </Link>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
-          >
+          <div className="text-center py-16">
             <div className="text-gray-400 dark:text-gray-500 mb-4">
               <FiFileText size={64} className="mx-auto" />
             </div>
@@ -444,17 +407,10 @@ export default function Posts() {
             <p className="text-gray-500 dark:text-gray-600">
               검색어나 필터를 변경해보세요.
             </p>
-          </motion.div>
+          </div>
         )}
 
-        {/* 액션 버튼들 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mt-16 space-y-4"
-        >
+        <div className="text-center mt-16 space-y-4">
           <div className="flex justify-center space-x-4">
             <button
               onClick={() => setShowCreateForm(true)}
@@ -471,7 +427,7 @@ export default function Posts() {
               <FiMessageSquare size={20} />
             </Link>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       {/* PostForm 모달 */}

@@ -1,8 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { FiGithub, FiExternalLink, FiTag, FiCalendar, FiFolder, FiUser, FiCode } from 'react-icons/fi'
+import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode } from 'react-icons/fi'
 import SearchBar from './SearchBar'
 
 interface Project {
@@ -358,7 +357,7 @@ export default function Projects() {
 
   if (isLoading) {
     return (
-      <section id="projects" className="section-padding bg-white dark:bg-dark-900">
+      <section id="projects" className="section-padding bg-canvas">
         <div className="container-custom">
           <div className="text-center mb-16">
             <div className="inline-block">
@@ -382,32 +381,19 @@ export default function Projects() {
   }
 
   return (
-    <section id="projects" className="section-padding bg-white dark:bg-dark-900">
+    <section id="projects" className="section-padding bg-canvas">
       <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
-        >
+        <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             <span className="text-gradient">프로젝트</span>를 소개합니다
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          <p className="text-lg text-textMuted max-w-2xl mx-auto">
             프론트엔드 개발자로 화면 구성과 화면에 필요한 데이터 작업을 진행했습니다.
             HTML5, CSS3, JavaScript부터 Svelte, React까지 다양한 기술을 활용한 프로젝트들을 소개합니다.
           </p>
-        </motion.div>
+        </div>
 
-        {/* 검색 및 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="mb-12"
-        >
+        <div className="mb-12">
           <SearchBar
             onSearch={handleSearch}
             onFilterChange={handleFilterChange}
@@ -415,16 +401,9 @@ export default function Projects() {
             filters={activeFilters}
             className="max-w-4xl mx-auto"
           />
-        </motion.div>
+        </div>
 
-        {/* 카테고리 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-4 mb-12"
-        >
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
           {categories.map((category) => (
             <button
               key={category.id}
@@ -438,34 +417,22 @@ export default function Projects() {
               {category.name}
             </button>
           ))}
-        </motion.div>
+        </div>
 
-        {/* 검색 결과 표시 */}
         {searchQuery && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center mb-8"
-          >
+          <div className="text-center mb-8">
             <p className="text-gray-600 dark:text-gray-400">
               "<span className="font-semibold text-primary-600 dark:text-primary-400">{searchQuery}</span>" 검색 결과: 
               <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredProjects.length}</span>개
             </p>
-          </motion.div>
+          </div>
         )}
 
         {/* 프로젝트 그리드 */}
         {filteredProjects.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProjects.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="card overflow-hidden group"
-              >
+            {filteredProjects.map((project) => (
+              <div key={project.id} className="card overflow-hidden group">
                 {/* 프로젝트 이미지 */}
                 <div className="relative overflow-hidden">
                   <div className="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 dark:from-dark-700 dark:to-dark-600 flex items-center justify-center">
@@ -583,15 +550,11 @@ export default function Projects() {
                     )}
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center py-16"
-          >
+          <div className="text-center py-16">
             <div className="text-gray-400 dark:text-gray-500 mb-4">
               <FiFolder size={64} className="mx-auto" />
             </div>
@@ -601,17 +564,10 @@ export default function Projects() {
             <p className="text-gray-500 dark:text-gray-600">
               검색어나 필터를 변경해보세요.
             </p>
-          </motion.div>
+          </div>
         )}
 
-        {/* 더 많은 프로젝트 보기 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          viewport={{ once: true }}
-          className="text-center mt-16"
-        >
+        <div className="text-center mt-16">
           <a
             href="https://github.com/oikikomori/"
             target="_blank"
@@ -621,7 +577,7 @@ export default function Projects() {
             <span>더 많은 프로젝트 보기</span>
             <FiGithub size={20} />
           </a>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

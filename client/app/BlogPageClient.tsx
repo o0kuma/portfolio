@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { FiArrowRight, FiCalendar, FiUser, FiTag, FiEye, FiHeart, FiMessageSquare, FiSearch, FiSun, FiMoon, FiArrowUp, FiStar, FiZap } from 'react-icons/fi'
+import { FiArrowRight, FiCalendar, FiUser, FiTag, FiEye, FiHeart, FiMessageSquare, FiSun, FiMoon, FiArrowUp, FiStar, FiZap } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../components/BlogSearchBar'
 import BlogFooter from '../components/BlogFooter'
@@ -31,7 +31,7 @@ export default function BlogPageClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<any>({})
   const [isLoading, setIsLoading] = useState(true)
-  const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
 
@@ -55,14 +55,12 @@ export default function BlogPageClient() {
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme')
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setIsDarkMode(true)
-      document.documentElement.classList.add('dark')
-    } else {
-      setIsDarkMode(false)
+    const light = savedTheme === 'light'
+    setIsDarkMode(!light)
+    if (light) {
       document.documentElement.classList.remove('dark')
+    } else {
+      document.documentElement.classList.add('dark')
     }
   }, [])
 
@@ -174,129 +172,98 @@ export default function BlogPageClient() {
   const regularPosts = filteredPosts.filter(post => !post.featured)
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-950 via-indigo-950 via-blue-950 to-slate-950 dark:from-slate-950 dark:via-purple-950 dark:via-indigo-950 dark:to-slate-950 relative overflow-hidden">
-      {/* 강렬한 배경 애니메이션 */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          animate={{
-            x: [0, 100, -100, 0],
-            y: [0, -100, 100, 0],
-            scale: [1, 1.2, 0.8, 1]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-20 left-10 w-[500px] h-[500px] bg-gradient-to-br from-purple-500/40 to-pink-500/30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -150, 150, 0],
-            y: [0, 150, -150, 0],
-            scale: [1, 0.9, 1.1, 1]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-20 right-10 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/40 to-cyan-500/30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, 80, -80, 0],
-            y: [0, -80, 80, 0],
-            scale: [1, 1.1, 0.9, 1]
-          }}
-          transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/2 left-1/2 w-[400px] h-[400px] bg-gradient-to-br from-pink-500/35 to-orange-500/25 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -120, 120, 0],
-            y: [0, 120, -120, 0],
-            scale: [1, 0.8, 1.2, 1]
-          }}
-          transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-          className="absolute top-1/4 right-1/4 w-[350px] h-[350px] bg-gradient-to-br from-indigo-500/30 to-purple-500/25 rounded-full blur-3xl"
-        />
-      </div>
-      
-      {/* 그리드 패턴 오버레이 */}
-      <div className="fixed inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none" style={{
-        backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)',
-        backgroundSize: '50px 50px'
-      }}></div>
-
-      {/* 헤더 - 글래스모피즘 */}
-      <motion.header
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-          isScrolled
-            ? 'bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 border-b border-white/20 dark:border-slate-700/30'
-            : 'bg-transparent'
+    <div className="min-h-screen bg-canvas text-textPrimary relative">
+      <header
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
+          isScrolled ? 'glass-panel border-b border-border shadow-lg' : 'bg-transparent'
         }`}
       >
-        <div className="container-custom">
+        <div className="page-shell">
           <div className="flex items-center justify-between h-16">
-            {/* 로고 */}
             <Link href="/">
-              <motion.div
-                whileHover={{ scale: 1.05, rotate: -2 }}
-                className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent cursor-pointer flex items-center gap-2"
-              >
-                <FiStar className="text-purple-500" />
+              <div className="text-2xl font-display font-bold text-gradient cursor-pointer flex items-center gap-2 transition-transform hover:scale-[1.02]">
+                <FiStar className="text-primary-600 dark:text-accent" aria-hidden />
                 <span>iykyk blog</span>
-              </motion.div>
+              </div>
             </Link>
 
-            {/* 데스크톱 네비게이션 */}
             <nav className="hidden md:flex items-center space-x-6">
-              <Link 
-                href="/posts" 
-                className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 group"
+              <Link
+                href="/posts"
+                className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-surface/80 dark:hover:bg-surfaceElevated/50 group"
               >
                 Posts
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-pink-600 group-hover:w-full transition-all duration-300" />
               </Link>
-              <Link 
-                href="/portfolio" 
-                className="relative text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 group"
+              <Link
+                href="/portfolio"
+                className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-surface/80 dark:hover:bg-surfaceElevated/50 group"
               >
                 Portfolio
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-300" />
               </Link>
-              <Link 
-                href="/tetris" 
-                className="relative text-gray-700 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-pink-50 dark:hover:bg-pink-900/20 group"
+              <Link
+                href="/tetris"
+                className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-surface/80 dark:hover:bg-surfaceElevated/50 group"
               >
                 Tetris
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-pink-600 to-purple-600 group-hover:w-full transition-all duration-300" />
               </Link>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <button
+                type="button"
                 onClick={() => setIsAIMessengerOpen(!isAIMessengerOpen)}
-                className="relative text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 flex items-center gap-2"
+                className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors font-medium px-3 py-1.5 rounded-lg hover:bg-surface/80 dark:hover:bg-surfaceElevated/50 flex items-center gap-2"
               >
                 <FiZap size={18} />
                 <span>AI Chat</span>
-              </motion.button>
+              </button>
             </nav>
 
-            {/* 우측 버튼들 */}
             <div className="flex items-center space-x-4">
-              {/* 다크모드 토글 */}
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+              <button
+                type="button"
                 onClick={toggleDarkMode}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                aria-label={isDarkMode ? '라이트 모드로 전환' : '다크 모드로 전환'}
               >
                 {isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
-              </motion.button>
+              </button>
             </div>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      {/* 히어로 섹션 */}
-      <section className="relative pt-32 pb-24 overflow-visible">
-        <div className="container-custom relative z-10">
+      {/* Hero: motion blobs + headline — scoped to this section only */}
+      <section className="relative min-h-[50vh] pt-32 pb-24 overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
+          <motion.div
+            animate={{
+              x: [0, 80, -80, 0],
+              y: [0, -60, 60, 0],
+              scale: [1, 1.15, 0.9, 1],
+            }}
+            transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
+            className="absolute -top-20 left-0 h-[min(420px,50vw)] w-[min(420px,50vw)] rounded-full bg-gradient-to-br from-purple-500/35 to-pink-500/25 blur-3xl"
+          />
+          <motion.div
+            animate={{
+              x: [0, -100, 100, 0],
+              y: [0, 80, -80, 0],
+              scale: [1, 0.95, 1.05, 1],
+            }}
+            transition={{ duration: 22, repeat: Infinity, ease: 'linear' }}
+            className="absolute -bottom-24 right-0 h-[min(480px,55vw)] w-[min(480px,55vw)] rounded-full bg-gradient-to-br from-blue-500/35 to-cyan-500/25 blur-3xl"
+          />
+        </div>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.04] dark:opacity-[0.06]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.08) 1px, transparent 1px)',
+            backgroundSize: '50px 50px',
+          }}
+        />
+        <div className="page-shell relative z-10">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -403,40 +370,26 @@ export default function BlogPageClient() {
       </section>
 
       {/* 메인 컨텐츠 */}
-      <div className="container-custom py-12 relative z-10">
-        {/* 카테고리 필터 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap justify-center gap-3 mb-16 relative z-10"
-        >
-          {categories.map((category, index) => (
-            <motion.button
+      <div className="page-shell py-12 relative z-10">
+        <div className="flex flex-wrap justify-center gap-3 mb-16 relative z-10">
+          {categories.map((category) => (
+            <button
               key={category.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.05, y: -2 }}
-              whileTap={{ scale: 0.95 }}
+              type="button"
               onClick={() => handleCategoryChange(category.id)}
               className={`px-6 py-3 rounded-full font-semibold transition-all duration-300 relative overflow-hidden ${
                 selectedCategory === category.id
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/50 scale-105'
-                  : 'bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-slate-800/90 border border-white/30 dark:border-slate-700/30 hover:border-purple-300/50 dark:hover:border-purple-700/50 shadow-lg shadow-purple-500/5 dark:shadow-purple-900/10'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105'
+                  : 'glass-panel text-textPrimary hover:border-primary-500/30'
               }`}
             >
               {category.name}
-            </motion.button>
+            </button>
           ))}
-        </motion.div>
+        </div>
 
-        {/* Featured 포스트 */}
         {featuredPosts.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-20"
-          >
+          <div className="mb-20">
             <div className="flex items-center gap-3 mb-10">
               <div className="h-1 w-12 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
               <h2 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -445,18 +398,14 @@ export default function BlogPageClient() {
               <div className="h-1 flex-1 bg-gradient-to-r from-pink-600 to-transparent rounded-full"></div>
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {featuredPosts.map((post, index) => (
-                <motion.div
+              {featuredPosts.map((post) => (
+                <div
                   key={post._id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="relative group"
+                  className="relative group transition-transform duration-300 hover:-translate-y-1"
                 >
                   {/* 그라데이션 테두리 효과 */}
                   <div className="absolute -inset-1 bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 rounded-3xl blur-xl opacity-0 group-hover:opacity-60 transition duration-700"></div>
-                  <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/30 dark:border-slate-700/30 group-hover:border-purple-300/50 dark:group-hover:border-purple-700/50">
+                  <div className="relative glass-panel rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-border group-hover:border-primary-500/40">
                     <div className="p-6">
                       <div className="flex items-center gap-2 mb-4">
                         <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full font-semibold shadow-lg">
@@ -540,17 +489,13 @@ export default function BlogPageClient() {
                         </Link>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            </div>
           )}
 
-        {/* 최신 포스트 */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
+        <div>
           <div className="flex items-center justify-between mb-10">
             <div className="flex items-center gap-3">
               <div className="h-1 w-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
@@ -592,16 +537,9 @@ export default function BlogPageClient() {
                     />
                   </div>
                 )}
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
-                  className="relative group"
-                >
-                  {/* 그라데이션 테두리 효과 */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-500 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700"></div>
-                  <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-white/30 dark:border-slate-700/30 group-hover:border-blue-300/50 dark:group-hover:border-blue-700/50">
+                <div className="relative group transition-transform duration-300 hover:-translate-y-1">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-500 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700" />
+                  <div className="relative glass-panel rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 border border-border group-hover:border-primary-500/40">
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-3">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -687,7 +625,7 @@ export default function BlogPageClient() {
                         </Link>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </React.Fragment>
               ))}
               </div>
@@ -699,12 +637,12 @@ export default function BlogPageClient() {
               <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
                 No posts found
               </h3>
-              <p className="text-gray-500 dark:text-gray-600">
+              <p className="text-textMuted">
                 Try changing your search or filters.
               </p>
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
       <BlogFooter />
