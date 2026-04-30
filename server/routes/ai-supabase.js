@@ -21,9 +21,10 @@ router.post('/chat', async (req, res) => {
 
     // 1. 대화 세션 가져오기 또는 생성
     const conversation = await supabaseService.getOrCreateConversation(sessionId, userId);
+    const effectiveSessionId = conversation.session_id || sessionId;
     
     // 2. 대화 히스토리 가져오기
-    const conversationHistory = await supabaseService.getConversationHistory(sessionId, 20);
+    const conversationHistory = await supabaseService.getConversationHistory(effectiveSessionId, 20);
     
     // 3. 사용자 메시지 저장
     const userMessage = {
@@ -34,7 +35,7 @@ router.post('/chat', async (req, res) => {
       responseTime: 0
     };
     
-    await supabaseService.addMessage(sessionId, userMessage);
+    await supabaseService.addMessage(effectiveSessionId, userMessage);
 
     // 4. AI 응답 생성
     const aiResponse = await chatbotAI.processMessage(message, tone);
@@ -55,7 +56,7 @@ router.post('/chat', async (req, res) => {
       responseTime: responseTime
     };
     
-    await supabaseService.addMessage(sessionId, aiMessage);
+    await supabaseService.addMessage(effectiveSessionId, aiMessage);
 
     res.json({
       success: aiResponse.success,
@@ -64,7 +65,7 @@ router.post('/chat', async (req, res) => {
       intent: aiResponse.intent,
       confidence: aiResponse.confidence,
       responseTime: responseTime,
-      sessionId: sessionId,
+      sessionId: effectiveSessionId,
       messageId: aiMessage.id
     });
 
