@@ -1,4 +1,7 @@
 jest.mock('../services/supabaseService', () => ({
+  getOrCreateConversation: jest.fn(),
+  getConversationHistory: jest.fn(),
+  addMessage: jest.fn(),
   getConversationStats: jest.fn(),
   updateConversationSettings: jest.fn(),
   deleteConversation: jest.fn()
@@ -6,6 +9,13 @@ jest.mock('../services/supabaseService', () => ({
 
 jest.mock('../utils/chatbotAI', () => {
   return jest.fn().mockImplementation(() => ({
+    processMessage: jest.fn().mockResolvedValue({
+      success: true,
+      response: 'AI response',
+      emotion: 'neutral',
+      intent: 'answer',
+      confidence: 0.9
+    }),
     checkStatus: jest.fn().mockResolvedValue({ ok: true })
   }));
 });
@@ -28,6 +38,26 @@ app.use('/api/ai', aiRouter);
 describe('AI Supabase routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  test('uses the created session id for anonymous chat message storage', async () => {
+    supabaseService.getOrCreateConversation.mockResolvedValue({
+      id: 'conversation-1',
+      session_id: 'generated-session'
+    });
+    supabaseService.getConversationHistory.mockResolvedValue([]);
+    supabaseService.addMessage.mockResolvedValue({});
+
+    const response = await request(app)
+      .post('/api/ai/chat')
+      .send({ message: 'Hello' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.sessionId).toBe('generated-session');
+    expect(supabaseService.getConversationHistory).toHaveBeenCalledWith('generated-session', 20);
+    expect(supabaseService.addMessage).toHaveBeenCalledTimes(2);
+    expect(supabaseService.addMessage.mock.calls[0][0]).toBe('generated-session');
+    expect(supabaseService.addMessage.mock.calls[1][0]).toBe('generated-session');
   });
 
   test('returns conversation stats through the database service', async () => {
