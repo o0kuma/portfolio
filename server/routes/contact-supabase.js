@@ -3,6 +3,7 @@ const router = express.Router();
 const supabaseService = require('../services/supabaseService');
 const { body, validationResult } = require('express-validator');
 const { sendContactEmail } = require('../utils/email');
+const { requireAdminToken } = require('../middleware/adminTokenAuth');
 
 // 연락처 메시지 전송
 router.post('/', [
@@ -71,7 +72,7 @@ router.post('/', [
 });
 
 // 모든 연락처 메시지 조회 (관리자용)
-router.get('/', async (req, res) => {
+router.get('/', requireAdminToken, async (req, res) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
     
@@ -104,7 +105,7 @@ router.get('/', async (req, res) => {
 });
 
 // 특정 연락처 메시지 조회
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireAdminToken, async (req, res) => {
   try {
     const contactId = req.params.id;
     const contact = await supabaseService.getContact(contactId);
@@ -121,7 +122,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // 연락처 상태 업데이트 (관리자용)
-router.put('/:id/status', [
+router.put('/:id/status', requireAdminToken, [
   body('status').isIn(['unread', 'read', 'replied']).withMessage('유효하지 않은 상태입니다.')
 ], async (req, res) => {
   try {
@@ -146,7 +147,7 @@ router.put('/:id/status', [
 });
 
 // 읽지 않은 메시지 수 조회
-router.get('/stats/unread-count', async (req, res) => {
+router.get('/stats/unread-count', requireAdminToken, async (req, res) => {
   try {
     const count = await supabaseService.getCount('contacts', { status: 'unread' });
     
@@ -160,7 +161,7 @@ router.get('/stats/unread-count', async (req, res) => {
 });
 
 // 연락처 통계 조회
-router.get('/stats/overview', async (req, res) => {
+router.get('/stats/overview', requireAdminToken, async (req, res) => {
   try {
     const total = await supabaseService.getCount('contacts');
     const unread = await supabaseService.getCount('contacts', { status: 'unread' });

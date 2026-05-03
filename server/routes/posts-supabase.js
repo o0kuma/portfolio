@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const supabaseService = require('../services/supabaseService');
 const { body, validationResult } = require('express-validator');
+const { requireAdminToken } = require('../middleware/adminTokenAuth');
 
 // 모든 포스트 조회
 router.get('/', async (req, res) => {
@@ -67,7 +68,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // 포스트 생성
-router.post('/', [
+router.post('/', requireAdminToken, [
   body('title').notEmpty().withMessage('제목은 필수입니다.'),
   body('content').notEmpty().withMessage('내용은 필수입니다.'),
   body('author').notEmpty().withMessage('작성자는 필수입니다.'),
@@ -122,7 +123,7 @@ router.post('/', [
 });
 
 // 포스트 업데이트
-router.put('/:id', [
+router.put('/:id', requireAdminToken, [
   body('title').optional().notEmpty().withMessage('제목은 비어있을 수 없습니다.'),
   body('content').optional().notEmpty().withMessage('내용은 비어있을 수 없습니다.'),
   body('category').optional().isIn(['general', 'tech', 'economy', 'coin', 'travel', 'food', 'lottery', 'project', 'update']).withMessage('유효하지 않은 카테고리입니다.'),
@@ -155,7 +156,7 @@ router.put('/:id', [
 });
 
 // 포스트 삭제
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdminToken, async (req, res) => {
   try {
     const postId = req.params.id;
     
