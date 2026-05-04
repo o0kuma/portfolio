@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const supabaseService = require('../services/supabaseService');
 const { body, validationResult } = require('express-validator');
+const { requireAdminToken } = require('../middleware/adminTokenAuth');
 
 // 모든 프로젝트 조회
 router.get('/', async (req, res) => {
@@ -57,7 +58,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // 프로젝트 생성
-router.post('/', [
+router.post('/', requireAdminToken, [
   body('title').notEmpty().withMessage('제목은 필수입니다.'),
   body('description').notEmpty().withMessage('설명은 필수입니다.'),
   body('content').notEmpty().withMessage('내용은 필수입니다.'),
@@ -99,7 +100,7 @@ router.post('/', [
 });
 
 // 프로젝트 업데이트
-router.put('/:id', [
+router.put('/:id', requireAdminToken, [
   body('title').optional().notEmpty().withMessage('제목은 비어있을 수 없습니다.'),
   body('description').optional().notEmpty().withMessage('설명은 비어있을 수 없습니다.'),
   body('content').optional().notEmpty().withMessage('내용은 비어있을 수 없습니다.'),
@@ -139,7 +140,7 @@ router.put('/:id', [
 });
 
 // 프로젝트 삭제
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAdminToken, async (req, res) => {
   try {
     const projectId = req.params.id;
     
