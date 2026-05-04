@@ -9,6 +9,13 @@ export async function POST(request: Request) {
   try {
     const { userId, sessionId, usageType, messageCount = 1, tokensUsed = 0 } = await request.json()
 
+    if (!userId && !sessionId) {
+      return NextResponse.json(
+        { success: false, error: 'userId 또는 sessionId가 필요합니다.' },
+        { status: 400 }
+      )
+    }
+
     if (!usageType) {
       return NextResponse.json(
         { success: false, error: 'usageType이 필요합니다.' },
@@ -20,6 +27,18 @@ export async function POST(request: Request) {
     if (!validUsageTypes.includes(usageType)) {
       return NextResponse.json(
         { success: false, error: '유효하지 않은 usageType입니다.' },
+        { status: 400 }
+      )
+    }
+
+    if (
+      !Number.isInteger(messageCount) ||
+      messageCount <= 0 ||
+      !Number.isFinite(tokensUsed) ||
+      tokensUsed < 0
+    ) {
+      return NextResponse.json(
+        { success: false, error: '사용량 값은 양수여야 합니다.' },
         { status: 400 }
       )
     }

@@ -483,7 +483,9 @@ async function getConversationHistory(sessionId: string, limit: number = 20) {
 
 export async function POST(request: Request) {
   try {
-    const { message, tone = '친근하게', sessionId, userId = 'anonymous', context = 'portfolio' } = await request.json()
+    const { message, tone = '친근하게', sessionId, context = 'portfolio' } = await request.json()
+    // This public endpoint has no authenticated identity; do not trust caller-supplied userId for quota checks.
+    const effectiveUserId = 'anonymous'
 
     if (!message) {
       return NextResponse.json(
@@ -501,7 +503,11 @@ export async function POST(request: Request) {
 
     // 구독 상태 확인 및 사용량 제한 체크
     try {
-      const subscriptionCheck = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/check?userId=${userId}&sessionId=${sessionId}`)
+      const subscriptionParams = new URLSearchParams({
+        userId: effectiveUserId,
+        sessionId
+      })
+      const subscriptionCheck = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/check?${subscriptionParams}`)
       const subscriptionData = await subscriptionCheck.json()
       
       if (subscriptionData.success && subscriptionData.subscription) {
@@ -533,7 +539,7 @@ export async function POST(request: Request) {
     // 1. 대화 세션 가져오기 또는 생성
     let conversation = null
     try {
-      conversation = await getOrCreateConversation(sessionId, userId)
+      conversation = await getOrCreateConversation(sessionId, effectiveUserId)
       if (!conversation) {
         console.warn('대화 세션을 생성할 수 없지만 계속 진행합니다:', sessionId)
       }
@@ -570,7 +576,7 @@ export async function POST(request: Request) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: userId !== 'anonymous' ? userId : null,
+          userId: null,
           sessionId: sessionId,
           usageType: 'chat',
           messageCount: 1,
