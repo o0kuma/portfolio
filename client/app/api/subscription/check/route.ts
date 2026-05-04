@@ -32,6 +32,31 @@ export async function GET(request: Request) {
       }
     }
 
+    const today = new Date().toISOString().split('T')[0]
+    const usageMap: Record<string, number> = {}
+
+    if (targetUserId && targetUserId !== 'anonymous') {
+      // Load today's usage for authenticated users.
+      const usageResult = await dbQuery<{ usage_type: string; message_count: number }>(
+        'SELECT usage_type, message_count FROM ai_usage WHERE user_id = $1 AND date = $2',
+        [targetUserId, today]
+      )
+
+      usageResult.rows.forEach(u => {
+        usageMap[u.usage_type] = (usageMap[u.usage_type] || 0) + u.message_count
+      })
+    } else if (sessionId) {
+      // Anonymous users are limited by session_id because they do not have user_id.
+      const usageResult = await dbQuery<{ usage_type: string; message_count: number }>(
+        'SELECT usage_type, message_count FROM ai_usage WHERE session_id = $1 AND date = $2',
+        [sessionId, today]
+      )
+
+      usageResult.rows.forEach(u => {
+        usageMap[u.usage_type] = (usageMap[u.usage_type] || 0) + u.message_count
+      })
+    }
+
     // 익명 사용자는 무료 플랜
     if (!targetUserId || targetUserId === 'anonymous') {
       return NextResponse.json({
@@ -46,6 +71,13 @@ export async function GET(request: Request) {
             dailyTranslations: 5,
             dailySummaries: 3,
             dailySuggestions: 3
+          },
+          usage: {
+            chat: usageMap.chat || 0,
+            improve: usageMap.improve || 0,
+            translate: usageMap.translate || 0,
+            summarize: usageMap.summarize || 0,
+            suggest: usageMap.suggest || 0
           }
         }
       })
@@ -62,21 +94,6 @@ export async function GET(request: Request) {
 
     const isPremium = subscription && subscription.current_period_end > new Date().toISOString()
     const plan = isPremium ? subscription.plan_type : 'free'
-
-    // 일일 사용량 확인
-    const today = new Date().toISOString().split('T')[0]
-    const usageResult = await dbQuery<{ usage_type: string; message_count: number }>(
-      'SELECT usage_type, message_count FROM ai_usage WHERE user_id = $1 AND date = $2',
-      [targetUserId, today]
-    )
-    const usage = usageResult.rows
-
-    const usageMap: Record<string, number> = {}
-    if (usage) {
-      usage.forEach(u => {
-        usageMap[u.usage_type] = (usageMap[u.usage_type] || 0) + u.message_count
-      })
-    }
 
     // 플랜별 제한 설정
     const limits = isPremium ? {
