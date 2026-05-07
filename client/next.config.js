@@ -21,9 +21,9 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
             process.env.DATABASE_URL = value
           }
           
-          // OPENAI_API_KEY 로드
-          if (key === 'OPENAI_API_KEY' && !process.env.OPENAI_API_KEY) {
-            process.env.OPENAI_API_KEY = value
+          // GEMINI_API_KEY 로드
+          if (key === 'GEMINI_API_KEY' && !process.env.GEMINI_API_KEY) {
+            process.env.GEMINI_API_KEY = value
           }
         }
       }
@@ -47,8 +47,8 @@ const nextConfig = {
     return config;
   },
   // 주의: env 설정은 클라이언트 사이드에 노출됩니다
-  // OPENAI_API_KEY는 서버 사이드 전용이므로 env에 포함하지 않습니다
-  // API 라우트에서는 process.env.OPENAI_API_KEY를 직접 사용합니다
+  // GEMINI_API_KEY는 서버 사이드 전용이므로 env에 포함하지 않습니다
+  // API 라우트에서는 process.env.GEMINI_API_KEY를 직접 사용합니다
 }
 
 module.exports = nextConfig

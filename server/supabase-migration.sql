@@ -89,6 +89,7 @@ CREATE TABLE IF NOT EXISTS conversations (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   session_id VARCHAR(255) UNIQUE NOT NULL,
   user_id VARCHAR(100) DEFAULT 'anonymous',
+  is_active BOOLEAN DEFAULT true,
   settings JSONB DEFAULT '{
     "selectedTone": "친근하게",
     "language": "ko",
@@ -119,6 +120,33 @@ CREATE TABLE IF NOT EXISTS messages (
   response_time INTEGER DEFAULT 0
 );
 
+-- 8. AI 사용량 추적 테이블
+CREATE TABLE IF NOT EXISTS ai_usage (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id VARCHAR(100),
+  session_id VARCHAR(255),
+  usage_type VARCHAR(20) NOT NULL CHECK (usage_type IN ('chat', 'improve', 'translate', 'summarize', 'suggest')),
+  message_count INTEGER DEFAULT 0,
+  tokens_used INTEGER DEFAULT 0,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(user_id, date, usage_type)
+);
+
+-- 9. 구독 테이블
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id VARCHAR(100) NOT NULL,
+  plan_type VARCHAR(20) DEFAULT 'free' CHECK (plan_type IN ('free', 'premium', 'enterprise')),
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active', 'cancelled', 'expired', 'past_due')),
+  current_period_start TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  current_period_end TIMESTAMP WITH TIME ZONE,
+  stripe_customer_id VARCHAR(255),
+  stripe_subscription_id VARCHAR(255),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- 인덱스 생성
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON profiles(username);
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON profiles(username);
@@ -137,6 +165,10 @@ CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
 CREATE INDEX IF NOT EXISTS idx_conversations_last_activity ON conversations((statistics->>'lastActivity')::timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_timestamp ON messages(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_user_date ON ai_usage(user_id, date);
+CREATE INDEX IF NOT EXISTS idx_ai_usage_session_date ON ai_usage(session_id, date);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 
 -- RLS (Row Level Security) 정책 설정
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;

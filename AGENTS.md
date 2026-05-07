@@ -24,7 +24,7 @@ cd client && npm run dev   # Next.js on :3000
 ### Environment
 
 - The server reads `server/.env` (gitignored). A minimal `.env` with `NODE_ENV=development` and `PORT=5000` is sufficient for startup; the server gracefully handles missing `DATABASE_URL`.
-- The Next.js client's `next.config.js` reads `server/.env` at dev time to load `DATABASE_URL` and `OPENAI_API_KEY`. No separate `client/.env.local` is strictly required.
+- The Next.js client's `next.config.js` reads `server/.env` at dev time to load `DATABASE_URL` and `GEMINI_API_KEY`. No separate `client/.env.local` is strictly required.
 - Without `DATABASE_URL`, posts/projects/contact/subscription DB features return errors, but the app itself starts and pages render (Tetris, portfolio, UI chrome all work).
 
 ### Lint / Test / Build
@@ -39,3 +39,12 @@ cd client && npm run dev   # Next.js on :3000
 - `sharp` (image processing) is a native dependency in `server/`; it compiles during `npm install`. If it fails, the server still starts but image processing features won't work.
 - The codebase is migrating from Supabase to Neon/raw PostgreSQL. Route files are named `*-supabase.js` but actually use the `pg` driver via `config/db.js`.
 - Node.js 20 LTS is required (Next.js 14 minimum).
+
+### AI Chatbot (Gemini)
+
+The AI chatbot uses **Google Gemini API** via the OpenAI-compatible REST endpoint (`generativelanguage.googleapis.com/v1beta/openai/chat/completions`). The model is `gemini-2.5-flash-preview-05-20`.
+
+- **API Key**: Set `GEMINI_API_KEY` in `server/.env`. The Next.js client reads it at dev time via `next.config.js`.
+- **Without the key**: The chatbot falls back to keyword-based template responses (still functional, but no AI generation).
+- **Chat route**: `client/app/api/ai/chat/route.ts` — handles message sending, conversation history, and usage tracking.
+- **DB tables used**: `conversations`, `messages`, `ai_usage`, `subscriptions` (schema in `server/supabase-migration.sql`).
