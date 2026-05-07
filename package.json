@@ -21,9 +21,9 @@
   "license": "MIT",
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.14"
   },
   "dependencies": {
-    "mongodb": "^6.19.0"
+    "mongodb": "^6.21.0"
   }
 }
