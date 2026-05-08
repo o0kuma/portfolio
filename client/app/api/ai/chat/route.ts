@@ -6,6 +6,22 @@ import { dbQuery } from '@/lib/neon-server'
 import * as fs from 'fs'
 import * as path from 'path'
 
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
+const MAX_MESSAGE_LENGTH = 4000
+const INTERNAL_API_TIMEOUT_MS = 3000
+
+type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_fetch_error' | null
+
+async function fetchWithTimeout(input: string, init: RequestInit = {}, timeoutMs: number = INTERNAL_API_TIMEOUT_MS) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+  try {
+    return await fetch(input, { ...init, signal: controller.signal })
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
 // Gemini API 키를 가져오는 헬퍼 함수
 function getGeminiApiKey(): string | null {
   const key = process.env.GEMINI_API_KEY?.trim()
@@ -41,9 +57,6 @@ function loadServerEnv() {
               const value = match[2].trim().replace(/^["']|["']$/g, '')
               if (key === 'GEMINI_API_KEY' && value && !process.env.GEMINI_API_KEY) {
                 process.env.GEMINI_API_KEY = value
-                if (process.env.NODE_ENV === 'development') {
-                  console.log(`✅ ${path.basename(envPath)}에서 GEMINI_API_KEY 로드됨`)
-                }
                 return
               }
             }
@@ -73,6 +86,7 @@ async function generateAIResponse(
   emotion: string
   intent: string
   confidence: number
+  fallbackReason: FallbackReason
 }> {
   // 개발 환경에서 .env 파일 재로드 시도
   if (!process.env.GEMINI_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
@@ -82,9 +96,10 @@ async function generateAIResponse(
   const geminiApiKey = getGeminiApiKey()
 
   if (!geminiApiKey) {
-    console.warn('⚠️ GEMINI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
-    console.warn('server/.env 파일에 GEMINI_API_KEY=your-api-key 를 추가하세요.')
-    return generateFallbackResponse(message, tone)
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('⚠️ GEMINI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
+    }
+    return generateFallbackResponse(message, tone, 'missing_api_key')
   }
 
   if (process.env.NODE_ENV === 'development') {
@@ -113,7 +128,7 @@ async function generateAIResponse(
         'Authorization': `Bearer ${geminiApiKey}`
       },
       body: JSON.stringify({
-        model: 'gemini-2.5-flash-preview-05-20',
+        model: GEMINI_MODEL,
         messages: messages,
         temperature: 0.7,
         max_tokens: 500
@@ -121,18 +136,20 @@ async function generateAIResponse(
     })
 
     if (!response.ok) {
+      const fallbackReason: FallbackReason = `gemini_http_${response.status}`
       const errorData = await response.json().catch(() => ({}))
-      console.error('Gemini API 오류:', {
+      console.error('Gemini API 오류로 fallback 응답 사용:', {
         status: response.status,
         statusText: response.statusText,
-        error: errorData
+        error: errorData?.error || errorData,
+        fallbackReason
       })
 
       if (response.status === 401 || response.status === 403) {
         console.error('Gemini API 인증 오류: API 키를 확인하세요.')
       }
 
-      return generateFallbackResponse(message, tone)
+      return generateFallbackResponse(message, tone, fallbackReason)
     }
 
     const data = await response.json()
@@ -146,16 +163,21 @@ async function generateAIResponse(
       response: aiResponse,
       emotion,
       intent,
-      confidence: 0.9
+      confidence: 0.9,
+      fallbackReason: null
     }
   } catch (error: any) {
-    console.error('Gemini API 호출 오류:', error.message)
-    return generateFallbackResponse(message, tone)
+    const fallbackReason: FallbackReason = 'gemini_fetch_error'
+    console.error('Gemini API 호출 오류로 fallback 응답 사용:', {
+      message: error?.message || 'Unknown error',
+      fallbackReason
+    })
+    return generateFallbackResponse(message, tone, fallbackReason)
   }
 }
 
 // 기본 응답 생성 (fallback)
-function generateFallbackResponse(message: string, tone: string) {
+function generateFallbackResponse(message: string, tone: string, fallbackReason: FallbackReason) {
   const toneMap: Record<string, string> = {
     '친근하게': '안녕하세요!',
     '전문적으로': '안녕하십니까.',
@@ -178,8 +200,25 @@ function generateFallbackResponse(message: string, tone: string) {
     response,
     emotion: 'neutral',
     intent: 'general',
-    confidence: 0.7
+    confidence: 0.7,
+    fallbackReason
   }
+}
+
+function getInternalApiBaseUrl(): string {
+  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
+  if (publicAppUrl) {
+    return publicAppUrl
+  }
+
+  const vercelUrl = process.env.VERCEL_URL?.trim()
+  if (vercelUrl) {
+    return vercelUrl.startsWith('http://') || vercelUrl.startsWith('https://')
+      ? vercelUrl
+      : `https://${vercelUrl}`
+  }
+
+  return 'http://localhost:3000'
 }
 
 // 감정 분석
@@ -355,7 +394,7 @@ export async function POST(request: Request) {
     // This public endpoint has no authenticated identity; do not trust caller-supplied userId for quota checks.
     const effectiveUserId = 'anonymous'
 
-    if (!message) {
+    if (typeof message !== 'string' || !message.trim()) {
       return NextResponse.json(
         { success: false, error: '메시지가 필요합니다.' },
         { status: 400 }
@@ -369,13 +408,29 @@ export async function POST(request: Request) {
       )
     }
 
+    const normalizedMessage = message.trim()
+    if (normalizedMessage.length > MAX_MESSAGE_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: `메시지는 최대 ${MAX_MESSAGE_LENGTH}자까지 입력할 수 있습니다.` },
+        { status: 400 }
+      )
+    }
+
+    const allowedTones = new Set(['친근하게', '전문적으로', '격식있게', '캐주얼하게'])
+    const safeTone = typeof tone === 'string' && allowedTones.has(tone) ? tone : '친근하게'
+    const safeContext = context === 'blog' ? 'blog' : 'portfolio'
+
+    const internalApiBaseUrl = getInternalApiBaseUrl()
+
     // 구독 상태 확인 및 사용량 제한 체크
     try {
       const subscriptionParams = new URLSearchParams({
         userId: effectiveUserId,
         sessionId
       })
-      const subscriptionCheck = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/check?${subscriptionParams}`)
+      const subscriptionCheck = await fetchWithTimeout(
+        `${internalApiBaseUrl}/api/subscription/check?${subscriptionParams}`
+      )
       const subscriptionData = await subscriptionCheck.json()
       
       if (subscriptionData.success && subscriptionData.subscription) {
@@ -397,8 +452,10 @@ export async function POST(request: Request) {
           )
         }
       }
-    } catch (subError) {
-      console.warn('구독 상태 확인 실패 (계속 진행):', subError)
+    } catch (subError: any) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('구독 상태 확인 실패 (계속 진행):', subError?.message || 'unknown')
+      }
       // 구독 확인 실패해도 계속 진행 (기본 동작)
     }
 
@@ -423,11 +480,11 @@ export async function POST(request: Request) {
     try {
       await addMessage(sessionId, {
         id: Date.now().toString(),
-        content: message,
+        content: normalizedMessage,
         isUser: true,
         timestamp: new Date(),
         responseTime: 0,
-        context: context // 포트폴리오/블로그 구분 저장
+        context: safeContext // 포트폴리오/블로그 구분 저장
       })
     } catch (error: any) {
       console.error('사용자 메시지 저장 오류:', error)
@@ -435,12 +492,12 @@ export async function POST(request: Request) {
     }
 
     // 4. AI 응답 생성 (Gemini API 사용)
-    const aiResponse = await generateAIResponse(message, tone, context, conversationHistory)
+    const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
     // 4-1. 사용량 기록
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/subscription/usage`, {
+      await fetchWithTimeout(`${internalApiBaseUrl}/api/subscription/usage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -451,8 +508,10 @@ export async function POST(request: Request) {
           tokensUsed: aiResponse.response.length / 4 // 대략적인 토큰 수 추정
         })
       })
-    } catch (usageError) {
-      console.warn('사용량 기록 실패 (계속 진행):', usageError)
+    } catch (usageError: any) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('사용량 기록 실패 (계속 진행):', usageError?.message || 'unknown')
+      }
     }
 
     // 5. AI 응답 저장
@@ -463,22 +522,21 @@ export async function POST(request: Request) {
         isUser: false,
         timestamp: new Date(),
         aiFeatures: {
-          tone: tone,
+          tone: safeTone,
           emotion: aiResponse.emotion,
           intent: aiResponse.intent,
           confidence: aiResponse.confidence,
-          context: context // 포트폴리오/블로그 구분 저장
+          context: safeContext // 포트폴리오/블로그 구분 저장
         },
         responseTime: responseTime,
-        context: context
+        context: safeContext
       })
     } catch (error: any) {
       console.error('AI 메시지 저장 오류:', error)
       // 메시지 저장 실패해도 계속 진행
     }
 
-    const isFallback = aiResponse.response.includes('더 자세히 알려주시면 도와드리겠습니다') || 
-                       aiResponse.confidence === 0.7
+    const isFallback = aiResponse.fallbackReason !== null
 
     return NextResponse.json({
       success: aiResponse.success,
@@ -489,6 +547,7 @@ export async function POST(request: Request) {
       responseTime: responseTime,
       sessionId: sessionId,
       isFallback: isFallback,
+      fallbackReason: aiResponse.fallbackReason,
       ...(isFallback && {
         warning: 'Gemini API를 사용할 수 없어 기본 응답을 반환했습니다. 환경 변수 GEMINI_API_KEY를 확인하세요.'
       })
