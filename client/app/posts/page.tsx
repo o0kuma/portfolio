@@ -7,6 +7,9 @@ import BlogSearchBar from '../../components/BlogSearchBar'
 import AdBanner from '../../components/AdBanner'
 import CreatePostForm from '../../components/CreatePostForm'
 import { normalizePostBoardItem } from '@/lib/postApi'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 interface Post {
   _id: string
@@ -56,7 +59,7 @@ export default function PostsPage() {
       if (category !== 'all') params.append('category', category)
       if (search) params.append('search', search)
       
-      const response = await fetch(`http://localhost:5000/api/posts?${params}`)
+      const response = await fetch(`${API_BASE_URL}/api/posts?${params}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -152,7 +155,7 @@ export default function PostsPage() {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
         method: 'DELETE'
       })
 
@@ -171,7 +174,7 @@ export default function PostsPage() {
 
   const handleLikePost = async (postId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
         method: 'POST'
       })
 

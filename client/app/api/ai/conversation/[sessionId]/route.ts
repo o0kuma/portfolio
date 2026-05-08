@@ -4,6 +4,13 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 
+const SESSION_ID_PATTERN = /^[a-zA-Z0-9._:-]{1,128}$/
+
+function isValidSessionId(value: string | null | undefined): value is string {
+  if (!value) return false
+  return SESSION_ID_PATTERN.test(value)
+}
+
 export async function GET(
   request: Request,
   { params }: { params: { sessionId: string } }
@@ -11,21 +18,40 @@ export async function GET(
   try {
     const { sessionId } = params
     const { searchParams } = new URL(request.url)
-    const limit = parseInt(searchParams.get('limit') || '50')
+    const requestedLimit = parseInt(searchParams.get('limit') || '50', 10)
+    const limit = Number.isFinite(requestedLimit)
+      ? Math.min(Math.max(requestedLimit, 1), 100)
+      : 50
 
-    if (!sessionId) {
+    if (!isValidSessionId(sessionId)) {
       return NextResponse.json(
-        { success: false, error: 'sessionId가 필요합니다.' },
+        { success: false, error: '유효한 sessionId가 필요합니다.' },
         { status: 400 }
       )
     }
 
-    // 먼저 conversation의 UUID(id)를 가져와야 함
-    const conversationResult = await dbQuery<{ id: string }>(
-      'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
-      [sessionId]
-    )
-    const conversation = conversationResult.rows[0]
+    let conversation: { id: string } | undefined
+    try {
+      // 먼저 conversation의 UUID(id)를 가져와야 함
+      const conversationResult = await dbQuery<{ id: string }>(
+        'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
+        [sessionId]
+      )
+      conversation = conversationResult.rows[0]
+    } catch (error: any) {
+      console.error('ai/conversation lookup failed:', {
+        code: error?.code,
+        message: error?.message,
+        sessionId
+      })
+      return NextResponse.json({
+        success: true,
+        sessionId,
+        messages: [],
+        count: 0,
+        warning: 'conversation_lookup_failed'
+      })
+    }
 
     if (!conversation) {
       return NextResponse.json({
@@ -37,11 +63,20 @@ export async function GET(
     }
 
     // 대화 히스토리 조회 (conversation_id는 UUID)
-    const messageResult = await dbQuery<any>(
-      'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC LIMIT $2',
-      [conversation.id, limit]
-    )
-    const messages = messageResult.rows
+    let messages: any[] = []
+    try {
+      const messageResult = await dbQuery<any>(
+        'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC LIMIT $2',
+        [conversation.id, limit]
+      )
+      messages = messageResult.rows || []
+    } catch (error: any) {
+      console.error('ai/conversation message lookup failed:', {
+        code: error?.code,
+        message: error?.message,
+        sessionId
+      })
+    }
 
     // 메시지를 ChatMessage 형식으로 변환
     const formattedMessages = (messages || []).map((msg: any) => ({
@@ -60,12 +95,15 @@ export async function GET(
     })
 
   } catch (error: any) {
-    console.error('대화 히스토리 조회 오류:', error)
+    console.error('ai/conversation unexpected error:', {
+      code: error?.code,
+      message: error?.message
+    })
     return NextResponse.json(
       {
         success: false,
         error: '대화 히스토리 조회 중 오류가 발생했습니다.',
-        details: error.message
+        errorCode: 'AI_CONVERSATION_FETCH_ERROR'
       },
       { status: 500 }
     )

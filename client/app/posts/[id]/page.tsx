@@ -7,6 +7,9 @@ import { useParams } from 'next/navigation'
 import AdBanner from '@/components/AdBanner'
 import { insertAdsInContent } from '@/components/InArticleAd'
 import { normalizePostDetail, type PostDetail } from '@/lib/postApi'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 type Post = PostDetail
 
@@ -29,7 +32,7 @@ export default function PostDetailPage() {
   const fetchPost = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}`)
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -55,7 +58,7 @@ export default function PostDetailPage() {
     
     try {
       setIsLiking(true)
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
         method: 'POST'
       })
       
@@ -80,7 +83,7 @@ export default function PostDetailPage() {
 
     try {
       setIsSubmittingComment(true)
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}/comments`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -108,7 +111,7 @@ export default function PostDetailPage() {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
         method: 'DELETE'
       })
 

@@ -5,6 +5,9 @@ import { FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiFileText,
 import SearchBar from './SearchBar'
 import PostForm from './PostForm'
 import Link from 'next/link'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 interface Post {
   _id: string
@@ -50,7 +53,7 @@ export default function Posts() {
       if (selectedCategory !== 'all') params.append('category', selectedCategory)
       if (searchQuery) params.append('search', searchQuery)
       
-      const response = await fetch(`http://localhost:5000/api/posts?${params}`)
+      const response = await fetch(`${API_BASE_URL}/api/posts?${params}`)
       const data = await response.json()
       
       if (response.ok) {
@@ -129,7 +132,7 @@ export default function Posts() {
 
   const handleSavePost = async (postData: any) => {
     try {
-      const url = postData._id ? `http://localhost:5000/api/posts/${postData._id}` : 'http://localhost:5000/api/posts'
+      const url = postData._id ? `${API_BASE_URL}/api/posts/${postData._id}` : `${API_BASE_URL}/api/posts`
       const method = postData._id ? 'PUT' : 'POST'
       
       const response = await fetch(url, {
@@ -163,7 +166,7 @@ export default function Posts() {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
         method: 'DELETE'
       })
 
@@ -182,7 +185,7 @@ export default function Posts() {
 
   const handleLikePost = async (postId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/posts/${postId}/like`, {
+      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
         method: 'POST'
       })
 

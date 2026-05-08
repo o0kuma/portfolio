@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react'
 import BlogPostsAtmosphere from '@/components/home/BlogPostsAtmosphere'
 import type { HomePost } from '@/components/home/post-types'
 import { normalizePostListItem } from '@/lib/postApi'
+import { getApiBaseUrl } from '@/lib/api-base-url'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+const API_BASE = getApiBaseUrl()
 
 function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('ko-KR', {

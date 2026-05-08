@@ -8,6 +8,9 @@ import BlogSearchBar from '../components/BlogSearchBar'
 import BlogFooter from '../components/BlogFooter'
 import AIMessenger from '../components/AIMessenger'
 import AdBanner from '../components/AdBanner'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 interface Post {
   _id: string
@@ -89,7 +92,7 @@ export default function BlogPageClient() {
       if (selectedCategory !== 'all') params.append('category', selectedCategory)
       if (searchQuery) params.append('search', searchQuery)
       
-      const response = await fetch(`http://localhost:5000/api/posts?${params}`)
+      const response = await fetch(`${API_BASE_URL}/api/posts?${params}`)
       const data = await response.json()
       
       if (response.ok) {

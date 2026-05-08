@@ -187,12 +187,17 @@ function generateFallbackResponse(message: string, tone: string, fallbackReason:
 
   const tonePrefix = toneMap[tone] || '안녕하세요!'
   const lowerMessage = message.toLowerCase()
+  const messagePreview = message.trim().slice(0, 60)
   let response = tonePrefix + ' '
 
   if (lowerMessage.includes('안녕') || lowerMessage.includes('hello')) {
     response += '반가워요! 무엇을 도와드릴까요?'
+  } else if (lowerMessage.includes('?') || lowerMessage.includes('어떻게') || lowerMessage.includes('왜')) {
+    response += `"${messagePreview}"에 대해 단계별로 답변드릴게요. 상황이나 목표를 조금 더 알려주시면 더 정확히 도와드릴 수 있어요.`
+  } else if (lowerMessage.includes('코드') || lowerMessage.includes('에러') || lowerMessage.includes('오류')) {
+    response += `"${messagePreview}" 관련해서 원인 후보를 좁혀볼게요. 오류 로그와 재현 경로를 함께 주시면 빠르게 해결할 수 있습니다.`
   } else {
-    response += '좋은 질문이네요! 더 자세히 알려주시면 도와드리겠습니다.'
+    response += `"${messagePreview}"에 대해 확인했습니다. 핵심 목적과 원하는 결과를 알려주시면 맞춤형으로 정리해드릴게요.`
   }
 
   return {

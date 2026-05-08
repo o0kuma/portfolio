@@ -1,4 +1,6 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 export interface ChatMessage {
   id: string

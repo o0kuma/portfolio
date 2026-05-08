@@ -3,6 +3,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiSave, FiTag } from 'react-icons/fi'
+import { getApiBaseUrl } from '@/lib/api-base-url'
+
+const API_BASE_URL = getApiBaseUrl()
 
 interface CreatePostFormProps {
   isOpen: boolean
@@ -43,7 +46,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
 
     try {
       setIsSubmitting(true)
-      const response = await fetch('http://localhost:5000/api/posts', {
+      const response = await fetch(`${API_BASE_URL}/api/posts`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
