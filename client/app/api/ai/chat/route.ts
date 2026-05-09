@@ -226,6 +226,11 @@ function getInternalApiBaseUrl(): string {
   return 'http://localhost:3000'
 }
 
+function estimateTokensUsed(responseText: string): number {
+  // The usage API validates tokensUsed as an integer, so round up the estimate.
+  return Math.max(1, Math.ceil(responseText.length / 4))
+}
+
 // 감정 분석
 function analyzeEmotion(message: string): string {
   const lowerMessage = message.toLowerCase()
@@ -437,31 +442,50 @@ export async function POST(request: Request) {
         `${internalApiBaseUrl}/api/subscription/check?${subscriptionParams}`
       )
       const subscriptionData = await subscriptionCheck.json()
+
+      if (!subscriptionCheck.ok || !subscriptionData.success || !subscriptionData.subscription) {
+        console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', {
+          status: subscriptionCheck.status,
+          error: subscriptionData?.error,
+          errorCode: subscriptionData?.errorCode
+        })
+        return NextResponse.json(
+          {
+            success: false,
+            error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+            errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
+      }
       
-      if (subscriptionData.success && subscriptionData.subscription) {
-        const { subscription: sub } = subscriptionData
-        const { usage, limits } = sub
-        
-        // 무료 사용자의 일일 메시지 제한 체크
-        if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
-          return NextResponse.json(
-            {
-              success: false,
-              error: '일일 무료 메시지 한도를 초과했습니다.',
-              errorCode: 'DAILY_LIMIT_EXCEEDED',
-              limit: limits.dailyChatMessages,
-              used: usage.chat,
-              upgradeRequired: true
-            },
-            { status: 403 }
-          )
-        }
+      const { subscription: sub } = subscriptionData
+      const { usage, limits } = sub
+      
+      // 무료 사용자의 일일 메시지 제한 체크
+      if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: '일일 무료 메시지 한도를 초과했습니다.',
+            errorCode: 'DAILY_LIMIT_EXCEEDED',
+            limit: limits.dailyChatMessages,
+            used: usage.chat,
+            upgradeRequired: true
+          },
+          { status: 403 }
+        )
       }
     } catch (subError: any) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('구독 상태 확인 실패 (계속 진행):', subError?.message || 'unknown')
-      }
-      // 구독 확인 실패해도 계속 진행 (기본 동작)
+      console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', subError?.message || 'unknown')
+      return NextResponse.json(
+        {
+          success: false,
+          error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+          errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
+        },
+        { status: 503 }
+      )
     }
 
     const startTime = Date.now()
@@ -502,7 +526,7 @@ export async function POST(request: Request) {
 
     // 4-1. 사용량 기록
     try {
-      await fetchWithTimeout(`${internalApiBaseUrl}/api/subscription/usage`, {
+      const usageResponse = await fetchWithTimeout(`${internalApiBaseUrl}/api/subscription/usage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -510,13 +534,35 @@ export async function POST(request: Request) {
           sessionId: sessionId,
           usageType: 'chat',
           messageCount: 1,
-          tokensUsed: aiResponse.response.length / 4 // 대략적인 토큰 수 추정
+          tokensUsed: estimateTokensUsed(aiResponse.response)
         })
       })
-    } catch (usageError: any) {
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('사용량 기록 실패 (계속 진행):', usageError?.message || 'unknown')
+      const usageData = await usageResponse.json().catch(() => ({}))
+      if (!usageResponse.ok || !usageData.success) {
+        console.error('사용량 기록 실패로 AI 응답을 차단합니다:', {
+          status: usageResponse.status,
+          error: usageData?.error,
+          errorCode: usageData?.errorCode
+        })
+        return NextResponse.json(
+          {
+            success: false,
+            error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+            errorCode: 'USAGE_RECORD_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
       }
+    } catch (usageError: any) {
+      console.error('사용량 기록 실패로 AI 응답을 차단합니다:', usageError?.message || 'unknown')
+      return NextResponse.json(
+        {
+          success: false,
+          error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+          errorCode: 'USAGE_RECORD_UNAVAILABLE'
+        },
+        { status: 503 }
+      )
     }
 
     // 5. AI 응답 저장

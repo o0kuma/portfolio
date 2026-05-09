@@ -107,6 +107,14 @@ export async function GET(request: Request) {
         code: error?.code,
         message: error?.message
       })
+      return NextResponse.json(
+        {
+          success: false,
+          error: '사용량 조회 중 오류가 발생했습니다.',
+          errorCode: 'USAGE_LOOKUP_ERROR'
+        },
+        { status: 503 }
+      )
     }
 
     // 익명 사용자는 무료 플랜
@@ -133,6 +141,14 @@ export async function GET(request: Request) {
         message: error?.message,
         hasUserId: Boolean(targetUserId)
       })
+      return NextResponse.json(
+        {
+          success: false,
+          error: '구독 정보 조회 중 오류가 발생했습니다.',
+          errorCode: 'SUBSCRIPTION_LOOKUP_ERROR'
+        },
+        { status: 503 }
+      )
     }
 
     const isPremium = subscription && subscription.current_period_end > new Date().toISOString()
