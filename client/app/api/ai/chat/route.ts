@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
+import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -429,14 +430,16 @@ export async function POST(request: Request) {
     const allowedTones = new Set(['친근하게', '전문적으로', '격식있게', '캐주얼하게'])
     const safeTone = typeof tone === 'string' && allowedTones.has(tone) ? tone : '친근하게'
     const safeContext = context === 'blog' ? 'blog' : 'portfolio'
+    const quotaIdentity = getAnonymousQuotaIdentity(request)
+    const quotaJson = (body: any, init?: ResponseInit) =>
+      applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
     const internalApiBaseUrl = getInternalApiBaseUrl()
 
     // 구독 상태 확인 및 사용량 제한 체크
     try {
       const subscriptionParams = new URLSearchParams({
-        userId: effectiveUserId,
-        sessionId
+        sessionId: quotaIdentity.sessionId
       })
       const subscriptionCheck = await fetchWithTimeout(
         `${internalApiBaseUrl}/api/subscription/check?${subscriptionParams}`
@@ -449,7 +452,7 @@ export async function POST(request: Request) {
           error: subscriptionData?.error,
           errorCode: subscriptionData?.errorCode
         })
-        return NextResponse.json(
+        return quotaJson(
           {
             success: false,
             error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
@@ -464,7 +467,7 @@ export async function POST(request: Request) {
       
       // 무료 사용자의 일일 메시지 제한 체크
       if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
-        return NextResponse.json(
+        return quotaJson(
           {
             success: false,
             error: '일일 무료 메시지 한도를 초과했습니다.',
@@ -478,7 +481,7 @@ export async function POST(request: Request) {
       }
     } catch (subError: any) {
       console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', subError?.message || 'unknown')
-      return NextResponse.json(
+      return quotaJson(
         {
           success: false,
           error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
@@ -531,7 +534,7 @@ export async function POST(request: Request) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: null,
-          sessionId: sessionId,
+          sessionId: quotaIdentity.sessionId,
           usageType: 'chat',
           messageCount: 1,
           tokensUsed: estimateTokensUsed(aiResponse.response)
@@ -544,7 +547,7 @@ export async function POST(request: Request) {
           error: usageData?.error,
           errorCode: usageData?.errorCode
         })
-        return NextResponse.json(
+        return quotaJson(
           {
             success: false,
             error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
@@ -555,7 +558,7 @@ export async function POST(request: Request) {
       }
     } catch (usageError: any) {
       console.error('사용량 기록 실패로 AI 응답을 차단합니다:', usageError?.message || 'unknown')
-      return NextResponse.json(
+      return quotaJson(
         {
           success: false,
           error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
@@ -589,7 +592,7 @@ export async function POST(request: Request) {
 
     const isFallback = aiResponse.fallbackReason !== null
 
-    return NextResponse.json({
+    return quotaJson({
       success: aiResponse.success,
       response: aiResponse.response,
       emotion: aiResponse.emotion,

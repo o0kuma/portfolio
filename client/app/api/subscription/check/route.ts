@@ -3,6 +3,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
+import {
+  applyAnonymousQuotaCookie,
+  getAnonymousQuotaIdentity,
+  isAnonymousQuotaSessionId
+} from '@/lib/anonymous-quota'
 
 const IDENTIFIER_PATTERN = /^[a-zA-Z0-9._:-]{1,128}$/
 
@@ -57,8 +62,9 @@ export async function GET(request: Request) {
     }
 
     // 세션 ID로 사용자 찾기 (익명 사용자 처리)
-    let targetUserId = userId
-    if (!targetUserId && sessionId) {
+    let targetUserId = userId === 'anonymous' ? null : userId
+    const providedQuotaSessionId = isAnonymousQuotaSessionId(sessionId) ? sessionId : null
+    if (!targetUserId && sessionId && !providedQuotaSessionId) {
       try {
         const conversationResult = await dbQuery<{ user_id: string }>(
           'SELECT user_id FROM conversations WHERE session_id = $1 LIMIT 1',
@@ -77,6 +83,13 @@ export async function GET(request: Request) {
       }
     }
 
+    const quotaIdentity = targetUserId || providedQuotaSessionId ? null : getAnonymousQuotaIdentity(request)
+    const anonymousUsageSessionId = providedQuotaSessionId || quotaIdentity?.sessionId || sessionId
+    const jsonResponse = (body: any, init?: ResponseInit) => {
+      const response = NextResponse.json(body, init)
+      return quotaIdentity ? applyAnonymousQuotaCookie(response, quotaIdentity) : response
+    }
+
     const today = new Date().toISOString().split('T')[0]
     const usageMap: Record<string, number> = {}
 
@@ -91,11 +104,11 @@ export async function GET(request: Request) {
         usageResult.rows.forEach(u => {
           usageMap[u.usage_type] = (usageMap[u.usage_type] || 0) + u.message_count
         })
-      } else if (sessionId) {
-        // Anonymous users are limited by session_id because they do not have user_id.
+      } else if (anonymousUsageSessionId) {
+        // Anonymous users are limited by a server-derived quota identity, not a client session id.
         const usageResult = await dbQuery<{ usage_type: string; message_count: number }>(
           'SELECT usage_type, message_count FROM ai_usage WHERE session_id = $1 AND date = $2',
-          [sessionId, today]
+          [anonymousUsageSessionId, today]
         )
 
         usageResult.rows.forEach(u => {
@@ -107,7 +120,7 @@ export async function GET(request: Request) {
         code: error?.code,
         message: error?.message
       })
-      return NextResponse.json(
+      return jsonResponse(
         {
           success: false,
           error: '사용량 조회 중 오류가 발생했습니다.',
@@ -119,7 +132,7 @@ export async function GET(request: Request) {
 
     // 익명 사용자는 무료 플랜
     if (!targetUserId || targetUserId === 'anonymous') {
-      return NextResponse.json({
+      return jsonResponse({
         success: true,
         subscription: buildFreeSubscription(usageMap)
       })
