@@ -30,6 +30,10 @@ function hashQuotaIdentifier(value: string): string {
     .slice(0, 32)
 }
 
+function shouldTrustProxyIpHeaders(): boolean {
+  return process.env.AI_QUOTA_TRUST_PROXY_HEADERS === 'true'
+}
+
 function getCookieValue(request: Request, name: string): string | null {
   const cookieHeader = request.headers.get('cookie')
   if (!cookieHeader) return null
@@ -73,22 +77,33 @@ export function isAnonymousQuotaSessionId(value: string | null): value is string
 }
 
 export function getAnonymousQuotaIdentity(request: Request): AnonymousQuotaIdentity {
-  const forwardedIp = getForwardedIp(request)
-  if (forwardedIp) {
+  const existingCookieValue = getCookieValue(request, COOKIE_NAME)
+  const hasValidCookie = Boolean(existingCookieValue && COOKIE_VALUE_PATTERN.test(existingCookieValue))
+  if (hasValidCookie) {
+    const cookieValue = existingCookieValue as string
     return {
-      sessionId: `anon_ip_${hashQuotaIdentifier(forwardedIp)}`,
+      sessionId: `anon_cookie_${hashQuotaIdentifier(cookieValue)}`,
+      cookieValue,
       shouldSetCookie: false
     }
   }
 
-  const existingCookieValue = getCookieValue(request, COOKIE_NAME)
-  const hasValidCookie = Boolean(existingCookieValue && COOKIE_VALUE_PATTERN.test(existingCookieValue))
-  const cookieValue = hasValidCookie ? (existingCookieValue as string) : createCookieValue()
+  if (shouldTrustProxyIpHeaders()) {
+    const forwardedIp = getForwardedIp(request)
+    if (forwardedIp) {
+      return {
+        sessionId: `anon_ip_${hashQuotaIdentifier(forwardedIp)}`,
+        shouldSetCookie: false
+      }
+    }
+  }
+
+  const cookieValue = createCookieValue()
 
   return {
     sessionId: `anon_cookie_${hashQuotaIdentifier(cookieValue)}`,
     cookieValue,
-    shouldSetCookie: !hasValidCookie
+    shouldSetCookie: true
   }
 }
 
