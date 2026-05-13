@@ -24,60 +24,66 @@ export default function PortfolioClient() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-canvas text-textPrimary relative overflow-hidden">
-        {/* 배경 애니메이션 */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-400/20 dark:bg-blue-400/10 rounded-full animate-pulse"></div>
-          <div className="absolute top-3/4 right-1/4 w-32 h-32 bg-purple-400/15 dark:bg-purple-400/8 rounded-full animate-bounce"></div>
-          <div className="absolute bottom-1/4 left-1/3 w-48 h-48 bg-indigo-400/25 dark:bg-indigo-400/12 rounded-full animate-ping"></div>
+      <div
+        className="min-h-screen flex items-center justify-center relative overflow-hidden"
+        style={{ background: 'linear-gradient(180deg,#0f172a 0%,#0c4a6e 55%,#06b6d4 100%)' }}
+      >
+        {/* Floating bubbles */}
+        {[
+          { w: 60, l: '10%', t: '20%', d: '3s' },
+          { w: 30, l: '80%', t: '15%', d: '2s' },
+          { w: 80, l: '70%', t: '60%', d: '4s' },
+          { w: 20, l: '30%', t: '70%', d: '2.5s' },
+          { w: 50, l: '50%', t: '10%', d: '3.5s' },
+        ].map((b, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full border border-white/20 bg-white/5 animate-pulse"
+            style={{ width: b.w, height: b.w, left: b.l, top: b.t, animationDuration: b.d }}
+          />
+        ))}
+
+        {/* Wave at bottom */}
+        <div className="absolute bottom-0 inset-x-0 pointer-events-none">
+          <svg viewBox="0 0 1440 60" preserveAspectRatio="none" className="w-full h-12 opacity-20">
+            <path d="M0,30 C360,60 720,0 1080,30 C1260,45 1380,15 1440,30 L1440,60 L0,60 Z" fill="white" />
+          </svg>
         </div>
-        
-        {/* 메인 로딩 컨텐츠 */}
-        <div className="text-center text-textPrimary relative z-10">
-          {/* 로고/아이콘 */}
-          <div className="mb-8">
-            <div className="relative">
-              <div className="w-24 h-24 mx-auto mb-4 relative">
-                {/* 외부 원 */}
-                <div className="absolute inset-0 border-4 border-blue-200 dark:border-blue-400/30 rounded-full"></div>
-                {/* 회전하는 원 */}
-                <div className="absolute inset-0 border-4 border-transparent border-t-blue-600 dark:border-t-blue-400 border-r-blue-600 dark:border-r-blue-400 rounded-full animate-spin"></div>
-                {/* 내부 원 */}
-                <div className="absolute inset-2 border-2 border-blue-300 dark:border-blue-400/50 rounded-full"></div>
-                {/* 중앙 점 */}
-                <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full transform -translate-x-1/2 -translate-y-1/2"></div>
-              </div>
-            </div>
+
+        {/* Loading content */}
+        <div className="relative z-10 text-center">
+          {/* Ocean spinner */}
+          <div className="w-24 h-24 mx-auto mb-8 relative">
+            <div className="absolute inset-0 rounded-full border-4 border-cyan-400/20" />
+            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-cyan-400 border-r-cyan-300 animate-spin" />
+            <div className="absolute inset-3 rounded-full border-2 border-cyan-400/20" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
           </div>
-          
-          {/* 텍스트 애니메이션 */}
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent animate-pulse">
-              Okuma
-            </h1>
-            <h2 className="text-xl md:text-2xl font-semibold text-textMuted">
-              포트폴리오
-            </h2>
-            <div className="flex items-center justify-center space-x-2">
-              <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-              <div className="w-2 h-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-            </div>
-            <p className="text-textMuted text-sm mt-4">
-              로딩 중...
-            </p>
-          </div>
-          
-          {/* 프로그레스 바 */}
-          <div className="mt-8 w-64 mx-auto">
-            <div className="w-full bg-slate-300 dark:bg-slate-600 rounded-full h-1">
-              <div className="bg-gradient-to-r from-blue-600 to-purple-600 h-1 rounded-full animate-pulse" style={{width: '100%'}}></div>
-            </div>
+
+          <h1
+            className="text-5xl md:text-6xl font-black mb-3"
+            style={{
+              background: 'linear-gradient(90deg,#67e8f9,#22d3ee,#34d399)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Okuma
+          </h1>
+          <p className="text-white/50 text-base mb-8">포트폴리오를 준비하는 중...</p>
+
+          {/* Wave progress bar */}
+          <div className="w-56 mx-auto h-1 rounded-full bg-white/10 overflow-hidden">
+            <div
+              className="h-full rounded-full animate-pulse"
+              style={{
+                background: 'linear-gradient(90deg,#06b6d4,#22d3ee,#67e8f9)',
+                width: '100%',
+              }}
+            />
           </div>
         </div>
-        
-        {/* 하단 파티클 효과 */}
-        <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-slate-200/20 dark:from-slate-800/20 to-transparent"></div>
       </div>
     )
   }
