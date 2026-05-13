@@ -79,7 +79,7 @@ export default function Hero() {
             {/* Description */}
             <p className="text-white/50 text-lg leading-relaxed mb-10 max-w-md">
               퍼블리싱부터 React, Next.js, Svelte까지 —<br />
-              화면을 만드는 것을 즐기는 6년 8개월 차 개발자입니다.
+              화면을 만드는 것을 즐기는 {new Date().getFullYear() - 2019}년 차 개발자입니다.
             </p>
 
             {/* CTA buttons */}

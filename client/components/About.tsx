@@ -59,7 +59,7 @@ export default function About() {
                 화면이 딱 맞아떨어질 때의 그 감각을 즐깁니다.
               </p>
               <p>
-                6년 8개월 동안 금융 플랫폼, 트레이딩 시스템, 앱 서비스, 회사 사이트 등
+                {new Date().getFullYear() - 2019}년 동안 금융 플랫폼, 트레이딩 시스템, 앱 서비스, 회사 사이트 등
                 다양한 프로젝트를 거쳐왔습니다. 요즘은 Next.js와 Svelte를 주로 쓰고 있고,
                 TypeScript로 더 단단한 코드를 만드는 데 집중합니다.
               </p>
@@ -71,7 +71,7 @@ export default function About() {
             {/* Inline stats */}
             <div className="mt-12 flex flex-wrap gap-10">
               {[
-                { value: '6.8+', label: '년 경력' },
+                { value: `${new Date().getFullYear() - 2019}+`, label: '년 경력' },
                 { value: '15+', label: '프로젝트' },
                 { value: '1990', label: '년생' },
               ].map((stat) => (
