@@ -89,7 +89,7 @@ export default function Header() {
           <div className="flex items-center justify-between h-16">
             <button
               type="button"
-              className="relative text-3xl font-display font-bold cursor-pointer bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent transition-transform hover:scale-[1.02]"
+              className="relative text-3xl font-display font-bold cursor-pointer bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent transition-transform hover:scale-[1.02]"
               onClick={() => scrollToSection('hero')}
             >
               Portfolio
@@ -105,7 +105,7 @@ export default function Header() {
                     className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-all font-semibold text-sm uppercase tracking-wider group"
                   >
                     {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
                   </button>
                 ) : (
                   <Link
@@ -114,7 +114,7 @@ export default function Header() {
                     className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-all font-semibold text-sm uppercase tracking-wider group"
                   >
                     {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 group-hover:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
                   </Link>
                 )
               )}
