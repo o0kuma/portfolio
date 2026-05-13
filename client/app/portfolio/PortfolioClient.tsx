@@ -6,7 +6,6 @@ import Hero from '../../components/Hero'
 import About from '../../components/About'
 import Projects from '../../components/Projects'
 import Skills from '../../components/Skills'
-import Posts from '../../components/Posts'
 import Contact from '../../components/Contact'
 import Footer from '../../components/Footer'
 
@@ -95,7 +94,6 @@ export default function PortfolioClient() {
       <About />
       <Skills />
       <Projects />
-      <Posts />
       <Contact />
       <Footer />
     </main>

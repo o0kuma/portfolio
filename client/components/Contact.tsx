@@ -13,6 +13,7 @@ export default function Contact() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [emailDelivered, setEmailDelivered] = useState(false)
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -33,6 +34,7 @@ export default function Contact() {
       const result = await response.json()
       if (response.ok) {
         setIsSubmitted(true)
+        setEmailDelivered(!!result.emailSent)
         setFormData({ name: '', email: '', subject: '', message: '' })
         if (result.emailSent) {
           console.log('✅ 메시지와 메일이 성공적으로 전송되었습니다.')
@@ -176,9 +178,14 @@ export default function Contact() {
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <FiCheckCircle className="text-emerald-400 mb-4" size={38} />
                 <h4 className="text-xl font-semibold text-white mb-2">메시지 전송 완료!</h4>
-                <p className="text-white/40 mb-6 text-sm">빠른 시일 내에 답변드리겠습니다.</p>
+                <p className="text-white/40 mb-4 text-sm">빠른 시일 내에 답변드리겠습니다.</p>
+                {!emailDelivered && (
+                  <p className="text-amber-400/70 text-xs mb-4 px-4 py-2 rounded-lg border border-amber-400/20 bg-amber-400/5">
+                    메시지는 저장되었습니다. 이메일 알림은 잠시 후 전달될 수 있습니다.
+                  </p>
+                )}
                 <button
-                  onClick={() => setIsSubmitted(false)}
+                  onClick={() => { setIsSubmitted(false); setEmailDelivered(false) }}
                   className="px-6 py-2.5 rounded-full border border-white/15 text-white/50 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-300 text-sm"
                 >
                   새 메시지 작성
