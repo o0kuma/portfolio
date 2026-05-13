@@ -80,8 +80,22 @@ export async function POST(request: Request) {
 
     // ── 3) 응답 ────────────────────────────────────────────────────────────
     // DB와 이메일 중 하나라도 성공하면 201 반환.
-    // 둘 다 실패해도 사용자에게 친절한 메시지를 돌려줌(500 아님).
+    // 둘 다 실패하면 클라이언트가 성공 화면으로 전환하지 않도록 503을 반환.
     const savedToDb = !dbError
+
+    if (!savedToDb && !emailSent) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: '메시지를 저장하거나 전송하지 못했습니다. 잠시 후 다시 시도해주세요.',
+          savedToDb,
+          dbError: dbError || undefined,
+          emailSent,
+          emailError: emailError || undefined,
+        },
+        { status: 503 }
+      )
+    }
 
     return NextResponse.json(
       {

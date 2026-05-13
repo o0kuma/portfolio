@@ -437,7 +437,6 @@ export async function POST(request: Request) {
     const internalApiBaseUrl = getInternalApiBaseUrl()
 
     // 구독 상태 확인 및 사용량 제한 체크
-    // 실패(네트워크 에러, HTML 응답, JSON 파싱 오류 등)해도 AI 응답을 차단하지 않고 free-tier 기본값으로 계속 진행
     try {
       const subscriptionParams = new URLSearchParams({
         sessionId: quotaIdentity.sessionId
@@ -446,39 +445,63 @@ export async function POST(request: Request) {
         `${internalApiBaseUrl}/api/subscription/check?${subscriptionParams}`
       )
 
-      // Content-Type이 JSON이 아니면(HTML 등) 조용히 무시
       const contentType = subscriptionCheck.headers.get('content-type') || ''
       if (!contentType.includes('application/json')) {
-        console.warn('구독 상태 확인: JSON이 아닌 응답 수신 (무시하고 계속 진행):', contentType)
-      } else if (!subscriptionCheck.ok) {
-        console.warn('구독 상태 확인: 비-200 응답 (무시하고 계속 진행):', subscriptionCheck.status)
-      } else {
-        const subscriptionData = await subscriptionCheck.json().catch(() => null)
-        if (subscriptionData?.success && subscriptionData?.subscription) {
-          const { subscription: sub } = subscriptionData
-          const { usage, limits } = sub
+        console.error('구독 상태 확인 실패로 AI 응답을 차단합니다: JSON이 아닌 응답 수신', contentType)
+        return quotaJson(
+          {
+            success: false,
+            error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+            errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
+      }
 
-          // 무료 사용자의 일일 메시지 제한 체크 (구독 정보가 정상적으로 확인된 경우에만)
-          if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
-            return quotaJson(
-              {
-                success: false,
-                error: '일일 무료 메시지 한도를 초과했습니다.',
-                errorCode: 'DAILY_LIMIT_EXCEEDED',
-                limit: limits.dailyChatMessages,
-                used: usage.chat,
-                upgradeRequired: true
-              },
-              { status: 403 }
-            )
-          }
-        } else {
-          console.warn('구독 상태 확인: 응답 파싱 실패 또는 success=false (무시하고 계속 진행)')
-        }
+      const subscriptionData = await subscriptionCheck.json().catch(() => null)
+      if (!subscriptionCheck.ok || !subscriptionData?.success || !subscriptionData?.subscription) {
+        console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', {
+          status: subscriptionCheck.status,
+          error: subscriptionData?.error,
+          errorCode: subscriptionData?.errorCode
+        })
+        return quotaJson(
+          {
+            success: false,
+            error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+            errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
+      }
+
+      const { subscription: sub } = subscriptionData
+      const { usage, limits } = sub
+
+      // 무료 사용자의 일일 메시지 제한 체크
+      if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
+        return quotaJson(
+          {
+            success: false,
+            error: '일일 무료 메시지 한도를 초과했습니다.',
+            errorCode: 'DAILY_LIMIT_EXCEEDED',
+            limit: limits.dailyChatMessages,
+            used: usage.chat,
+            upgradeRequired: true
+          },
+          { status: 403 }
+        )
       }
     } catch (subError: any) {
-      // 네트워크 에러, 타임아웃 등 — 차단하지 않고 free-tier 기본값으로 계속 진행
-      console.warn('구독 상태 확인 실패 (무시하고 계속 진행):', subError?.message || 'unknown')
+      console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', subError?.message || 'unknown')
+      return quotaJson(
+        {
+          success: false,
+          error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+          errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
+        },
+        { status: 503 }
+      )
     }
 
     const startTime = Date.now()
@@ -517,7 +540,7 @@ export async function POST(request: Request) {
     const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
-    // 4-1. 사용량 기록 (실패해도 AI 응답을 차단하지 않음)
+    // 4-1. 사용량 기록
     try {
       const usageResponse = await fetchWithTimeout(`${internalApiBaseUrl}/api/subscription/usage`, {
         method: 'POST',
@@ -531,21 +554,45 @@ export async function POST(request: Request) {
         })
       })
 
-      // Content-Type이 JSON이 아니면(HTML 등) 조용히 무시
       const usageContentType = usageResponse.headers.get('content-type') || ''
       if (!usageContentType.includes('application/json')) {
-        console.warn('사용량 기록: JSON이 아닌 응답 수신 (무시하고 계속 진행):', usageContentType)
-      } else if (!usageResponse.ok) {
-        const usageData = await usageResponse.json().catch(() => ({}))
-        console.warn('사용량 기록 실패 (무시하고 계속 진행):', {
-          status: usageResponse.status,
-          error: usageData?.error
-        })
+        console.error('사용량 기록 실패로 AI 응답을 차단합니다: JSON이 아닌 응답 수신', usageContentType)
+        return quotaJson(
+          {
+            success: false,
+            error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+            errorCode: 'USAGE_RECORD_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
       }
-      // 성공 여부와 무관하게 AI 응답은 항상 반환됨
+
+      const usageData = await usageResponse.json().catch(() => null)
+      if (!usageResponse.ok || !usageData?.success) {
+        console.error('사용량 기록 실패로 AI 응답을 차단합니다:', {
+          status: usageResponse.status,
+          error: usageData?.error,
+          errorCode: usageData?.errorCode
+        })
+        return quotaJson(
+          {
+            success: false,
+            error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+            errorCode: 'USAGE_RECORD_UNAVAILABLE'
+          },
+          { status: 503 }
+        )
+      }
     } catch (usageError: any) {
-      // 네트워크 에러, 타임아웃 등 — 차단하지 않고 계속 진행
-      console.warn('사용량 기록 실패 (무시하고 계속 진행):', usageError?.message || 'unknown')
+      console.error('사용량 기록 실패로 AI 응답을 차단합니다:', usageError?.message || 'unknown')
+      return quotaJson(
+        {
+          success: false,
+          error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+          errorCode: 'USAGE_RECORD_UNAVAILABLE'
+        },
+        { status: 503 }
+      )
     }
 
     // 5. AI 응답 저장
