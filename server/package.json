@@ -15,7 +15,12 @@
     "create-sample-posts": "node scripts/create-sample-posts.js",
     "seed:portfolio-posts": "node scripts/seed-portfolio-posts.js",
     "check-posts-table": "node scripts/check-posts-table.js",
-    "fix-posts-table": "node scripts/auto-fix-posts-table.js"
+    "fix-posts-table": "node scripts/auto-fix-posts-table.js",
+    "generate-posts": "node scripts/auto-generate-posts.js",
+    "generate-posts:tech": "node scripts/auto-generate-posts.js tech 2",
+    "generate-posts:economy": "node scripts/auto-generate-posts.js economy 2",
+    "generate-posts:coin": "node scripts/auto-generate-posts.js coin 2",
+    "generate-posts:all": "node scripts/auto-generate-posts.js all 1"
   },
   "dependencies": {
     "compression": "^1.7.4",
