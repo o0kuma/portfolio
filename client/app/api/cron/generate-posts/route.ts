@@ -9,7 +9,7 @@
  *   - 2-step generation: meta (title+tags) via JSON mode, content via plain text
  *   - fixJsonControlChars: handles Gemini quirk with literal control chars in JSON strings
  *
- * Set CRON_SECRET in Vercel environment variables to protect this endpoint.
+ * Requires CRON_SECRET in deployed environments to protect this endpoint.
  */
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -245,7 +245,12 @@ export async function GET(req: NextRequest) {
   loadServerEnvIfDev()
 
   // Authorization check — Vercel injects the bearer token automatically for cron jobs.
-  const cronSecret = process.env.CRON_SECRET
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret && (process.env.NODE_ENV === 'production' || process.env.VERCEL)) {
+    console.error('CRON_SECRET is required for /api/cron/generate-posts in deployed environments.')
+    return NextResponse.json({ error: 'Cron endpoint is not configured' }, { status: 503 })
+  }
+
   if (cronSecret) {
     const authHeader = req.headers.get('authorization')
     const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim()
