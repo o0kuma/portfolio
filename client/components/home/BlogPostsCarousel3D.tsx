@@ -34,7 +34,6 @@ type CardProps = {
   formatDate: Props['formatDate']
   formatNumber: Props['formatNumber']
   categoryLabel: Props['categoryLabel']
-  dimmed?: boolean
 }
 
 const DRAG_SENS = 0.45
@@ -217,8 +216,9 @@ export default function BlogPostsCarousel3D({
                     transform: `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`,
                     transformStyle: 'preserve-3d',
                     backfaceVisibility: 'hidden',
-                    opacity: i === activeIndex ? 1 : 0.38,
-                    transition: 'opacity 0.35s ease',
+                    opacity: i === activeIndex ? 1 : 0,
+                    transition: 'opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                    willChange: 'opacity, transform',
                   }}
                   aria-hidden={i !== activeIndex}
                 >
@@ -232,7 +232,6 @@ export default function BlogPostsCarousel3D({
                       formatDate={formatDate}
                       formatNumber={formatNumber}
                       categoryLabel={categoryLabel}
-                      dimmed={i !== activeIndex}
                     />
                   </div>
                 </div>
@@ -285,13 +284,10 @@ function GlassPostCard({
   formatDate,
   formatNumber,
   categoryLabel,
-  dimmed = false,
 }: CardProps) {
   return (
     <article
-      className={`group relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.02] to-transparent shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition duration-300 hover:border-white/20 hover:from-white/[0.1] md:[transform-style:preserve-3d] ${
-        dimmed ? 'scale-[0.97] blur-[0.5px]' : ''
-      }`}
+      className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.02] to-transparent shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition duration-300 hover:border-white/20 hover:from-white/[0.1] md:[transform-style:preserve-3d]"
     >
       <div className="relative p-8 md:p-10">
         <div className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-gradient-to-br from-fuchsia-500/10 via-violet-500/5 to-transparent blur-3xl md:h-40 md:w-40" />
