@@ -41,7 +41,7 @@ export default function HomePostsSection() {
     let cancelled = false
     ;(async () => {
       try {
-        const params = new URLSearchParams({ page: '1', limit: '12' })
+        const params = new URLSearchParams({ page: '1', limit: '9' })
         const res = await fetch(`${API_BASE}/api/posts?${params}`)
         const data = await res.json()
         if (!cancelled && res.ok && data.posts) {

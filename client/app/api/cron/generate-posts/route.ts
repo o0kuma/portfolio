@@ -239,6 +239,22 @@ async function savePost(post: GeneratedPost): Promise<{ id: string; title: strin
 }
 
 // ---------------------------------------------------------------------------
+// Cleanup old non-featured posts (older than 30 days)
+// ---------------------------------------------------------------------------
+async function cleanupOldPosts(): Promise<{ deleted: number; titles: string[] }> {
+  const r = await dbQuery<{ id: string; title: string }>(
+    `DELETE FROM posts
+     WHERE created_at < NOW() - INTERVAL '30 days'
+       AND featured = false
+     RETURNING id, title`,
+  )
+  return {
+    deleted: r.rows.length,
+    titles: r.rows.map((row) => row.title),
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Route handler
 // ---------------------------------------------------------------------------
 export async function GET(req: NextRequest) {
@@ -299,11 +315,25 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Cleanup posts older than 30 days (non-featured only)
+  let cleanup = { deleted: 0, titles: [] as string[] }
+  try {
+    cleanup = await cleanupOldPosts()
+    if (cleanup.deleted > 0) {
+      console.log(`[generate-posts] Cleaned up ${cleanup.deleted} old post(s):`, cleanup.titles)
+    }
+  } catch (cleanupErr) {
+    const msg = cleanupErr instanceof Error ? cleanupErr.message : String(cleanupErr)
+    console.error('[generate-posts] Cleanup error (non-fatal):', msg)
+    errors.push({ category: 'cleanup', error: msg })
+  }
+
   return NextResponse.json({
     ok: true,
     generated: results.length,
     posts: results,
     errors,
+    cleanup: { deleted: cleanup.deleted, titles: cleanup.titles },
     timestamp: new Date().toISOString(),
   })
 }

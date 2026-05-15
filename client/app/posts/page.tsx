@@ -53,7 +53,7 @@ export default function PostsPage() {
       setIsLoading(true)
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: '12'
+        limit: '9'
       })
       
       if (category !== 'all') params.append('category', category)

@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl
     const page = Math.max(1, parseInt(searchParams.get('page') ?? '1', 10))
-    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '10', 10)))
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get('limit') ?? '9', 10)))
     const category = searchParams.get('category') ?? ''
     const featured = searchParams.get('featured') ?? ''
     const search = searchParams.get('search') ?? ''
