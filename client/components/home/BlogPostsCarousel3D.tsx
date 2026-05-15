@@ -216,7 +216,7 @@ export default function BlogPostsCarousel3D({
                     transform: `translate(-50%, -50%) rotateY(${i * step}deg) translateZ(${radius}px)`,
                     transformStyle: 'preserve-3d',
                     backfaceVisibility: 'hidden',
-                    opacity: i === activeIndex ? 1 : 0,
+                    opacity: i === activeIndex ? 1 : 0.25,
                     transition: 'opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
                     willChange: 'opacity, transform',
                   }}

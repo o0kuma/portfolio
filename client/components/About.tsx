@@ -68,6 +68,33 @@ export default function About() {
               </p>
             </div>
 
+            {/* Recent work items */}
+            <div className="mt-12">
+              <div className="flex items-center gap-3 mb-5">
+                <span className="w-5 h-px bg-cyan-400/60" />
+                <span className="text-cyan-400/70 text-xs font-mono tracking-[0.18em] uppercase">Recent Work</span>
+              </div>
+              <ul className="space-y-3">
+                {[
+                  { label: 'BTB 사이트 유지보수 / Scale-up', status: '' },
+                  { label: 'scaleup_tip 논문·특허 데이터 수집 — JSON 메타데이터 추출 및 서버 저장 관리', status: '' },
+                  { label: 'B2B 오픈마켓', status: '진행 중' },
+                ].map((item) => (
+                  <li key={item.label} className="flex items-start gap-3">
+                    <span className="mt-[0.55rem] w-1 h-1 rounded-full bg-cyan-400/40 shrink-0" />
+                    <span className="text-white/45 text-sm leading-relaxed">
+                      {item.label}
+                      {item.status && (
+                        <span className="ml-2 px-2 py-0.5 rounded-full text-[0.65rem] font-mono border border-cyan-400/25 text-cyan-400/60 bg-cyan-400/[0.06] align-middle">
+                          {item.status}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
             {/* Inline stats */}
             <div className="mt-12 flex flex-wrap gap-10">
               {[

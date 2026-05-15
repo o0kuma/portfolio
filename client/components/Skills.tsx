@@ -26,8 +26,22 @@ const DEPTH_ZONES = [
     borderOpacity: '0.22',
     skills: [
       'React', 'Svelte', 'Next.js', 'TypeScript',
-      'Node.js', 'EJS', 'PixiJS',
+      'EJS', 'PixiJS',
       'Git', 'GitHub', 'GitLab', 'Figma', 'Zeplin',
+    ],
+  },
+  {
+    id: 'backend',
+    depth: '백엔드',
+    subtitle: 'Backend — 서버사이드 영역',
+    description: '서버·DB·API 구축에 활용하는 기술',
+    color: '#a78bfa',
+    bgOpacity: '0.06',
+    borderOpacity: '0.22',
+    skills: [
+      'Node.js', 'Express', 'Java', 'Spring Boot',
+      'PostgreSQL', 'MySQL', 'MongoDB',
+      'Python', 'REST API',
     ],
   },
   {
@@ -39,7 +53,7 @@ const DEPTH_ZONES = [
     bgOpacity: '0.04',
     borderOpacity: '0.16',
     skills: [
-      'Go', 'PHP', 'MySQL', 'MongoDB',
+      'Go', 'PHP',
       'Webpack', 'Vite',
       'Adobe Photoshop', 'Confluence', 'Jira', 'Redmine',
     ],
@@ -59,12 +73,16 @@ export default function Skills() {
       {/* Depth guide lines in background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
         <div
-          className="absolute inset-x-0 top-[28%] h-px"
+          className="absolute inset-x-0 top-[24%] h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.06), transparent)' }}
         />
         <div
-          className="absolute inset-x-0 top-[58%] h-px"
+          className="absolute inset-x-0 top-[48%] h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.05), transparent)' }}
+        />
+        <div
+          className="absolute inset-x-0 top-[72%] h-px"
+          style={{ background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.04), transparent)' }}
         />
       </div>
 

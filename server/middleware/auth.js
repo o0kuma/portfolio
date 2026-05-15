@@ -1,3 +1,6 @@
+// UNUSED - 레거시 파일
+// Supabase Auth 기반 인증 미들웨어. routes/auth-supabase.js 에서만 사용하며
+// auth-supabase.js 라우트 자체가 server.js 에 마운트되지 않아 실제로 동작하지 않음.
 const { supabase } = require('../config/supabase');
 
 // Supabase Auth 토큰 검증 미들웨어

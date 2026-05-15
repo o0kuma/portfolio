@@ -291,6 +291,13 @@ class DatabaseService {
       usage_type: 'usage_type',
       date: 'date'
     });
+    if (filters.search) {
+      values.push(`%${filters.search}%`);
+      const searchCol = tableName === 'projects'
+        ? `(title ILIKE $${values.length} OR description ILIKE $${values.length} OR content ILIKE $${values.length})`
+        : `(title ILIKE $${values.length} OR content ILIKE $${values.length})`;
+      where.push(searchCol);
+    }
     const result = await query(
       `SELECT COUNT(*)::int AS total FROM ${tableName} ${where.length ? `WHERE ${where.join(' AND ')}` : ''}`,
       values

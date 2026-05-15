@@ -1,3 +1,7 @@
+// UNUSED - 레거시 파일
+// config/db.js (Neon/PostgreSQL) 로 전환 완료.
+// server.js 에서 이 파일을 import 하지 않으며, 활성 라우트(supabaseService)도 사용하지 않음.
+// scripts/migrate-data.js, scripts/test-supabase.js 에서만 참조 (레거시 마이그레이션 스크립트).
 const { createClient } = require('@supabase/supabase-js');
 
 // Supabase 설정

@@ -1,3 +1,7 @@
+// UNUSED - 레거시 파일
+// Supabase Auth 기반 회원가입/로그인/프로필 라우트.
+// server.js 에 마운트되지 않음 (app.use('/api/auth', ...) 구문 없음).
+// 향후 인증 기능이 필요하면 ADMIN_API_TOKEN 또는 별도 JWT 방식으로 재구현 권장.
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const supabaseService = require('../services/supabaseService');
