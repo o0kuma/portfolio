@@ -38,7 +38,7 @@ export default function About() {
 
             {/* Heading */}
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-10">
-              화면을 만드는<br />
+              설계하고 구현하는<br />
               <span
                 style={{
                   background: 'linear-gradient(90deg, #22d3ee, #34d399)',
@@ -47,16 +47,16 @@ export default function About() {
                   backgroundClip: 'text',
                 }}
               >
-                사람입니다.
+                개발자입니다.
               </span>
             </h2>
 
             {/* Natural monologue */}
             <div className="space-y-5 text-white/55 text-[1.05rem] leading-[1.85] max-w-2xl">
               <p>
-                웹퍼블리셔로 시작해 지금은 프론트엔드 개발자로 일하고 있습니다.
-                HTML과 CSS를 다루는 것을 가장 좋아하고,
-                화면이 딱 맞아떨어질 때의 그 감각을 즐깁니다.
+                프론트엔드가 주 영역이지만, 서버와 DB도 직접 만들어야 할 때 뒤로 물러서지 않습니다.
+                UI 컴포넌트를 설계하고 API를 연동하며,
+                필요하다면 백엔드 로직까지 끝까지 구현합니다.
               </p>
               <p>
                 {new Date().getFullYear() - 2019}년 동안 금융 플랫폼, 트레이딩 시스템, 앱 서비스, 회사 사이트 등
@@ -64,7 +64,7 @@ export default function About() {
                 TypeScript로 더 단단한 코드를 만드는 데 집중합니다.
               </p>
               <p>
-                퍼블리싱 감각과 개발 실력 모두를 갖추려 꾸준히 배우고 있습니다.
+                화면의 완성도와 코드의 품질, 두 가지 모두를 놓치지 않으려 꾸준히 파고듭니다.
               </p>
             </div>
 
@@ -123,7 +123,7 @@ export default function About() {
             <div className="mt-10 flex flex-wrap gap-2.5">
               {[
                 '서울 · 송파구',
-                '웹퍼블리셔 / 프론트엔드 개발자',
+                '프론트엔드 / 풀스택 개발자',
                 'c8c8c81828@gmail.com',
               ].map((item) => (
                 <span
