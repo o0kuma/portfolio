@@ -292,7 +292,7 @@ function GlassPostCard({
     <article
       className={`group relative overflow-hidden rounded-[2rem] border shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition duration-300 md:[transform-style:preserve-3d] ${
         active
-          ? 'border-white/25 bg-gradient-to-br from-white/[0.18] via-white/[0.10] to-white/[0.04] hover:border-white/35 hover:from-white/[0.22]'
+          ? 'border-white/60 bg-gradient-to-br from-white/[0.55] via-white/[0.35] to-white/[0.15] hover:border-white/70 hover:from-white/[0.62]'
           : 'border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.02] to-transparent hover:border-white/20 hover:from-white/[0.1]'
       }`}
     >

@@ -69,7 +69,6 @@ export default function PostsPage() {
         setPosts(mapped)
         setFilteredPosts(mapped)
         setTotalPages(data.totalPages)
-        setCurrentPage(data.currentPage)
       } else {
         console.error('Failed to fetch posts:', data.message)
         // 에러 시 샘플 데이터 사용
