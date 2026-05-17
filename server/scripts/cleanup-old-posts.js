@@ -1,11 +1,12 @@
 /**
  * cleanup-old-posts.js
  *
- * Deletes posts older than 30 days that are NOT featured.
- * Featured posts (featured = true) are always preserved.
+ * Previews posts older than 30 days that are NOT featured.
+ * Pass --confirm to delete after reviewing the preview.
  *
  * Usage:
  *   node server/scripts/cleanup-old-posts.js
+ *   node server/scripts/cleanup-old-posts.js --confirm
  *
  * Reads DATABASE_URL from server/.env automatically.
  */
@@ -43,6 +44,7 @@ function loadEnv() {
 // ---------------------------------------------------------------------------
 async function main() {
   loadEnv()
+  const shouldDelete = process.argv.includes('--confirm')
 
   const databaseUrl = process.env.DATABASE_URL
   if (!databaseUrl) {
@@ -78,7 +80,12 @@ async function main() {
       )
     })
 
-    // 2. Delete
+    if (!shouldDelete) {
+      console.log('\n[cleanup] Dry run only. Re-run with --confirm to delete these posts.')
+      return
+    }
+
+    // 2. Delete after explicit confirmation
     const del = await pool.query(
       `DELETE FROM posts
        WHERE created_at < NOW() - INTERVAL '30 days'
