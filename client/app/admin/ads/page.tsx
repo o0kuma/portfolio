@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { FiPlus, FiEdit, FiTrash2, FiEye, FiMousePointer, FiDollarSign, FiX, FiSave } from 'react-icons/fi'
+import { toast } from '@/lib/toast'
 
 interface Advertisement {
   id: string
@@ -177,7 +178,7 @@ export default function AdsManagementPage() {
   const handleDelete = async (ad: Advertisement) => {
     if (!confirm(`"${ad.title}" 광고를 삭제하시겠습니까?`)) return
     if (!adminToken.trim()) {
-      alert('관리자 토큰이 없습니다. 토큰 설정을 먼저 해주세요.')
+      toast.warning('관리자 토큰이 없습니다. 토큰 설정을 먼저 해주세요.')
       return
     }
     try {
@@ -187,7 +188,7 @@ export default function AdsManagementPage() {
       })
       const result = await response.json()
       if (result.success) await fetchAds()
-      else alert(result.error || '삭제에 실패했습니다.')
+      else toast.error(result.error || '삭제에 실패했습니다.')
     } catch (err) {
       console.error('삭제 오류:', err)
     }

@@ -9,6 +9,7 @@ import { insertAdsInContent } from '@/components/InArticleAd'
 import { normalizePostDetail, type PostDetail } from '@/lib/postApi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import CreatePostForm from '@/components/CreatePostForm'
+import { toast } from '@/lib/toast'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -79,7 +80,7 @@ export default function PostDetailPage() {
     e.preventDefault()
     
     if (!newComment.author.trim() || !newComment.content.trim()) {
-      alert('작성자와 댓글 내용을 모두 입력해주세요.')
+      toast.warning('작성자와 댓글 내용을 모두 입력해주세요.')
       return
     }
 
@@ -99,11 +100,11 @@ export default function PostDetailPage() {
         fetchPost()
       } else {
         const data = await response.json()
-        alert('댓글 작성 실패: ' + data.message)
+        toast.error('댓글 작성 실패: ' + data.message)
       }
     } catch (error) {
       console.error('Error submitting comment:', error)
-      alert('댓글 작성 중 오류가 발생했습니다.')
+      toast.error('댓글 작성 중 오류가 발생했습니다.')
     } finally {
       setIsSubmittingComment(false)
     }
@@ -129,11 +130,11 @@ export default function PostDetailPage() {
         window.location.href = '/posts'
       } else {
         const data = await response.json()
-        alert('삭제 실패: ' + data.message)
+        toast.error('삭제 실패: ' + data.message)
       }
     } catch (error) {
       console.error('Error deleting post:', error)
-      alert('삭제 중 오류가 발생했습니다.')
+      toast.error('삭제 중 오류가 발생했습니다.')
     }
   }
 

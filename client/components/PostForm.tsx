@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiX, FiSave, FiTag, FiEye } from 'react-icons/fi'
+import { toast } from '@/lib/toast'
 
 interface Post {
   _id?: string
@@ -92,7 +93,7 @@ export default function PostForm({ isOpen, onClose, post, onSave }: PostFormProp
     e.preventDefault()
     
     if (!formData.title.trim() || !formData.content.trim() || !formData.author.trim()) {
-      alert('제목, 내용, 작성자를 모두 입력해주세요.')
+      toast.warning('제목, 내용, 작성자를 모두 입력해주세요.')
       return
     }
 
@@ -102,7 +103,7 @@ export default function PostForm({ isOpen, onClose, post, onSave }: PostFormProp
       onClose()
     } catch (error) {
       console.error('Error saving post:', error)
-      alert('저장 중 오류가 발생했습니다.')
+      toast.error('저장 중 오류가 발생했습니다.')
     } finally {
       setIsSubmitting(false)
     }

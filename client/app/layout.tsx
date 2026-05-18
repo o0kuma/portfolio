@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
+import ToastContainer from '@/components/Toast'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -162,6 +163,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
+        <ToastContainer />
       </body>
     </html>
   )

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
+import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Contact() {
@@ -44,7 +45,7 @@ export default function Contact() {
       }
     } catch (error) {
       console.error('메시지 전송 실패:', error)
-      alert('메시지 전송에 실패했습니다. 다시 시도해주세요.')
+      toast.error('메시지 전송에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setIsSubmitting(false)
     }

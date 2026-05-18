@@ -8,6 +8,7 @@ import AdBanner from '../../components/AdBanner'
 import CreatePostForm from '../../components/CreatePostForm'
 import { normalizePostBoardItem } from '@/lib/postApi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
+import { toast } from '@/lib/toast'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -176,11 +177,11 @@ export default function PostsPage() {
         fetchPosts(currentPage, selectedCategory, searchQuery)
       } else {
         const data = await response.json()
-        alert('삭제 실패: ' + data.message)
+        toast.error('삭제 실패: ' + data.message)
       }
     } catch (error) {
       console.error('Error deleting post:', error)
-      alert('삭제 중 오류가 발생했습니다.')
+      toast.error('삭제 중 오류가 발생했습니다.')
     }
   }
 

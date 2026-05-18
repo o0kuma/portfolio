@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { FiCheck, FiZap, FiStar, FiArrowRight } from 'react-icons/fi'
+import { toast } from '@/lib/toast'
 
 interface SubscriptionPlan {
   id: string
@@ -101,7 +102,7 @@ export default function SubscriptionPlans() {
     if (plan.id === 'free') return
 
     if (!user) {
-      alert('구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
+      toast.warning('구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
       return
     }
 
@@ -123,11 +124,11 @@ export default function SubscriptionPlans() {
         // Stripe Checkout으로 리다이렉트
         window.location.href = data.url
       } else {
-        alert('결제 세션 생성에 실패했습니다.')
+        toast.error('결제 세션 생성에 실패했습니다.')
       }
     } catch (error) {
       console.error('구독 오류:', error)
-      alert('구독 처리 중 오류가 발생했습니다.')
+      toast.error('구독 처리 중 오류가 발생했습니다.')
     }
   }
 

@@ -33,6 +33,7 @@ import {
   type SummaryResponse,
   type SuggestionResponse
 } from '../utils/aiService'
+import { toast } from '@/lib/toast'
 
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
@@ -256,7 +257,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) || null
 
     if (!SpeechRecognitionCtor) {
-      alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해주세요.')
+      toast.warning('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해주세요.')
       return
     }
 
@@ -306,7 +307,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     const textToProcess = messageContent || inputText
     
     if (!textToProcess.trim()) {
-      alert('처리할 텍스트가 없습니다.')
+      toast.warning('처리할 텍스트가 없습니다.')
       return
     }
 
