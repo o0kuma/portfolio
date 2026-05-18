@@ -18,25 +18,29 @@ const pool = new Pool({
 async function createVisitorTable() {
   const client = await pool.connect();
   try {
+    // visitor_count: cumulative unique visitor tracking (one row per session)
     await client.query(`
-      CREATE TABLE IF NOT EXISTS visitor_sessions (
-        id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+      CREATE TABLE IF NOT EXISTS visitor_count (
+        id SERIAL PRIMARY KEY,
         session_id TEXT NOT NULL UNIQUE,
-        last_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+        first_seen TIMESTAMP WITH TIME ZONE DEFAULT NOW()
       );
     `);
-    console.log('✅ visitor_sessions 테이블이 생성되었습니다 (또는 이미 존재합니다).');
+    console.log('✅ visitor_count 테이블이 생성되었습니다 (또는 이미 존재합니다).');
 
     const result = await client.query(`
       SELECT column_name, data_type
       FROM information_schema.columns
-      WHERE table_name = 'visitor_sessions'
+      WHERE table_name = 'visitor_count'
       ORDER BY ordinal_position;
     `);
-    console.log('📋 테이블 컬럼:');
+    console.log('📋 visitor_count 테이블 컬럼:');
     result.rows.forEach((row) => {
       console.log(`   - ${row.column_name}: ${row.data_type}`);
     });
+
+    const countResult = await client.query(`SELECT COUNT(*) AS total FROM visitor_count`);
+    console.log(`📊 현재 누적 방문자 수: ${countResult.rows[0].total}명`);
   } finally {
     client.release();
     await pool.end();

@@ -6,15 +6,14 @@ export interface UseVisitorCountResult {
   count: number
 }
 
-const HEARTBEAT_INTERVAL_MS = 10_000
-const POLL_INTERVAL_MS = 10_000
+// Refresh cumulative count once per minute — no heartbeat needed
+const POLL_INTERVAL_MS = 60_000
 
 function getOrCreateSessionId(): string {
   const KEY = 'visitor_session_id'
   const existing = sessionStorage.getItem(KEY)
   if (existing) return existing
 
-  // crypto.randomUUID() is available in all modern browsers
   const id = crypto.randomUUID()
   sessionStorage.setItem(KEY, id)
   return id
@@ -22,13 +21,12 @@ function getOrCreateSessionId(): string {
 
 export function useVisitorCount(): UseVisitorCountResult {
   const [count, setCount] = useState(0)
-  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     const sessionId = getOrCreateSessionId()
 
-    const sendHeartbeat = async () => {
+    const register = async () => {
       try {
         await fetch('/api/visitors', {
           method: 'POST',
@@ -36,7 +34,7 @@ export function useVisitorCount(): UseVisitorCountResult {
           body: JSON.stringify({ session_id: sessionId }),
         })
       } catch {
-        // network errors are non-fatal for heartbeat
+        // network errors are non-fatal
       }
     }
 
@@ -47,18 +45,17 @@ export function useVisitorCount(): UseVisitorCountResult {
         const data: { count: number } = await res.json()
         setCount(data.count)
       } catch {
-        // network errors are non-fatal for polling
+        // network errors are non-fatal
       }
     }
 
-    // heartbeat 먼저 완료 후 count 조회 (race condition 방지)
-    sendHeartbeat().then(() => fetchCount())
+    // Register once, then fetch cumulative count
+    register().then(() => fetchCount())
 
-    heartbeatRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS)
+    // Poll periodically so the displayed number stays reasonably fresh
     pollRef.current = setInterval(fetchCount, POLL_INTERVAL_MS)
 
     return () => {
-      if (heartbeatRef.current) clearInterval(heartbeatRef.current)
       if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [])

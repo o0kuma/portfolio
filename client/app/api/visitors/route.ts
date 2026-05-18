@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 
-// POST: session_id heartbeat - upsert last_seen
+// POST: register session as a visitor (idempotent — duplicate session_id is silently ignored)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -15,9 +15,9 @@ export async function POST(request: NextRequest) {
     }
 
     await dbQuery(
-      `INSERT INTO visitor_sessions (session_id, last_seen)
-       VALUES ($1, NOW())
-       ON CONFLICT (session_id) DO UPDATE SET last_seen = NOW()`,
+      `INSERT INTO visitor_count (session_id)
+       VALUES ($1)
+       ON CONFLICT (session_id) DO NOTHING`,
       [sessionId.trim()],
     )
 
@@ -29,13 +29,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET: 최근 30초 이내 활성 세션 수 반환
+// GET: total cumulative unique visitor count
 export async function GET() {
   try {
     const result = await dbQuery<{ count: string }>(
-      `SELECT COUNT(*)::int AS count
-       FROM visitor_sessions
-       WHERE last_seen > NOW() - INTERVAL '30 seconds'`,
+      `SELECT COUNT(*) AS count FROM visitor_count`,
     )
 
     const count = Number(result.rows[0]?.count ?? 0)
