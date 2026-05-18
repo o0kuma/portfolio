@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
 import SearchBar from './SearchBar'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
 
 export default function Header() {
+  const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -179,7 +181,9 @@ export default function Header() {
           >
             <SearchBar
               onSearch={(query) => {
-                console.log('검색:', query)
+                if (query.trim()) {
+                  router.push(`/posts?search=${encodeURIComponent(query.trim())}`)
+                }
               }}
               placeholder="Search projects or posts..."
               className="max-w-2xl mx-auto"

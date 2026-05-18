@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   FiSend, 
@@ -57,6 +57,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const recognitionRef = useRef<any>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -248,6 +249,51 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
       '관련 예시를 들어주세요'
     ]
   }
+
+  const handleMicClick = useCallback(() => {
+    const SpeechRecognitionCtor =
+      (typeof window !== 'undefined' &&
+        ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) || null
+
+    if (!SpeechRecognitionCtor) {
+      alert('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해주세요.')
+      return
+    }
+
+    if (isRecording && recognitionRef.current) {
+      recognitionRef.current.stop()
+      recognitionRef.current = null
+      setIsRecording(false)
+      return
+    }
+
+    const recognition = new SpeechRecognitionCtor()
+    recognition.lang = 'ko-KR'
+    recognition.continuous = false
+    recognition.interimResults = false
+    recognitionRef.current = recognition
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setInputText(prev => prev ? prev + ' ' + transcript : transcript)
+    }
+
+    recognition.onerror = (event: any) => {
+      if (event.error !== 'aborted') {
+        console.error('음성 인식 오류:', event.error)
+      }
+      setIsRecording(false)
+      recognitionRef.current = null
+    }
+
+    recognition.onend = () => {
+      setIsRecording(false)
+      recognitionRef.current = null
+    }
+
+    recognition.start()
+    setIsRecording(true)
+  }, [isRecording])
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -515,10 +561,11 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                     style={{ minHeight: '44px', maxHeight: '120px' }}
                   />
                   <button
-                    onClick={() => setIsRecording(!isRecording)}
+                    onClick={handleMicClick}
+                    title={isRecording ? '음성 인식 중지' : '음성으로 입력'}
                     className={`absolute right-2 bottom-2 p-2 rounded-full transition-colors ${
                       isRecording 
-                        ? 'bg-red-500 text-white' 
+                        ? 'bg-red-500 text-white animate-pulse' 
                         : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
                     }`}
                   >
@@ -534,29 +581,44 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 </button>
               </div>
               
-              {/* AI 기능 버튼들 */}
-              <div className="mt-2 flex space-x-2">
+              {/* AI 기능 토글 및 버튼들 */}
+              <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   onClick={() => setShowAIFeatures(!showAIFeatures)}
-                  className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                  className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                    showAIFeatures
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-500'
+                  }`}
                 >
                   <FiZap className="w-3 h-3 inline mr-1" />
                   AI 기능
                 </button>
-                <button
-                  onClick={() => handleAIFeature('improve')}
-                  className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                >
-                  <FiEdit3 className="w-3 h-3 inline mr-1" />
-                  텍스트 개선
-                </button>
-                <button
-                  onClick={() => handleAIFeature('translate')}
-                  className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
-                >
-                  <FiGlobe className="w-3 h-3 inline mr-1" />
-                  번역
-                </button>
+                {showAIFeatures && (
+                  <>
+                    <button
+                      onClick={() => handleAIFeature('summarize')}
+                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                    >
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />
+                      요약
+                    </button>
+                    <button
+                      onClick={() => handleAIFeature('improve')}
+                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                    >
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />
+                      텍스트 개선
+                    </button>
+                    <button
+                      onClick={() => handleAIFeature('translate')}
+                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                    >
+                      <FiGlobe className="w-3 h-3 inline mr-1" />
+                      번역
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </>

@@ -8,6 +8,7 @@ import AdBanner from '@/components/AdBanner'
 import { insertAdsInContent } from '@/components/InArticleAd'
 import { normalizePostDetail, type PostDetail } from '@/lib/postApi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
+import CreatePostForm from '@/components/CreatePostForm'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -27,6 +28,7 @@ export default function PostDetailPage() {
   const [isLiking, setIsLiking] = useState(false)
   const [newComment, setNewComment] = useState<Comment>({ author: '', content: '' })
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [showEditForm, setShowEditForm] = useState(false)
 
   // 포스트 데이터 가져오기
   const fetchPost = async () => {
@@ -110,9 +112,16 @@ export default function PostDetailPage() {
   const handleDeletePost = async () => {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
+    const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN
+    const headers: Record<string, string> = {}
+    if (adminToken) {
+      headers['Authorization'] = `Bearer ${adminToken}`
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       })
 
       if (response.ok) {
@@ -203,7 +212,7 @@ export default function PostDetailPage() {
             </Link>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => {/* 수정 기능 */}}
+                onClick={() => setShowEditForm(true)}
                 className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
                 title="수정"
               >
@@ -387,6 +396,16 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* 게시글 수정 폼 */}
+      {post && (
+        <CreatePostForm
+          isOpen={showEditForm}
+          onClose={() => setShowEditForm(false)}
+          onSuccess={() => { setShowEditForm(false); fetchPost() }}
+          editPost={post}
+        />
+      )}
     </div>
   )
 }

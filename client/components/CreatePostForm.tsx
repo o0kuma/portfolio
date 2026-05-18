@@ -1,19 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiSave, FiTag } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 
 const API_BASE_URL = getApiBaseUrl()
 
+interface EditPost {
+  _id: string
+  title: string
+  content: string
+  author: string
+  category: string
+  tags: string[]
+  featured: boolean
+}
+
 interface CreatePostFormProps {
   isOpen: boolean
   onClose: () => void
   onSuccess: () => void
+  editPost?: EditPost | null
 }
 
-export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePostFormProps) {
+export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }: CreatePostFormProps) {
+  const isEditMode = !!editPost
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -25,6 +38,23 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
   const [tagInput, setTagInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (editPost) {
+      setFormData({
+        title: editPost.title,
+        content: editPost.content,
+        author: editPost.author,
+        category: editPost.category,
+        tags: editPost.tags,
+        featured: editPost.featured
+      })
+    } else {
+      setFormData({ title: '', content: '', author: '', category: 'tech', tags: [], featured: false })
+    }
+    setTagInput('')
+    setError('')
+  }, [editPost, isOpen])
 
   const categories = [
     { id: 'tech', name: 'Tech' },
@@ -46,8 +76,13 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
 
     try {
       setIsSubmitting(true)
-      const response = await fetch(`${API_BASE_URL}/api/posts`, {
-        method: 'POST',
+      const url = isEditMode
+        ? `${API_BASE_URL}/api/posts/${editPost!._id}`
+        : `${API_BASE_URL}/api/posts`
+      const method = isEditMode ? 'PUT' : 'POST'
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -57,15 +92,17 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
       const data = await response.json()
 
       if (response.ok) {
-        setFormData({
-          title: '',
-          content: '',
-          author: '',
-          category: 'tech',
-          tags: [],
-          featured: false
-        })
-        setTagInput('')
+        if (!isEditMode) {
+          setFormData({
+            title: '',
+            content: '',
+            author: '',
+            category: 'tech',
+            tags: [],
+            featured: false
+          })
+          setTagInput('')
+        }
         onSuccess()
         onClose()
       } else {
@@ -122,7 +159,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
           {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              새 게시글 작성
+              {isEditMode ? '게시글 수정' : '새 게시글 작성'}
             </h2>
             <button
               onClick={onClose}
@@ -283,7 +320,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess }: CreatePos
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <FiSave className="w-4 h-4" />
-              {isSubmitting ? '저장 중...' : '저장'}
+              {isSubmitting ? '저장 중...' : isEditMode ? '수정 완료' : '저장'}
             </button>
           </div>
         </motion.div>

@@ -36,6 +36,7 @@ export default function PostsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [showCreateForm, setShowCreateForm] = useState(false)
+  const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   const categories = [
     { id: 'all', name: 'All' },
@@ -150,12 +151,24 @@ export default function PostsPage() {
     return num.toString()
   }
 
+  const handleEditPost = (post: Post) => {
+    setEditingPost(post)
+    setShowCreateForm(true)
+  }
+
   const handleDeletePost = async (postId: string) => {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
+    const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN
+    const headers: Record<string, string> = {}
+    if (adminToken) {
+      headers['Authorization'] = `Bearer ${adminToken}`
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers
       })
 
       if (response.ok) {
@@ -188,6 +201,7 @@ export default function PostsPage() {
 
   const handleCreateSuccess = () => {
     fetchPosts(currentPage, selectedCategory, searchQuery)
+    setEditingPost(null)
   }
 
   if (isLoading) {
@@ -336,7 +350,7 @@ export default function PostsPage() {
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => {/* 수정 기능 */}}
+                        onClick={() => handleEditPost(post)}
                         className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
                         title="수정"
                       >
@@ -480,11 +494,12 @@ export default function PostsPage() {
         )}
       </div>
 
-      {/* 게시글 작성 폼 */}
+      {/* 게시글 작성/수정 폼 */}
       <CreatePostForm
         isOpen={showCreateForm}
-        onClose={() => setShowCreateForm(false)}
+        onClose={() => { setShowCreateForm(false); setEditingPost(null) }}
         onSuccess={handleCreateSuccess}
+        editPost={editingPost}
       />
     </div>
   )

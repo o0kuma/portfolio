@@ -94,13 +94,13 @@ export const sendChatMessage = async (
   }
 }
 
-// 텍스트 개선 API 호출
+// 텍스트 개선 API 호출 (Next.js API 라우트)
 export const improveText = async (
   text: string,
   improvementType: string = 'general'
 ): Promise<TextImprovementResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/ai/improve`, {
+    const response = await fetch(`/api/ai/improve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,13 +156,13 @@ export const translateText = async (
   }
 }
 
-// 요약 API 호출
+// 요약 API 호출 (Next.js API 라우트)
 export const summarizeText = async (
   text: string,
   summaryLength: string = 'medium'
 ): Promise<SummaryResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/ai/summarize`, {
+    const response = await fetch(`/api/ai/summarize`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
