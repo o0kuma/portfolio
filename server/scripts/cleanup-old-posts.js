@@ -2,11 +2,11 @@
  * cleanup-old-posts.js
  *
  * Previews posts older than 30 days that are NOT featured.
- * Add --confirm-delete to perform the destructive deletion.
+ * Pass --confirm to delete after reviewing the preview.
  *
  * Usage:
  *   node server/scripts/cleanup-old-posts.js
- *   node server/scripts/cleanup-old-posts.js --confirm-delete
+ *   node server/scripts/cleanup-old-posts.js --confirm
  *
  * Reads DATABASE_URL from server/.env automatically.
  */
@@ -44,7 +44,7 @@ function loadEnv() {
 // ---------------------------------------------------------------------------
 async function main() {
   loadEnv()
-  const shouldDelete = process.argv.includes('--confirm-delete')
+  const shouldDelete = process.argv.includes('--confirm')
 
   const databaseUrl = process.env.DATABASE_URL
   if (!databaseUrl) {
@@ -81,11 +81,11 @@ async function main() {
     })
 
     if (!shouldDelete) {
-      console.log('\n[cleanup] Dry run only. Re-run with --confirm-delete to delete these posts.')
+      console.log('\n[cleanup] Dry run only. Re-run with --confirm to delete these posts.')
       return
     }
 
-    // 2. Delete only after an explicit confirmation flag.
+    // 2. Delete after explicit confirmation
     const del = await pool.query(
       `DELETE FROM posts
        WHERE created_at < NOW() - INTERVAL '30 days'
@@ -100,7 +100,14 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('[cleanup] Fatal error:', err.message)
-  process.exit(1)
-})
+if (require.main === module) {
+  main().catch((err) => {
+    console.error('[cleanup] Fatal error:', err.message)
+    process.exit(1)
+  })
+}
+
+module.exports = {
+  main,
+  loadEnv
+}

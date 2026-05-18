@@ -3,6 +3,8 @@
  *
  * Vercel Cron Job endpoint — called daily at 00:00 UTC (09:00 KST).
  * Generates 2 blog posts using Gemini native REST API and saves them to Neon DB.
+ * This endpoint does not prune existing posts; the current schema has no durable
+ * marker that distinguishes generated posts from manually authored posts.
  *
  * Uses the same verified approach as server/scripts/auto-generate-posts.js:
  *   - callGeminiRaw: native generateContent endpoint (avoids OpenAI-compat 404 issues)
