@@ -4,9 +4,8 @@ import { useEffect, useState } from 'react'
 import { useVisitorCount } from '@/hooks/useVisitorCount'
 
 export default function VisitorCounter() {
-  const { count, status } = useVisitorCount()
+  const { count } = useVisitorCount()
 
-  // Pulse animation trigger on count change
   const [pulse, setPulse] = useState(false)
   const [displayed, setDisplayed] = useState(0)
 
@@ -18,16 +17,7 @@ export default function VisitorCounter() {
     return () => clearTimeout(t)
   }, [count, displayed])
 
-  if (status === 'error' || (status === 'disconnected' && count === 0)) {
-    return null
-  }
-
-  const dot =
-    status === 'connected'
-      ? 'bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.6)]'
-      : status === 'connecting'
-        ? 'bg-yellow-400 animate-pulse'
-        : 'bg-gray-500'
+  if (count === 0) return null
 
   return (
     <span
@@ -38,12 +28,11 @@ export default function VisitorCounter() {
       aria-live="polite"
       aria-label={`현재 ${displayed}명 접속 중`}
     >
-      <span className={`h-2 w-2 rounded-full ${dot}`} aria-hidden />
-      {status === 'connecting' ? (
-        <span>연결 중…</span>
-      ) : (
-        <span>{displayed}명 접속 중</span>
-      )}
+      <span
+        className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.6)]"
+        aria-hidden
+      />
+      <span>{displayed}명 접속 중</span>
     </span>
   )
 }

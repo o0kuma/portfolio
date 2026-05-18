@@ -1,57 +1,68 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { io, Socket } from 'socket.io-client'
-
-export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 export interface UseVisitorCountResult {
   count: number
-  status: ConnectionStatus
 }
 
-const SERVER_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000'
+const HEARTBEAT_INTERVAL_MS = 10_000
+const POLL_INTERVAL_MS = 10_000
+
+function getOrCreateSessionId(): string {
+  const KEY = 'visitor_session_id'
+  const existing = sessionStorage.getItem(KEY)
+  if (existing) return existing
+
+  // crypto.randomUUID() is available in all modern browsers
+  const id = crypto.randomUUID()
+  sessionStorage.setItem(KEY, id)
+  return id
+}
 
 export function useVisitorCount(): UseVisitorCountResult {
   const [count, setCount] = useState(0)
-  const [status, setStatus] = useState<ConnectionStatus>('connecting')
-  const socketRef = useRef<Socket | null>(null)
+  const heartbeatRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
-    const socket = io(SERVER_URL, {
-      transports: ['websocket', 'polling'],
-      reconnectionAttempts: 5,
-      reconnectionDelay: 2000,
-    })
-    socketRef.current = socket
+    const sessionId = getOrCreateSessionId()
 
-    socket.on('connect', () => {
-      setStatus('connected')
-      socket.emit('request_visitor_count')
-    })
+    const sendHeartbeat = async () => {
+      try {
+        await fetch('/api/visitors', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sessionId }),
+        })
+      } catch {
+        // network errors are non-fatal for heartbeat
+      }
+    }
 
-    socket.on('visitor_count', (data: { count: number }) => {
-      setCount(data.count)
-    })
+    const fetchCount = async () => {
+      try {
+        const res = await fetch('/api/visitors')
+        if (!res.ok) return
+        const data: { count: number } = await res.json()
+        setCount(data.count)
+      } catch {
+        // network errors are non-fatal for polling
+      }
+    }
 
-    socket.on('connect_error', () => {
-      setStatus('error')
-    })
+    // Immediate calls on mount
+    sendHeartbeat()
+    fetchCount()
 
-    socket.on('disconnect', () => {
-      setStatus('disconnected')
-    })
-
-    socket.on('reconnect', () => {
-      setStatus('connected')
-    })
+    heartbeatRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS)
+    pollRef.current = setInterval(fetchCount, POLL_INTERVAL_MS)
 
     return () => {
-      socket.disconnect()
-      socketRef.current = null
+      if (heartbeatRef.current) clearInterval(heartbeatRef.current)
+      if (pollRef.current) clearInterval(pollRef.current)
     }
   }, [])
 
-  return { count, status }
+  return { count }
 }
