@@ -65,22 +65,24 @@ export default function PostsPage() {
       const data = await response.json()
       
       if (response.ok) {
-        const mapped = (data.posts as Record<string, unknown>[]).map((row) =>
-          normalizePostBoardItem(row),
-        )
+        const rawPosts = Array.isArray(data.posts)
+          ? (data.posts as Record<string, unknown>[])
+          : []
+        const mapped = rawPosts.map((row) => normalizePostBoardItem(row))
         setPosts(mapped)
         setFilteredPosts(mapped)
-        setTotalPages(data.totalPages)
+        setTotalPages(Math.max(1, data.totalPages ?? 1))
       } else {
         console.error('Failed to fetch posts:', data.message)
-        // 에러 시 샘플 데이터 사용
         setPosts([])
         setFilteredPosts([])
+        setTotalPages(1)
       }
     } catch (error) {
       console.error('Error fetching posts:', error)
       setPosts([])
       setFilteredPosts([])
+      setTotalPages(1)
     } finally {
       setIsLoading(false)
     }
