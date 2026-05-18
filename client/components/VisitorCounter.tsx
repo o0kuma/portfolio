@@ -17,7 +17,8 @@ export default function VisitorCounter() {
     return () => clearTimeout(t)
   }, [count, displayed])
 
-  if (count === 0) return null
+  // 최소 1명(자기 자신)은 항상 표시
+  const shown = Math.max(displayed, 1)
 
   return (
     <span
@@ -26,13 +27,13 @@ export default function VisitorCounter() {
         pulse ? 'scale-110 text-white/90' : 'scale-100',
       ].join(' ')}
       aria-live="polite"
-      aria-label={`현재 ${displayed}명 접속 중`}
+      aria-label={`현재 ${shown}명 접속 중`}
     >
       <span
         className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_2px_rgba(52,211,153,0.6)]"
         aria-hidden
       />
-      <span>{displayed}명 접속 중</span>
+      <span>{shown}명 접속 중</span>
     </span>
   )
 }

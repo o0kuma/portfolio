@@ -51,9 +51,8 @@ export function useVisitorCount(): UseVisitorCountResult {
       }
     }
 
-    // Immediate calls on mount
-    sendHeartbeat()
-    fetchCount()
+    // heartbeat 먼저 완료 후 count 조회 (race condition 방지)
+    sendHeartbeat().then(() => fetchCount())
 
     heartbeatRef.current = setInterval(sendHeartbeat, HEARTBEAT_INTERVAL_MS)
     pollRef.current = setInterval(fetchCount, POLL_INTERVAL_MS)
