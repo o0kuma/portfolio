@@ -1,4 +1,6 @@
 const express = require('express');
+const http = require('http');
+const { Server: SocketIOServer } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
@@ -10,7 +12,44 @@ require('dotenv').config();
 const { testConnection } = require('./config/db');
 
 const app = express();
+const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 5000;
+
+const CORS_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://kuuuma.com',
+  'https://www.kuuuma.com'
+];
+
+// Socket.io 설정
+const io = new SocketIOServer(httpServer, {
+  cors: {
+    origin: CORS_ORIGINS,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  transports: ['websocket', 'polling'],
+});
+
+// 접속 중인 소켓 ID 집합 (중복 없는 실시간 카운트)
+const activeConnections = new Map();
+
+io.on('connection', (socket) => {
+  activeConnections.set(socket.id, { connectedAt: Date.now() });
+  const count = activeConnections.size;
+
+  io.emit('visitor_count', { count });
+
+  socket.on('request_visitor_count', () => {
+    socket.emit('visitor_count', { count: activeConnections.size });
+  });
+
+  socket.on('disconnect', () => {
+    activeConnections.delete(socket.id);
+    io.emit('visitor_count', { count: activeConnections.size });
+  });
+});
 
 // 업로드 디렉토리 생성
 const uploadDir = path.join(__dirname, 'uploads');
@@ -38,12 +77,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'https://kuuuma.com',
-    'https://www.kuuuma.com'
-  ],
+  origin: CORS_ORIGINS,
   credentials: true
 }));
 
@@ -173,8 +207,9 @@ const startServer = async () => {
       console.error('⚠️ Neon 연결 실패, 서버는 계속 실행됩니다:', dbError.message);
     }
     
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`🚀 서버가 포트 ${PORT}에서 실행 중입니다.`);
+      console.log(`🔌 Socket.io 실시간 방문자 카운터 활성화`);
       console.log(`📁 업로드 디렉토리: ${uploadDir}`);
       console.log(`📝 로그 디렉토리: ${logDir}`);
       console.log(`🌍 환경: ${process.env.NODE_ENV || 'development'}`);

@@ -2,6 +2,12 @@
 
 import { FiGithub, FiMail, FiArrowUp, FiBook, FiCode, FiUser } from 'react-icons/fi'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+// SSR 불가 (Socket.io는 브라우저 전용) → dynamic import
+const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
+  ssr: false,
+})
 
 export default function BlogFooter() {
   const currentYear = new Date().getFullYear()
@@ -113,9 +119,12 @@ export default function BlogFooter() {
             © {currentYear} iykyk blog. Made with <span className="text-red-400">❤</span> by Okuma
           </p>
 
-          <div className="flex items-center gap-2 text-sm text-textMuted">
-            <FiUser size={16} />
-            <span>Personal Blog</span>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-sm text-textMuted">
+              <FiUser size={16} />
+              <span>Personal Blog</span>
+            </div>
+            <VisitorCounter />
           </div>
         </div>
       </div>

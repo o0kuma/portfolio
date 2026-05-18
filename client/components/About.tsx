@@ -1,8 +1,19 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 
 export default function About() {
+  const { t } = useLanguage()
+  const years = new Date().getFullYear() - 2019
+
+  const stats = [
+    { value: `${years}+`, label: t.about.statYearsSuffix },
+    { value: '15+', label: t.about.statProjectsSuffix },
+    { value: '1990', label: t.about.statBirthSuffix },
+  ]
+
   return (
     <section
       id="about"
@@ -33,12 +44,14 @@ export default function About() {
             {/* Section label */}
             <div className="flex items-center gap-3 mb-12">
               <span className="w-8 h-px bg-cyan-400/80" />
-              <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">About</span>
+              <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">
+                {t.about.label}
+              </span>
             </div>
 
             {/* Heading */}
             <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-10">
-              설계하고 구현하는<br />
+              {t.about.heading1}<br />
               <span
                 style={{
                   background: 'linear-gradient(90deg, #22d3ee, #34d399)',
@@ -47,39 +60,27 @@ export default function About() {
                   backgroundClip: 'text',
                 }}
               >
-                개발자입니다.
+                {t.about.heading2}
               </span>
             </h2>
 
             {/* Natural monologue */}
             <div className="space-y-5 text-white/55 text-[1.05rem] leading-[1.85] max-w-2xl">
-              <p>
-                프론트엔드가 주 영역이지만, 서버와 DB도 직접 만들어야 할 때 뒤로 물러서지 않습니다.
-                UI 컴포넌트를 설계하고 API를 연동하며,
-                필요하다면 백엔드 로직까지 끝까지 구현합니다.
-              </p>
-              <p>
-                {new Date().getFullYear() - 2019}년 동안 금융 플랫폼, 트레이딩 시스템, 앱 서비스, 회사 사이트 등
-                다양한 프로젝트를 거쳐왔습니다. 요즘은 Next.js와 Svelte를 주로 쓰고 있고,
-                TypeScript로 더 단단한 코드를 만드는 데 집중합니다.
-              </p>
-              <p>
-                화면의 완성도와 코드의 품질, 두 가지 모두를 놓치지 않으려 꾸준히 파고듭니다.
-              </p>
+              <p>{t.about.p1}</p>
+              <p>{interpolate(t.about.p2, { years })}</p>
+              <p>{t.about.p3}</p>
             </div>
 
             {/* Recent work items */}
             <div className="mt-12">
               <div className="flex items-center gap-3 mb-5">
                 <span className="w-5 h-px bg-cyan-400/60" />
-                <span className="text-cyan-400/70 text-xs font-mono tracking-[0.18em] uppercase">Recent Work</span>
+                <span className="text-cyan-400/70 text-xs font-mono tracking-[0.18em] uppercase">
+                  {t.about.recentWork}
+                </span>
               </div>
               <ul className="space-y-3">
-                {[
-                  { label: 'BTB 사이트 유지보수 / Scale-up', status: '' },
-                  { label: 'scaleup_tip 논문·특허 데이터 수집 — JSON 메타데이터 추출 및 서버 저장 관리', status: '' },
-                  { label: 'B2B 오픈마켓', status: '진행 중' },
-                ].map((item) => (
+                {t.about.works.map((item) => (
                   <li key={item.label} className="flex items-start gap-3">
                     <span className="mt-[0.55rem] w-1 h-1 rounded-full bg-cyan-400/40 shrink-0" />
                     <span className="text-white/45 text-sm leading-relaxed">
@@ -97,11 +98,7 @@ export default function About() {
 
             {/* Inline stats */}
             <div className="mt-12 flex flex-wrap gap-10">
-              {[
-                { value: `${new Date().getFullYear() - 2019}+`, label: '년 경력' },
-                { value: '15+', label: '프로젝트' },
-                { value: '1990', label: '년생' },
-              ].map((stat) => (
+              {stats.map((stat) => (
                 <div key={stat.label}>
                   <div
                     className="text-3xl font-black"
@@ -121,11 +118,7 @@ export default function About() {
 
             {/* Info chips */}
             <div className="mt-10 flex flex-wrap gap-2.5">
-              {[
-                '서울 · 송파구',
-                '프론트엔드 / 풀스택 개발자',
-                'c8c8c81828@gmail.com',
-              ].map((item) => (
+              {[t.about.location, t.about.role, 'c8c8c81828@gmail.com'].map((item) => (
                 <span
                   key={item}
                   className="px-4 py-1.5 rounded-full border border-white/10 bg-white/[0.04] text-white/40 text-sm"

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
+import Providers from '@/components/Providers'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -160,7 +161,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   )

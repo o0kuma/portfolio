@@ -1,8 +1,11 @@
 'use client'
 
 import { FiGithub, FiMail, FiArrowUp } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 
 export default function Footer() {
+  const { t } = useLanguage()
   const currentYear = new Date().getFullYear()
 
   const scrollToTop = () => {
@@ -41,7 +44,7 @@ export default function Footer() {
 
           {/* Copyright */}
           <p className="text-white/22 text-sm font-mono order-2 sm:order-1">
-            © {currentYear} 오승일. All rights reserved.
+            {interpolate(t.footer.copyright, { year: currentYear })}
           </p>
 
           {/* Social icons */}
@@ -69,7 +72,7 @@ export default function Footer() {
             type="button"
             onClick={scrollToTop}
             className="flex items-center gap-1.5 text-white/22 hover:text-cyan-400 transition-colors duration-300 text-xs font-mono order-3"
-            aria-label="상단으로 이동"
+            aria-label={t.footer.copyright}
           >
             <FiArrowUp size={13} />
             TOP

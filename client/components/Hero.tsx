@@ -2,8 +2,13 @@
 
 import { motion } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowDown } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 
 export default function Hero() {
+  const { t } = useLanguage()
+  const years = new Date().getFullYear() - 2019
+
   return (
     <section
       id="hero"
@@ -57,12 +62,14 @@ export default function Hero() {
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-400/30 bg-cyan-400/10 text-cyan-300 text-sm font-medium mb-10 select-none">
               <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
-              Frontend Developer
+              {t.hero.badge}
             </div>
 
             {/* Name */}
             <h1 className="font-black leading-[1.0] mb-6">
-              <span className="block text-white text-6xl md:text-7xl lg:text-8xl">오승일</span>
+              <span className="block text-white text-6xl md:text-7xl lg:text-8xl">
+                {t.hero.nameMain}
+              </span>
               <span
                 className="block text-4xl md:text-5xl lg:text-6xl font-bold mt-2"
                 style={{
@@ -72,14 +79,18 @@ export default function Hero() {
                   backgroundClip: 'text',
                 }}
               >
-                Seungil Oh
+                {t.hero.nameSub}
               </span>
             </h1>
 
             {/* Description */}
             <p className="text-white/50 text-lg leading-relaxed mb-10 max-w-md">
-              React, Next.js, Svelte로 프론트엔드를 설계하고,<br />
-              Node.js 백엔드까지 다루는 {new Date().getFullYear() - 2019}년 차 풀스택 개발자입니다.
+              {interpolate(t.hero.description, { years }).split('\n').map((line, i) => (
+                <span key={i}>
+                  {line}
+                  {i === 0 && <br />}
+                </span>
+              ))}
             </p>
 
             {/* CTA buttons */}
@@ -94,7 +105,7 @@ export default function Hero() {
                   boxShadow: '0 8px 32px rgba(34,211,238,0.25)',
                 }}
               >
-                프로젝트 보기
+                {t.hero.viewProjects}
               </motion.a>
               <motion.a
                 href="#contact"
@@ -102,7 +113,7 @@ export default function Hero() {
                 whileTap={{ scale: 0.97 }}
                 className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full border border-white/20 text-white/75 font-semibold text-sm backdrop-blur-sm hover:border-cyan-400/50 hover:text-cyan-300 transition-colors duration-300"
               >
-                연락하기
+                {t.hero.contactMe}
               </motion.a>
             </div>
 
@@ -229,7 +240,7 @@ export default function Hero() {
           transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
           className="text-white/25 hover:text-cyan-400 transition-colors duration-300 cursor-pointer"
           onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-          aria-label="아래로 스크롤"
+          aria-label={t.hero.scrollDown}
         >
           <FiArrowDown size={20} />
         </motion.button>

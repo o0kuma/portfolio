@@ -7,9 +7,11 @@ import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiSettings, FiMessageSquare } fro
 import SearchBar from './SearchBar'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
+import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Header() {
   const router = useRouter()
+  const { t, toggleLocale } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
@@ -69,12 +71,12 @@ export default function Header() {
   const navItems: Array<
     { label: string; kind: 'section'; id: string } | { label: string; kind: 'path'; href: string }
   > = [
-    { label: 'About', kind: 'section', id: 'about' },
-    { label: 'Skills', kind: 'section', id: 'skills' },
-    { label: 'Projects', kind: 'section', id: 'projects' },
-    { label: 'Posts', kind: 'section', id: 'posts' },
-    { label: 'Contact', kind: 'section', id: 'contact' },
-    { label: 'Tetris', kind: 'path', href: '/tetris' },
+    { label: t.nav.about, kind: 'section', id: 'about' },
+    { label: t.nav.skills, kind: 'section', id: 'skills' },
+    { label: t.nav.projects, kind: 'section', id: 'projects' },
+    { label: t.nav.posts, kind: 'section', id: 'posts' },
+    { label: t.nav.contact, kind: 'section', id: 'contact' },
+    { label: t.nav.tetris, kind: 'path', href: '/tetris' },
   ]
 
   return (
@@ -152,6 +154,15 @@ export default function Header() {
                 title="관리자 패널"
               >
                 <FiSettings size={20} />
+              </button>
+
+              <button
+                type="button"
+                onClick={toggleLocale}
+                className="px-2.5 py-1 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
+                aria-label="언어 전환"
+              >
+                {t.nav.langToggle}
               </button>
 
               <button

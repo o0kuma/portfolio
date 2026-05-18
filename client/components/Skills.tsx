@@ -1,13 +1,11 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useLanguage } from '@/lib/LanguageContext'
 
 const DEPTH_ZONES = [
   {
-    id: 'surface',
-    depth: '수면',
-    subtitle: 'Surface — 전문 영역',
-    description: '매일 쓰고 누구보다 자신 있는 기술',
+    id: 'surface' as const,
     color: '#22d3ee',
     bgOpacity: '0.08',
     borderOpacity: '0.3',
@@ -17,10 +15,7 @@ const DEPTH_ZONES = [
     ],
   },
   {
-    id: 'mid',
-    depth: '중층',
-    subtitle: 'Mid Water — 활용 영역',
-    description: '프로젝트에 적극적으로 활용하는 기술',
+    id: 'mid' as const,
     color: '#38bdf8',
     bgOpacity: '0.06',
     borderOpacity: '0.22',
@@ -31,10 +26,7 @@ const DEPTH_ZONES = [
     ],
   },
   {
-    id: 'backend',
-    depth: '백엔드',
-    subtitle: 'Backend — 서버사이드 영역',
-    description: '서버·DB·API 구축에 활용하는 기술',
+    id: 'backend' as const,
     color: '#a78bfa',
     bgOpacity: '0.06',
     borderOpacity: '0.22',
@@ -45,10 +37,7 @@ const DEPTH_ZONES = [
     ],
   },
   {
-    id: 'deep',
-    depth: '심해',
-    subtitle: 'Deep — 탐험 영역',
-    description: '경험은 있지만 계속 탐구 중인 기술',
+    id: 'deep' as const,
     color: '#34d399',
     bgOpacity: '0.04',
     borderOpacity: '0.16',
@@ -61,6 +50,8 @@ const DEPTH_ZONES = [
 ]
 
 export default function Skills() {
+  const { t } = useLanguage()
+
   return (
     <section
       id="skills"
@@ -98,11 +89,13 @@ export default function Skills() {
         >
           <div className="flex items-center gap-3 mb-6">
             <span className="w-8 h-px bg-cyan-400/80" />
-            <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">Skills</span>
+            <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">
+              {t.skills.label}
+            </span>
           </div>
 
           <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-4">
-            바다의 깊이처럼<br />
+            {t.skills.heading1}<br />
             <span
               style={{
                 background: 'linear-gradient(90deg, #22d3ee, #34d399)',
@@ -111,75 +104,78 @@ export default function Skills() {
                 backgroundClip: 'text',
               }}
             >
-              쌓아온 기술들
+              {t.skills.heading2}
             </span>
           </h2>
           <p className="text-white/35 text-base max-w-md font-mono">
-            수면에서 심해까지 — 다양한 깊이로 다양한 기술을 다룹니다.
+            {t.skills.subtext}
           </p>
         </motion.div>
 
         {/* Depth zones */}
         <div className="space-y-14">
-          {DEPTH_ZONES.map((zone, zoneIndex) => (
-            <motion.div
-              key={zone.id}
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.7, delay: zoneIndex * 0.1 }}
-            >
-              {/* Zone header row */}
-              <div className="flex items-center gap-4 mb-5">
-                <div className="flex items-baseline gap-2 shrink-0">
-                  <span
-                    className="text-base font-bold font-mono"
-                    style={{ color: zone.color }}
-                  >
-                    {zone.depth}
-                  </span>
-                  <span className="text-white/25 text-xs font-mono hidden sm:inline">
-                    {zone.subtitle}
+          {DEPTH_ZONES.map((zone, zoneIndex) => {
+            const zoneLabel = t.skills.zones[zone.id]
+            return (
+              <motion.div
+                key={zone.id}
+                initial={{ opacity: 0, y: 28 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: zoneIndex * 0.1 }}
+              >
+                {/* Zone header row */}
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="flex items-baseline gap-2 shrink-0">
+                    <span
+                      className="text-base font-bold font-mono"
+                      style={{ color: zone.color }}
+                    >
+                      {zoneLabel.depth}
+                    </span>
+                    <span className="text-white/25 text-xs font-mono hidden sm:inline">
+                      {zoneLabel.subtitle}
+                    </span>
+                  </div>
+                  {/* Separator line */}
+                  <div
+                    className="flex-1 h-px"
+                    style={{
+                      background: `linear-gradient(90deg, ${zone.color}35, transparent)`,
+                    }}
+                  />
+                  <span className="text-white/20 text-xs shrink-0 hidden md:inline">
+                    {zoneLabel.description}
                   </span>
                 </div>
-                {/* Separator line */}
-                <div
-                  className="flex-1 h-px"
-                  style={{
-                    background: `linear-gradient(90deg, ${zone.color}35, transparent)`,
-                  }}
-                />
-                <span className="text-white/20 text-xs shrink-0 hidden md:inline">
-                  {zone.description}
-                </span>
-              </div>
 
-              {/* Skill tags — water flow layout */}
-              <div className="flex flex-wrap gap-2.5">
-                {zone.skills.map((skill, skillIndex) => (
-                  <motion.span
-                    key={skill}
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{
-                      duration: 0.35,
-                      delay: zoneIndex * 0.08 + skillIndex * 0.03,
-                    }}
-                    whileHover={{ y: -4, transition: { duration: 0.18 } }}
-                    className="px-4 py-2 rounded-full text-sm font-medium cursor-default select-none"
-                    style={{
-                      border: `1px solid ${zone.color}${Math.round(parseFloat(zone.borderOpacity) * 255).toString(16).padStart(2, '0')}`,
-                      background: `${zone.color}${Math.round(parseFloat(zone.bgOpacity) * 255).toString(16).padStart(2, '0')}`,
-                      color: zone.color,
-                    }}
-                  >
-                    {skill}
-                  </motion.span>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+                {/* Skill tags — water flow layout */}
+                <div className="flex flex-wrap gap-2.5">
+                  {zone.skills.map((skill, skillIndex) => (
+                    <motion.span
+                      key={skill}
+                      initial={{ opacity: 0, scale: 0.85 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{
+                        duration: 0.35,
+                        delay: zoneIndex * 0.08 + skillIndex * 0.03,
+                      }}
+                      whileHover={{ y: -4, transition: { duration: 0.18 } }}
+                      className="px-4 py-2 rounded-full text-sm font-medium cursor-default select-none"
+                      style={{
+                        border: `1px solid ${zone.color}${Math.round(parseFloat(zone.borderOpacity) * 255).toString(16).padStart(2, '0')}`,
+                        background: `${zone.color}${Math.round(parseFloat(zone.bgOpacity) * 255).toString(16).padStart(2, '0')}`,
+                        color: zone.color,
+                      }}
+                    >
+                      {skill}
+                    </motion.span>
+                  ))}
+                </div>
+              </motion.div>
+            )
+          })}
         </div>
 
         {/* Footer note */}
@@ -190,7 +186,7 @@ export default function Skills() {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="mt-16 text-white/20 text-xs font-mono text-center tracking-widest"
         >
-          — 항상 새로운 기술을 배우는 중입니다 —
+          {t.skills.footer}
         </motion.p>
       </div>
     </section>
