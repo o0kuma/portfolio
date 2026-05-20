@@ -2,7 +2,7 @@
  * /api/cron/generate-posts
  *
  * Vercel Cron Job endpoint — called daily at 00:00 UTC (09:00 KST).
- * Generates 2 blog posts using Gemini native REST API and saves them to Neon DB.
+ * Generates 1 blog post per run (Vercel Hobby: 1 cron/day, maxDuration 60s).
  * This endpoint does not prune existing posts; the current schema has no durable
  * marker that distinguishes generated posts from manually authored posts.
  *
@@ -257,25 +257,30 @@ export async function GET(req: NextRequest) {
     const authHeader = req.headers.get('authorization')
     const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim()
     if (providedSecret !== cronSecret) {
+      console.error('[cron/generate-posts] Unauthorized — CRON_SECRET mismatch or missing Authorization header')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
   }
 
+  const databaseUrl = process.env.DATABASE_URL?.trim()
+  if (!databaseUrl) {
+    console.error('[cron/generate-posts] DATABASE_URL is not set')
+    return NextResponse.json({ error: 'DATABASE_URL not configured' }, { status: 500 })
+  }
+
   const apiKey = getGeminiApiKey()
   if (!apiKey) {
+    console.error('[cron/generate-posts] GEMINI_API_KEY is not set or too short')
     return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
   }
 
-  // Pick 2 categories for today (rotate based on day of year) — free plan limit
+  // One category per day (rotate by day of year) — fits Hobby cron + 60s timeout
   const today = new Date()
   const dayOfYear = Math.floor(
     (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
   )
   const startIdx = dayOfYear % DAILY_SCHEDULE.length
-  const selected = [
-    DAILY_SCHEDULE[startIdx % DAILY_SCHEDULE.length],
-    DAILY_SCHEDULE[(startIdx + 2) % DAILY_SCHEDULE.length],
-  ]
+  const selected = [DAILY_SCHEDULE[startIdx % DAILY_SCHEDULE.length]]
 
   const results: { title: string; category: string; id: string }[] = []
   const errors: { category: string; error: string }[] = []
@@ -297,15 +302,25 @@ export async function GET(req: NextRequest) {
       await new Promise((r) => setTimeout(r, 2000))
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
+      console.error(`[cron/generate-posts] category=${category} failed:`, msg)
       errors.push({ category, error: msg })
     }
   }
 
-  return NextResponse.json({
-    ok: true,
+  const payload = {
+    ok: results.length > 0,
     generated: results.length,
     posts: results,
     errors,
+    scheduleIndex: startIdx,
     timestamp: new Date().toISOString(),
-  })
+  }
+
+  if (results.length === 0) {
+    console.error('[cron/generate-posts] No posts generated:', JSON.stringify(errors))
+    return NextResponse.json(payload, { status: errors.length > 0 ? 502 : 500 })
+  }
+
+  console.log('[cron/generate-posts] Success:', JSON.stringify(results.map((p) => p.title)))
+  return NextResponse.json(payload)
 }

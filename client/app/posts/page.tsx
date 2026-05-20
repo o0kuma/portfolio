@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../../components/BlogSearchBar'
@@ -120,14 +120,18 @@ export default function PostsPage() {
     setFilteredPosts(filtered)
   }, [posts, activeFilters])
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query)
-    setCurrentPage(1)
-  }
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery((prev) => {
+      if (prev !== query) {
+        setCurrentPage(1)
+      }
+      return query
+    })
+  }, [])
 
-  const handleFilterChange = (filters: any) => {
+  const handleFilterChange = useCallback((filters: any) => {
     setActiveFilters(filters)
-  }
+  }, [])
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category)
@@ -207,7 +211,9 @@ export default function PostsPage() {
     setEditingPost(null)
   }
 
-  if (isLoading) {
+  const isInitialLoad = isLoading && posts.length === 0
+
+  if (isInitialLoad) {
     return (
       <div className="min-h-screen bg-canvas text-textPrimary">
         <div className="page-shell py-16">
