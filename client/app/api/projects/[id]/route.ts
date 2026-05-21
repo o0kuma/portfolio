@@ -6,6 +6,21 @@ import { dbQuery } from '@/lib/neon-server'
 
 type Ctx = { params: { id: string } }
 
+const ALLOWED_PROJECT_COLUMNS = new Set([
+  'title',
+  'description',
+  'content',
+  'technologies',
+  'images',
+  'github_url',
+  'live_url',
+  'featured',
+  'category',
+  'status',
+  'start_date',
+  'end_date',
+])
+
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
     const { id } = params
@@ -47,9 +62,11 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
       endDate: 'end_date',
     }
     for (const [k, v] of Object.entries(body ?? {})) {
-      normalised[camelToSnake[k] ?? k] = v
+      const column = camelToSnake[k] ?? k
+      if (ALLOWED_PROJECT_COLUMNS.has(column)) {
+        normalised[column] = v
+      }
     }
-    normalised['updated_at'] = new Date().toISOString()
 
     const entries = Object.entries(normalised)
     if (!entries.length) {
@@ -61,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
     values.push(id)
 
     const result = await dbQuery(
-      `UPDATE projects SET ${setClause} WHERE id = $${values.length} RETURNING *`,
+      `UPDATE projects SET ${setClause}, updated_at = NOW() WHERE id = $${values.length} RETURNING *`,
       values,
     )
 

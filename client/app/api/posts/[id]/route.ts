@@ -6,6 +6,17 @@ import { dbQuery } from '@/lib/neon-server'
 
 type Ctx = { params: { id: string } }
 
+const ALLOWED_POST_COLUMNS = new Set([
+  'title',
+  'content',
+  'author',
+  'category',
+  'tags',
+  'featured',
+  'cover_image_url',
+  'status',
+])
+
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
     const { id } = params
@@ -43,7 +54,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
 
     const { id } = params
     const body = await request.json()
-    const entries = Object.entries(body ?? {})
+    const entries = Object.entries(body ?? {}).filter(([k]) => ALLOWED_POST_COLUMNS.has(k))
     if (!entries.length) {
       return NextResponse.json({ message: '수정할 내용이 없습니다.' }, { status: 400 })
     }

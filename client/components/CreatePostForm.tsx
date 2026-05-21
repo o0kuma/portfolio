@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiSave, FiTag } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
+import { adminAuthHeaders } from '@/lib/admin-token'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -85,6 +86,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
         method,
         headers: {
           'Content-Type': 'application/json',
+          ...adminAuthHeaders(),
         },
         body: JSON.stringify(formData),
       })

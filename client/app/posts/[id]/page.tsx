@@ -9,6 +9,7 @@ import { insertAdsInContent } from '@/components/InArticleAd'
 import { normalizePostDetail, type PostDetail } from '@/lib/postApi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import CreatePostForm from '@/components/CreatePostForm'
+import { adminAuthHeaders } from '@/lib/admin-token'
 import { toast } from '@/lib/toast'
 
 const API_BASE_URL = getApiBaseUrl()
@@ -113,16 +114,10 @@ export default function PostDetailPage() {
   const handleDeletePost = async () => {
     if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
 
-    const adminToken = process.env.NEXT_PUBLIC_ADMIN_TOKEN
-    const headers: Record<string, string> = {}
-    if (adminToken) {
-      headers['Authorization'] = `Bearer ${adminToken}`
-    }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
         method: 'DELETE',
-        headers
+        headers: adminAuthHeaders(),
       })
 
       if (response.ok) {
