@@ -19,6 +19,7 @@ export const maxDuration = 60 // Vercel Hobby plan max: 60 seconds
 
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
+import { cleanupOldCronPosts } from '@/lib/cleanup-cron-posts'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -231,13 +232,27 @@ async function isDuplicate(title: string): Promise<boolean> {
 // Save post to DB
 // ---------------------------------------------------------------------------
 async function savePost(post: GeneratedPost): Promise<{ id: string; title: string }> {
-  const r = await dbQuery(
-    `INSERT INTO posts (title, content, author, category, tags, featured, views, likes, status)
-     VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9)
-     RETURNING id, title`,
-    [post.title, post.content, 'iykyk', post.category, post.tags, false, 0, 0, 'published']
-  )
-  return r.rows[0]
+  try {
+    const r = await dbQuery(
+      `INSERT INTO posts (title, content, author, category, tags, featured, views, likes, status, source)
+       VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9, 'cron')
+       RETURNING id, title`,
+      [post.title, post.content, 'kuuuma', post.category, post.tags, false, 0, 0, 'published'],
+    )
+    return r.rows[0]
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err)
+    if (msg.includes('column') && msg.includes('source')) {
+      const r = await dbQuery(
+        `INSERT INTO posts (title, content, author, category, tags, featured, views, likes, status)
+         VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9)
+         RETURNING id, title`,
+        [post.title, post.content, 'kuuuma', post.category, post.tags, false, 0, 0, 'published'],
+      )
+      return r.rows[0]
+    }
+    throw err
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -321,6 +336,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(payload, { status: errors.length > 0 ? 502 : 500 })
   }
 
+  let cleaned = 0
+  try {
+    cleaned = await cleanupOldCronPosts()
+    if (cleaned > 0) {
+      console.log(`[cron/generate-posts] Cleaned ${cleaned} old cron post(s)`)
+    }
+  } catch (cleanupErr) {
+    console.warn('[cron/generate-posts] Cleanup skipped:', cleanupErr)
+  }
+
   console.log('[cron/generate-posts] Success:', JSON.stringify(results.map((p) => p.title)))
-  return NextResponse.json(payload)
+  return NextResponse.json({ ...payload, cleaned })
 }

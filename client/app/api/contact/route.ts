@@ -1,8 +1,61 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sendContactEmail } from '@/lib/email'
 import { dbQuery } from '@/lib/neon-server'
+
+function checkAdminAuth(request: NextRequest): boolean {
+  const adminToken = process.env.ADMIN_API_TOKEN
+  if (!adminToken) return false
+  const auth = request.headers.get('authorization') ?? ''
+  const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
+  return provided === adminToken
+}
+
+export async function GET(request: NextRequest) {
+  if (!checkAdminAuth(request)) {
+    return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
+  }
+
+  try {
+    const result = await dbQuery(
+      `SELECT id, name, email, subject, message, status, created_at
+       FROM contacts
+       ORDER BY created_at DESC
+       LIMIT 100`,
+    )
+    return NextResponse.json({ success: true, contacts: result.rows })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'unknown'
+    return NextResponse.json({ success: false, error: msg }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  if (!checkAdminAuth(request)) {
+    return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
+  }
+
+  try {
+    const body = await request.json()
+    const { id, status } = body
+    if (!id || !status) {
+      return NextResponse.json({ success: false, error: 'id와 status가 필요합니다.' }, { status: 400 })
+    }
+
+    const result = await dbQuery(
+      `UPDATE contacts SET status = $1 WHERE id = $2 RETURNING *`,
+      [status, id],
+    )
+    if (!result.rows[0]) {
+      return NextResponse.json({ success: false, error: '연락처를 찾을 수 없습니다.' }, { status: 404 })
+    }
+    return NextResponse.json({ success: true, contact: result.rows[0] })
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'unknown'
+    return NextResponse.json({ success: false, error: msg }, { status: 500 })
+  }
+}
 
 // Contact form handler.
 // DB save and email dispatch are intentionally independent:

@@ -8,6 +8,7 @@ import SearchBar from './SearchBar'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
 import { useLanguage } from '@/lib/LanguageContext'
+import { hasAdminAccess } from '@/lib/admin-access'
 
 export default function Header() {
   const router = useRouter()
@@ -18,6 +19,11 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
   const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
+  const [showAdmin, setShowAdmin] = useState(false)
+
+  useEffect(() => {
+    setShowAdmin(hasAdminAccess())
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -147,14 +153,16 @@ export default function Header() {
                 <FiSearch size={20} />
               </button>
 
-              <button
-                type="button"
-                onClick={() => setIsAdminPanelOpen(true)}
-                className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
-                title="관리자 패널"
-              >
-                <FiSettings size={20} />
-              </button>
+              {showAdmin && (
+                <button
+                  type="button"
+                  onClick={() => setIsAdminPanelOpen(true)}
+                  className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                  title="관리자 패널"
+                >
+                  <FiSettings size={20} />
+                </button>
+              )}
 
               <button
                 type="button"

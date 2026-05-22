@@ -6,6 +6,7 @@ import { Suspense } from 'react'
 import { FiArrowDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
 import HomePostsSection from '@/components/home/HomePostsSection'
+import { useLanguage } from '@/lib/LanguageContext'
 import {
   HomeMotionProvider,
   useHomeMotion,
@@ -25,6 +26,7 @@ const HomeScene = dynamic(() => import('./HomeScene'), {
 function ImmersiveHomeInner() {
   const scrollProgress = useHomeScrollProgress()
   const { tilt, reduced } = useHomeMotion()
+  const { t } = useLanguage()
 
   return (
     <div className="relative w-full bg-[#030014]">
@@ -42,17 +44,20 @@ function ImmersiveHomeInner() {
             href="/"
             className="font-display text-lg tracking-tight text-white/95 md:text-xl"
           >
-            iykyk
+            {t.home.brand}
           </Link>
           <nav className="flex items-center gap-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55 md:gap-10 md:text-xs">
             <a href="#posts-feed" className="transition-colors hover:text-white">
-              Posts
+              {t.home.navPosts}
             </a>
+            <Link href="/posts" className="transition-colors hover:text-white">
+              {t.nav.posts}
+            </Link>
             <Link href="/portfolio" className="transition-colors hover:text-white">
-              Portfolio
+              {t.home.navPortfolio}
             </Link>
             <Link href="/tetris" className="transition-colors hover:text-white">
-              Tetris
+              {t.home.navTetris}
             </Link>
           </nav>
         </header>
@@ -71,17 +76,17 @@ function ImmersiveHomeInner() {
             }
           >
             <span className="bg-gradient-to-br from-white via-indigo-100 to-violet-300 bg-clip-text text-transparent drop-shadow-[0_0_60px_rgba(99,102,241,0.35)]">
-              iykyk
+              {t.home.brand}
             </span>
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-white/50 md:text-[15px]">
-            블로그와 기록. 아래로 스크롤하면 최근 글을 바로 볼 수 있어요.
+            {t.home.tagline}
           </p>
           <a
             href="#posts-feed"
             className="pointer-events-auto mt-12 inline-flex items-center gap-2 border border-white/15 bg-white/5 px-8 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm transition hover:border-white/30 hover:bg-white/10"
           >
-            최근 글 보기
+            {t.home.scrollCta}
           </a>
         </main>
 
@@ -91,7 +96,7 @@ function ImmersiveHomeInner() {
             className="pointer-events-auto flex flex-col items-center gap-2 text-white/35 transition hover:text-white/55"
           >
             <FiArrowDown className="animate-bounce" size={18} aria-hidden />
-            <span className="text-[10px] uppercase tracking-[0.35em]">Scroll</span>
+            <span className="text-[10px] uppercase tracking-[0.35em]">{t.home.scrollHint}</span>
           </a>
         </footer>
       </section>

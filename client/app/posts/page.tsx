@@ -10,6 +10,9 @@ import { normalizePostBoardItem } from '@/lib/postApi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import { toast } from '@/lib/toast'
 import { adminAuthHeaders } from '@/lib/admin-token'
+import { hasAdminAccess } from '@/lib/admin-access'
+import { useLanguage } from '@/lib/LanguageContext'
+import { POST_CATEGORIES, getCategoryLabel } from '@/lib/post-categories'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -29,6 +32,8 @@ interface Post {
 }
 
 export default function PostsPage() {
+  const { locale, t } = useLanguage()
+  const [isAdmin, setIsAdmin] = useState(false)
   const [posts, setPosts] = useState<Post[]>([])
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -41,14 +46,16 @@ export default function PostsPage() {
   const [editingPost, setEditingPost] = useState<Post | null>(null)
 
   const categories = [
-    { id: 'all', name: 'All' },
-    { id: 'tech', name: 'Tech' },
-    { id: 'economy', name: 'Economy' },
-    { id: 'coin', name: 'Coin' },
-    { id: 'travel', name: 'Travel' },
-    { id: 'food', name: 'Food' },
-    { id: 'lottery', name: 'Lottery' }
+    { id: 'all', name: t.postsPage.all },
+    ...POST_CATEGORIES.map((c) => ({
+      id: c.id,
+      name: locale === 'ko' ? c.ko : c.en,
+    })),
   ]
+
+  useEffect(() => {
+    setIsAdmin(hasAdminAccess())
+  }, [])
 
   // API에서 포스트 데이터 가져오기
   const fetchPosts = async (page = 1, category = 'all', search = '') => {
@@ -219,7 +226,7 @@ export default function PostsPage() {
                 <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 border-r-primary-600 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                Loading posts...
+                {t.postsPage.loading}
               </h3>
               <div className="flex items-center justify-center space-x-1">
                 <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"></div>
@@ -244,20 +251,22 @@ export default function PostsPage() {
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 border border-white/30 dark:border-slate-700/30"
               >
                 <FiArrowLeft size={20} />
-                <span className="font-medium">Home</span>
+                <span className="font-medium">{t.postsPage.home}</span>
               </Link>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
-                Posts
+                {t.postsPage.title}
               </h1>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowCreateForm(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:brightness-105"
-            >
-              <FiPlus size={20} />
-              <span>New Post</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setShowCreateForm(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:brightness-105"
+              >
+                <FiPlus size={20} />
+                <span>{t.postsPage.newPost}</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -270,7 +279,7 @@ export default function PostsPage() {
               <BlogSearchBar
                 onSearch={handleSearch}
                 onFilterChange={handleFilterChange}
-                placeholder="Search posts..."
+                placeholder={t.postsPage.searchPlaceholder}
                 filters={activeFilters}
                 className="max-w-4xl mx-auto"
               />
@@ -343,31 +352,27 @@ export default function PostsPage() {
                         post.category === 'lottery' ? 'bg-pink-100/80 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400 backdrop-blur-sm' :
                         'bg-gray-100/80 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 backdrop-blur-sm'
                       }`}>
-                        {post.category === 'tech' ? 'Tech' :
-                         post.category === 'economy' ? 'Economy' :
-                         post.category === 'coin' ? 'Coin' :
-                         post.category === 'travel' ? 'Travel' :
-                         post.category === 'food' ? 'Food' :
-                         post.category === 'lottery' ? 'Lottery' :
-                         'General'}
+                        {getCategoryLabel(post.category, locale)}
                       </span>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleEditPost(post)}
-                        className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
-                        title="수정"
-                      >
-                        <FiEdit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeletePost(post._id)}
-                        className="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                        title="삭제"
-                      >
-                        <FiTrash2 size={16} />
-                      </button>
-                    </div>
+                    {isAdmin && (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => handleEditPost(post)}
+                          className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                          title="수정"
+                        >
+                          <FiEdit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePost(post._id)}
+                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          title="삭제"
+                        >
+                          <FiTrash2 size={16} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-2">
@@ -436,7 +441,7 @@ export default function PostsPage() {
                     href={`/posts/${post._id}`}
                     className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                   >
-                    Read More
+                    {t.postsPage.readMore}
                     <FiArrowLeft size={16} className="rotate-180" />
                   </Link>
                 </div>
@@ -451,10 +456,10 @@ export default function PostsPage() {
               <FiMessageSquare size={64} className="mx-auto" />
             </div>
             <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              No posts found
+              {t.postsPage.noPosts}
             </h3>
             <p className="text-textMuted">
-              Try changing your search or filters.
+              {t.postsPage.noPostsHint}
             </p>
           </div>
         )}
@@ -468,7 +473,7 @@ export default function PostsPage() {
               disabled={currentPage === 1}
               className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
             >
-              Previous
+              {t.postsPage.previous}
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -492,7 +497,7 @@ export default function PostsPage() {
               disabled={currentPage === totalPages}
               className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
             >
-              Next
+              {t.postsPage.next}
             </button>
           </div>
         )}

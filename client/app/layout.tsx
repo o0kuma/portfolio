@@ -3,6 +3,13 @@ import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
+import {
+  getSiteUrl,
+  SITE_NAME,
+  SITE_AUTHOR,
+  SITE_GITHUB,
+  OG_IMAGE_PATH,
+} from '@/lib/site'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -16,57 +23,59 @@ const fraunces = Fraunces({
   display: 'swap',
 })
 
+const siteUrl = getSiteUrl()
+
 export const metadata: Metadata = {
   title: {
-    default: 'iykyk blog',
-    template: '%s | iykyk blog'
+    default: SITE_NAME,
+    template: `%s | ${SITE_NAME}`,
   },
-  description: '프론트엔드 개발자 Okuma 포트폴리오 웹사이트. Next.js, React, TypeScript, Tailwind CSS 등을 활용한 프로젝트들과 개발 경험을 공유합니다.',
+  description:
+    '오승일(Seungil Oh)의 포트폴리오와 블로그 — React, Next.js, TypeScript 기반 웹 개발 프로젝트와 기술 글.',
   keywords: [
+    'kuuuma',
     '포트폴리오',
     '웹 개발자',
     '프론트엔드',
-    '백엔드',
+    '풀스택',
     'React',
     'Next.js',
-    'Node.js',
-    'MongoDB',
     'TypeScript',
-    'Tailwind CSS'
+    '블로그',
   ],
-  authors: [{ name: '승짱' }],
-  creator: '승짱',
-  publisher: '승짱',
+  authors: [{ name: SITE_AUTHOR }],
+  creator: SITE_AUTHOR,
+  publisher: SITE_AUTHOR,
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://portfolio-pi-eight-svjrkqfkn0.vercel.app/'),
+  metadataBase: new URL(siteUrl),
   alternates: {
     canonical: '/',
   },
   openGraph: {
     type: 'website',
     locale: 'ko_KR',
-    url: 'https://portfolio-pi-eight-svjrkqfkn0.vercel.app/',
-    title: 'Portfolio',
-    description: '프론트엔드 개발자 Okuma 포트폴리오 웹사이트',
-    siteName: 'Okuma 포트폴리오',
+    url: siteUrl,
+    title: SITE_NAME,
+    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+    siteName: SITE_NAME,
     images: [
       {
-        url: '/og-image.jpg',
+        url: OG_IMAGE_PATH,
         width: 1200,
         height: 630,
-        alt: 'Okuma 포트폴리오',
+        alt: SITE_NAME,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Okuma - 포트폴리오',
-    description: '프론트엔드 개발자 Okuma 포트폴리오 웹사이트',
-    images: ['/og-image.jpg'],
+    title: SITE_NAME,
+    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+    images: [OG_IMAGE_PATH],
   },
   robots: {
     index: true,
@@ -78,11 +87,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  verification: {
-    google: 'your-google-verification-code',
-    yandex: 'your-yandex-verification-code',
-    yahoo: 'your-yahoo-verification-code',
   },
 }
 
@@ -96,35 +100,24 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`scroll-smooth dark ${fontVars}`} suppressHydrationWarning>
       <head>
-        {/* 구조화된 데이터 */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "Person",
-              "name": "Okuma",
-              "jobTitle": "프론트엔드 개발자",
-              "description": "Next.js, React, Node.js, MongoDB를 활용한 웹 개발자",
-              "url": "https://portfolio-pi-eight-svjrkqfkn0.vercel.app/",
-              "sameAs": [
-                "https://github.com/oikikomori",
-                "https://linkedin.com/in/yourusername",
-                "https://twitter.com/yourusername"
-              ],
-              "knowsAbout": [
-                "React",
-                "Next.js",
-                "Node.js",
-                "MongoDB",
-                "TypeScript",
-                "Tailwind CSS"
-              ],
-              "worksFor": {
-                "@type": "Organization",
-                "name": "자유 개발자"
-              }
-            })
+              '@context': 'https://schema.org',
+              '@type': 'Person',
+              name: SITE_AUTHOR,
+              alternateName: 'Seungil Oh',
+              jobTitle: '프론트엔드 / 풀스택 개발자',
+              description: 'React, Next.js, Node.js, PostgreSQL을 활용한 웹 개발자',
+              url: siteUrl,
+              sameAs: [SITE_GITHUB],
+              knowsAbout: ['React', 'Next.js', 'Node.js', 'TypeScript', 'Tailwind CSS'],
+              worksFor: {
+                '@type': 'Organization',
+                name: 'Freelance Developer',
+              },
+            }),
           }}
         />
 
@@ -132,9 +125,8 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0f172a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="apple-mobile-web-app-title" content="Okuma 포트폴리오" />
+        <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
 
-        {/* Default dark; only remove when user chose light (localStorage) */}
         <script
           dangerouslySetInnerHTML={{
             __html: `

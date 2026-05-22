@@ -68,7 +68,10 @@ export default function AdsManagementPage() {
   const fetchAds = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch('/api/admin/ads', { cache: 'no-store' })
+      const response = await fetch('/api/admin/ads', {
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${localStorage.getItem('admin_token') ?? adminToken}` },
+      })
       const data = await response.json()
       if (!data.success) throw new Error(data.error || '광고 조회 실패')
       setAds(data.ads || [])

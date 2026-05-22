@@ -246,3 +246,29 @@ npm run lint
 - `npm run build`에서 `/api/contact` 등 env 의존 라우트가 있으면 환경 변수 누락 시 실패할 수 있습니다.
 - 기능 확인은 우선 `npm run dev` 기준으로 검증하는 것을 권장합니다.
 
+---
+
+## ✅ 운영 환경 변수 체크리스트 (Neon / Vercel)
+
+| 변수 | 필수 | 용도 |
+|------|------|------|
+| `DATABASE_URL` | ✅ (DB 기능) | Neon PostgreSQL 연결 |
+| `GEMINI_API_KEY` | ✅ (AI·cron 글) | 챗봇·일일 포스트 생성 |
+| `CRON_SECRET` | ✅ (프로덕션 cron) | `GET /api/cron/generate-posts` 인증 |
+| `ADMIN_API_TOKEN` | ✅ (관리 API) | posts/projects/ads/contact 관리 |
+| `NEXT_PUBLIC_APP_URL` | 권장 | `https://kuuuma.com` — metadata·OG canonical |
+| `SMTP_*` / `GOOGLE_*` | 선택 | 문의 폼 이메일 알림 |
+
+### DB migration (cron `source` 컬럼)
+
+```bash
+# server/migrations/add-posts-source.sql 실행
+psql "$DATABASE_URL" -f server/migrations/add-posts-source.sql
+```
+
+### 로컬 관리자 토큰
+
+1. `server/.env`에 `ADMIN_API_TOKEN` 설정  
+2. 브라우저 `/admin/ads` 또는 개발자 도구에서 `localStorage.setItem('admin_token', '<동일한 토큰>')`  
+3. `/posts`에서 새 글·수정·삭제 UI 표시, Header ⚙ 관리자 패널 표시
+

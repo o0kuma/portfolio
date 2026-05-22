@@ -12,8 +12,12 @@ function checkAdminAuth(request: NextRequest): boolean {
   return provided === adminToken
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    if (!checkAdminAuth(request)) {
+      return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
+    }
+
     const result = await dbQuery('SELECT * FROM advertisements ORDER BY created_at DESC')
     return NextResponse.json({ success: true, ads: result.rows })
   } catch (error: any) {

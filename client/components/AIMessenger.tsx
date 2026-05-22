@@ -34,6 +34,7 @@ import {
   type SuggestionResponse
 } from '../utils/aiService'
 import { toast } from '@/lib/toast'
+import { isStripeConfigured } from '@/lib/stripe-config'
 
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
@@ -44,6 +45,7 @@ interface AIMessengerProps {
 }
 
 export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: AIMessengerProps) {
+  const stripeReady = isStripeConfigured()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string>('')
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
@@ -412,7 +414,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            {!subscription?.isPremium && (
+            {!subscription?.isPremium && stripeReady && (
               <button
                 onClick={() => window.open('/subscription', '_blank')}
                 className="px-2 py-1 text-xs bg-yellow-500 text-yellow-900 rounded font-semibold hover:bg-yellow-400 transition-colors"
@@ -465,7 +467,9 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                     <span className="text-slate-600 dark:text-slate-400">
                       채팅: {subscription.usage?.chat || 0}/{subscription.limits?.dailyChatMessages || 10}
                     </span>
-                    {(subscription.usage?.chat || 0) >= (subscription.limits?.dailyChatMessages || 10) * 0.8 && (
+                    {stripeReady &&
+                      (subscription.usage?.chat || 0) >=
+                        (subscription.limits?.dailyChatMessages || 10) * 0.8 && (
                       <button
                         onClick={() => window.open('/subscription', '_blank')}
                         className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"

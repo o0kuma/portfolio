@@ -121,7 +121,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       '골프 티찜 웹사이트로, 골프 티찜을 소개하고 예약을 할 수 있는 웹사이트입니다. React를 기반으로 한 반응형 UI와 사용자 친화적인 인터페이스를 구현했습니다.',
     technologies: ['HTML5', 'CSS 3', 'React', 'JavaScript'],
-    images: ['/images/tzzim.png'],
+    images: ['/images/placeholder.svg'],
     githubUrl: '',
     liveUrl: 'https://apkpure.net/kr/%ED%8B%B0%EC%B0%9C/com.mnemosyne.teezzim_op',
     featured: false,
@@ -229,7 +229,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       '교통약자 이동 지원 센터 사이트로 외주를 받아 퍼블리싱 작업을 진행했습니다. 다른 대학들과 마찬가지로 담당 대학에 대한 가족회사 사이트를 제작했습니다.',
     technologies: ['HTML5', 'CSS 3', 'JavaScript'],
-    images: ['/images/dj_1.jpg'],
+    images: ['/images/placeholder.svg'],
     githubUrl: '',
     liveUrl: 'https://djcall.or.kr/',
     featured: false,
@@ -265,7 +265,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       'kmuseum 프로젝트에 총 두 명이 참여하였고, 전 퍼블리싱을 담당했습니다. 전국 모든 박물관에 공연, 전시, 이벤트 등 예약을 할 수 있는 사이트로 고객들에게 편의를 제공하기 위해 작업했던 프로젝트입니다.',
     technologies: ['HTML5', 'CSS 3', 'PHP'],
-    images: ['/images/kmuseum_1.jpg'],
+    images: ['/images/placeholder.svg'],
     githubUrl: '',
     liveUrl: '',
     featured: false,
@@ -317,12 +317,65 @@ export default function Projects() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const sorted = [...SAMPLE_PROJECTS].sort(
-      (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
-    )
-    setProjects(sorted)
-    setFilteredProjects(sorted)
-    setIsLoading(false)
+    let cancelled = false
+
+    const mapRow = (row: Record<string, unknown>): Project => {
+      const rawImages = Array.isArray(row.images) ? (row.images as string[]) : []
+      const images =
+        rawImages.length > 0
+          ? rawImages.map((img) => (img.startsWith('/') ? img : `/images/${img}`))
+          : ['/images/placeholder.svg']
+
+      return {
+        id: String(row.id ?? ''),
+        title: String(row.title ?? ''),
+        description: String(row.description ?? ''),
+        content: String(row.content ?? ''),
+        technologies: Array.isArray(row.technologies) ? (row.technologies as string[]) : [],
+        images,
+        githubUrl: String(row.github_url ?? row.githubUrl ?? ''),
+        liveUrl: String(row.live_url ?? row.liveUrl ?? ''),
+        featured: Boolean(row.featured),
+        category: String(row.category ?? 'web'),
+        startDate: String(row.start_date ?? row.startDate ?? ''),
+        endDate: String(row.end_date ?? row.endDate ?? ''),
+        status: String(row.status ?? 'completed'),
+        participants: row.participants ? String(row.participants) : undefined,
+        role: row.role ? String(row.role) : undefined,
+      }
+    }
+
+    ;(async () => {
+      try {
+        const res = await fetch('/api/projects?limit=50')
+        const data = await res.json()
+        if (!cancelled && res.ok && Array.isArray(data.projects) && data.projects.length > 0) {
+          const mapped = (data.projects as Record<string, unknown>[]).map(mapRow)
+          const sorted = mapped.sort(
+            (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+          )
+          setProjects(sorted)
+          setFilteredProjects(sorted)
+          return
+        }
+      } catch {
+        // fall through to sample data
+      }
+
+      if (!cancelled) {
+        const sorted = [...SAMPLE_PROJECTS].sort(
+          (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
+        )
+        setProjects(sorted)
+        setFilteredProjects(sorted)
+      }
+    })().finally(() => {
+      if (!cancelled) setIsLoading(false)
+    })
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -528,11 +581,11 @@ export default function Projects() {
 
                         {/* Project image (if real) */}
                         <img
-                          src={project.images[0]}
+                          src={project.images[0] || '/images/placeholder.svg'}
                           alt={project.title}
                           className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-overlay"
                           onError={(e) => {
-                            e.currentTarget.style.display = 'none'
+                            e.currentTarget.src = '/images/placeholder.svg'
                           }}
                         />
 

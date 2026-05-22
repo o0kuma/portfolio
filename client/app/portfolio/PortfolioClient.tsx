@@ -7,6 +7,7 @@ import About from '../../components/About'
 import Projects from '../../components/Projects'
 import Skills from '../../components/Skills'
 import Contact from '../../components/Contact'
+import RecentPostsSection from '../../components/RecentPostsSection'
 import Footer from '../../components/Footer'
 
 export default function PortfolioClient() {
@@ -68,7 +69,7 @@ export default function PortfolioClient() {
               backgroundClip: 'text',
             }}
           >
-            Okuma
+            kuuuma
           </h1>
           <p className="text-white/50 text-base mb-8">포트폴리오를 준비하는 중...</p>
 
@@ -94,6 +95,7 @@ export default function PortfolioClient() {
       <About />
       <Skills />
       <Projects />
+      <RecentPostsSection />
       <Contact />
       <Footer />
     </main>

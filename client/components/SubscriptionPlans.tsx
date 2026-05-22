@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { FiCheck, FiZap, FiStar, FiArrowRight } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
+import { isStripeConfigured } from '@/lib/stripe-config'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface SubscriptionPlan {
   id: string
@@ -69,6 +71,8 @@ const plans: SubscriptionPlan[] = [
 ]
 
 export default function SubscriptionPlans() {
+  const { t } = useLanguage()
+  const stripeReady = isStripeConfigured()
   const [user, setUser] = useState<any>(null)
   const [currentSubscription, setCurrentSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -100,6 +104,11 @@ export default function SubscriptionPlans() {
 
   const handleSubscribe = async (plan: SubscriptionPlan) => {
     if (plan.id === 'free') return
+
+    if (!stripeReady) {
+      toast.info(t.subscription.comingSoon)
+      return
+    }
 
     if (!user) {
       toast.warning('구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
@@ -150,6 +159,12 @@ export default function SubscriptionPlans() {
           <p className="text-xl text-textMuted">
             ChatGPT를 활용한 고급 AI 기능을 무제한으로 사용하세요
           </p>
+          {!stripeReady && (
+            <div className="mt-6 mx-auto max-w-lg rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">
+              <p className="font-semibold">{t.subscription.comingSoon}</p>
+              <p className="text-sm mt-1 text-amber-200/80">{t.subscription.comingSoonDetail}</p>
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -211,15 +226,22 @@ export default function SubscriptionPlans() {
                 ) : (
                   <button
                     onClick={() => handleSubscribe(plan)}
+                    disabled={plan.id !== 'free' && !stripeReady}
                     className={`w-full py-3 px-6 rounded-lg font-semibold transition-all ${
                       plan.id === 'free'
                         ? 'bg-gray-200 text-gray-600 cursor-not-allowed'
+                        : !stripeReady
+                        ? 'bg-gray-500 text-gray-200 cursor-not-allowed'
                         : plan.popular
                         ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl'
                         : 'bg-gray-800 hover:bg-gray-900 dark:bg-gray-700 dark:hover:bg-gray-600 text-white'
                     }`}
                   >
-                    {plan.id === 'free' ? '현재 플랜' : '구독하기'}
+                    {plan.id === 'free'
+                      ? '현재 플랜'
+                      : !stripeReady
+                      ? '준비 중'
+                      : '구독하기'}
                   </button>
                 )}
               </div>

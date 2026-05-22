@@ -1,28 +1,26 @@
 import type { Metadata } from 'next'
 import ImmersiveHome from '@/components/home/ImmersiveHome'
+import { SITE_NAME, getSiteUrl, OG_IMAGE_PATH } from '@/lib/site'
+
+const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
-  title: 'iykyk blog',
-  description: 'A space for sharing thoughts, experiences, and insights across various topics and interests.',
-  keywords: [
-    'blog',
-    'personal blog',
-    'tech',
-    'lifestyle',
-    'travel',
-    'food',
-    'culture',
-    'iykyk'
-  ],
+  title: `${SITE_NAME} — Blog`,
+  description:
+    '기술, 경제, 여행 등 다양한 주제의 글과 인사이트를 공유하는 kuuuma.com 블로그.',
+  alternates: { canonical: '/' },
   openGraph: {
-    title: 'iykyk blog',
-    description: 'A space for sharing thoughts, experiences, and insights across various topics and interests.',
+    title: `${SITE_NAME} — Blog`,
+    description: '기술·경제·여행 등 다양한 주제의 블로그',
     type: 'website',
+    url: siteUrl,
+    images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: SITE_NAME }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'iykyk blog',
-    description: 'A space for sharing thoughts, experiences, and insights across various topics and interests.',
+    title: `${SITE_NAME} — Blog`,
+    description: '기술·경제·여행 등 다양한 주제의 블로그',
+    images: [OG_IMAGE_PATH],
   },
 }
 

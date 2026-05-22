@@ -3,18 +3,30 @@
 import { FiGithub, FiMail, FiArrowUp, FiBook, FiCode, FiUser } from 'react-icons/fi'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
+import { POST_CATEGORIES } from '@/lib/post-categories'
+import { SITE_AUTHOR, SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 
-// SSR 불가 (Socket.io는 브라우저 전용) → dynamic import
 const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
   ssr: false,
 })
 
 export default function BlogFooter() {
+  const { locale, t, toggleLocale } = useLanguage()
   const currentYear = new Date().getFullYear()
 
   const socialLinks = [
-    { icon: FiGithub, href: 'https://github.com', label: 'GitHub' },
-    { icon: FiMail, href: 'mailto:c8c8c81828@gmail.com', label: 'Email' },
+    { icon: FiGithub, href: SITE_GITHUB, label: 'GitHub' },
+    { icon: FiMail, href: `mailto:${SITE_EMAIL}`, label: 'Email' },
+  ]
+
+  const quickLinks = [
+    { name: t.blogFooter.links.home, href: '/' },
+    { name: t.blogFooter.links.posts, href: '/posts' },
+    { name: t.blogFooter.links.portfolio, href: '/portfolio' },
+    { name: t.blogFooter.links.privacy, href: '/privacy' },
+    { name: t.blogFooter.links.terms, href: '/terms' },
   ]
 
   const scrollToTop = () => {
@@ -34,12 +46,10 @@ export default function BlogFooter() {
             <div className="md:col-span-1">
               <Link href="/">
                 <h3 className="mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text font-display text-3xl font-bold text-transparent">
-                  iykyk blog
+                  {t.blogFooter.brand}
                 </h3>
               </Link>
-              <p className="mb-6 leading-relaxed text-textMuted">
-                A space for sharing thoughts, experiences, and insights across various topics and interests.
-              </p>
+              <p className="mb-6 leading-relaxed text-textMuted">{t.blogFooter.description}</p>
 
               <div className="flex space-x-4">
                 {socialLinks.map((social) => (
@@ -60,17 +70,11 @@ export default function BlogFooter() {
             <div>
               <h4 className="mb-6 flex items-center gap-2 text-lg font-semibold">
                 <FiBook size={20} className="text-purple-400" />
-                Quick Links
+                {t.blogFooter.quickLinks}
               </h4>
               <ul className="space-y-3">
-                {[
-                  { name: 'Home', href: '/' },
-                  { name: 'Posts', href: '/posts' },
-                  { name: 'Portfolio', href: '/portfolio' },
-                  { name: 'Privacy Policy', href: '/privacy' },
-                  { name: 'Terms of Service', href: '/terms' },
-                ].map((link) => (
-                  <li key={link.name}>
+                {quickLinks.map((link) => (
+                  <li key={link.href}>
                     <Link
                       href={link.href}
                       className="group flex items-center gap-2 text-textMuted transition-colors hover:text-textPrimary"
@@ -86,24 +90,17 @@ export default function BlogFooter() {
             <div>
               <h4 className="mb-6 flex items-center gap-2 text-lg font-semibold">
                 <FiCode size={20} className="text-blue-400" />
-                Categories
+                {t.blogFooter.categories}
               </h4>
               <ul className="space-y-3">
-                {[
-                  { name: 'Tech', href: '/posts?category=tech' },
-                  { name: 'Lifestyle', href: '/posts?category=lifestyle' },
-                  { name: 'Travel', href: '/posts?category=travel' },
-                  { name: 'Food', href: '/posts?category=food' },
-                  { name: 'Culture', href: '/posts?category=culture' },
-                  { name: 'General', href: '/posts?category=general' },
-                ].map((link) => (
-                  <li key={link.name}>
+                {POST_CATEGORIES.filter((c) => c.id !== 'general').map((cat) => (
+                  <li key={cat.id}>
                     <Link
-                      href={link.href}
+                      href={`/posts?category=${cat.id}`}
                       className="group flex items-center gap-2 text-textMuted transition-colors hover:text-textPrimary"
                     >
                       <span className="h-1.5 w-1.5 rounded-full bg-blue-400 opacity-0 transition-opacity group-hover:opacity-100" />
-                      {link.name}
+                      {locale === 'ko' ? cat.ko : cat.en}
                     </Link>
                   </li>
                 ))}
@@ -116,13 +113,20 @@ export default function BlogFooter() {
 
         <div className="flex flex-col items-center justify-between gap-4 py-8 md:flex-row">
           <p className="text-sm text-textMuted">
-            © {currentYear} iykyk blog. Made with <span className="text-red-400">❤</span> by Okuma
+            {interpolate(t.blogFooter.copyright, { year: currentYear, author: SITE_AUTHOR })}
           </p>
 
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleLocale}
+              className="rounded-lg border border-border px-3 py-1 text-xs font-semibold text-textMuted hover:text-textPrimary"
+            >
+              {locale === 'ko' ? 'EN' : 'KO'}
+            </button>
             <div className="flex items-center gap-2 text-sm text-textMuted">
               <FiUser size={16} />
-              <span>Personal Blog</span>
+              <span>{t.blogFooter.personalBlog}</span>
             </div>
             <VisitorCounter />
           </div>
