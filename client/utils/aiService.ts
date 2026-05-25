@@ -131,7 +131,7 @@ export const translateText = async (
   targetLanguage: string = 'English'
 ): Promise<TranslationResponse> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/ai/translate`, {
+    const response = await fetch('/api/ai/translate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

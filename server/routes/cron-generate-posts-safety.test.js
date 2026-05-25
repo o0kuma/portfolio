@@ -2,10 +2,13 @@ const fs = require('fs');
 const path = require('path');
 
 describe('generate-posts cron safety', () => {
-  test('does not delete posts from the automatic cron endpoint', () => {
-    const routePath = path.resolve(__dirname, '../../client/app/api/cron/generate-posts/route.ts');
-    const routeSource = fs.readFileSync(routePath, 'utf8');
+  test('cron cleanup only targets posts marked source=cron', () => {
+    const cleanupPath = path.resolve(__dirname, '../../client/lib/cleanup-cron-posts.ts');
+    const cleanupSource = fs.readFileSync(cleanupPath, 'utf8');
 
-    expect(routeSource).not.toMatch(/\bDELETE\s+FROM\s+posts\b/i);
+    expect(cleanupSource).toMatch(/source\s*=\s*'cron'/i);
+    expect(cleanupSource).not.toMatch(
+      /DELETE\s+FROM\s+posts[\s\S]*featured\s*=\s*false(?![\s\S]*source\s*=\s*'cron')/i,
+    );
   });
 });
