@@ -9,6 +9,8 @@ describe('Next.js posts admin security', () => {
       'client/app/posts/page.tsx',
       'client/app/posts/[id]/page.tsx',
       'client/components/CreatePostForm.tsx',
+      'client/lib/admin-access.ts',
+      'client/components/Header.tsx',
     ];
 
     for (const rel of files) {
