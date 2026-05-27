@@ -1,8 +1,9 @@
 /**
  * cleanup-old-posts.js
  *
- * Previews posts older than 30 days that are NOT featured.
+ * Previews cron-generated posts (source = 'cron') older than 30 days that are NOT featured.
  * Pass --confirm to delete after reviewing the preview.
+ * Manual posts (source = 'manual') are never targeted.
  *
  * Usage:
  *   node server/scripts/cleanup-old-posts.js
@@ -58,17 +59,30 @@ async function main() {
   try {
     console.log('[cleanup] Connecting to database…')
 
-    // 1. Preview: list posts that will be deleted
-    const preview = await pool.query(
-      `SELECT id, title, category, created_at
-       FROM posts
-       WHERE created_at < NOW() - INTERVAL '30 days'
+    const cronOnlyFilter = `created_at < NOW() - INTERVAL '30 days'
          AND featured = false
-       ORDER BY created_at ASC`,
-    )
+         AND source = 'cron'`
+
+    // 1. Preview: list cron posts that will be deleted
+    let preview
+    try {
+      preview = await pool.query(
+        `SELECT id, title, category, created_at
+         FROM posts
+         WHERE ${cronOnlyFilter}
+         ORDER BY created_at ASC`,
+      )
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes('column') && msg.includes('source')) {
+        console.warn('[cleanup] posts.source column missing — run server/migrations/add-posts-source.sql first.')
+        return
+      }
+      throw err
+    }
 
     if (preview.rows.length === 0) {
-      console.log('[cleanup] No posts older than 30 days (non-featured) found. Nothing to delete.')
+      console.log('[cleanup] No cron posts older than 30 days (non-featured) found. Nothing to delete.')
       return
     }
 
@@ -88,8 +102,7 @@ async function main() {
     // 2. Delete after explicit confirmation
     const del = await pool.query(
       `DELETE FROM posts
-       WHERE created_at < NOW() - INTERVAL '30 days'
-         AND featured = false
+       WHERE ${cronOnlyFilter}
        RETURNING id, title`,
     )
 

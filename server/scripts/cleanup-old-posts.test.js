@@ -38,7 +38,7 @@ describe('cleanup-old-posts script', () => {
       rows: [
         {
           id: 'post-1',
-          title: 'Manual post',
+          title: 'Cron post',
           category: 'general',
           created_at: new Date(Date.now() - 31 * 86400000).toISOString()
         }
@@ -49,31 +49,44 @@ describe('cleanup-old-posts script', () => {
 
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][0]).toContain('SELECT id, title, category, created_at');
+    expect(query.mock.calls[0][0]).toMatch(/source\s*=\s*'cron'/i);
     expect(query.mock.calls[0][0]).not.toContain('DELETE FROM posts');
     expect(end).toHaveBeenCalledTimes(1);
   });
 
-  test('deletes old non-featured posts only when --confirm is provided', async () => {
+  test('deletes old cron posts only when --confirm is provided', async () => {
     process.argv = ['node', 'cleanup-old-posts.js', '--confirm'];
     query
       .mockResolvedValueOnce({
         rows: [
           {
             id: 'post-1',
-            title: 'Manual post',
+            title: 'Cron post',
             category: 'general',
             created_at: new Date(Date.now() - 31 * 86400000).toISOString()
           }
         ]
       })
       .mockResolvedValueOnce({
-        rows: [{ id: 'post-1', title: 'Manual post' }]
+        rows: [{ id: 'post-1', title: 'Cron post' }]
       });
 
     await main();
 
     expect(query).toHaveBeenCalledTimes(2);
     expect(query.mock.calls[1][0]).toContain('DELETE FROM posts');
+    expect(query.mock.calls[1][0]).toMatch(/source\s*=\s*'cron'/i);
+    expect(end).toHaveBeenCalledTimes(1);
+  });
+
+  test('skips cleanup when posts.source column is missing', async () => {
+    query.mockRejectedValueOnce(new Error('column "source" does not exist'));
+
+    await main();
+
+    expect(query).toHaveBeenCalledTimes(1);
+    expect(query.mock.calls[0][0]).not.toContain('DELETE FROM posts');
+    expect(warnSpy).toHaveBeenCalled();
     expect(end).toHaveBeenCalledTimes(1);
   });
 });

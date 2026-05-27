@@ -11,4 +11,14 @@ describe('generate-posts cron safety', () => {
       /DELETE\s+FROM\s+posts[\s\S]*featured\s*=\s*false(?![\s\S]*source\s*=\s*'cron')/i,
     );
   });
+
+  test('manual cleanup script only targets posts marked source=cron', () => {
+    const scriptPath = path.resolve(__dirname, '../scripts/cleanup-old-posts.js');
+    const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+
+    expect(scriptSource).toMatch(/source\s*=\s*'cron'/i);
+    expect(scriptSource).not.toMatch(
+      /DELETE\s+FROM\s+posts[\s\S]*featured\s*=\s*false(?![\s\S]*source\s*=\s*'cron')/i,
+    );
+  });
 });
