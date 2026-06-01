@@ -7,6 +7,7 @@ import { FiArrowDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
 import HomePostsSection from '@/components/home/HomePostsSection'
 import { useLanguage } from '@/lib/LanguageContext'
+import { PORTFOLIO_PUBLIC } from '@/lib/site'
 import {
   HomeMotionProvider,
   useHomeMotion,
@@ -53,9 +54,11 @@ function ImmersiveHomeInner() {
             <Link href="/posts" className="transition-colors hover:text-white">
               {t.nav.posts}
             </Link>
-            <Link href="/portfolio" className="transition-colors hover:text-white">
-              {t.home.navPortfolio}
-            </Link>
+            {PORTFOLIO_PUBLIC && (
+              <Link href="/portfolio" className="transition-colors hover:text-white">
+                {t.home.navPortfolio}
+              </Link>
+            )}
             <Link href="/tetris" className="transition-colors hover:text-white">
               {t.home.navTetris}
             </Link>

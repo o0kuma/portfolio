@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import { POST_CATEGORIES } from '@/lib/post-categories'
-import { SITE_AUTHOR, SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
+import { PORTFOLIO_PUBLIC, SITE_AUTHOR, SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 
 const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
   ssr: false,
@@ -24,7 +24,9 @@ export default function BlogFooter() {
   const quickLinks = [
     { name: t.blogFooter.links.home, href: '/' },
     { name: t.blogFooter.links.posts, href: '/posts' },
-    { name: t.blogFooter.links.portfolio, href: '/portfolio' },
+    ...(PORTFOLIO_PUBLIC
+      ? [{ name: t.blogFooter.links.portfolio, href: '/portfolio' }]
+      : []),
     { name: t.blogFooter.links.privacy, href: '/privacy' },
     { name: t.blogFooter.links.terms, href: '/terms' },
   ]
