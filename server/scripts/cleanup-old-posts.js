@@ -1,7 +1,7 @@
 /**
  * cleanup-old-posts.js
  *
- * Previews cron-generated posts (source = 'cron') older than 30 days that are NOT featured.
+ * Previews cron-generated posts (source = 'cron') older than 15 days that are NOT featured.
  * Pass --confirm to delete after reviewing the preview.
  * Manual posts (source = 'manual') are never targeted.
  *
@@ -59,7 +59,7 @@ async function main() {
   try {
     console.log('[cleanup] Connecting to database…')
 
-    const cronOnlyFilter = `created_at < NOW() - INTERVAL '30 days'
+    const cronOnlyFilter = `created_at < NOW() - INTERVAL '15 days'
          AND featured = false
          AND source = 'cron'`
 
@@ -82,7 +82,7 @@ async function main() {
     }
 
     if (preview.rows.length === 0) {
-      console.log('[cleanup] No cron posts older than 30 days (non-featured) found. Nothing to delete.')
+      console.log('[cleanup] No cron posts older than 15 days (non-featured) found. Nothing to delete.')
       return
     }
 
