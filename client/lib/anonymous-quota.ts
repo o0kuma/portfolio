@@ -31,6 +31,8 @@ function hashQuotaIdentifier(value: string): string {
 }
 
 function shouldTrustProxyIpHeaders(): boolean {
+  // Vercel overwrites client-supplied forwarding headers with the real client IP.
+  if (process.env.VERCEL) return true
   return process.env.AI_QUOTA_TRUST_PROXY_HEADERS === 'true'
 }
 

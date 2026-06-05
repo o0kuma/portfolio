@@ -4,6 +4,12 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
+import {
+  enforceAiFeatureQuota,
+  estimateTokensUsed,
+  quotaJson,
+  recordAiFeatureUsage,
+} from '@/lib/ai-feature-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -50,10 +56,16 @@ loadServerEnv()
 
 export async function POST(request: Request) {
   try {
+    const quotaCheck = await enforceAiFeatureQuota(request, 'translate')
+    if (!quotaCheck.ok) {
+      return quotaCheck.response
+    }
+    const { identity } = quotaCheck
+
     const { text, targetLanguage = 'English' } = await request.json()
 
     if (typeof text !== 'string' || !text.trim()) {
-      return NextResponse.json({ success: false, error: '번역할 텍스트가 필요합니다.' }, { status: 400 })
+      return quotaJson(identity, { success: false, error: '번역할 텍스트가 필요합니다.' }, { status: 400 })
     }
 
     const originalText = text.trim()
@@ -66,7 +78,7 @@ export async function POST(request: Request) {
     const geminiApiKey = getGeminiApiKey()
 
     if (!geminiApiKey) {
-      return NextResponse.json({
+      return quotaJson(identity, {
         success: true,
         originalText,
         translatedText: originalText,
@@ -98,7 +110,7 @@ export async function POST(request: Request) {
     )
 
     if (!response.ok) {
-      return NextResponse.json({
+      return quotaJson(identity, {
         success: true,
         originalText,
         translatedText: originalText,
@@ -109,7 +121,16 @@ export async function POST(request: Request) {
     const data = await response.json()
     const translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
 
-    return NextResponse.json({
+    const usageRecord = await recordAiFeatureUsage(
+      identity,
+      'translate',
+      estimateTokensUsed(translatedText),
+    )
+    if (!usageRecord.ok) {
+      return usageRecord.response
+    }
+
+    return quotaJson(identity, {
       success: true,
       originalText,
       translatedText,
