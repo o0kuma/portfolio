@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
+import { enforceAiQuota, MAX_AI_TEXT_LENGTH, recordAiUsage } from '@/lib/ai-quota-guard'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -55,6 +56,18 @@ export async function POST(request: Request) {
     }
 
     const originalText = text.trim()
+    if (originalText.length > MAX_AI_TEXT_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: `요약할 텍스트는 최대 ${MAX_AI_TEXT_LENGTH}자까지 입력할 수 있습니다.` },
+        { status: 400 }
+      )
+    }
+
+    const quotaResult = await enforceAiQuota(request, 'summarize')
+    if (!quotaResult.allowed) {
+      return quotaResult.response
+    }
+    const { ctx: quotaCtx } = quotaResult
 
     if (!process.env.GEMINI_API_KEY) loadServerEnv()
     const geminiApiKey = getGeminiApiKey()
@@ -106,7 +119,12 @@ export async function POST(request: Request) {
     const data = await response.json()
     const summary = data.choices?.[0]?.message?.content || '[요약 실패]'
 
-    return NextResponse.json({ success: true, originalText, summary, summaryLength })
+    const usageRecord = await recordAiUsage(quotaCtx, 'summarize', summary.length)
+    if (!usageRecord.ok) {
+      return usageRecord.response
+    }
+
+    return quotaCtx.quotaJson({ success: true, originalText, summary, summaryLength })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || '요약 중 오류가 발생했습니다.' }, { status: 500 })
   }

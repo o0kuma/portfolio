@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 
-// 이메일 설정 테스트 API
+// 이메일 설정 테스트 API (development only)
 export async function GET() {
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 })
+  }
+
   try {
     // 환경변수 확인
     const config = {
