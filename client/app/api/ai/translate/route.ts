@@ -4,6 +4,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
+import {
+  applyQuotaCookieToResponse,
+  checkAiQuota,
+  recordAiUsage,
+} from '@/lib/ai-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -74,6 +79,12 @@ export async function POST(request: Request) {
       })
     }
 
+    const quotaCheck = await checkAiQuota(request, 'translate')
+    if (!quotaCheck.ok) {
+      return quotaCheck.response
+    }
+    const { quotaIdentity } = quotaCheck
+
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
@@ -97,24 +108,26 @@ export async function POST(request: Request) {
       },
     )
 
-    if (!response.ok) {
-      return NextResponse.json({
-        success: true,
-        originalText,
-        translatedText: originalText,
-        targetLanguage: target,
-      })
+    let translatedText = originalText
+    if (response.ok) {
+      const data = await response.json()
+      translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
     }
 
-    const data = await response.json()
-    const translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
+    const usageRecord = await recordAiUsage(request, 'translate', quotaIdentity, translatedText.length)
+    if (!usageRecord.ok) {
+      return usageRecord.response
+    }
 
-    return NextResponse.json({
-      success: true,
-      originalText,
-      translatedText,
-      targetLanguage: target,
-    })
+    return applyQuotaCookieToResponse(
+      NextResponse.json({
+        success: true,
+        originalText,
+        translatedText,
+        targetLanguage: target,
+      }),
+      quotaIdentity,
+    )
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '번역 중 오류가 발생했습니다.'
     return NextResponse.json({ success: false, error: msg }, { status: 500 })
