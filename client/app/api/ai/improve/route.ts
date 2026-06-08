@@ -4,12 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  enforceAiFeatureQuota,
-  estimateTokensUsed,
-  quotaJson,
-  recordAiFeatureUsage,
-} from '@/lib/ai-feature-quota'
+import { enforceAiQuota, MAX_AI_TEXT_LENGTH, recordAiUsage } from '@/lib/ai-quota-guard'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -62,30 +57,37 @@ const improvementInstructions: Record<string, string> = {
 
 export async function POST(request: Request) {
   try {
-    const quotaCheck = await enforceAiFeatureQuota(request, 'improve')
-    if (!quotaCheck.ok) {
-      return quotaCheck.response
-    }
-    const { identity } = quotaCheck
-
     const { text, improvementType = 'general' } = await request.json()
 
     if (typeof text !== 'string' || !text.trim()) {
-      return quotaJson(identity, { success: false, error: '개선할 텍스트가 필요합니다.' }, { status: 400 })
+      return NextResponse.json({ success: false, error: '개선할 텍스트가 필요합니다.' }, { status: 400 })
     }
 
     const originalText = text.trim()
+    if (originalText.length > MAX_AI_TEXT_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: `개선할 텍스트는 최대 ${MAX_AI_TEXT_LENGTH}자까지 입력할 수 있습니다.` },
+        { status: 400 }
+      )
+    }
+
     const instruction = improvementInstructions[improvementType] || improvementInstructions.general
+
+    const quotaResult = await enforceAiQuota(request, 'improve')
+    if (!quotaResult.allowed) {
+      return quotaResult.response
+    }
+    const { ctx: quotaCtx } = quotaResult
 
     if (!process.env.GEMINI_API_KEY) loadServerEnv()
     const geminiApiKey = getGeminiApiKey()
 
     if (!geminiApiKey) {
-      return quotaJson(identity, {
+      return NextResponse.json({
         success: true,
         originalText,
         improvedText: originalText,
-        improvementType,
+        improvementType
       })
     }
 
@@ -110,22 +112,18 @@ export async function POST(request: Request) {
     })
 
     if (!response.ok) {
-      return quotaJson(identity, { success: true, originalText, improvedText: originalText, improvementType })
+      return NextResponse.json({ success: true, originalText, improvedText: originalText, improvementType })
     }
 
     const data = await response.json()
     const improvedText = data.choices?.[0]?.message?.content || originalText
 
-    const usageRecord = await recordAiFeatureUsage(
-      identity,
-      'improve',
-      estimateTokensUsed(improvedText),
-    )
+    const usageRecord = await recordAiUsage(quotaCtx, 'improve', improvedText.length)
     if (!usageRecord.ok) {
       return usageRecord.response
     }
 
-    return quotaJson(identity, { success: true, originalText, improvedText, improvementType })
+    return quotaCtx.quotaJson({ success: true, originalText, improvedText, improvementType })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || '텍스트 개선 중 오류가 발생했습니다.' }, { status: 500 })
   }

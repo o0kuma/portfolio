@@ -4,12 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  enforceAiFeatureQuota,
-  estimateTokensUsed,
-  quotaJson,
-  recordAiFeatureUsage,
-} from '@/lib/ai-feature-quota'
+import { enforceAiQuota, MAX_AI_TEXT_LENGTH, recordAiUsage } from '@/lib/ai-quota-guard'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -56,29 +51,36 @@ loadServerEnv()
 
 export async function POST(request: Request) {
   try {
-    const quotaCheck = await enforceAiFeatureQuota(request, 'translate')
-    if (!quotaCheck.ok) {
-      return quotaCheck.response
-    }
-    const { identity } = quotaCheck
-
     const { text, targetLanguage = 'English' } = await request.json()
 
     if (typeof text !== 'string' || !text.trim()) {
-      return quotaJson(identity, { success: false, error: '번역할 텍스트가 필요합니다.' }, { status: 400 })
+      return NextResponse.json({ success: false, error: '번역할 텍스트가 필요합니다.' }, { status: 400 })
     }
 
     const originalText = text.trim()
+    if (originalText.length > MAX_AI_TEXT_LENGTH) {
+      return NextResponse.json(
+        { success: false, error: `번역할 텍스트는 최대 ${MAX_AI_TEXT_LENGTH}자까지 입력할 수 있습니다.` },
+        { status: 400 }
+      )
+    }
+
     const target =
       typeof targetLanguage === 'string' && targetLanguage.trim()
         ? targetLanguage.trim()
         : 'English'
 
+    const quotaResult = await enforceAiQuota(request, 'translate')
+    if (!quotaResult.allowed) {
+      return quotaResult.response
+    }
+    const { ctx: quotaCtx } = quotaResult
+
     if (!process.env.GEMINI_API_KEY) loadServerEnv()
     const geminiApiKey = getGeminiApiKey()
 
     if (!geminiApiKey) {
-      return quotaJson(identity, {
+      return NextResponse.json({
         success: true,
         originalText,
         translatedText: originalText,
@@ -110,7 +112,7 @@ export async function POST(request: Request) {
     )
 
     if (!response.ok) {
-      return quotaJson(identity, {
+      return NextResponse.json({
         success: true,
         originalText,
         translatedText: originalText,
@@ -121,16 +123,12 @@ export async function POST(request: Request) {
     const data = await response.json()
     const translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
 
-    const usageRecord = await recordAiFeatureUsage(
-      identity,
-      'translate',
-      estimateTokensUsed(translatedText),
-    )
+    const usageRecord = await recordAiUsage(quotaCtx, 'translate', translatedText.length)
     if (!usageRecord.ok) {
       return usageRecord.response
     }
 
-    return quotaJson(identity, {
+    return quotaCtx.quotaJson({
       success: true,
       originalText,
       translatedText,
