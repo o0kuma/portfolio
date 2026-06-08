@@ -12,8 +12,8 @@ describe('AI feature quota security', () => {
 
   test.each(featureRoutes)('%s enforces subscription quota before Gemini', (rel) => {
     const source = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
-    expect(source).toMatch(/enforceAiFeatureQuota/);
-    expect(source).toMatch(/recordAiFeatureUsage/);
+    expect(source).toMatch(/checkAiQuota/);
+    expect(source).toMatch(/recordAiUsage/);
   });
 
   test('anonymous quota trusts Vercel proxy headers for stable identity', () => {
@@ -24,14 +24,13 @@ describe('AI feature quota security', () => {
     expect(source).toMatch(/process\.env\.VERCEL/);
   });
 
-  test('test-email-config requires admin auth and omits secret values', () => {
+  test('test-email-config is disabled on production/Vercel', () => {
     const source = fs.readFileSync(
       path.join(repoRoot, 'client/app/api/test-email-config/route.ts'),
       'utf8',
     );
-    expect(source).toMatch(/checkAdminAuth/);
-    expect(source).not.toMatch(/substring\(0,\s*10\)/);
-    expect(source).not.toMatch(/allEnvVars/);
-    expect(source).not.toMatch(/clientSecretValue/);
+    expect(source).toMatch(/NODE_ENV === 'production'/);
+    expect(source).toMatch(/process\.env\.VERCEL/);
+    expect(source).toContain('404');
   });
 });

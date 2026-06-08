@@ -45,28 +45,53 @@ export async function POST(request: Request) {
 
     const today = new Date().toISOString().split('T')[0]
 
-    // Anonymous usage is keyed by session_id; UNIQUE(user_id, date, usage_type) does not
-    // dedupe rows where user_id IS NULL, so update-by-session first.
+    // Anonymous usage is keyed by session_id. UNIQUE(user_id, date, usage_type) does not
+    // dedupe NULL user_id rows, so use a partial unique index + upsert when available.
     let data
     if (!userId && sessionId) {
-      const updated = await dbQuery<any>(
-        `UPDATE ai_usage
-         SET message_count = message_count + $4,
-             tokens_used = tokens_used + $5
-         WHERE session_id = $1 AND date = $2 AND usage_type = $3
-         RETURNING *`,
-        [sessionId, today, usageType, messageCount, tokensUsed],
-      )
-
-      if (updated.rows[0]) {
-        data = updated
-      } else {
+      try {
         data = await dbQuery<any>(
           `INSERT INTO ai_usage (user_id, session_id, usage_type, message_count, tokens_used, date)
            VALUES (NULL, $1, $2, $3, $4, $5)
+           ON CONFLICT (session_id, date, usage_type) WHERE user_id IS NULL
+           DO UPDATE SET
+             message_count = ai_usage.message_count + EXCLUDED.message_count,
+             tokens_used = ai_usage.tokens_used + EXCLUDED.tokens_used
            RETURNING *`,
           [sessionId, usageType, messageCount, tokensUsed, today],
         )
+      } catch (upsertError: any) {
+        const msg = upsertError?.message || ''
+        const missingAnonIndex =
+          msg.includes('idx_ai_usage_anon_session_date_type') ||
+          (msg.includes('no unique') && msg.includes('conflict'))
+
+        if (!missingAnonIndex) {
+          throw upsertError
+        }
+
+        const updated = await dbQuery<any>(
+          `UPDATE ai_usage
+           SET message_count = message_count + $4,
+               tokens_used = tokens_used + $5
+           WHERE session_id = $1
+             AND date = $2
+             AND usage_type = $3
+             AND user_id IS NULL
+           RETURNING *`,
+          [sessionId, today, usageType, messageCount, tokensUsed],
+        )
+
+        if (updated.rows[0]) {
+          data = updated
+        } else {
+          data = await dbQuery<any>(
+            `INSERT INTO ai_usage (user_id, session_id, usage_type, message_count, tokens_used, date)
+             VALUES (NULL, $1, $2, $3, $4, $5)
+             RETURNING *`,
+            [sessionId, usageType, messageCount, tokensUsed, today],
+          )
+        }
       }
     } else {
       data = await dbQuery<any>(

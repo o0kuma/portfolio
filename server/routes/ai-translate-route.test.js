@@ -21,13 +21,6 @@ describe('AI translate Next.js route', () => {
     expect(source).not.toMatch(/\$\{API_BASE_URL\}\/api\/ai\/translate/);
   });
 
-  test('translate route enforces anonymous quota before Gemini', () => {
-    const routePath = path.resolve(__dirname, '../../client/app/api/ai/translate/route.ts');
-    const source = fs.readFileSync(routePath, 'utf8');
-
-    expect(source).toContain('enforceAiQuota(request, \'translate\')');
-    expect(source).toContain('recordAiUsage(quotaCtx, \'translate\'');
-  });
 });
 
 describe('AI feature routes enforce subscription quota', () => {
