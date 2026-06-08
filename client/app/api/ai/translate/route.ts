@@ -4,7 +4,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
-import { enforceAiQuota, MAX_AI_TEXT_LENGTH, recordAiUsage } from '@/lib/ai-quota-guard'
+import {
+  applyQuotaCookieToResponse,
+  checkAiQuota,
+  recordAiUsage,
+} from '@/lib/ai-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -58,23 +62,10 @@ export async function POST(request: Request) {
     }
 
     const originalText = text.trim()
-    if (originalText.length > MAX_AI_TEXT_LENGTH) {
-      return NextResponse.json(
-        { success: false, error: `번역할 텍스트는 최대 ${MAX_AI_TEXT_LENGTH}자까지 입력할 수 있습니다.` },
-        { status: 400 }
-      )
-    }
-
     const target =
       typeof targetLanguage === 'string' && targetLanguage.trim()
         ? targetLanguage.trim()
         : 'English'
-
-    const quotaResult = await enforceAiQuota(request, 'translate')
-    if (!quotaResult.allowed) {
-      return quotaResult.response
-    }
-    const { ctx: quotaCtx } = quotaResult
 
     if (!process.env.GEMINI_API_KEY) loadServerEnv()
     const geminiApiKey = getGeminiApiKey()
@@ -87,6 +78,12 @@ export async function POST(request: Request) {
         targetLanguage: target,
       })
     }
+
+    const quotaCheck = await checkAiQuota(request, 'translate')
+    if (!quotaCheck.ok) {
+      return quotaCheck.response
+    }
+    const { quotaIdentity } = quotaCheck
 
     const response = await fetch(
       'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
@@ -111,29 +108,26 @@ export async function POST(request: Request) {
       },
     )
 
-    if (!response.ok) {
-      return NextResponse.json({
-        success: true,
-        originalText,
-        translatedText: originalText,
-        targetLanguage: target,
-      })
+    let translatedText = originalText
+    if (response.ok) {
+      const data = await response.json()
+      translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
     }
 
-    const data = await response.json()
-    const translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
-
-    const usageRecord = await recordAiUsage(quotaCtx, 'translate', translatedText.length)
+    const usageRecord = await recordAiUsage(request, 'translate', quotaIdentity, translatedText.length)
     if (!usageRecord.ok) {
       return usageRecord.response
     }
 
-    return quotaCtx.quotaJson({
-      success: true,
-      originalText,
-      translatedText,
-      targetLanguage: target,
-    })
+    return applyQuotaCookieToResponse(
+      NextResponse.json({
+        success: true,
+        originalText,
+        translatedText,
+        targetLanguage: target,
+      }),
+      quotaIdentity,
+    )
   } catch (error: unknown) {
     const msg = error instanceof Error ? error.message : '번역 중 오류가 발생했습니다.'
     return NextResponse.json({ success: false, error: msg }, { status: 500 })

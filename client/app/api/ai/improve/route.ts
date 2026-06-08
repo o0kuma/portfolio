@@ -4,7 +4,11 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
-import { enforceAiQuota, MAX_AI_TEXT_LENGTH, recordAiUsage } from '@/lib/ai-quota-guard'
+import {
+  applyQuotaCookieToResponse,
+  checkAiQuota,
+  recordAiUsage,
+} from '@/lib/ai-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 
@@ -64,20 +68,7 @@ export async function POST(request: Request) {
     }
 
     const originalText = text.trim()
-    if (originalText.length > MAX_AI_TEXT_LENGTH) {
-      return NextResponse.json(
-        { success: false, error: `개선할 텍스트는 최대 ${MAX_AI_TEXT_LENGTH}자까지 입력할 수 있습니다.` },
-        { status: 400 }
-      )
-    }
-
     const instruction = improvementInstructions[improvementType] || improvementInstructions.general
-
-    const quotaResult = await enforceAiQuota(request, 'improve')
-    if (!quotaResult.allowed) {
-      return quotaResult.response
-    }
-    const { ctx: quotaCtx } = quotaResult
 
     if (!process.env.GEMINI_API_KEY) loadServerEnv()
     const geminiApiKey = getGeminiApiKey()
@@ -90,6 +81,12 @@ export async function POST(request: Request) {
         improvementType
       })
     }
+
+    const quotaCheck = await checkAiQuota(request, 'improve')
+    if (!quotaCheck.ok) {
+      return quotaCheck.response
+    }
+    const { quotaIdentity } = quotaCheck
 
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
@@ -111,19 +108,21 @@ export async function POST(request: Request) {
       })
     })
 
-    if (!response.ok) {
-      return NextResponse.json({ success: true, originalText, improvedText: originalText, improvementType })
+    let improvedText = originalText
+    if (response.ok) {
+      const data = await response.json()
+      improvedText = data.choices?.[0]?.message?.content || originalText
     }
 
-    const data = await response.json()
-    const improvedText = data.choices?.[0]?.message?.content || originalText
-
-    const usageRecord = await recordAiUsage(quotaCtx, 'improve', improvedText.length)
+    const usageRecord = await recordAiUsage(request, 'improve', quotaIdentity, improvedText.length)
     if (!usageRecord.ok) {
       return usageRecord.response
     }
 
-    return quotaCtx.quotaJson({ success: true, originalText, improvedText, improvementType })
+    return applyQuotaCookieToResponse(
+      NextResponse.json({ success: true, originalText, improvedText, improvementType }),
+      quotaIdentity,
+    )
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || '텍스트 개선 중 오류가 발생했습니다.' }, { status: 500 })
   }
