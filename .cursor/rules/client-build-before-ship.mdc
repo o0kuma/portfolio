@@ -1,0 +1,25 @@
+---
+description: Require client build before commit/push after API or type changes
+globs: client/lib/**/*.ts,client/app/api/**/*.ts,client/app/**/*.tsx
+alwaysApply: false
+---
+
+# Client build before ship
+
+After changing **Next.js API routes**, **`client/lib/*` helpers**, or **TypeScript types/unions** used by the app:
+
+1. Run **`cd client && npm run build`** and confirm **exit 0** (includes Next typecheck).
+2. Do **not** commit or push until the build passes locally.
+
+## TypeScript (`strict: false`)
+
+The client does not use full strict mode. Do not rely on `if (!result.ok)` alone to narrow discriminated unions.
+
+- Use **explicit type guards** (e.g. `isQuotaCheckFailure(x)`) before accessing `.response` or other failure-only fields.
+- When adding `Success | Failure` unions in `client/lib`, export guards and use them in all consuming routes.
+
+## Scope
+
+Applies especially to: `client/lib/ai-quota.ts`, `client/app/api/ai/**`, and any shared lib imported by API routes.
+
+Master or user requested **push** does not skip this step when the diff touches the paths above.

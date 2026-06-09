@@ -33,6 +33,10 @@ cd client && npm run dev   # Next.js on :3000
 - **Test (server):** `cd server && npm test` — uses Jest (requires test files to exist).
 - **Build (client):** `cd client && npm run build` — succeeds; `eslint.ignoreDuringBuilds` is true in `next.config.js`.
 
+**Before commit/push (required for agents):** If you change `client/app/api/**`, `client/lib/**`, or TypeScript unions/types used by API routes, run **`cd client && npm run build`** and fix all type errors **before** commit or push. Vercel runs the same typecheck; skipping local build has caused production failures.
+
+**TypeScript note:** Client `strict` is not fully enabled. Use explicit type guards for discriminated unions (e.g. quota check success/failure); do not assume `if (!x.ok)` narrows types. See `.cursor/rules/client-build-before-ship.mdc`.
+
 ### Key gotchas
 
 - The root `package.json` uses `concurrently` to run both dev servers. Make sure dependencies are installed at root, server, and client levels (`npm run install:all`).
