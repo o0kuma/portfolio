@@ -78,6 +78,12 @@ export type QuotaCheckFailure = {
   response: NextResponse
 }
 
+export function isQuotaCheckFailure(
+  check: QuotaCheckSuccess | QuotaCheckFailure,
+): check is QuotaCheckFailure {
+  return check.ok === false
+}
+
 export async function checkAiQuota(
   request: Request,
   usageType: AiUsageType,
@@ -173,6 +179,12 @@ export async function checkAiQuota(
 
 export type UsageRecordSuccess = { ok: true }
 export type UsageRecordFailure = { ok: false; response: NextResponse }
+
+export function isUsageRecordFailure(
+  result: UsageRecordSuccess | UsageRecordFailure,
+): result is UsageRecordFailure {
+  return result.ok === false
+}
 
 export async function recordAiUsage(
   request: Request,

@@ -7,6 +7,8 @@ import * as path from 'path'
 import {
   applyQuotaCookieToResponse,
   checkAiQuota,
+  isQuotaCheckFailure,
+  isUsageRecordFailure,
   recordAiUsage,
 } from '@/lib/ai-quota'
 
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
     }
 
     const quotaCheck = await checkAiQuota(request, 'summarize')
-    if (!quotaCheck.ok) {
+    if (isQuotaCheckFailure(quotaCheck)) {
       return quotaCheck.response
     }
     const { quotaIdentity } = quotaCheck
@@ -119,7 +121,7 @@ export async function POST(request: Request) {
     }
 
     const usageRecord = await recordAiUsage(request, 'summarize', quotaIdentity, summary.length)
-    if (!usageRecord.ok) {
+    if (isUsageRecordFailure(usageRecord)) {
       return usageRecord.response
     }
 
