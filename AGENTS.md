@@ -6,6 +6,10 @@
 
 This is a Korean-language portfolio website (`kuuuma.com`) with a Node.js Express backend (`server/`) and a Next.js 14 frontend (`client/`). It includes blog posts, portfolio projects, a contact form, AI chatbot, subscription/monetization features, and a Tetris game demo.
 
+### Portfolio preview (owner only)
+
+Set `NEXT_PUBLIC_PORTFOLIO_ENABLED=true` in local `server/.env` (or Vercel Preview env) to open `/portfolio` and nav links; Production should leave it unset/`false` until public launch.
+
 ### Running the application
 
 Both services can be started concurrently from the root:
