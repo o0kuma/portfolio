@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import PortfolioClient from './PortfolioClient'
-import { SITE_NAME, SITE_AUTHOR, getSiteUrl, OG_IMAGE_PATH, PORTFOLIO_PUBLIC } from '@/lib/site'
+import { SITE_NAME, SITE_AUTHOR, getSiteUrl, OG_IMAGE_PATH, isPortfolioPublic } from '@/lib/site'
+
+export const dynamic = 'force-dynamic'
 
 const siteUrl = getSiteUrl()
 
 export async function generateMetadata(): Promise<Metadata> {
-  if (!PORTFOLIO_PUBLIC) {
+  if (!isPortfolioPublic()) {
     return {}
   }
 
@@ -31,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default function Portfolio() {
-  if (!PORTFOLIO_PUBLIC) {
+  if (!isPortfolioPublic()) {
     notFound()
   }
 

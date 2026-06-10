@@ -6,8 +6,17 @@ export function getSiteUrl(): string {
 }
 
 /**
- * Set NEXT_PUBLIC_PORTFOLIO_ENABLED=true to expose /portfolio and nav links.
- * For personal preview only (local / Vercel Preview); keep false in Production unless launching.
+ * Server/runtime gate for /portfolio (works on Vercel Preview without rebuild).
+ * Set PORTFOLIO_ENABLED=true (server-only) and/or NEXT_PUBLIC_PORTFOLIO_ENABLED=true.
+ */
+export function isPortfolioPublic(): boolean {
+  if (process.env.PORTFOLIO_ENABLED === 'true') return true
+  if (process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED === 'true') return true
+  return false
+}
+
+/**
+ * Client nav visibility — NEXT_PUBLIC_* is inlined at build time; use with PORTFOLIO_ENABLED on Preview for page access.
  */
 export const PORTFOLIO_PUBLIC = process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED === 'true'
 

@@ -8,7 +8,7 @@ This is a Korean-language portfolio website (`kuuuma.com`) with a Node.js Expres
 
 ### Portfolio preview (owner only)
 
-Set `NEXT_PUBLIC_PORTFOLIO_ENABLED=true` in local `server/.env` (or Vercel Preview env) to open `/portfolio` and nav links; Production should leave it unset/`false` until public launch.
+Portfolio `/portfolio` page gate uses **runtime** `PORTFOLIO_ENABLED=true` (server-only) and/or `NEXT_PUBLIC_PORTFOLIO_ENABLED=true`. On Vercel Preview, set **`PORTFOLIO_ENABLED=true`** (Preview env only) so the route works without a rebuild; optionally also set `NEXT_PUBLIC_PORTFOLIO_ENABLED=true` for nav links in client components. Local: add either/both to `server/.env` (loaded in dev via `next.config.js`). Production: leave both unset/`false` until public launch.
 
 ### Running the application
 

@@ -25,6 +25,13 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
           if (key === 'GEMINI_API_KEY' && !process.env.GEMINI_API_KEY) {
             process.env.GEMINI_API_KEY = value
           }
+
+          if (key === 'PORTFOLIO_ENABLED' && !process.env.PORTFOLIO_ENABLED) {
+            process.env.PORTFOLIO_ENABLED = value
+          }
+          if (key === 'NEXT_PUBLIC_PORTFOLIO_ENABLED' && !process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED) {
+            process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED = value
+          }
         }
       }
     })
