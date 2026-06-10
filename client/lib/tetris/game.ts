@@ -10,6 +10,7 @@ import { getSrsKicks, nextRotationCCW, nextRotationCW } from './srs'
 import { emptyBoard } from './tetrominoes'
 import type { ActivePiece, BoardMatrix, GameSnapshot, PieceId, Rotation } from './types'
 import { gravityMsForLevel, levelFromLines } from './levels'
+import { stageFromLines } from './stages'
 
 export interface GameEngineState {
   board: BoardMatrix
@@ -73,6 +74,7 @@ export function toSnapshot(s: GameEngineState): GameSnapshot {
     score: s.score,
     level: s.level,
     lines: s.lines,
+    stage: stageFromLines(s.lines),
     gameOver: s.gameOver,
     paused: s.paused,
   }

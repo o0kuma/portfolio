@@ -16,6 +16,7 @@ export default function TetrisPageClient() {
   const {
     snapshot,
     highScore,
+    bestStage,
     actions,
     leaderboardRefreshKey,
     submitError,
@@ -97,8 +98,10 @@ export default function TetrisPageClient() {
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-900/65 backdrop-blur-[2px]">
                     <p className="text-lg font-semibold text-white">게임 오버</p>
                     <p className="text-sm text-slate-200">
-                      점수 {snapshot.score.toLocaleString()}
+                      {snapshot.stage}단계 · {snapshot.lines}줄 · 점수{' '}
+                      {snapshot.score.toLocaleString()}
                     </p>
+                    <p className="text-xs text-slate-300">최고 {bestStage}단계</p>
                     <button
                       type="button"
                       onClick={actions.resetGame}
@@ -124,7 +127,7 @@ export default function TetrisPageClient() {
             </div>
 
             <div className="flex w-full flex-col gap-6 lg:max-w-sm">
-              <TetrisHud snapshot={snapshot} highScore={highScore} />
+              <TetrisHud snapshot={snapshot} highScore={highScore} bestStage={bestStage} />
               <TetrisPlayerName />
               <TetrisLeaderboard refreshKey={leaderboardRefreshKey} />
               {submitError && (

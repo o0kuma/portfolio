@@ -2,7 +2,6 @@ import {
   TETRIS_PLAYER_NAME_KEY,
   TETRIS_SESSION_ID_KEY,
 } from '@/lib/tetris/constants'
-
 function randomSessionId(): string {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID().replace(/-/g, '').slice(0, 32)
@@ -38,6 +37,7 @@ export function writeTetrisPlayerName(name: string): void {
 export type SubmitTetrisScoreInput = {
   score: number
   lines: number
+  stage: number
   level: number
   playerName?: string
 }
@@ -58,6 +58,7 @@ export async function submitTetrisScore(
         playerName: playerName || undefined,
         score: input.score,
         lines: input.lines,
+        stage: input.stage,
         level: input.level,
         sessionId,
       }),
@@ -76,7 +77,8 @@ export type LeaderboardEntry = {
   rank: number
   playerName: string
   score: number
-  lines: number | null
+  lines: number
+  stage: number
   level: number | null
   createdAt: string
 }

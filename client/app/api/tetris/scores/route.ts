@@ -5,6 +5,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 
 const MAX_SCORE = 999_999
+const MAX_STAGE = 10
+const LINES_PER_STAGE = 20
 const MAX_POSTS_PER_SESSION_PER_DAY = 10
 const DEFAULT_LIMIT = 20
 const MAX_LIMIT = 50
@@ -13,8 +15,9 @@ export type TetrisScoreRow = {
   id: string
   player_name: string
   score: number
-  lines: number | null
+  lines: number
   level: number | null
+  stage: number
   created_at: string
 }
 
@@ -41,6 +44,15 @@ function parseOptionalInt(
   return n
 }
 
+function parseRequiredInt(
+  raw: unknown,
+  min: number,
+  max: number,
+): number | null {
+  if (raw === undefined || raw === null) return null
+  return parseOptionalInt(raw, min, max)
+}
+
 function parseScore(raw: unknown): number | null {
   const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10)
   if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > MAX_SCORE) {
@@ -49,9 +61,17 @@ function parseScore(raw: unknown): number | null {
   return n
 }
 
+function expectedStageFromLines(lines: number): number {
+  return Math.min(MAX_STAGE, 1 + Math.floor(lines / LINES_PER_STAGE))
+}
+
+/** Reported stage must match line-clear progression. */
+function stageLinesConsistent(stage: number, lines: number): boolean {
+  return stage === expectedStageFromLines(lines)
+}
+
 /** Loose anti-cheat: score should be plausible for reported line clears. */
-function scoreLinesConsistent(score: number, lines: number | null): boolean {
-  if (lines === null) return true
+function scoreLinesConsistent(score: number, lines: number): boolean {
   if (lines > 0 && score < lines * 40) return false
   if (lines > 0 && score > lines * 80_000) return false
   return true
@@ -69,9 +89,9 @@ export async function GET(request: NextRequest) {
   try {
     const limit = parseLimit(request.nextUrl.searchParams)
     const result = await dbQuery<TetrisScoreRow>(
-      `SELECT id, player_name, score, lines, level, created_at
+      `SELECT id, player_name, score, lines, level, stage, created_at
        FROM tetris_scores
-       ORDER BY score DESC, created_at ASC
+       ORDER BY stage DESC, lines DESC, score DESC, created_at ASC
        LIMIT $1`,
       [limit],
     )
@@ -81,6 +101,7 @@ export async function GET(request: NextRequest) {
       playerName: row.player_name,
       score: row.score,
       lines: row.lines,
+      stage: row.stage,
       level: row.level,
       createdAt: row.created_at,
     }))
@@ -91,6 +112,12 @@ export async function GET(request: NextRequest) {
     console.error('[/api/tetris/scores GET]', msg)
     if (msg.includes('DATABASE_URL')) {
       return NextResponse.json({ message: '랭킹을 불러올 수 없습니다.' }, { status: 503 })
+    }
+    if (msg.includes('column "stage"')) {
+      return NextResponse.json(
+        { message: 'stage 컬럼이 없습니다. DB 마이그레이션을 실행해 주세요.' },
+        { status: 503 },
+      )
     }
     return NextResponse.json({ message: msg }, { status: 500 })
   }
@@ -104,11 +131,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: '유효한 점수가 필요합니다.' }, { status: 400 })
     }
 
-    const lines = parseOptionalInt(body?.lines, 0, MAX_SCORE)
-    const level = parseOptionalInt(body?.level, 0, 99)
-    if (body?.lines !== undefined && body?.lines !== null && lines === null) {
+    const lines = parseRequiredInt(body?.lines, 0, MAX_SCORE)
+    if (lines === null) {
       return NextResponse.json({ message: '라인 값이 올바르지 않습니다.' }, { status: 400 })
     }
+
+    const stage = parseRequiredInt(body?.stage, 1, MAX_STAGE)
+    if (stage === null) {
+      return NextResponse.json({ message: '단계 값이 올바르지 않습니다.' }, { status: 400 })
+    }
+
+    if (!stageLinesConsistent(stage, lines)) {
+      return NextResponse.json(
+        { message: '단계와 라인 수가 일치하지 않습니다.' },
+        { status: 400 },
+      )
+    }
+
+    const level = parseOptionalInt(body?.level, 0, 99)
     if (body?.level !== undefined && body?.level !== null && level === null) {
       return NextResponse.json({ message: '레벨 값이 올바르지 않습니다.' }, { status: 400 })
     }
@@ -142,10 +182,10 @@ export async function POST(request: NextRequest) {
     }
 
     const insert = await dbQuery<{ id: string }>(
-      `INSERT INTO tetris_scores (player_name, score, lines, level, session_id)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO tetris_scores (player_name, score, lines, level, stage, session_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [playerName, score, lines, level, sessionId],
+      [playerName, score, lines, level, stage, sessionId],
     )
 
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
@@ -155,7 +195,7 @@ export async function POST(request: NextRequest) {
     if (msg.includes('DATABASE_URL')) {
       return NextResponse.json({ message: '점수를 저장할 수 없습니다.' }, { status: 503 })
     }
-    if (msg.includes('relation "tetris_scores"')) {
+    if (msg.includes('relation "tetris_scores"') || msg.includes('column "stage"')) {
       return NextResponse.json(
         { message: '랭킹 테이블이 없습니다. DB 마이그레이션을 실행해 주세요.' },
         { status: 503 },

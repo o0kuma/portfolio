@@ -57,7 +57,7 @@ export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: num
 
       {error && (
         <p className="text-xs text-amber-700 dark:text-amber-400/90">
-          {error.includes('DATABASE') || error.includes('테이블')
+          {error.includes('DATABASE') || error.includes('테이블') || error.includes('마이그레이션')
             ? 'DB 연결 또는 마이그레이션이 필요합니다.'
             : error}
         </p>
@@ -68,27 +68,42 @@ export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: num
       )}
 
       {entries.length > 0 && (
-        <ol className="max-h-72 space-y-1 overflow-y-auto text-xs">
-          {entries.map((row) => (
-            <li
-              key={`${row.rank}-${row.createdAt}-${row.score}`}
-              className="grid grid-cols-[2rem_1fr_auto] items-baseline gap-2 border-b border-slate-100 py-1.5 last:border-0 dark:border-slate-800"
-            >
-              <span className="font-mono tabular-nums text-slate-400">{row.rank}</span>
-              <span className="truncate font-medium text-slate-800 dark:text-slate-200">
-                {row.playerName}
-              </span>
-              <span className="font-mono tabular-nums text-primary-600 dark:text-primary-400">
-                {row.score.toLocaleString()}
-              </span>
-              <span className="col-span-3 pl-8 text-[10px] text-slate-500 dark:text-slate-500">
-                {formatDate(row.createdAt)}
-                {row.lines != null ? ` · ${row.lines}줄` : ''}
-                {row.level != null ? ` · Lv.${row.level}` : ''}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <div className="max-h-72 overflow-y-auto text-xs">
+          <div
+            className="grid grid-cols-[2rem_1fr_2.5rem_2.5rem_3.5rem_auto] gap-x-1 border-b border-slate-200 pb-1 font-medium text-slate-500 dark:border-slate-700 dark:text-slate-400"
+            aria-hidden
+          >
+            <span>#</span>
+            <span>이름</span>
+            <span className="text-right">단계</span>
+            <span className="text-right">줄</span>
+            <span className="text-right">점수</span>
+            <span className="text-right">날짜</span>
+          </div>
+          <ol className="space-y-0">
+            {entries.map((row) => (
+              <li
+                key={`${row.rank}-${row.createdAt}-${row.score}`}
+                className="grid grid-cols-[2rem_1fr_2.5rem_2.5rem_3.5rem_auto] items-baseline gap-x-1 border-b border-slate-100 py-1.5 last:border-0 dark:border-slate-800"
+              >
+                <span className="font-mono tabular-nums text-slate-400">{row.rank}</span>
+                <span className="truncate font-medium text-slate-800 dark:text-slate-200">
+                  {row.playerName}
+                </span>
+                <span className="text-right font-mono tabular-nums">{row.stage}</span>
+                <span className="text-right font-mono tabular-nums text-slate-600 dark:text-slate-300">
+                  {row.lines}
+                </span>
+                <span className="text-right font-mono tabular-nums text-primary-600 dark:text-primary-400">
+                  {row.score.toLocaleString()}
+                </span>
+                <span className="text-right text-[10px] text-slate-500 dark:text-slate-500">
+                  {formatDate(row.createdAt)}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
     </div>
   )

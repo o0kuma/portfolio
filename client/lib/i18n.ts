@@ -144,6 +144,16 @@ export const translations = {
       comingSoon: '프리미엄 구독 결제는 준비 중입니다.',
       comingSoonDetail: 'Stripe 연동 후 이용할 수 있습니다.',
     },
+    tetrisGame: {
+      stage: '단계',
+      bestStage: '최고 단계',
+      nextStageProgress: '다음 단계까지',
+      maxStage: '최대 단계 도달',
+      leaderboardStage: '단계',
+      leaderboardLines: '줄',
+      leaderboardScore: '점수',
+      leaderboardDate: '날짜',
+    },
   },
 
   en: {

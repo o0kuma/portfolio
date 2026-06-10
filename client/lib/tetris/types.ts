@@ -37,6 +37,8 @@ export interface GameSnapshot {
   score: number
   level: number
   lines: number
+  /** Progression stage from total lines (1–10). */
+  stage: number
   gameOver: boolean
   paused: boolean
 }

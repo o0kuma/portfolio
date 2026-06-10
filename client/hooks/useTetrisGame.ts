@@ -1,7 +1,8 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ARR, DAS_DELAY, HIGH_SCORE_KEY } from '@/lib/tetris/constants'
+import { ARR, BEST_STAGE_KEY, DAS_DELAY, HIGH_SCORE_KEY } from '@/lib/tetris/constants'
+import { stageFromLines } from '@/lib/tetris/stages'
 import {
   createInitialState,
   gravityStep,
@@ -38,12 +39,30 @@ function maybePersistHighScore(score: number): number {
   return prev
 }
 
+function readBestStage(): number {
+  if (typeof window === 'undefined') return 1
+  const raw = window.localStorage.getItem(BEST_STAGE_KEY)
+  const n = raw ? parseInt(raw, 10) : 1
+  return Number.isFinite(n) && n >= 1 && n <= 10 ? n : 1
+}
+
+function maybePersistBestStage(stage: number): number {
+  if (typeof window === 'undefined') return readBestStage()
+  const prev = readBestStage()
+  if (stage > prev) {
+    window.localStorage.setItem(BEST_STAGE_KEY, String(stage))
+    return stage
+  }
+  return prev
+}
+
 export function useTetrisGame() {
   const stateRef = useRef<GameEngineState>(createInitialState())
   const [snapshot, setSnapshot] = useState<GameSnapshot>(() =>
     toSnapshot(stateRef.current)
   )
   const [highScore, setHighScore] = useState(0)
+  const [bestStage, setBestStage] = useState(1)
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [leftHeld, setLeftHeld] = useState(false)
@@ -52,17 +71,22 @@ export function useTetrisGame() {
 
   useEffect(() => {
     setHighScore(readHighScore())
+    setBestStage(readBestStage())
   }, [])
 
   const setState = useCallback((next: GameEngineState) => {
     if (next.gameOver && !stateRef.current.gameOver) {
       const hs = maybePersistHighScore(next.score)
       setHighScore(hs)
+      const stage = stageFromLines(next.lines)
+      const bs = maybePersistBestStage(stage)
+      setBestStage(bs)
       if (next.score > 0) {
         setSubmitError(null)
         void submitTetrisScore({
           score: next.score,
           lines: next.lines,
+          stage,
           level: next.level,
         }).then((result) => {
           if (result.ok) {
@@ -266,6 +290,7 @@ export function useTetrisGame() {
   return {
     snapshot,
     highScore,
+    bestStage,
     actions,
     leaderboardRefreshKey,
     submitError,

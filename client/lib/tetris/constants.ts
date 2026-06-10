@@ -8,6 +8,7 @@ export const VISIBLE_ROW_START = 0
 export const VISIBLE_ROWS = ROWS
 
 export const HIGH_SCORE_KEY = 'tetris-high-score'
+export const BEST_STAGE_KEY = 'tetris-best-stage'
 export const TETRIS_PLAYER_NAME_KEY = 'tetris_player_name'
 export const TETRIS_SESSION_ID_KEY = 'tetris_session_id'
 
