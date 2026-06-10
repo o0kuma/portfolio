@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import SearchBar from './SearchBar'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 interface Project {
   id: string
@@ -286,27 +287,139 @@ const CATEGORIES = [
   { id: 'other', name: '기타' },
 ]
 
-// Gradient palette for card accent strips — ocean-summer colours
-const CARD_ACCENTS = [
-  'from-cyan-500 to-blue-600',
-  'from-teal-400 to-cyan-600',
-  'from-sky-500 to-indigo-600',
-  'from-emerald-400 to-teal-600',
-  'from-blue-500 to-cyan-400',
-  'from-cyan-400 to-sky-600',
-]
+function formatProjectDate(d: string) {
+  if (!d) return '현재'
+  return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+}
 
-// Bubble data for the animated ocean bubbles
-const BUBBLES = [
-  { w: 18, l: '8%', dur: 9, delay: 0 },
-  { w: 10, l: '18%', dur: 11, delay: 2 },
-  { w: 26, l: '32%', dur: 8, delay: 4 },
-  { w: 14, l: '48%', dur: 13, delay: 1 },
-  { w: 20, l: '63%', dur: 10, delay: 3 },
-  { w: 8,  l: '75%', dur: 7,  delay: 5 },
-  { w: 22, l: '85%', dur: 12, delay: 1.5 },
-  { w: 12, l: '94%', dur: 9,  delay: 6 },
-]
+function ProjectCard({
+  project,
+  layout,
+}: {
+  project: Project
+  layout: 'track' | 'grid'
+}) {
+  const widthClass =
+    layout === 'track'
+      ? 'min-w-[min(88vw,22rem)] md:min-w-[26rem] snap-start shrink-0'
+      : 'w-full'
+
+  return (
+    <article
+      className={`group flex flex-col h-full border border-neutral-800 rounded-xl bg-neutral-950 overflow-hidden hover:border-neutral-600 transition-colors ${widthClass}`}
+    >
+      <div className="relative h-36 bg-neutral-900 border-b border-neutral-800 overflow-hidden shrink-0">
+        <img
+          src={project.images[0] || '/images/placeholder.svg'}
+          alt={project.title}
+          className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
+          onError={(e) => {
+            e.currentTarget.src = '/images/placeholder.svg'
+          }}
+        />
+        {project.featured && (
+          <div className="absolute top-3 right-3 px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider border border-neutral-600 text-neutral-300 rounded">
+            Featured
+          </div>
+        )}
+        <div className="absolute bottom-3 left-4">
+          <span
+            className={`px-2 py-0.5 rounded text-xs font-medium border ${
+              project.status === 'completed'
+                ? 'border-neutral-600 text-neutral-400'
+                : project.status === 'in-progress'
+                  ? 'border-neutral-500 text-neutral-300'
+                  : 'border-neutral-700 text-neutral-500'
+            }`}
+          >
+            {project.status === 'completed'
+              ? '완료'
+              : project.status === 'in-progress'
+                ? '진행중'
+                : '계획'}
+          </span>
+        </div>
+      </div>
+
+      <div className="flex flex-col flex-1 p-5">
+        <div className="flex items-center gap-1.5 text-neutral-600 text-xs mb-3 font-mono">
+          <FiCalendar size={11} />
+          <span>
+            {formatProjectDate(project.startDate)} — {formatProjectDate(project.endDate)}
+          </span>
+        </div>
+
+        <h3 className="text-neutral-100 font-semibold text-lg mb-2 leading-snug group-hover:text-white transition-colors">
+          {project.title}
+        </h3>
+
+        <p className="text-neutral-500 text-sm leading-relaxed mb-4 line-clamp-2">
+          {project.description}
+        </p>
+
+        {(project.participants || project.role) && (
+          <div className="mb-4 space-y-1">
+            {project.participants && (
+              <div className="flex items-center gap-2 text-neutral-600 text-xs">
+                <FiUser size={11} />
+                <span>{project.participants}</span>
+              </div>
+            )}
+            {project.role && (
+              <div className="flex items-center gap-2 text-neutral-600 text-xs">
+                <FiCode size={11} />
+                <span>{project.role}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-1.5 mb-5 mt-auto">
+          {project.technologies.slice(0, 5).map((tech) => (
+            <span
+              key={tech}
+              className="px-2 py-0.5 text-xs rounded border border-neutral-800 text-neutral-400"
+            >
+              {tech}
+            </span>
+          ))}
+          {project.technologies.length > 5 && (
+            <span className="px-2 py-0.5 text-xs text-neutral-600">
+              +{project.technologies.length - 5}
+            </span>
+          )}
+        </div>
+
+        {(project.githubUrl || project.liveUrl) && (
+          <div className="flex gap-2">
+            {project.githubUrl && (
+              <a
+                href={project.githubUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2 text-sm font-medium text-neutral-300 border border-neutral-700 hover:border-neutral-500 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              >
+                <FiGithub size={14} />
+                GitHub
+              </a>
+            )}
+            {project.liveUrl && (
+              <a
+                href={project.liveUrl}
+                target={project.liveUrl.startsWith('/') ? undefined : '_blank'}
+                rel={project.liveUrl.startsWith('/') ? undefined : 'noopener noreferrer'}
+                className="flex-1 py-2 text-sm font-medium text-neutral-950 bg-neutral-100 hover:bg-white rounded-lg transition-colors flex items-center justify-center gap-1.5"
+              >
+                <FiExternalLink size={14} />
+                Live Demo
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+    </article>
+  )
+}
 
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
@@ -315,6 +428,8 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const reducedMotion = usePrefersReducedMotion()
+  const useHorizontalTrack = !reducedMotion
 
   useEffect(() => {
     let cancelled = false
@@ -424,93 +539,45 @@ export default function Projects() {
     setFilteredProjects(filtered)
   }, [projects, selectedCategory, searchQuery, activeFilters])
 
-  const formatDate = (d: string) => {
-    if (!d) return '현재'
-    return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
-  }
-
   if (isLoading) {
     return (
       <section
         id="projects"
-        className="relative overflow-hidden py-32 flex items-center justify-center"
-        style={{ background: 'linear-gradient(180deg,#0f172a 0%,#0c4a6e 50%,#0891b2 100%)' }}
+        className="relative py-32 flex items-center justify-center border-b border-neutral-800 bg-neutral-950"
       >
         <div className="text-center">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full border-4 border-cyan-400/30 border-t-cyan-400 animate-spin" />
-          <p className="text-white/60">프로젝트를 불러오는 중...</p>
+          <div className="w-10 h-10 mx-auto mb-4 rounded-full border-2 border-neutral-700 border-t-neutral-300 animate-spin" />
+          <p className="text-neutral-500 text-sm font-mono">프로젝트를 불러오는 중...</p>
         </div>
       </section>
     )
   }
 
   return (
-    <section
-      id="projects"
-      className="relative overflow-hidden"
-      style={{ background: 'linear-gradient(180deg,#0f172a 0%,#0c4a6e 40%,#0891b2 75%,#06b6d4 100%)' }}
-    >
-      {/* ── Decorative top wave ─────────────────────────────────── */}
-      <div className="absolute top-0 inset-x-0 pointer-events-none">
-        <svg viewBox="0 0 1440 70" preserveAspectRatio="none" className="w-full h-14 opacity-20">
-          <path d="M0,35 C360,70 720,0 1080,35 C1260,53 1380,18 1440,35 L1440,0 L0,0 Z" fill="white" />
-        </svg>
-      </div>
-
-      {/* ── Floating ocean bubbles ───────────────────────────────── */}
-      {BUBBLES.map((b, i) => (
-        <motion.span
-          key={i}
-          aria-hidden="true"
-          className="absolute bottom-0 rounded-full border border-white/25 bg-white/5 pointer-events-none"
-          style={{ width: b.w, height: b.w, left: b.l }}
-          animate={{ y: [0, -(620 + i * 30)], opacity: [0, 0.7, 0.4, 0] }}
-          transition={{ duration: b.dur, repeat: Infinity, delay: b.delay, ease: 'easeInOut' }}
-        />
-      ))}
-
-      {/* ── Main content ────────────────────────────────────────── */}
-      <div className="container-custom relative z-10 pt-28 pb-36">
-
-        {/* Section header */}
-        <div className="relative text-center mb-20">
-          {/* Giant watermark */}
-          <span
-            aria-hidden="true"
-            className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-[7rem] md:text-[13rem] font-black text-white/[0.03] leading-none select-none pointer-events-none tracking-tighter"
-          >
-            PROJECTS
-          </span>
-
+    <section id="projects" className="relative border-b border-neutral-800 bg-neutral-950">
+      <div className="container-custom relative z-10 pt-28 pb-24">
+        <div className="mb-16 max-w-2xl">
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: 0.6 }}
           >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold bg-cyan-400/15 text-cyan-300 border border-cyan-400/30 backdrop-blur-sm mb-8">
-              <span>🌊</span> PORTFOLIO WORKS
-            </span>
-
-            <h2 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] mb-6">
-              프로젝트
-              <br />
-              <span
-                style={{
-                  background: 'linear-gradient(90deg,#67e8f9 0%,#22d3ee 40%,#34d399 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                경험
-              </span>
-            </h2>
-
-            <p className="text-white/55 text-lg max-w-xl mx-auto leading-relaxed">
-              퍼블리싱부터 React, Next.js, Svelte까지 —<br />
-              다양한 기술로 완성한 작업물들을 소개합니다.
+            <p className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase mb-4">
+              Portfolio works
             </p>
+            <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-4">
+              프로젝트
+              <span className="text-neutral-500"> 경험</span>
+            </h2>
+            <p className="text-neutral-500 text-base leading-relaxed">
+              퍼블리싱부터 React, Next.js, Svelte까지 — 다양한 기술로 완성한 작업물입니다.
+            </p>
+            {useHorizontalTrack && (
+              <p className="mt-3 text-neutral-600 text-xs font-mono hidden md:block">
+                가로로 스크롤하여 더 보기 →
+              </p>
+            )}
           </motion.div>
         </div>
 
@@ -524,16 +591,16 @@ export default function Projects() {
           />
         </div>
 
-        {/* Category filter pills */}
-        <div className="flex flex-wrap justify-center gap-3 mb-14">
+        <div className="flex flex-wrap gap-2 mb-10">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
+              type="button"
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 selectedCategory === cat.id
-                  ? 'bg-cyan-400 text-slate-900 shadow-lg shadow-cyan-400/50 scale-105'
-                  : 'bg-white/10 text-white/70 backdrop-blur-sm border border-white/20 hover:bg-white/20 hover:text-white hover:scale-105'
+                  ? 'bg-neutral-100 text-neutral-950'
+                  : 'border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200'
               }`}
             >
               {cat.name}
@@ -541,230 +608,76 @@ export default function Projects() {
           ))}
         </div>
 
-        {/* Search result count */}
         {searchQuery && (
-          <p className="text-center text-white/55 mb-8 text-sm">
-            &ldquo;<span className="font-semibold text-cyan-300">{searchQuery}</span>&rdquo; 검색 결과&nbsp;
-            <span className="font-semibold text-white">{filteredProjects.length}</span>개
+          <p className="text-neutral-500 mb-6 text-sm font-mono">
+            &ldquo;{searchQuery}&rdquo; — {filteredProjects.length}개
           </p>
         )}
 
-        {/* ── Bento / mosaic project grid ─────────────────────── */}
         {filteredProjects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <AnimatePresence mode="popLayout">
-              {filteredProjects.map((project, index) => {
-                const isWide = index % 6 === 0
-                const accent = CARD_ACCENTS[index % CARD_ACCENTS.length]
-
-                return (
-                  <motion.article
+          useHorizontalTrack ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin md:gap-6 -mx-4 px-4 md:mx-0 md:px-0"
+            >
+              <AnimatePresence mode="popLayout">
+                {filteredProjects.map((project, index) => (
+                  <motion.div
                     key={project.id}
-                    initial={{ opacity: 0, y: 50, scale: 0.94 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
-                    transition={{ duration: 0.45, delay: Math.min(index * 0.045, 0.4) }}
-                    whileHover={{ y: -14, transition: { duration: 0.25, ease: 'easeOut' } }}
-                    className={`group relative flex flex-col ${isWide ? 'lg:col-span-2' : ''}`}
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.35) }}
                   >
-                    {/* Hover glow halo */}
-                    <div className="absolute -inset-1 rounded-3xl bg-gradient-to-br from-cyan-400 to-sky-500 opacity-0 group-hover:opacity-30 blur-xl transition-all duration-500 pointer-events-none" />
-
-                    <div className="relative flex flex-col h-full bg-white/10 backdrop-blur-md border border-white/15 rounded-3xl overflow-hidden transition-all duration-400 group-hover:border-cyan-400/50 group-hover:bg-white/[0.13]">
-
-                      {/* ── Colour accent strip (image area) ── */}
-                      <div className={`relative h-40 bg-gradient-to-br ${accent} overflow-hidden shrink-0`}>
-                        {/* Decorative circles inside strip */}
-                        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-white/10" />
-                        <div className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/10" />
-                        <div className="absolute top-4 left-1/2 -translate-x-1/2 w-12 h-12 rounded-full bg-white/5 border border-white/20" />
-
-                        {/* Project image (if real) */}
-                        <img
-                          src={project.images[0] || '/images/placeholder.svg'}
-                          alt={project.title}
-                          className="absolute inset-0 w-full h-full object-cover opacity-25 mix-blend-overlay"
-                          onError={(e) => {
-                            e.currentTarget.src = '/images/placeholder.svg'
-                          }}
-                        />
-
-                        {/* Featured badge */}
-                        {project.featured && (
-                          <div className="absolute top-3 right-3 px-2.5 py-1 bg-white/20 backdrop-blur-sm border border-white/30 text-white text-xs font-bold rounded-full">
-                            ⭐ Featured
-                          </div>
-                        )}
-
-                        {/* Status badge */}
-                        <div className="absolute bottom-3 left-4">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${
-                              project.status === 'completed'
-                                ? 'bg-emerald-400/25 text-emerald-200 border-emerald-400/40'
-                                : project.status === 'in-progress'
-                                ? 'bg-amber-400/25 text-amber-200 border-amber-400/40'
-                                : 'bg-blue-400/25 text-blue-200 border-blue-400/40'
-                            }`}
-                          >
-                            {project.status === 'completed'
-                              ? '완료'
-                              : project.status === 'in-progress'
-                              ? '진행중'
-                              : '계획'}
-                          </span>
-                        </div>
-
-                        {/* Wave ripple on card hover */}
-                        <motion.div
-                          className="absolute inset-0 rounded-full bg-white/10 pointer-events-none"
-                          initial={{ scale: 0, opacity: 0.6 }}
-                          whileHover={{ scale: 3, opacity: 0 }}
-                          transition={{ duration: 0.7, ease: 'easeOut' }}
-                          style={{ transformOrigin: '30% 60%' }}
-                        />
-                      </div>
-
-                      {/* ── Card body ─────────────────────────── */}
-                      <div className="flex flex-col flex-1 p-6">
-
-                        {/* Date row */}
-                        <div className="flex items-center gap-1.5 text-white/35 text-xs mb-3">
-                          <FiCalendar size={11} />
-                          <span>{formatDate(project.startDate)} — {formatDate(project.endDate)}</span>
-                        </div>
-
-                        <h3 className="text-white font-bold text-xl mb-2 leading-snug group-hover:text-cyan-300 transition-colors duration-300">
-                          {project.title}
-                        </h3>
-
-                        <p className="text-white/55 text-sm leading-relaxed mb-4 line-clamp-2">
-                          {project.description}
-                        </p>
-
-                        {/* Participants & role */}
-                        {(project.participants || project.role) && (
-                          <div className="mb-4 space-y-1">
-                            {project.participants && (
-                              <div className="flex items-center gap-2 text-white/45 text-xs">
-                                <FiUser size={11} />
-                                <span>{project.participants}</span>
-                              </div>
-                            )}
-                            {project.role && (
-                              <div className="flex items-center gap-2 text-white/45 text-xs">
-                                <FiCode size={11} />
-                                <span>{project.role}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Tech tags */}
-                        <div className="flex flex-wrap gap-1.5 mb-5 mt-auto">
-                          {project.technologies.slice(0, 5).map((tech) => (
-                            <span
-                              key={tech}
-                              className="px-2 py-0.5 text-xs rounded-md bg-cyan-400/15 text-cyan-300 border border-cyan-400/25"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                          {project.technologies.length > 5 && (
-                            <span className="px-2 py-0.5 text-xs rounded-md bg-white/10 text-white/45 border border-white/15">
-                              +{project.technologies.length - 5}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Action buttons */}
-                        {(project.githubUrl || project.liveUrl) && (
-                          <div className="flex gap-2">
-                            {project.githubUrl && (
-                              <a
-                                href={project.githubUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 py-2.5 text-sm font-medium text-white/75 bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5"
-                              >
-                                <FiGithub size={14} />
-                                GitHub
-                              </a>
-                            )}
-                            {project.liveUrl && (
-                              <a
-                                href={project.liveUrl}
-                                target={project.liveUrl.startsWith('/') ? undefined : '_blank'}
-                                rel={project.liveUrl.startsWith('/') ? undefined : 'noopener noreferrer'}
-                                className="flex-1 py-2.5 text-sm font-medium text-slate-900 bg-cyan-400 hover:bg-cyan-300 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/30"
-                              >
-                                <FiExternalLink size={14} />
-                                Live Demo
-                              </a>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </motion.article>
-                )
-              })}
-            </AnimatePresence>
-          </div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-24"
-          >
-            <div className="text-white/20 mb-4">
-              <FiFolder size={64} className="mx-auto" />
+                    <ProjectCard project={project} layout="track" />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <AnimatePresence mode="popLayout">
+                {filteredProjects.map((project, index) => (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.35) }}
+                  >
+                    <ProjectCard project={project} layout="grid" />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-            <h3 className="text-xl font-semibold text-white/45 mb-2">프로젝트를 찾을 수 없습니다</h3>
-            <p className="text-white/30 text-sm">검색어나 필터를 변경해보세요.</p>
+          )
+        ) : (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
+            <FiFolder size={48} className="mx-auto text-neutral-700 mb-4" />
+            <h3 className="text-lg font-semibold text-neutral-400 mb-2">프로젝트를 찾을 수 없습니다</h3>
+            <p className="text-neutral-600 text-sm">검색어나 필터를 변경해보세요.</p>
           </motion.div>
         )}
 
-        {/* GitHub CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mt-16"
+          transition={{ duration: 0.5 }}
+          className="mt-14"
         >
           <a
             href="https://github.com/oikikomori/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white font-semibold hover:bg-white/20 hover:border-white/40 hover:-translate-y-1 hover:shadow-2xl hover:shadow-white/10 transition-all duration-300"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-neutral-700 text-neutral-300 text-sm font-medium hover:border-neutral-500 hover:text-neutral-100 transition-colors"
           >
-            <FiGithub size={20} />
+            <FiGithub size={18} />
             더 많은 프로젝트 보기
           </a>
         </motion.div>
-      </div>
-
-      {/* ── Bottom wave transitioning to next section ──────────── */}
-      <div className="absolute bottom-0 inset-x-0 pointer-events-none">
-        <svg
-          viewBox="0 0 1440 80"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          preserveAspectRatio="none"
-          className="w-full block h-16 md:h-20"
-        >
-          <path
-            d="M0,40 C240,80 480,10 720,45 C960,80 1200,15 1440,40 L1440,80 L0,80 Z"
-            fill="white"
-            fillOpacity="0.06"
-          />
-          <path
-            d="M0,55 C360,20 720,70 1080,45 C1260,33 1380,58 1440,50 L1440,80 L0,80 Z"
-            fill="white"
-            fillOpacity="0.04"
-          />
-        </svg>
       </div>
     </section>
   )

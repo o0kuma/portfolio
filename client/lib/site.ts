@@ -5,7 +5,10 @@ export function getSiteUrl(): string {
   return 'https://kuuuma.com'
 }
 
-/** Set NEXT_PUBLIC_PORTFOLIO_ENABLED=true to expose /portfolio and nav links. */
+/**
+ * Set NEXT_PUBLIC_PORTFOLIO_ENABLED=true to expose /portfolio and nav links.
+ * For personal preview only (local / Vercel Preview); keep false in Production unless launching.
+ */
 export const PORTFOLIO_PUBLIC = process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED === 'true'
 
 export const SITE_NAME = 'kuuuma.com'

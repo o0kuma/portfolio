@@ -6,6 +6,9 @@ import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
 
+const inputClass =
+  'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
+
 export default function Contact() {
   const { t } = useLanguage()
 
@@ -59,99 +62,60 @@ export default function Contact() {
   ]
 
   return (
-    <section
-      id="contact"
-      className="relative overflow-hidden py-32"
-      style={{
-        background: 'linear-gradient(180deg, #0a1628 0%, #0d1f3c 40%, #0f172a 100%)',
-      }}
-    >
-      {/* Horizon glow — sunset-over-sea feeling */}
-      <div
-        className="absolute inset-x-0 top-0 h-[500px] pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 50% at 50% -10%, rgba(56,189,248,0.09) 0%, transparent 70%)',
-        }}
-      />
-      <div
-        className="absolute inset-x-0 bottom-0 h-64 pointer-events-none"
-        style={{
-          background:
-            'radial-gradient(ellipse 60% 40% at 50% 110%, rgba(52,211,153,0.06) 0%, transparent 70%)',
-        }}
-      />
-
-      {/* Top hairline */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
-
+    <section id="contact" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
       <div className="container-custom relative z-10">
-
-        {/* ── Hero typography ─────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, y: 36 }}
+          initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.85 }}
-          className="mb-20"
+          transition={{ duration: 0.6 }}
+          className="mb-16 max-w-3xl"
         >
           <div className="flex items-center gap-3 mb-8">
-            <span className="w-8 h-px bg-cyan-400/80" />
-            <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">
+            <span className="w-8 h-px bg-neutral-600" />
+            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
               {t.contact.label}
             </span>
           </div>
 
-          <h2 className="text-5xl md:text-7xl lg:text-[6rem] font-black text-white leading-[1.0] mb-8">
-            {t.contact.heading1}<br />
-            <span
-              style={{
-                background: 'linear-gradient(90deg, #22d3ee, #34d399)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              {t.contact.heading2}
-            </span>
+          <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-6">
+            {t.contact.heading1}
+            <br />
+            <span className="text-neutral-400">{t.contact.heading2}</span>
           </h2>
 
-          {/* Big email link */}
           <a href="mailto:c8c8c81828@gmail.com" className="group inline-block">
-            <p className="text-lg md:text-xl text-white/40 font-mono group-hover:text-cyan-300 transition-colors duration-300 mb-1.5">
+            <p className="text-base md:text-lg text-neutral-500 font-mono group-hover:text-neutral-200 transition-colors">
               c8c8c81828@gmail.com
             </p>
-            <div className="h-px w-full bg-gradient-to-r from-cyan-400/40 to-transparent group-hover:from-cyan-400/80 transition-all duration-300" />
+            <div className="h-px w-full bg-neutral-800 group-hover:bg-neutral-600 transition-colors mt-1" />
           </a>
         </motion.div>
 
-        {/* ── Two columns: info + form ─────────────── */}
         <div className="grid lg:grid-cols-2 gap-16 max-w-5xl">
-
-          {/* Left: info */}
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -12 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            transition={{ duration: 0.55 }}
           >
-            <p className="text-white/45 text-lg leading-relaxed mb-10 whitespace-pre-line">
+            <p className="text-neutral-500 text-lg leading-relaxed mb-10 whitespace-pre-line">
               {t.contact.intro}
             </p>
 
-            <div className="space-y-5 mb-10">
+            <div className="space-y-4 mb-10">
               {contactItems.map((item) => (
                 <div key={item.label} className="flex items-center gap-4">
-                  <span className="text-white/22 text-xs font-mono w-16 shrink-0">{item.label}</span>
+                  <span className="text-neutral-600 text-xs font-mono w-16 shrink-0">{item.label}</span>
                   {item.href ? (
                     <a
                       href={item.href}
-                      className="text-white/55 hover:text-cyan-300 transition-colors duration-300 text-sm"
+                      className="text-neutral-400 hover:text-neutral-100 transition-colors text-sm"
                     >
                       {item.value}
                     </a>
                   ) : (
-                    <span className="text-white/55 text-sm">{item.value}</span>
+                    <span className="text-neutral-400 text-sm">{item.value}</span>
                   )}
                 </div>
               ))}
@@ -161,33 +125,36 @@ export default function Contact() {
               href="https://github.com/oikikomori/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-full border border-white/12 text-white/40 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-300 text-sm"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200 transition-colors text-sm"
             >
               <FiGithub size={15} />
               GitHub
             </a>
           </motion.div>
 
-          {/* Right: form */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 12 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.1 }}
+            transition={{ duration: 0.55, delay: 0.08 }}
           >
             {isSubmitted ? (
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <FiCheckCircle className="text-emerald-400 mb-4" size={38} />
-                <h4 className="text-xl font-semibold text-white mb-2">{t.contact.successTitle}</h4>
-                <p className="text-white/40 mb-4 text-sm">{t.contact.successDesc}</p>
+              <div className="flex flex-col items-center justify-center py-16 text-center border border-neutral-800 rounded-xl bg-neutral-950/50">
+                <FiCheckCircle className="text-neutral-300 mb-4" size={36} />
+                <h4 className="text-lg font-semibold text-neutral-100 mb-2">{t.contact.successTitle}</h4>
+                <p className="text-neutral-500 mb-4 text-sm">{t.contact.successDesc}</p>
                 {!emailDelivered && (
-                  <p className="text-amber-400/70 text-xs mb-4 px-4 py-2 rounded-lg border border-amber-400/20 bg-amber-400/5">
+                  <p className="text-neutral-500 text-xs mb-4 px-4 py-2 rounded border border-neutral-700">
                     {t.contact.emailWarning}
                   </p>
                 )}
                 <button
-                  onClick={() => { setIsSubmitted(false); setEmailDelivered(false) }}
-                  className="px-6 py-2.5 rounded-full border border-white/15 text-white/50 hover:border-cyan-400/40 hover:text-cyan-300 transition-all duration-300 text-sm"
+                  type="button"
+                  onClick={() => {
+                    setIsSubmitted(false)
+                    setEmailDelivered(false)
+                  }}
+                  className="px-5 py-2 rounded-lg border border-neutral-700 text-neutral-400 hover:text-neutral-200 text-sm transition-colors"
                 >
                   {t.contact.newMessage}
                 </button>
@@ -202,13 +169,7 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                     placeholder={t.contact.namePlaceholder}
-                    className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 focus:outline-none transition-all duration-300"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.45)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+                    className={inputClass}
                   />
                   <input
                     type="email"
@@ -217,13 +178,7 @@ export default function Contact() {
                     onChange={handleInputChange}
                     required
                     placeholder={t.contact.emailPlaceholder}
-                    className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 focus:outline-none transition-all duration-300"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
-                    onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.45)' }}
-                    onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+                    className={inputClass}
                   />
                 </div>
 
@@ -234,13 +189,7 @@ export default function Contact() {
                   onChange={handleInputChange}
                   required
                   placeholder={t.contact.subjectPlaceholder}
-                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 focus:outline-none transition-all duration-300"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.45)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+                  className={inputClass}
                 />
 
                 <textarea
@@ -250,23 +199,16 @@ export default function Contact() {
                   required
                   rows={5}
                   placeholder={t.contact.messagePlaceholder}
-                  className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/25 focus:outline-none transition-all duration-300 resize-none"
-                  style={{
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.45)' }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)' }}
+                  className={`${inputClass} resize-none`}
                 />
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-3.5 rounded-xl font-semibold text-sm text-slate-900 flex items-center justify-center gap-2 transition-opacity duration-300 disabled:opacity-50 hover:opacity-90"
-                  style={{ background: 'linear-gradient(90deg, #22d3ee, #34d399)' }}
+                  className="w-full py-3 rounded-lg font-semibold text-sm text-neutral-950 bg-neutral-100 hover:bg-white flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                 >
                   {isSubmitting ? (
-                    <div className="w-4 h-4 rounded-full border-2 border-slate-900/30 border-t-slate-900 animate-spin" />
+                    <div className="w-4 h-4 rounded-full border-2 border-neutral-400 border-t-neutral-900 animate-spin" />
                   ) : (
                     <>
                       <FiSend size={14} />

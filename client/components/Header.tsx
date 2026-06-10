@@ -92,14 +92,16 @@ export default function Header() {
           boxShadow: isScrolled ? '0 4px 24px rgb(0 0 0 / 0.08)' : 'none',
         }}
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          isScrolled ? 'glass-panel border-b border-border' : 'bg-transparent'
+          isScrolled
+            ? 'bg-neutral-950/90 backdrop-blur-md border-b border-neutral-800'
+            : 'bg-transparent'
         }`}
       >
         <div className="page-shell">
           <div className="flex items-center justify-between h-16">
             <button
               type="button"
-              className="relative text-3xl font-display font-bold cursor-pointer bg-gradient-to-r from-cyan-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent transition-transform hover:scale-[1.02]"
+              className="relative text-xl font-semibold tracking-tight text-neutral-100 cursor-pointer transition-opacity hover:opacity-80"
               onClick={() => scrollToSection('hero')}
             >
               Portfolio
@@ -112,19 +114,19 @@ export default function Header() {
                     key={item.id}
                     type="button"
                     onClick={() => scrollToSection(item.id)}
-                    className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-all font-semibold text-sm uppercase tracking-wider group"
+                    className="relative text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide group"
                   >
                     {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-px bg-neutral-400 group-hover:w-full transition-all duration-300" />
                   </button>
                 ) : (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="relative text-textMuted hover:text-primary-600 dark:hover:text-accent transition-all font-semibold text-sm uppercase tracking-wider group"
+                    className="relative text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide group"
                   >
                     {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-emerald-400 group-hover:w-full transition-all duration-300" />
+                    <span className="absolute bottom-0 left-0 w-0 h-px bg-neutral-400 group-hover:w-full transition-all duration-300" />
                   </Link>
                 )
               )}
@@ -134,7 +136,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setIsAIMessengerOpen(!isAIMessengerOpen)}
-                className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors relative rounded-lg"
+                className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors relative rounded-lg"
                 title="AI 어시스턴트"
               >
                 <FiMessageSquare size={20} />
@@ -146,7 +148,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
-                className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
                 aria-expanded={isSearchOpen}
                 aria-label="검색"
               >
@@ -157,7 +159,7 @@ export default function Header() {
                 <button
                   type="button"
                   onClick={() => setIsAdminPanelOpen(true)}
-                  className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                  className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
                   title="관리자 패널"
                 >
                   <FiSettings size={20} />
@@ -167,7 +169,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={toggleLocale}
-                className="px-2.5 py-1 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
+                className="px-2.5 py-1 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
                 aria-label="언어 전환"
               >
                 {t.nav.langToggle}
@@ -176,7 +178,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={toggleDarkMode}
-                className="p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
                 aria-label={isDarkMode ? '라이트 모드' : '다크 모드'}
               >
                 {isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
@@ -185,7 +187,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={toggleMenu}
-                className="md:hidden p-2 text-textMuted hover:text-primary-600 dark:hover:text-accent transition-colors rounded-lg"
+                className="md:hidden p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
                 aria-label="메뉴"
               >
                 {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
@@ -211,7 +213,7 @@ export default function Header() {
         </div>
 
         <div
-          className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-out border-t border-border bg-canvas ${
+          className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-out border-t border-neutral-800 bg-neutral-950 ${
             isMenuOpen ? 'max-h-96' : 'max-h-0'
           }`}
         >
@@ -223,7 +225,7 @@ export default function Header() {
                     key={item.id}
                     type="button"
                     onClick={() => scrollToSection(item.id)}
-                    className="text-left text-textPrimary hover:text-primary-600 dark:hover:text-accent transition-colors font-medium py-2"
+                    className="text-left text-neutral-200 hover:text-neutral-50 transition-colors font-medium py-2"
                   >
                     {item.label}
                   </button>
@@ -232,7 +234,7 @@ export default function Header() {
                     key={item.href}
                     href={item.href}
                     onClick={closeMenu}
-                    className="text-left text-textPrimary hover:text-primary-600 dark:hover:text-accent transition-colors font-medium py-2"
+                    className="text-left text-neutral-200 hover:text-neutral-50 transition-colors font-medium py-2"
                   >
                     {item.label}
                   </Link>

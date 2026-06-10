@@ -6,9 +6,6 @@ import { useLanguage } from '@/lib/LanguageContext'
 const DEPTH_ZONES = [
   {
     id: 'surface' as const,
-    color: '#22d3ee',
-    bgOpacity: '0.08',
-    borderOpacity: '0.3',
     skills: [
       'HTML5', 'CSS3', 'JavaScript', 'SCSS', 'Web Components',
       'jQuery', 'Bootstrap', 'Tailwind CSS', 'Semantic UI',
@@ -16,9 +13,6 @@ const DEPTH_ZONES = [
   },
   {
     id: 'mid' as const,
-    color: '#38bdf8',
-    bgOpacity: '0.06',
-    borderOpacity: '0.22',
     skills: [
       'React', 'Svelte', 'Next.js', 'TypeScript',
       'EJS', 'PixiJS',
@@ -27,9 +21,6 @@ const DEPTH_ZONES = [
   },
   {
     id: 'backend' as const,
-    color: '#a78bfa',
-    bgOpacity: '0.06',
-    borderOpacity: '0.22',
     skills: [
       'Node.js', 'Express', 'Java', 'Spring Boot',
       'PostgreSQL', 'MySQL', 'MongoDB',
@@ -38,9 +29,6 @@ const DEPTH_ZONES = [
   },
   {
     id: 'deep' as const,
-    color: '#34d399',
-    bgOpacity: '0.04',
-    borderOpacity: '0.16',
     skills: [
       'Go', 'PHP',
       'Webpack', 'Vite',
@@ -49,142 +37,98 @@ const DEPTH_ZONES = [
   },
 ]
 
+const zoneVariants = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.04 } },
+}
+
+const tagVariants = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
+}
+
 export default function Skills() {
   const { t } = useLanguage()
 
   return (
-    <section
-      id="skills"
-      className="relative overflow-hidden py-32"
-      style={{ background: 'linear-gradient(180deg, #0a1e38 0%, #0c2a4a 60%, #0a1e38 100%)' }}
-    >
-      {/* Top hairline */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-cyan-400/25 to-transparent" />
-
-      {/* Depth guide lines in background */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div
-          className="absolute inset-x-0 top-[24%] h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.06), transparent)' }}
-        />
-        <div
-          className="absolute inset-x-0 top-[48%] h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(56,189,248,0.05), transparent)' }}
-        />
-        <div
-          className="absolute inset-x-0 top-[72%] h-px"
-          style={{ background: 'linear-gradient(90deg, transparent, rgba(167,139,250,0.04), transparent)' }}
-        />
-      </div>
-
+    <section id="skills" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
       <div className="container-custom relative z-10">
-
-        {/* Section header */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.6 }}
           className="mb-20"
         >
           <div className="flex items-center gap-3 mb-6">
-            <span className="w-8 h-px bg-cyan-400/80" />
-            <span className="text-cyan-400 text-xs font-mono tracking-[0.2em] uppercase">
+            <span className="w-8 h-px bg-neutral-600" />
+            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
               {t.skills.label}
             </span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-4">
-            {t.skills.heading1}<br />
-            <span
-              style={{
-                background: 'linear-gradient(90deg, #22d3ee, #34d399)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-            >
-              {t.skills.heading2}
-            </span>
+          <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-4">
+            {t.skills.heading1}
+            <br />
+            <span className="text-neutral-400">{t.skills.heading2}</span>
           </h2>
-          <p className="text-white/35 text-base max-w-md font-mono">
-            {t.skills.subtext}
-          </p>
+          <p className="text-neutral-600 text-base max-w-md font-mono">{t.skills.subtext}</p>
         </motion.div>
 
-        {/* Depth zones */}
         <div className="space-y-14">
           {DEPTH_ZONES.map((zone, zoneIndex) => {
             const zoneLabel = t.skills.zones[zone.id]
             return (
               <motion.div
                 key={zone.id}
-                initial={{ opacity: 0, y: 28 }}
+                initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.7, delay: zoneIndex * 0.1 }}
+                transition={{ duration: 0.5, delay: zoneIndex * 0.06 }}
               >
-                {/* Zone header row */}
                 <div className="flex items-center gap-4 mb-5">
                   <div className="flex items-baseline gap-2 shrink-0">
-                    <span
-                      className="text-base font-bold font-mono"
-                      style={{ color: zone.color }}
-                    >
+                    <span className="text-base font-bold font-mono text-neutral-300">
                       {zoneLabel.depth}
                     </span>
-                    <span className="text-white/25 text-xs font-mono hidden sm:inline">
+                    <span className="text-neutral-600 text-xs font-mono hidden sm:inline">
                       {zoneLabel.subtitle}
                     </span>
                   </div>
-                  {/* Separator line */}
-                  <div
-                    className="flex-1 h-px"
-                    style={{
-                      background: `linear-gradient(90deg, ${zone.color}35, transparent)`,
-                    }}
-                  />
-                  <span className="text-white/20 text-xs shrink-0 hidden md:inline">
+                  <div className="flex-1 h-px bg-neutral-800" />
+                  <span className="text-neutral-600 text-xs shrink-0 hidden md:inline">
                     {zoneLabel.description}
                   </span>
                 </div>
 
-                {/* Skill tags — water flow layout */}
-                <div className="flex flex-wrap gap-2.5">
-                  {zone.skills.map((skill, skillIndex) => (
+                <motion.div
+                  variants={zoneVariants}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, margin: '-40px' }}
+                  className="flex flex-wrap gap-2"
+                >
+                  {zone.skills.map((skill) => (
                     <motion.span
                       key={skill}
-                      initial={{ opacity: 0, scale: 0.85 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{
-                        duration: 0.35,
-                        delay: zoneIndex * 0.08 + skillIndex * 0.03,
-                      }}
-                      whileHover={{ y: -4, transition: { duration: 0.18 } }}
-                      className="px-4 py-2 rounded-full text-sm font-medium cursor-default select-none"
-                      style={{
-                        border: `1px solid ${zone.color}${Math.round(parseFloat(zone.borderOpacity) * 255).toString(16).padStart(2, '0')}`,
-                        background: `${zone.color}${Math.round(parseFloat(zone.bgOpacity) * 255).toString(16).padStart(2, '0')}`,
-                        color: zone.color,
-                      }}
+                      variants={tagVariants}
+                      className="px-3.5 py-1.5 rounded-md text-sm font-medium border border-neutral-700 bg-neutral-950/60 text-neutral-300"
                     >
                       {skill}
                     </motion.span>
                   ))}
-                </div>
+                </motion.div>
               </motion.div>
             )
           })}
         </div>
 
-        {/* Footer note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.3 }}
-          className="mt-16 text-white/20 text-xs font-mono text-center tracking-widest"
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="mt-16 text-neutral-700 text-xs font-mono text-center tracking-widest"
         >
           {t.skills.footer}
         </motion.p>
