@@ -4,6 +4,8 @@ import TetrisBoard from '@/components/tetris/TetrisBoard'
 import TetrisGestureOverlay from '@/components/tetris/TetrisGestureOverlay'
 import TetrisHelp from '@/components/tetris/TetrisHelp'
 import TetrisHud from '@/components/tetris/TetrisHud'
+import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
+import TetrisPlayerName from '@/components/tetris/TetrisPlayerName'
 import TetrisTouchPad from '@/components/tetris/TetrisTouchPad'
 import { useTetrisGame } from '@/hooks/useTetrisGame'
 import Link from 'next/link'
@@ -11,7 +13,14 @@ import { useCallback, useEffect, useRef } from 'react'
 import { FiArrowLeft } from 'react-icons/fi'
 
 export default function TetrisPageClient() {
-  const { snapshot, highScore, actions } = useTetrisGame()
+  const {
+    snapshot,
+    highScore,
+    actions,
+    leaderboardRefreshKey,
+    submitError,
+    clearSubmitError,
+  } = useTetrisGame()
   const surfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -116,6 +125,23 @@ export default function TetrisPageClient() {
 
             <div className="flex w-full flex-col gap-6 lg:max-w-sm">
               <TetrisHud snapshot={snapshot} highScore={highScore} />
+              <TetrisPlayerName />
+              <TetrisLeaderboard refreshKey={leaderboardRefreshKey} />
+              {submitError && (
+                <p
+                  role="status"
+                  className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+                >
+                  랭킹 저장 실패: {submitError}
+                  <button
+                    type="button"
+                    className="ml-2 underline"
+                    onClick={clearSubmitError}
+                  >
+                    닫기
+                  </button>
+                </p>
+              )}
               <TetrisHelp />
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 키보드 포커스가 이 영역에 있을 때 단축키가 동작합니다. 첫 로드 후

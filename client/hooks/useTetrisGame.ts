@@ -18,6 +18,7 @@ import {
   toSnapshot,
   type GameEngineState,
 } from '@/lib/tetris/game'
+import { submitTetrisScore } from '@/lib/tetris/leaderboardClient'
 import type { GameSnapshot } from '@/lib/tetris/types'
 
 function readHighScore(): number {
@@ -43,6 +44,8 @@ export function useTetrisGame() {
     toSnapshot(stateRef.current)
   )
   const [highScore, setHighScore] = useState(0)
+  const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   const [leftHeld, setLeftHeld] = useState(false)
   const [rightHeld, setRightHeld] = useState(false)
   const [softDropHeld, setSoftDropHeld] = useState(false)
@@ -55,6 +58,20 @@ export function useTetrisGame() {
     if (next.gameOver && !stateRef.current.gameOver) {
       const hs = maybePersistHighScore(next.score)
       setHighScore(hs)
+      if (next.score > 0) {
+        setSubmitError(null)
+        void submitTetrisScore({
+          score: next.score,
+          lines: next.lines,
+          level: next.level,
+        }).then((result) => {
+          if (result.ok) {
+            setLeaderboardRefreshKey((k) => k + 1)
+          } else if (result.error) {
+            setSubmitError(result.error)
+          }
+        })
+      }
     }
     stateRef.current = next
     setSnapshot(toSnapshot(next))
@@ -250,5 +267,8 @@ export function useTetrisGame() {
     snapshot,
     highScore,
     actions,
+    leaderboardRefreshKey,
+    submitError,
+    clearSubmitError: () => setSubmitError(null),
   }
 }
