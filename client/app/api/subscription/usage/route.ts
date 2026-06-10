@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         data = await dbQuery<any>(
           `INSERT INTO ai_usage (user_id, session_id, usage_type, message_count, tokens_used, date)
            VALUES (NULL, $1, $2, $3, $4, $5)
-           ON CONFLICT (session_id, date, usage_type) WHERE user_id IS NULL
+           ON CONFLICT (session_id, date, usage_type) WHERE user_id IS NULL AND session_id IS NOT NULL
            DO UPDATE SET
              message_count = ai_usage.message_count + EXCLUDED.message_count,
              tokens_used = ai_usage.tokens_used + EXCLUDED.tokens_used

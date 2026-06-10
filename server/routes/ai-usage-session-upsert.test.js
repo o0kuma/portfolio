@@ -10,8 +10,19 @@ describe('anonymous ai_usage session upsert', () => {
       'utf8',
     );
 
-    expect(source).toMatch(/ON CONFLICT \(session_id, date, usage_type\) WHERE user_id IS NULL/);
-    expect(source).toMatch(/user_id IS NULL/);
+    const migration = fs.readFileSync(
+      path.join(repoRoot, 'server/migrations/add-ai-usage-session-unique.sql'),
+      'utf8',
+    );
+
+    const indexPredicateMatch = migration.match(
+      /WHERE user_id IS NULL AND session_id IS NOT NULL/,
+    );
+    expect(indexPredicateMatch).not.toBeNull();
+
+    expect(source).toMatch(
+      /ON CONFLICT \(session_id, date, usage_type\) WHERE user_id IS NULL AND session_id IS NOT NULL/,
+    );
   });
 
   test('migration adds partial unique index for anonymous ai_usage rows', () => {
@@ -21,6 +32,6 @@ describe('anonymous ai_usage session upsert', () => {
     );
 
     expect(source).toMatch(/idx_ai_usage_anon_session_date_type/);
-    expect(source).toMatch(/WHERE user_id IS NULL/);
+    expect(source).toMatch(/WHERE user_id IS NULL AND session_id IS NOT NULL/);
   });
 });
