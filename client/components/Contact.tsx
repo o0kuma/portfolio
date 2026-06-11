@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
-import { portfolioViewport, sectionReveal, lineReveal, labelReveal, sectionHeaderContainer } from '@/lib/portfolioMotion'
+import { portfolioViewport, sectionReveal, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 
 const inputClass =
   'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
@@ -66,24 +66,32 @@ export default function Contact() {
     <section id="contact" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
       <div className="container-custom relative z-10">
         <motion.div
-          variants={sectionReveal}
+          variants={staggerContainer}
           initial="hidden"
           whileInView="visible"
           viewport={portfolioViewport}
           className="mb-16 max-w-3xl"
         >
-          <motion.div variants={sectionHeaderContainer} className="flex items-center gap-3 mb-8">
-            <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
-            <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+          <motion.div variants={staggerItem} className="flex items-center gap-3 mb-8">
+            <div className="overflow-hidden w-8 h-px">
+              <motion.span
+                variants={lineReveal}
+                className="block w-full h-full bg-neutral-600"
+                style={{ originX: 0 }}
+              />
+            </div>
+            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
               {t.contact.label}
-            </motion.span>
+            </span>
           </motion.div>
 
-          <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-6">
-            {t.contact.heading1}
-            <br />
-            <span className="text-neutral-400">{t.contact.heading2}</span>
-          </h2>
+          <div className="overflow-hidden mb-6">
+            <motion.h2 variants={maskReveal} className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight">
+              {t.contact.heading1}
+              <br />
+              <span className="text-neutral-400">{t.contact.heading2}</span>
+            </motion.h2>
+          </div>
 
           <a href="mailto:c8c8c81828@gmail.com" className="group inline-block">
             <p className="text-base md:text-lg text-neutral-500 font-mono group-hover:text-neutral-200 transition-colors">

@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowDown } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { portfolioViewport, sectionReveal } from '@/lib/portfolioMotion'
+import { portfolioViewport, maskReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 export default function Hero() {
@@ -30,35 +30,53 @@ export default function Hero() {
       <div className="container-custom relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen py-28">
           <motion.div
-            variants={sectionReveal}
+            variants={staggerContainer}
             initial="hidden"
-            whileInView="visible"
-            viewport={portfolioViewport}
+            animate="visible"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-700 text-neutral-400 text-xs font-mono tracking-widest uppercase mb-10">
+            {/* Badge */}
+            <motion.div
+              variants={staggerItem}
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-700 text-neutral-400 text-xs font-mono tracking-widest uppercase mb-10"
+            >
               <span className="w-1.5 h-1.5 rounded-full bg-neutral-300" />
               {t.hero.badge}
-            </div>
+            </motion.div>
 
+            {/* Name: masked reveal */}
             <h1 className="font-black leading-[1.05] mb-6">
-              <span className="block text-neutral-50 text-5xl md:text-6xl lg:text-7xl tracking-tight">
-                {t.hero.nameMain}
-              </span>
-              <span className="block text-neutral-400 text-3xl md:text-4xl lg:text-5xl font-semibold mt-3 tracking-tight">
-                {t.hero.nameSub}
-              </span>
+              <div className="overflow-hidden">
+                <motion.span
+                  variants={maskReveal}
+                  className="block text-neutral-50 text-5xl md:text-6xl lg:text-7xl tracking-tight"
+                >
+                  {t.hero.nameMain}
+                </motion.span>
+              </div>
+              <div className="overflow-hidden mt-3">
+                <motion.span
+                  variants={maskReveal}
+                  transition={{ delay: 0.1 }}
+                  className="block text-neutral-400 text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight"
+                >
+                  {t.hero.nameSub}
+                </motion.span>
+              </div>
             </h1>
 
-            <p className="text-neutral-500 text-lg leading-relaxed mb-10 max-w-md">
+            <motion.p
+              variants={staggerItem}
+              className="text-neutral-500 text-lg leading-relaxed mb-10 max-w-md"
+            >
               {interpolate(t.hero.description, { years }).split('\n').map((line, i) => (
                 <span key={i}>
                   {line}
                   {i === 0 && <br />}
                 </span>
               ))}
-            </p>
+            </motion.p>
 
-            <div className="flex flex-wrap gap-3 mb-12">
+            <motion.div variants={staggerItem} className="flex flex-wrap gap-3 mb-12">
               <motion.a
                 href="#projects"
                 whileHover={{ y: -2 }}
@@ -75,9 +93,9 @@ export default function Hero() {
               >
                 {t.hero.contactMe}
               </motion.a>
-            </div>
+            </motion.div>
 
-            <div className="flex items-center gap-6">
+            <motion.div variants={staggerItem} className="flex items-center gap-6">
               <a
                 href="https://github.com/oikikomori/"
                 target="_blank"
@@ -94,16 +112,14 @@ export default function Hero() {
                 <FiMail size={17} />
                 <span>Email</span>
               </a>
-            </div>
+            </motion.div>
           </motion.div>
 
           <motion.div
             style={{ y: heroParallaxY }}
-            variants={sectionReveal}
-            initial="hidden"
-            whileInView="visible"
-            viewport={portfolioViewport}
-            transition={{ delay: 0.15 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="hidden lg:flex items-center justify-center"
             aria-hidden="true"
           >

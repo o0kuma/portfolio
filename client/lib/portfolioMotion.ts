@@ -6,7 +6,7 @@ export const portfolioViewport = {
   margin: '-40px 0px -60px 0px',
 } as const
 
-/** Section container: stronger upward reveal */
+/** Section container: strong upward reveal */
 export const sectionReveal = {
   hidden: { opacity: 0, y: 80 },
   visible: {
@@ -16,26 +16,28 @@ export const sectionReveal = {
   },
 } as const
 
+/**
+ * Masked text reveal — parent must have overflow:hidden.
+ * Text slides up from below the clip boundary.
+ */
+export const maskReveal = {
+  hidden: { y: '110%' },
+  visible: {
+    y: '0%',
+    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+  },
+} as const
+
 /** Horizontal line: draws left → right */
 export const lineReveal = {
-  hidden: { scaleX: 0, opacity: 0 },
+  hidden: { scaleX: 0 },
   visible: {
     scaleX: 1,
-    opacity: 1,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
 } as const
 
-/** Section label text: slides up from slight offset */
-export const labelReveal = {
-  hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1], delay: 0.15 },
-  },
-} as const
-
+/** Fade + slide up for body text / cards */
 export const staggerContainer = {
   hidden: {},
   visible: {
@@ -49,13 +51,5 @@ export const staggerItem = {
     opacity: 1,
     y: 0,
     transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
-  },
-} as const
-
-/** Section header row: stagger the line + label together */
-export const sectionHeaderContainer = {
-  hidden: {},
-  visible: {
-    transition: { staggerChildren: 0.1 },
   },
 } as const

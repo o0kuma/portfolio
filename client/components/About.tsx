@@ -3,11 +3,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { portfolioViewport, staggerContainer, staggerItem, lineReveal, labelReveal, sectionHeaderContainer } from '@/lib/portfolioMotion'
-
-const container = staggerContainer
-
-const item = staggerItem
+import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 
 export default function About() {
   const { t } = useLanguage()
@@ -24,33 +20,52 @@ export default function About() {
       <div className="container-custom relative z-10">
         <div className="grid lg:grid-cols-[1fr_120px] gap-12 lg:gap-20 items-start max-w-5xl">
           <motion.div
-            variants={container}
+            variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={portfolioViewport}
           >
-            <motion.div variants={sectionHeaderContainer} className="flex items-center gap-3 mb-12" style={{ originX: 0 }}>
-              <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
-              <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+            {/* Section label with line draw */}
+            <motion.div variants={staggerItem} className="flex items-center gap-3 mb-12">
+              <div className="overflow-hidden w-8 h-px">
+                <motion.span
+                  variants={lineReveal}
+                  className="block w-full h-full bg-neutral-600"
+                  style={{ originX: 0 }}
+                />
+              </div>
+              <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
                 {t.about.label}
-              </motion.span>
+              </span>
             </motion.div>
 
-            <motion.h2 variants={item} className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-10">
-              {t.about.heading1}
-              <br />
-              <span className="text-neutral-400">{t.about.heading2}</span>
-            </motion.h2>
+            {/* Heading: masked reveal */}
+            <div className="overflow-hidden mb-10">
+              <motion.h2
+                variants={maskReveal}
+                className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight"
+              >
+                {t.about.heading1}
+                <br />
+                <span className="text-neutral-400">{t.about.heading2}</span>
+              </motion.h2>
+            </div>
 
-            <motion.div variants={item} className="space-y-5 text-neutral-500 text-[1.05rem] leading-[1.85] max-w-2xl">
+            <motion.div variants={staggerItem} className="space-y-5 text-neutral-500 text-[1.05rem] leading-[1.85] max-w-2xl">
               <p>{t.about.p1}</p>
               <p>{interpolate(t.about.p2, { years })}</p>
               <p>{t.about.p3}</p>
             </motion.div>
 
-            <motion.div variants={item} className="mt-12">
+            <motion.div variants={staggerItem} className="mt-12">
               <div className="flex items-center gap-3 mb-5">
-                <motion.span variants={lineReveal} className="block w-5 h-px bg-neutral-700" style={{ originX: 0 }} />
+                <div className="overflow-hidden w-5 h-px">
+                  <motion.span
+                    variants={lineReveal}
+                    className="block w-full h-full bg-neutral-700"
+                    style={{ originX: 0 }}
+                  />
+                </div>
                 <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
                   {t.about.recentWork}
                 </span>
@@ -72,16 +87,20 @@ export default function About() {
               </ul>
             </motion.div>
 
-            <motion.div variants={item} className="mt-12 flex flex-wrap gap-10">
+            <motion.div variants={staggerItem} className="mt-12 flex flex-wrap gap-10">
               {stats.map((stat) => (
                 <div key={stat.label}>
-                  <div className="text-3xl font-black text-neutral-100">{stat.value}</div>
+                  <div className="overflow-hidden">
+                    <motion.div variants={maskReveal} className="text-3xl font-black text-neutral-100">
+                      {stat.value}
+                    </motion.div>
+                  </div>
                   <div className="text-neutral-600 text-sm mt-1 font-mono">{stat.label}</div>
                 </div>
               ))}
             </motion.div>
 
-            <motion.div variants={item} className="mt-10 flex flex-wrap gap-2.5">
+            <motion.div variants={staggerItem} className="mt-10 flex flex-wrap gap-2.5">
               {[t.about.location, t.about.role, 'c8c8c81828@gmail.com'].map((chip) => (
                 <span
                   key={chip}

@@ -7,11 +7,10 @@ import SearchBar from './SearchBar'
 import {
   portfolioViewport,
   sectionReveal,
+  maskReveal,
+  lineReveal,
   staggerContainer,
   staggerItem,
-  lineReveal,
-  labelReveal,
-  sectionHeaderContainer,
 } from '@/lib/portfolioMotion'
 
 interface Project {
@@ -565,27 +564,29 @@ export default function Projects() {
       <div className="container-custom relative z-10 pt-28 pb-24">
         <div className="mb-16 max-w-2xl">
           <motion.div
-            variants={sectionReveal}
+            variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={portfolioViewport}
           >
-            <motion.div
-              variants={sectionHeaderContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={portfolioViewport}
-              className="flex items-center gap-3 mb-4"
-            >
-              <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
-              <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+            <motion.div variants={staggerItem} className="flex items-center gap-3 mb-4">
+              <div className="overflow-hidden w-8 h-px">
+                <motion.span
+                  variants={lineReveal}
+                  className="block w-full h-full bg-neutral-600"
+                  style={{ originX: 0 }}
+                />
+              </div>
+              <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
                 Portfolio works
-              </motion.span>
+              </span>
             </motion.div>
-            <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-4">
-              프로젝트
-              <span className="text-neutral-500"> 경험</span>
-            </h2>
+            <div className="overflow-hidden mb-4">
+              <motion.h2 variants={maskReveal} className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight">
+                프로젝트
+                <span className="text-neutral-500"> 경험</span>
+              </motion.h2>
+            </div>
             <p className="text-neutral-500 text-base leading-relaxed">
               퍼블리싱부터 React, Next.js, Svelte까지 — 다양한 기술로 완성한 작업물입니다.
             </p>
