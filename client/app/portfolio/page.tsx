@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import PortfolioClient from './PortfolioClient'
 import { SITE_NAME, SITE_AUTHOR, getSiteUrl, OG_IMAGE_PATH, isPortfolioPublic } from '@/lib/site'
 
+/** Gated at runtime via isPortfolioPublic() — public unless PORTFOLIO_DISABLED / legacy flags. */
 export const dynamic = 'force-dynamic'
 
 const siteUrl = getSiteUrl()

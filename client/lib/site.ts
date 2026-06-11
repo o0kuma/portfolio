@@ -6,19 +6,23 @@ export function getSiteUrl(): string {
 }
 
 /**
- * Server/runtime gate for /portfolio (works on Vercel Preview without rebuild).
- * Set PORTFOLIO_ENABLED=true (server-only) and/or NEXT_PUBLIC_PORTFOLIO_ENABLED=true.
+ * Server/runtime gate for /portfolio. Public by default; opt out with PORTFOLIO_DISABLED=true
+ * or legacy PORTFOLIO_ENABLED=false / NEXT_PUBLIC_PORTFOLIO_DISABLED=true.
  */
 export function isPortfolioPublic(): boolean {
-  if (process.env.PORTFOLIO_ENABLED === 'true') return true
-  if (process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED === 'true') return true
-  return false
+  if (process.env.PORTFOLIO_DISABLED === 'true') return false
+  if (process.env.NEXT_PUBLIC_PORTFOLIO_DISABLED === 'true') return false
+  if (process.env.PORTFOLIO_ENABLED === 'false') return false
+  return true
 }
 
 /**
- * Client nav visibility — NEXT_PUBLIC_* is inlined at build time; use with PORTFOLIO_ENABLED on Preview for page access.
+ * Client nav visibility — NEXT_PUBLIC_* inlined at build time.
+ * Hide nav with NEXT_PUBLIC_PORTFOLIO_DISABLED=true (or legacy NEXT_PUBLIC_PORTFOLIO_ENABLED=false).
  */
-export const PORTFOLIO_PUBLIC = process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED === 'true'
+export const PORTFOLIO_PUBLIC =
+  process.env.NEXT_PUBLIC_PORTFOLIO_DISABLED !== 'true' &&
+  process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED !== 'false'
 
 export const SITE_NAME = 'kuuuma.com'
 export const SITE_AUTHOR = '오승일'

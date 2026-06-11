@@ -6,9 +6,9 @@
 
 This is a Korean-language portfolio website (`kuuuma.com`) with a Node.js Express backend (`server/`) and a Next.js 14 frontend (`client/`). It includes blog posts, portfolio projects, a contact form, AI chatbot, subscription/monetization features, and a Tetris game demo.
 
-### Portfolio preview (owner only)
+### Portfolio visibility
 
-Portfolio `/portfolio` page gate uses **runtime** `PORTFOLIO_ENABLED=true` (server-only) and/or `NEXT_PUBLIC_PORTFOLIO_ENABLED=true`. On Vercel Preview, set **`PORTFOLIO_ENABLED=true`** (Preview env only) so the route works without a rebuild; optionally also set `NEXT_PUBLIC_PORTFOLIO_ENABLED=true` for nav links in client components. Local: add either/both to `server/.env` (loaded in dev via `next.config.js`). Production: leave both unset/`false` until public launch.
+`/portfolio` and nav links are **public by default**. To hide: set `PORTFOLIO_DISABLED=true` (server runtime, no rebuild on Vercel) and/or `NEXT_PUBLIC_PORTFOLIO_DISABLED=true` (client nav at build time). Legacy opt-out: `PORTFOLIO_ENABLED=false` and `NEXT_PUBLIC_PORTFOLIO_ENABLED=false`. Local overrides load from `server/.env` in dev via `next.config.js`.
 
 ### Running the application
 

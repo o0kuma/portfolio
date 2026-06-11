@@ -26,11 +26,14 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
             process.env.GEMINI_API_KEY = value
           }
 
-          if (key === 'PORTFOLIO_ENABLED' && !process.env.PORTFOLIO_ENABLED) {
-            process.env.PORTFOLIO_ENABLED = value
-          }
-          if (key === 'NEXT_PUBLIC_PORTFOLIO_ENABLED' && !process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED) {
-            process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED = value
+          const portfolioKeys = [
+            'PORTFOLIO_ENABLED',
+            'PORTFOLIO_DISABLED',
+            'NEXT_PUBLIC_PORTFOLIO_ENABLED',
+            'NEXT_PUBLIC_PORTFOLIO_DISABLED',
+          ]
+          if (portfolioKeys.includes(key) && !process.env[key]) {
+            process.env[key] = value
           }
         }
       }
