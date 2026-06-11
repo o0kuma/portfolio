@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { portfolioViewport, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import { portfolioViewport, staggerContainer, staggerItem, lineReveal, labelReveal, sectionHeaderContainer } from '@/lib/portfolioMotion'
 
 const container = staggerContainer
 
@@ -29,11 +29,11 @@ export default function About() {
             whileInView="visible"
             viewport={portfolioViewport}
           >
-            <motion.div variants={item} className="flex items-center gap-3 mb-12">
-              <span className="w-8 h-px bg-neutral-600" />
-              <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+            <motion.div variants={sectionHeaderContainer} className="flex items-center gap-3 mb-12" style={{ originX: 0 }}>
+              <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
+              <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
                 {t.about.label}
-              </span>
+              </motion.span>
             </motion.div>
 
             <motion.h2 variants={item} className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-10">
@@ -50,7 +50,7 @@ export default function About() {
 
             <motion.div variants={item} className="mt-12">
               <div className="flex items-center gap-3 mb-5">
-                <span className="w-5 h-px bg-neutral-700" />
+                <motion.span variants={lineReveal} className="block w-5 h-px bg-neutral-700" style={{ originX: 0 }} />
                 <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
                   {t.about.recentWork}
                 </span>

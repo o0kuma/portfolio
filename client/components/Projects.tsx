@@ -9,6 +9,9 @@ import {
   sectionReveal,
   staggerContainer,
   staggerItem,
+  lineReveal,
+  labelReveal,
+  sectionHeaderContainer,
 } from '@/lib/portfolioMotion'
 
 interface Project {
@@ -567,9 +570,18 @@ export default function Projects() {
             whileInView="visible"
             viewport={portfolioViewport}
           >
-            <p className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase mb-4">
-              Portfolio works
-            </p>
+            <motion.div
+              variants={sectionHeaderContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={portfolioViewport}
+              className="flex items-center gap-3 mb-4"
+            >
+              <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
+              <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+                Portfolio works
+              </motion.span>
+            </motion.div>
             <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-4">
               프로젝트
               <span className="text-neutral-500"> 경험</span>

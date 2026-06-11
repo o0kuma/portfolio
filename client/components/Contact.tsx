@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
-import { portfolioViewport, sectionReveal } from '@/lib/portfolioMotion'
+import { portfolioViewport, sectionReveal, lineReveal, labelReveal, sectionHeaderContainer } from '@/lib/portfolioMotion'
 
 const inputClass =
   'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
@@ -72,12 +72,12 @@ export default function Contact() {
           viewport={portfolioViewport}
           className="mb-16 max-w-3xl"
         >
-          <div className="flex items-center gap-3 mb-8">
-            <span className="w-8 h-px bg-neutral-600" />
-            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+          <motion.div variants={sectionHeaderContainer} className="flex items-center gap-3 mb-8">
+            <motion.span variants={lineReveal} className="block w-8 h-px bg-neutral-600" style={{ originX: 0 }} />
+            <motion.span variants={labelReveal} className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
               {t.contact.label}
-            </span>
-          </div>
+            </motion.span>
+          </motion.div>
 
           <h2 className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight mb-6">
             {t.contact.heading1}
