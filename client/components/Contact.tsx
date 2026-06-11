@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
+import { portfolioViewport, sectionReveal } from '@/lib/portfolioMotion'
 
 const inputClass =
   'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
@@ -65,10 +66,10 @@ export default function Contact() {
     <section id="contact" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
       <div className="container-custom relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={portfolioViewport}
           className="mb-16 max-w-3xl"
         >
           <div className="flex items-center gap-3 mb-8">
@@ -94,10 +95,10 @@ export default function Contact() {
 
         <div className="grid lg:grid-cols-2 gap-16 max-w-5xl">
           <motion.div
-            initial={{ opacity: 0, x: -12 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
+            variants={sectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
           >
             <p className="text-neutral-500 text-lg leading-relaxed mb-10 whitespace-pre-line">
               {t.contact.intro}
@@ -133,10 +134,11 @@ export default function Contact() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55, delay: 0.08 }}
+            variants={sectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
+            transition={{ delay: 0.1 }}
           >
             {isSubmitted ? (
               <div className="flex flex-col items-center justify-center py-16 text-center border border-neutral-800 rounded-xl bg-neutral-950/50">

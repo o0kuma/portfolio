@@ -1,25 +1,39 @@
 'use client'
 
-import { motion } from 'framer-motion'
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowDown } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
+import { portfolioViewport, sectionReveal } from '@/lib/portfolioMotion'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 export default function Hero() {
   const { t } = useLanguage()
   const years = new Date().getFullYear() - 2019
+  const sectionRef = useRef<HTMLElement>(null)
+  const reduced = usePrefersReducedMotion()
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end start'],
+  })
+  const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, reduced ? 0 : 72])
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, reduced ? 1 : 0.35])
 
   return (
-    <section
+    <motion.section
+      ref={sectionRef}
       id="hero"
+      style={{ opacity: heroOpacity }}
       className="relative min-h-screen flex items-center border-b border-neutral-800 bg-neutral-950"
     >
       <div className="container-custom relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen py-28">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
+            variants={sectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-neutral-700 text-neutral-400 text-xs font-mono tracking-widest uppercase mb-10">
               <span className="w-1.5 h-1.5 rounded-full bg-neutral-300" />
@@ -84,9 +98,12 @@ export default function Hero() {
           </motion.div>
 
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
+            style={{ y: heroParallaxY }}
+            variants={sectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
+            transition={{ delay: 0.15 }}
             className="hidden lg:flex items-center justify-center"
             aria-hidden="true"
           >
@@ -114,6 +131,6 @@ export default function Hero() {
           <FiArrowDown size={20} />
         </motion.button>
       </motion.div>
-    </section>
+    </motion.section>
   )
 }

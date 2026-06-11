@@ -51,9 +51,6 @@ function ImmersiveHomeInner() {
             <a href="#posts-feed" className="transition-colors hover:text-white">
               {t.home.navPosts}
             </a>
-            <Link href="/posts" className="transition-colors hover:text-white">
-              {t.nav.posts}
-            </Link>
             {PORTFOLIO_PUBLIC && (
               <Link href="/portfolio" className="transition-colors hover:text-white">
                 {t.home.navPortfolio}

@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
+import { portfolioViewport, sectionReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 
 const DEPTH_ZONES = [
   {
@@ -37,15 +38,9 @@ const DEPTH_ZONES = [
   },
 ]
 
-const zoneVariants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.04 } },
-}
+const zoneVariants = staggerContainer
 
-const tagVariants = {
-  hidden: { opacity: 0, y: 8 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.35 } },
-}
+const tagVariants = staggerItem
 
 export default function Skills() {
   const { t } = useLanguage()
@@ -54,10 +49,10 @@ export default function Skills() {
     <section id="skills" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
       <div className="container-custom relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={portfolioViewport}
           className="mb-20"
         >
           <div className="flex items-center gap-3 mb-6">
@@ -81,10 +76,11 @@ export default function Skills() {
             return (
               <motion.div
                 key={zone.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: zoneIndex * 0.06 }}
+                variants={sectionReveal}
+                initial="hidden"
+                whileInView="visible"
+                viewport={portfolioViewport}
+                transition={{ delay: zoneIndex * 0.06 }}
               >
                 <div className="flex items-center gap-4 mb-5">
                   <div className="flex items-baseline gap-2 shrink-0">
@@ -104,8 +100,8 @@ export default function Skills() {
                 <motion.div
                   variants={zoneVariants}
                   initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: '-40px' }}
+                  whileInView="visible"
+                  viewport={portfolioViewport}
                   className="flex flex-wrap gap-2"
                 >
                   {zone.skills.map((skill) => (

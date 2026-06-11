@@ -3,18 +3,11 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
+import { portfolioViewport, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 
-const container = {
-  hidden: {},
-  show: {
-    transition: { staggerChildren: 0.08 },
-  },
-}
+const container = staggerContainer
 
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
-}
+const item = staggerItem
 
 export default function About() {
   const { t } = useLanguage()
@@ -33,8 +26,8 @@ export default function About() {
           <motion.div
             variants={container}
             initial="hidden"
-            whileInView="show"
-            viewport={{ once: true, margin: '-80px' }}
+            whileInView="visible"
+            viewport={portfolioViewport}
           >
             <motion.div variants={item} className="flex items-center gap-3 mb-12">
               <span className="w-8 h-px bg-neutral-600" />
@@ -103,7 +96,7 @@ export default function About() {
           <motion.div
             initial={{ opacity: 0, x: 16 }}
             whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
+            viewport={portfolioViewport}
             transition={{ duration: 0.8, delay: 0.1 }}
             className="hidden lg:flex items-center justify-center pt-4"
             aria-hidden="true"

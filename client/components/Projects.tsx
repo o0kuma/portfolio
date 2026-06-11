@@ -1,10 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import SearchBar from './SearchBar'
-import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import {
+  portfolioViewport,
+  sectionReveal,
+  staggerContainer,
+  staggerItem,
+} from '@/lib/portfolioMotion'
 
 interface Project {
   id: string
@@ -428,8 +433,7 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
-  const reducedMotion = usePrefersReducedMotion()
-  const useHorizontalTrack = !reducedMotion
+  const useHorizontalTrack = true
 
   useEffect(() => {
     let cancelled = false
@@ -558,10 +562,10 @@ export default function Projects() {
       <div className="container-custom relative z-10 pt-28 pb-24">
         <div className="mb-16 max-w-2xl">
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
+            variants={sectionReveal}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
           >
             <p className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase mb-4">
               Portfolio works
@@ -574,8 +578,8 @@ export default function Projects() {
               퍼블리싱부터 React, Next.js, Svelte까지 — 다양한 기술로 완성한 작업물입니다.
             </p>
             {useHorizontalTrack && (
-              <p className="mt-3 text-neutral-600 text-xs font-mono hidden md:block">
-                가로로 스크롤하여 더 보기 →
+              <p className="mt-3 text-neutral-500 text-xs font-mono">
+                ← 가로로 스크롤하여 더 보기 →
               </p>
             )}
           </motion.div>
@@ -617,41 +621,32 @@ export default function Projects() {
         {filteredProjects.length > 0 ? (
           useHorizontalTrack ? (
             <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
-              className="flex gap-5 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin md:gap-6 -mx-4 px-4 md:mx-0 md:px-0"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={portfolioViewport}
+              className="flex w-full min-w-0 gap-5 overflow-x-auto overscroll-x-contain pb-6 snap-x snap-mandatory scrollbar-thin md:gap-6 -mx-4 px-4 md:-mx-6 md:px-6"
             >
-              <AnimatePresence mode="popLayout">
-                {filteredProjects.map((project, index) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, x: 24 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.35) }}
-                  >
-                    <ProjectCard project={project} layout="track" />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+              {filteredProjects.map((project) => (
+                <motion.div key={project.id} variants={staggerItem} className="shrink-0">
+                  <ProjectCard project={project} layout="track" />
+                </motion.div>
+              ))}
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              <AnimatePresence mode="popLayout">
-                {filteredProjects.map((project, index) => (
-                  <motion.div
-                    key={project.id}
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.35, delay: Math.min(index * 0.04, 0.35) }}
-                  >
-                    <ProjectCard project={project} layout="grid" />
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={portfolioViewport}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            >
+              {filteredProjects.map((project) => (
+                <motion.div key={project.id} variants={staggerItem}>
+                  <ProjectCard project={project} layout="grid" />
+                </motion.div>
+              ))}
+            </motion.div>
           )
         ) : (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-20">
@@ -662,10 +657,10 @@ export default function Projects() {
         )}
 
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={portfolioViewport}
           className="mt-14"
         >
           <a

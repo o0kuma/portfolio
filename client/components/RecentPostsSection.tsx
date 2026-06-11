@@ -7,6 +7,7 @@ import { FiArrowRight, FiCalendar, FiEye } from 'react-icons/fi'
 import { normalizePostListItem } from '@/lib/postApi'
 import { getCategoryLabel } from '@/lib/post-categories'
 import { useLanguage } from '@/lib/LanguageContext'
+import { portfolioViewport, sectionReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import type { HomePost } from '@/components/home/post-types'
 
 function formatDate(dateString: string, locale: string) {
@@ -48,10 +49,10 @@ export default function RecentPostsSection() {
     <section id="posts" className="py-24 border-b border-neutral-800 bg-neutral-950 text-neutral-100">
       <div className="page-shell">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.55 }}
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={portfolioViewport}
           className="mb-12 max-w-xl"
         >
           <p className="text-neutral-600 text-xs font-mono tracking-[0.2em] uppercase mb-3">
@@ -66,14 +67,17 @@ export default function RecentPostsSection() {
         ) : posts.length === 0 ? (
           <p className="text-neutral-600">{t.recentPosts.empty}</p>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
-            {posts.map((post, index) => (
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={portfolioViewport}
+            className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10"
+          >
+            {posts.map((post) => (
               <motion.article
                 key={post._id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: Math.min(index * 0.06, 0.3) }}
+                variants={staggerItem}
                 className="rounded-xl p-6 border border-neutral-800 bg-neutral-900/40 hover:border-neutral-600 transition-colors"
               >
                 <span className="inline-block px-2 py-0.5 text-[10px] font-mono uppercase tracking-wider rounded border border-neutral-700 text-neutral-400 mb-3">
@@ -100,7 +104,7 @@ export default function RecentPostsSection() {
                 </Link>
               </motion.article>
             ))}
-          </div>
+          </motion.div>
         )}
 
         <div className="text-center">
