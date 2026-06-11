@@ -10,6 +10,7 @@ import Contact from '../../components/Contact'
 import RecentPostsSection from '../../components/RecentPostsSection'
 import Footer from '../../components/Footer'
 import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollProgress'
+import SectionWrapper from '../../components/SectionWrapper'
 
 export default function PortfolioClient() {
   useEffect(() => {
@@ -21,11 +22,27 @@ export default function PortfolioClient() {
       <PortfolioScrollProgress />
       <Header />
       <Hero />
-      <About />
-      <Skills />
-      <Projects />
-      <RecentPostsSection />
-      <Contact />
+
+      <SectionWrapper id="about" className="relative border-b border-neutral-800 bg-neutral-950">
+        <About />
+      </SectionWrapper>
+
+      <SectionWrapper id="skills" className="relative border-b border-neutral-800 bg-neutral-900">
+        <Skills />
+      </SectionWrapper>
+
+      <SectionWrapper id="projects" className="relative border-b border-neutral-800 bg-neutral-950">
+        <Projects />
+      </SectionWrapper>
+
+      <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-950">
+        <RecentPostsSection />
+      </SectionWrapper>
+
+      <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">
+        <Contact />
+      </SectionWrapper>
+
       <Footer />
     </main>
   )

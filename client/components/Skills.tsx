@@ -42,7 +42,7 @@ export default function Skills() {
   const { t } = useLanguage()
 
   return (
-    <section id="skills" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
+    <div className="relative py-32">
       <div className="container-custom relative z-10">
 
         {/* Section header */}
@@ -142,6 +142,6 @@ export default function Skills() {
           {t.skills.footer}
         </motion.p>
       </div>
-    </section>
+    </div>
   )
 }

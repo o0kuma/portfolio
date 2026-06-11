@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import SearchBar from './SearchBar'
@@ -437,6 +437,35 @@ export default function Projects() {
   const [isLoading, setIsLoading] = useState(true)
   const useHorizontalTrack = true
 
+  // Drag-to-scroll
+  const trackRef = useRef<HTMLDivElement>(null)
+  const drag = useRef({ active: false, startX: 0, scrollLeft: 0 })
+
+  const hasDragged = useRef(false)
+
+  const onDragStart = useCallback((e: React.MouseEvent) => {
+    if (!trackRef.current) return
+    hasDragged.current = false
+    drag.current = { active: true, startX: e.pageX, scrollLeft: trackRef.current.scrollLeft }
+    trackRef.current.style.cursor = 'grabbing'
+  }, [])
+
+  const onDragMove = useCallback((e: React.MouseEvent) => {
+    if (!drag.current.active || !trackRef.current) return
+    const dx = e.pageX - drag.current.startX
+    if (Math.abs(dx) > 4) hasDragged.current = true
+    trackRef.current.scrollLeft = drag.current.scrollLeft - dx * 1.2
+  }, [])
+
+  const onDragEnd = useCallback(() => {
+    drag.current.active = false
+    if (trackRef.current) trackRef.current.style.cursor = 'grab'
+  }, [])
+
+  const onClickCapture = useCallback((e: React.MouseEvent) => {
+    if (hasDragged.current) e.stopPropagation()
+  }, [])
+
   useEffect(() => {
     let cancelled = false
 
@@ -560,7 +589,7 @@ export default function Projects() {
   }
 
   return (
-    <section id="projects" className="relative border-b border-neutral-800 bg-neutral-950">
+    <div className="relative">
       <div className="container-custom relative z-10 pt-28 pb-24">
         <div className="mb-16 max-w-2xl">
           <motion.div
@@ -634,11 +663,18 @@ export default function Projects() {
         {filteredProjects.length > 0 ? (
           useHorizontalTrack ? (
             <motion.div
+              ref={trackRef}
               variants={staggerContainer}
               initial="hidden"
               whileInView="visible"
               viewport={portfolioViewport}
-              className="flex w-full min-w-0 gap-5 overflow-x-auto overscroll-x-contain pb-6 snap-x snap-mandatory scrollbar-thin md:gap-6 -mx-4 px-4 md:-mx-6 md:px-6"
+              className="flex w-full min-w-0 gap-5 overflow-x-auto overscroll-x-contain pb-6 snap-x snap-proximity scrollbar-none md:gap-6 -mx-4 px-4 md:-mx-6 md:px-6 select-none"
+              style={{ cursor: 'grab', scrollBehavior: 'smooth' }}
+              onMouseDown={onDragStart}
+              onMouseMove={onDragMove}
+              onMouseUp={onDragEnd}
+              onMouseLeave={onDragEnd}
+              onClickCapture={onClickCapture}
             >
               {filteredProjects.map((project) => (
                 <motion.div key={project.id} variants={staggerItem} className="shrink-0">
@@ -687,6 +723,6 @@ export default function Projects() {
           </a>
         </motion.div>
       </div>
-    </section>
+    </div>
   )
 }

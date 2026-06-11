@@ -63,7 +63,7 @@ export default function Contact() {
   ]
 
   return (
-    <section id="contact" className="relative py-32 border-b border-neutral-800 bg-neutral-900">
+    <div className="relative py-32">
       <div className="container-custom relative z-10">
         <motion.div
           variants={staggerContainer}
@@ -231,6 +231,6 @@ export default function Contact() {
           </motion.div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }

@@ -2,17 +2,17 @@
 
 export const portfolioViewport = {
   once: true,
-  amount: 0.15,
-  margin: '-40px 0px -60px 0px',
+  amount: 0.12,
+  margin: '-30px 0px -50px 0px',
 } as const
 
-/** Section container: strong upward reveal */
+/** Section container: slides up as a block */
 export const sectionReveal = {
-  hidden: { opacity: 0, y: 80 },
+  hidden: { opacity: 0, y: 60 },
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.75, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
   },
 } as const
 
@@ -24,16 +24,16 @@ export const maskReveal = {
   hidden: { y: '110%' },
   visible: {
     y: '0%',
-    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
   },
 } as const
 
-/** Horizontal line: draws left → right */
+/** Full-width horizontal rule: draws left → right */
 export const lineReveal = {
   hidden: { scaleX: 0 },
   visible: {
     scaleX: 1,
-    transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
   },
 } as const
 
@@ -46,7 +46,7 @@ export const staggerContainer = {
 } as const
 
 export const staggerItem = {
-  hidden: { opacity: 0, y: 48 },
+  hidden: { opacity: 0, y: 40 },
   visible: {
     opacity: 1,
     y: 0,

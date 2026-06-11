@@ -16,7 +16,7 @@ export default function About() {
   ]
 
   return (
-    <section id="about" className="relative py-32 border-b border-neutral-800 bg-neutral-950">
+    <div className="relative py-32">
       <div className="container-custom relative z-10">
         <div className="grid lg:grid-cols-[1fr_120px] gap-12 lg:gap-20 items-start max-w-5xl">
           <motion.div
@@ -129,6 +129,6 @@ export default function About() {
           </motion.div>
         </div>
       </div>
-    </section>
+    </div>
   )
 }
