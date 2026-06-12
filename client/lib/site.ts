@@ -20,9 +20,7 @@ export function isPortfolioPublic(): boolean {
  * Client nav visibility — NEXT_PUBLIC_* inlined at build time.
  * Hide nav with NEXT_PUBLIC_PORTFOLIO_DISABLED=true (or legacy NEXT_PUBLIC_PORTFOLIO_ENABLED=false).
  */
-export const PORTFOLIO_PUBLIC =
-  process.env.NEXT_PUBLIC_PORTFOLIO_DISABLED !== 'true' &&
-  process.env.NEXT_PUBLIC_PORTFOLIO_ENABLED !== 'false'
+export const PORTFOLIO_PUBLIC = false
 
 export const SITE_NAME = 'kuuuma.com'
 export const SITE_AUTHOR = '오승일'

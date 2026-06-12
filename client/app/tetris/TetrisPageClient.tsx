@@ -60,11 +60,11 @@ export default function TetrisPageClient() {
           style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
         >
           <Link
-            href="/portfolio"
+            href="/"
             className="inline-flex items-center gap-2 text-sm font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            포트폴리오로
+            홈으로
           </Link>
           <span className="text-sm font-semibold text-textPrimary">테트리스</span>
         </div>
