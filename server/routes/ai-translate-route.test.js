@@ -32,17 +32,17 @@ describe('AI feature routes enforce subscription quota', () => {
 
   test.each(quotaRoutes)('$file checks quota before Gemini', ({ file, usageType }) => {
     const source = readRoute(file);
-    expect(source).toContain("from '@/lib/ai-quota'");
-    expect(source).toContain(`checkAiQuota(request, '${usageType}')`);
-    expect(source).toContain(`recordAiUsage(request, '${usageType}'`);
+    expect(source).toContain("from '@/lib/ai-chat-quota'");
+    expect(source).toContain(`checkAnonymousAiQuota(quotaIdentity.sessionId, '${usageType}')`);
+    expect(source).toContain(`recordAnonymousUsage(`);
   });
 
-  test('shared ai-quota helper exists', () => {
-    const helperPath = path.join(clientRoot, 'lib/ai-quota.ts');
+  test('shared ai-chat-quota helper exists', () => {
+    const helperPath = path.join(clientRoot, 'lib/ai-chat-quota.ts');
     expect(fs.existsSync(helperPath)).toBe(true);
-    const source = readRoute('lib/ai-quota.ts');
-    expect(source).toContain('checkAiQuota');
-    expect(source).toContain('recordAiUsage');
+    const source = readRoute('lib/ai-chat-quota.ts');
+    expect(source).toContain('checkAnonymousAiQuota');
+    expect(source).toContain('recordAnonymousUsage');
     expect(source).toContain('dailyTranslations');
   });
 });
