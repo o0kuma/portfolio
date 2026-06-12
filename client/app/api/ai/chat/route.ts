@@ -471,24 +471,15 @@ export async function POST(request: Request) {
     const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
-    // 4-1. 사용량 기록 (DB 직접 upsert)
-    const usageRecorded = await recordAnonymousUsage(
+    // 4-1. 사용량 기록 (실패해도 응답은 정상 반환 — best-effort)
+    recordAnonymousUsage(
       quotaIdentity.sessionId,
       'chat',
       1,
       estimateTokensUsed(aiResponse.response)
-    )
-    if (!usageRecorded) {
-      console.error('사용량 기록 실패로 AI 응답을 차단합니다 (DB 기록 실패)')
-      return quotaJson(
-        {
-          success: false,
-          error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
-          errorCode: 'USAGE_RECORD_UNAVAILABLE'
-        },
-        { status: 503 }
-      )
-    }
+    ).then(recorded => {
+      if (!recorded) console.warn('사용량 기록 실패 (응답은 정상 반환)')
+    })
 
     // 5. AI 응답 저장
     try {
