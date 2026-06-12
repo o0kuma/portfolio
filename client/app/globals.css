@@ -6,27 +6,27 @@
 
 @layer base {
   :root {
-    --color-canvas: 248 250 252;
+    --color-canvas: 250 249 247;
     --color-surface: 255 255 255;
-    --color-surface-elevated: 255 255 255;
-    --color-border: 226 232 240;
-    --color-text-primary: 15 23 42;
-    --color-text-muted: 100 116 139;
-    --color-accent: 37 99 235;
-    --color-accent-muted: 59 130 246;
+    --color-surface-elevated: 253 252 250;
+    --color-border: 233 229 223;
+    --color-text-primary: 61 58 54;
+    --color-text-muted: 146 140 132;
+    --color-accent: 192 106 77;
+    --color-accent-muted: 217 132 107;
     --section-padding-y: 4rem;
     --page-shell-max: 80rem;
   }
 
   html.dark {
-    --color-canvas: 15 23 42;
-    --color-surface: 30 41 59;
-    --color-surface-elevated: 51 65 85;
-    --color-border: 71 85 105;
-    --color-text-primary: 248 250 252;
-    --color-text-muted: 148 163 184;
-    --color-accent: 96 165 250;
-    --color-accent-muted: 59 130 246;
+    --color-canvas: 30 28 26;
+    --color-surface: 40 37 34;
+    --color-surface-elevated: 52 48 44;
+    --color-border: 66 61 56;
+    --color-text-primary: 240 237 233;
+    --color-text-muted: 168 160 152;
+    --color-accent: 226 156 128;
+    --color-accent-muted: 217 132 107;
   }
 
   html {
@@ -149,10 +149,10 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent dark:from-accent dark:to-purple-400;
+    @apply bg-gradient-to-r from-primary-600 to-primary-300 bg-clip-text text-transparent dark:from-accent dark:to-primary-200;
   }
 
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-primary-600 to-purple-600;
+    @apply bg-gradient-to-br from-primary-500 to-primary-300;
   }
 }

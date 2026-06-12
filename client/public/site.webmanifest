@@ -4,8 +4,8 @@
   "description": "오승일의 포트폴리오와 블로그",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#06b6d4",
+  "background_color": "#faf9f7",
+  "theme_color": "#c06a4d",
   "icons": [
     {
       "src": "/favicon.svg",

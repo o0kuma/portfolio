@@ -176,7 +176,7 @@ export default function BlogPostsCarousel3D({
 
   return (
     <div className="relative py-4 md:py-8">
-      <p className="mb-6 text-center font-mono text-[10px] uppercase tracking-[0.35em] text-white/35">
+      <p className="mb-6 text-center font-mono text-[10px] uppercase tracking-[0.35em] text-stone-400">
         Drag · wheel · ← →
       </p>
 
@@ -246,7 +246,7 @@ export default function BlogPostsCarousel3D({
           <button
             type="button"
             onClick={goPrev}
-            className="rounded-full border border-white/15 bg-white/[0.06] p-3 text-white/70 backdrop-blur-sm transition hover:border-white/30 hover:text-white"
+            className="rounded-full border border-stone-300 bg-white/70 p-3 text-stone-500 backdrop-blur-sm transition hover:border-primary-400 hover:text-primary-700"
             aria-label="이전 글"
           >
             <FiChevronLeft size={22} />
@@ -259,8 +259,8 @@ export default function BlogPostsCarousel3D({
                 onClick={() => setRotation(-i * step)}
                 className={`h-2 rounded-full transition-all ${
                   i === activeIndex
-                    ? 'w-8 bg-fuchsia-400/90'
-                    : 'w-2 bg-white/25 hover:bg-white/45'
+                    ? 'w-8 bg-primary-500'
+                    : 'w-2 bg-stone-300 hover:bg-stone-400'
                 }`}
                 aria-label={`${i + 1}번째 글`}
                 aria-current={i === activeIndex}
@@ -270,7 +270,7 @@ export default function BlogPostsCarousel3D({
           <button
             type="button"
             onClick={goNext}
-            className="rounded-full border border-white/15 bg-white/[0.06] p-3 text-white/70 backdrop-blur-sm transition hover:border-white/30 hover:text-white"
+            className="rounded-full border border-stone-300 bg-white/70 p-3 text-stone-500 backdrop-blur-sm transition hover:border-primary-400 hover:text-primary-700"
             aria-label="다음 글"
           >
             <FiChevronRight size={22} />
@@ -290,36 +290,36 @@ function GlassPostCard({
 }: CardProps) {
   return (
     <article
-      className={`group relative overflow-hidden rounded-[2rem] border shadow-[0_25px_80px_-20px_rgba(0,0,0,0.85)] backdrop-blur-2xl transition duration-300 md:[transform-style:preserve-3d] ${
+      className={`group relative overflow-hidden rounded-[2rem] border shadow-[0_25px_80px_-30px_rgba(61,58,54,0.35)] backdrop-blur-2xl transition duration-300 md:[transform-style:preserve-3d] ${
         active
-          ? 'border-white/60 bg-gradient-to-br from-white/[0.55] via-white/[0.35] to-white/[0.15] hover:border-white/70 hover:from-white/[0.62]'
-          : 'border-white/10 bg-gradient-to-br from-white/[0.07] via-white/[0.02] to-transparent hover:border-white/20 hover:from-white/[0.1]'
+          ? 'border-stone-200 bg-gradient-to-br from-white via-white/90 to-primary-50/80 hover:border-primary-200'
+          : 'border-stone-200/60 bg-gradient-to-br from-white/60 via-white/40 to-transparent hover:border-stone-300 hover:from-white/70'
       }`}
     >
       <div className="relative p-8 md:p-10">
-        <div className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-gradient-to-br from-fuchsia-500/10 via-violet-500/5 to-transparent blur-3xl md:h-40 md:w-40" />
+        <div className="pointer-events-none absolute -right-6 -top-6 h-36 w-36 rounded-full bg-gradient-to-br from-primary-200/40 via-primary-100/30 to-transparent blur-3xl md:h-40 md:w-40" />
 
         <div className="relative flex flex-wrap items-center gap-3">
           {post.featured && (
-            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-0.5 font-mono text-[9px] uppercase tracking-[0.25em] text-amber-200/90">
+            <span className="rounded-full border border-amber-300/60 bg-amber-100/70 px-3 py-0.5 font-mono text-[9px] uppercase tracking-[0.25em] text-amber-700">
               Featured
             </span>
           )}
-          <span className="rounded-full border border-white/10 px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+          <span className="rounded-full border border-stone-200 px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-500">
             {categoryLabel(post.category)}
           </span>
         </div>
 
-        <h3 className="relative mt-5 font-display text-2xl font-semibold leading-[1.15] tracking-tight text-white md:text-3xl lg:text-[2.25rem]">
+        <h3 className="relative mt-5 font-display text-2xl font-semibold leading-[1.15] tracking-tight text-stone-800 md:text-3xl lg:text-[2.25rem]">
           <Link
             href={`/posts/${post._id}`}
-            className="transition-colors hover:text-indigo-200"
+            className="transition-colors hover:text-primary-700"
           >
             {post.title}
           </Link>
         </h3>
 
-        <p className="relative mt-4 max-w-3xl text-sm leading-relaxed text-white/45 line-clamp-4 md:text-base">
+        <p className="relative mt-4 max-w-3xl text-sm leading-relaxed text-stone-500 line-clamp-4 md:text-base">
           {post.content}
         </p>
 
@@ -327,7 +327,7 @@ function GlassPostCard({
           {post.tags.slice(0, 5).map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-black/20 px-2.5 py-1 font-mono text-[10px] tracking-wide text-white/40"
+              className="inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-100/70 px-2.5 py-1 font-mono text-[10px] tracking-wide text-stone-500"
             >
               <FiTag size={11} aria-hidden />
               {tag}
@@ -335,32 +335,32 @@ function GlassPostCard({
           ))}
         </div>
 
-        <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/10 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
+        <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-stone-200 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-stone-400">
           <span className="inline-flex items-center gap-2">
-            <FiUser size={12} className="text-white/25" aria-hidden />
+            <FiUser size={12} className="text-stone-300" aria-hidden />
             {post.author}
           </span>
           <span className="inline-flex items-center gap-2">
-            <FiCalendar size={12} className="text-white/25" aria-hidden />
+            <FiCalendar size={12} className="text-stone-300" aria-hidden />
             {formatDate(post.createdAt)}
           </span>
           <span className="inline-flex items-center gap-2">
-            <FiEye size={12} className="text-white/25" aria-hidden />
+            <FiEye size={12} className="text-stone-300" aria-hidden />
             {formatNumber(post.views)}
           </span>
           <span className="inline-flex items-center gap-2">
-            <FiHeart size={12} className="text-white/25" aria-hidden />
+            <FiHeart size={12} className="text-stone-300" aria-hidden />
             {formatNumber(post.likes)}
           </span>
           <span className="inline-flex items-center gap-2">
-            <FiMessageSquare size={12} className="text-white/25" aria-hidden />
+            <FiMessageSquare size={12} className="text-stone-300" aria-hidden />
             {formatNumber(post.comments?.length ?? 0)}
           </span>
         </div>
 
         <Link
           href={`/posts/${post._id}`}
-          className="relative mt-8 inline-flex items-center gap-3 border-b border-white/25 pb-1 font-mono text-[11px] tracking-[0.35em] text-white/70 transition hover:border-white/60 hover:text-white"
+          className="relative mt-8 inline-flex items-center gap-3 border-b border-stone-300 pb-1 font-mono text-[11px] tracking-[0.35em] text-stone-600 transition hover:border-primary-500 hover:text-primary-700"
         >
           READ ENTRY
           <FiArrowRight size={16} aria-hidden />

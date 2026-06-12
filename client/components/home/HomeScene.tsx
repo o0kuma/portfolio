@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, Sparkles, Stars } from '@react-three/drei'
+import { Float, MeshDistortMaterial, Sparkles } from '@react-three/drei'
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import type { Group } from 'three'
@@ -42,7 +42,7 @@ function ScrollSyncedField({ scrollRef }: { scrollRef: MutableRefObject<number> 
   })
   return (
     <group ref={group}>
-      <Stars radius={90} depth={45} count={5000} factor={3.2} saturation={0} fade speed={0.35} />
+      <Sparkles count={420} scale={42} size={1.4} speed={0.18} color="#d3cdc5" opacity={0.55} />
     </group>
   )
 }
@@ -66,11 +66,11 @@ function DistortedCore({ scrollRef }: { scrollRef: MutableRefObject<number> }) {
         <mesh>
           <icosahedronGeometry args={[1.12, 7]} />
           <MeshDistortMaterial
-            color="#4338ca"
-            emissive="#1e1b4b"
-            emissiveIntensity={0.38}
-            roughness={0.12}
-            metalness={0.88}
+            color="#d99b80"
+            emissive="#c06a4d"
+            emissiveIntensity={0.12}
+            roughness={0.42}
+            metalness={0.2}
             distort={0.42}
             speed={2}
           />
@@ -101,13 +101,13 @@ export default function HomeScene({ scrollProgress = 0 }: Props) {
       }}
       style={{ width: '100%', height: '100%', display: 'block' }}
     >
-      <color attach="background" args={['#030014']} />
-      <fog attach="fog" args={['#030014', 7.5, 26]} />
-      <ambientLight intensity={0.32} />
-      <pointLight position={[7, 5, 7]} intensity={1.15} color="#a5b4fc" />
-      <pointLight position={[-5, -3, -4]} intensity={0.55} color="#6d28d9" />
+      <color attach="background" args={['#faf9f7']} />
+      <fog attach="fog" args={['#faf9f7', 7.5, 26]} />
+      <ambientLight intensity={0.85} />
+      <pointLight position={[7, 5, 7]} intensity={1.05} color="#ffffff" />
+      <pointLight position={[-5, -3, -4]} intensity={0.45} color="#e3b8a3" />
       <ScrollSyncedField scrollRef={scrollRef} />
-      <Sparkles count={180} scale={11} size={1.8} speed={0.32} color="#818cf8" opacity={0.42} />
+      <Sparkles count={160} scale={11} size={2.2} speed={0.28} color="#c06a4d" opacity={0.5} />
       <DistortedCore scrollRef={scrollRef} />
       <CameraRig scrollRef={scrollRef} />
     </Canvas>
