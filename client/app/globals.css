@@ -6,27 +6,27 @@
 
 @layer base {
   :root {
-    --color-canvas: 250 249 247;
+    --color-canvas: 248 250 252;
     --color-surface: 255 255 255;
-    --color-surface-elevated: 253 252 250;
-    --color-border: 233 229 223;
-    --color-text-primary: 61 58 54;
-    --color-text-muted: 146 140 132;
-    --color-accent: 192 106 77;
-    --color-accent-muted: 217 132 107;
+    --color-surface-elevated: 255 255 255;
+    --color-border: 226 232 240;
+    --color-text-primary: 15 23 42;
+    --color-text-muted: 100 116 139;
+    --color-accent: 37 99 235;
+    --color-accent-muted: 59 130 246;
     --section-padding-y: 4rem;
     --page-shell-max: 80rem;
   }
 
   html.dark {
-    --color-canvas: 30 28 26;
-    --color-surface: 40 37 34;
-    --color-surface-elevated: 52 48 44;
-    --color-border: 66 61 56;
-    --color-text-primary: 240 237 233;
-    --color-text-muted: 168 160 152;
-    --color-accent: 226 156 128;
-    --color-accent-muted: 217 132 107;
+    --color-canvas: 15 23 42;
+    --color-surface: 30 41 59;
+    --color-surface-elevated: 51 65 85;
+    --color-border: 71 85 105;
+    --color-text-primary: 248 250 252;
+    --color-text-muted: 148 163 184;
+    --color-accent: 96 165 250;
+    --color-accent-muted: 59 130 246;
   }
 
   html {
@@ -149,10 +149,66 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-primary-300 bg-clip-text text-transparent dark:from-accent dark:to-primary-200;
+    @apply bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent dark:from-accent dark:to-purple-400;
   }
 
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-primary-500 to-primary-300;
+    @apply bg-gradient-to-br from-primary-600 to-purple-600;
   }
 }
+
+/* ─── Portfolio page: light minimal theme ─────────────────────────────────── */
+/* Scoped under .portfolio-page so the dark home route is unaffected.          */
+
+.portfolio-page {
+  background-color: #faf9f7 !important;
+  color: #3d3a36 !important;
+}
+
+/* Backgrounds */
+.portfolio-page .bg-neutral-950,
+.portfolio-page .bg-neutral-950\/90 { background-color: #faf9f7 !important; }
+.portfolio-page .bg-neutral-900 { background-color: #f3f0eb !important; }
+.portfolio-page .bg-neutral-800 { background-color: #eae6e0 !important; }
+
+/* Text */
+.portfolio-page .text-neutral-50,
+.portfolio-page .text-neutral-100 { color: #3d3a36 !important; }
+.portfolio-page .text-neutral-200 { color: #524f4b !important; }
+.portfolio-page .text-neutral-300 { color: #706c67 !important; }
+.portfolio-page .text-neutral-400 { color: #928c84 !important; }
+.portfolio-page .text-neutral-500 { color: #a8a098 !important; }
+.portfolio-page .text-neutral-600 { color: #bfb9b0 !important; }
+
+/* Hover text */
+.portfolio-page .hover\:text-neutral-50:hover,
+.portfolio-page .hover\:text-neutral-100:hover { color: #1e1c1a !important; }
+
+/* Borders */
+.portfolio-page .border-neutral-800 { border-color: #e2ddd8 !important; }
+.portfolio-page .border-neutral-700 { border-color: #cbc4bb !important; }
+.portfolio-page .border-neutral-600 { border-color: #b0a89e !important; }
+
+/* Underline hover accent on nav */
+.portfolio-page .bg-neutral-400 { background-color: #a8a098 !important; }
+
+/* Inputs */
+.portfolio-page input,
+.portfolio-page textarea {
+  background-color: #ffffff !important;
+  color: #3d3a36 !important;
+  border-color: #e2ddd8 !important;
+}
+.portfolio-page input::placeholder,
+.portfolio-page textarea::placeholder { color: #bfb9b0 !important; }
+.portfolio-page input:focus,
+.portfolio-page textarea:focus { border-color: #c06a4d !important; }
+
+/* Scrolled header */
+.portfolio-page header.fixed .bg-neutral-950\/90 { background-color: rgb(250 249 247 / 0.92) !important; }
+
+/* Accent override: swap blue-ish accents with warm terracotta */
+.portfolio-page .text-primary-600 { color: #c06a4d !important; }
+.portfolio-page .border-primary-500 { border-color: #c06a4d !important; }
+.portfolio-page .bg-primary-600 { background-color: #c06a4d !important; }
+.portfolio-page .bg-primary-600:hover { background-color: #a2543c !important; }

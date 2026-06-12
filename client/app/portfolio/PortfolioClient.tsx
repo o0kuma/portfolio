@@ -14,11 +14,15 @@ import SectionWrapper from '../../components/SectionWrapper'
 
 export default function PortfolioClient() {
   useEffect(() => {
-    document.documentElement.classList.add('dark')
+    document.documentElement.classList.remove('dark')
+    return () => {
+      const saved = localStorage.getItem('theme')
+      if (saved === 'dark' || !saved) document.documentElement.classList.add('dark')
+    }
   }, [])
 
   return (
-    <main className="portfolio-page min-h-screen bg-neutral-950 text-neutral-100 antialiased">
+    <main className="portfolio-page min-h-screen bg-[#faf9f7] text-[#3d3a36] antialiased">
       <PortfolioScrollProgress />
       <Header />
       <Hero />

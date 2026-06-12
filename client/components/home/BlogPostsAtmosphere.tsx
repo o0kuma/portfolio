@@ -25,7 +25,7 @@ function GrainOverlay() {
   )
 }
 
-/** Airy blog list band — light minimal: warm paper bg, grain, mono rail, soft cards. */
+/** Cinematic blog list band — Active Theory–inspired: dark space, grain, mono rail, glass cards. */
 export default function BlogPostsAtmosphere({
   posts,
   loading,
@@ -35,11 +35,15 @@ export default function BlogPostsAtmosphere({
 }: Props) {
   return (
     <section
-      className="relative min-h-screen overflow-hidden bg-[#faf9f7] text-stone-800"
+      className="relative min-h-screen overflow-hidden bg-[#030014] text-white"
       aria-labelledby="posts-feed-heading"
     >
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(227,184,163,0.22)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,rgba(238,212,199,0.35)_0%,transparent_50%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(30,27,75,0.35)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,rgba(0,0,0,0.85)_0%,transparent_50%)]"
+        aria-hidden
+      />
+      <div
+        className="pointer-events-none absolute inset-0 shadow-[inset_0_0_160px_60px_rgba(0,0,0,0.55)]"
         aria-hidden
       />
       <GrainOverlay />
@@ -49,45 +53,45 @@ export default function BlogPostsAtmosphere({
         <aside className="shrink-0 lg:sticky lg:top-28 lg:max-w-[13rem]">
           <p
             id="posts-feed-heading"
-            className="font-mono text-[10px] font-medium uppercase leading-relaxed tracking-[0.4em] text-stone-400"
+            className="font-mono text-[10px] font-medium uppercase leading-relaxed tracking-[0.4em] text-white/35"
           >
             What are you
             <br />
             looking for?
           </p>
-          <nav className="mt-10 space-y-4 font-mono text-[11px] tracking-[0.12em] text-stone-500" aria-label="블로그 빠른 이동">
+          <nav className="mt-10 space-y-4 font-mono text-[11px] tracking-[0.12em] text-white/55" aria-label="블로그 빠른 이동">
             <Link
               href="/posts"
-              className="flex items-baseline gap-2 transition-colors hover:text-stone-900"
+              className="flex items-baseline gap-2 transition-colors hover:text-white"
             >
-              <span className="text-primary-500" aria-hidden>
+              <span className="text-fuchsia-400/80" aria-hidden>
                 →
               </span>
               ALL POSTS
             </Link>
             <Link
               href="/posts?category=tech"
-              className="flex items-baseline gap-2 transition-colors hover:text-stone-900"
+              className="flex items-baseline gap-2 transition-colors hover:text-white"
             >
-              <span className="text-primary-400" aria-hidden>
+              <span className="text-violet-400/70" aria-hidden>
                 →
               </span>
               TECH
             </Link>
             <Link
               href="/posts?category=travel"
-              className="flex items-baseline gap-2 transition-colors hover:text-stone-900"
+              className="flex items-baseline gap-2 transition-colors hover:text-white"
             >
-              <span className="text-primary-300" aria-hidden>
+              <span className="text-cyan-400/60" aria-hidden>
                 →
               </span>
               TRAVEL
             </Link>
             <Link
               href="/posts?category=food"
-              className="flex items-baseline gap-2 transition-colors hover:text-stone-900"
+              className="flex items-baseline gap-2 transition-colors hover:text-white"
             >
-              <span className="text-primary-600" aria-hidden>
+              <span className="text-rose-400/60" aria-hidden>
                 →
               </span>
               FOOD
@@ -95,7 +99,7 @@ export default function BlogPostsAtmosphere({
           </nav>
           <Link
             href="/posts"
-            className="mt-12 inline-flex w-full max-w-[15rem] items-center justify-center rounded-full border border-stone-300 bg-white/60 px-4 py-3 font-mono text-[10px] tracking-[0.28em] text-stone-500 backdrop-blur-sm transition hover:border-primary-400 hover:text-primary-700"
+            className="mt-12 inline-flex w-full max-w-[15rem] items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-4 py-3 font-mono text-[10px] tracking-[0.28em] text-white/50 backdrop-blur-sm transition hover:border-white/30 hover:text-white/90"
           >
             OPEN ARCHIVE…
           </Link>
@@ -105,17 +109,17 @@ export default function BlogPostsAtmosphere({
         <div className="min-w-0 flex-1">
           {loading ? (
             <div className="flex min-h-[min(52vh,480px)] items-center justify-center py-8">
-              <div className="h-56 w-full max-w-[440px] animate-pulse rounded-[2rem] border border-stone-200 bg-white/60 backdrop-blur-md" />
+              <div className="h-56 w-full max-w-[440px] animate-pulse rounded-[2rem] border border-white/5 bg-white/[0.04] backdrop-blur-md" />
             </div>
           ) : posts.length === 0 ? (
-            <div className="rounded-[2rem] border border-dashed border-stone-300 bg-white/50 px-8 py-20 text-center backdrop-blur-sm">
-              <p className="font-mono text-xs tracking-widest text-stone-400">NO ENTRIES FOUND</p>
-              <p className="mt-4 text-sm text-stone-500">
+            <div className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.03] px-8 py-20 text-center backdrop-blur-sm">
+              <p className="font-mono text-xs tracking-widest text-white/40">NO ENTRIES FOUND</p>
+              <p className="mt-4 text-sm text-white/45">
                 API 서버를 확인하거나 게시판에서 글을 작성해 보세요.
               </p>
               <Link
                 href="/posts"
-                className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] text-primary-600 hover:text-primary-800"
+                className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] text-fuchsia-300/90 hover:text-white"
               >
                 GO TO /posts <FiArrowRight size={14} aria-hidden />
               </Link>
