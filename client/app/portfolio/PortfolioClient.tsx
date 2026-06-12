@@ -31,7 +31,7 @@ export default function PortfolioClient() {
         <Skills />
       </SectionWrapper>
 
-      <SectionWrapper id="projects" className="relative border-b border-neutral-800 bg-neutral-950">
+      <SectionWrapper id="projects" fadeOnly className="relative border-b border-neutral-800 bg-neutral-950">
         <Projects />
       </SectionWrapper>
 

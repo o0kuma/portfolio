@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import SearchBar from './SearchBar'
 import {
@@ -428,6 +428,71 @@ function ProjectCard({
   )
 }
 
+/**
+ * eilab-style horizontal track: the row of cards pins to the viewport
+ * and translates horizontally as the user scrolls vertically.
+ */
+function StickyHorizontalTrack({ projects }: { projects: Project[] }) {
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [overflow, setOverflow] = useState(0)
+
+  useEffect(() => {
+    const measure = () => {
+      if (!trackRef.current) return
+      setOverflow(Math.max(0, trackRef.current.scrollWidth - window.innerWidth))
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [projects])
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start start', 'end end'],
+  })
+  const x = useTransform(scrollYProgress, [0, 1], [0, -overflow])
+
+  if (projects.length === 0) return null
+
+  // Not enough cards to overflow: plain static row, no pinning
+  if (overflow === 0) {
+    return (
+      <div ref={sectionRef}>
+        <div ref={trackRef} className="flex w-max gap-5 md:gap-6 px-4 md:px-6">
+          {projects.map((project) => (
+            <div key={project.id} className="shrink-0">
+              <ProjectCard project={project} layout="track" />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      ref={sectionRef}
+      className="-mx-4 md:-mx-6"
+      style={{ height: `calc(100vh + ${overflow}px)` }}
+    >
+      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+        <motion.div
+          ref={trackRef}
+          style={{ x }}
+          className="flex w-max gap-5 md:gap-6 px-4 md:px-6"
+        >
+          {projects.map((project) => (
+            <div key={project.id} className="shrink-0">
+              <ProjectCard project={project} layout="track" />
+            </div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
 export default function Projects() {
   const [projects, setProjects] = useState<Project[]>([])
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([])
@@ -436,35 +501,6 @@ export default function Projects() {
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const useHorizontalTrack = true
-
-  // Drag-to-scroll
-  const trackRef = useRef<HTMLDivElement>(null)
-  const drag = useRef({ active: false, startX: 0, scrollLeft: 0 })
-
-  const hasDragged = useRef(false)
-
-  const onDragStart = useCallback((e: React.MouseEvent) => {
-    if (!trackRef.current) return
-    hasDragged.current = false
-    drag.current = { active: true, startX: e.pageX, scrollLeft: trackRef.current.scrollLeft }
-    trackRef.current.style.cursor = 'grabbing'
-  }, [])
-
-  const onDragMove = useCallback((e: React.MouseEvent) => {
-    if (!drag.current.active || !trackRef.current) return
-    const dx = e.pageX - drag.current.startX
-    if (Math.abs(dx) > 4) hasDragged.current = true
-    trackRef.current.scrollLeft = drag.current.scrollLeft - dx * 1.2
-  }, [])
-
-  const onDragEnd = useCallback(() => {
-    drag.current.active = false
-    if (trackRef.current) trackRef.current.style.cursor = 'grab'
-  }, [])
-
-  const onClickCapture = useCallback((e: React.MouseEvent) => {
-    if (hasDragged.current) e.stopPropagation()
-  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -621,7 +657,7 @@ export default function Projects() {
             </p>
             {useHorizontalTrack && (
               <p className="mt-3 text-neutral-500 text-xs font-mono">
-                ← 가로로 스크롤하여 더 보기 →
+                ↓ 스크롤하면 카드가 옆으로 흐릅니다 →
               </p>
             )}
           </motion.div>
@@ -662,26 +698,7 @@ export default function Projects() {
 
         {filteredProjects.length > 0 ? (
           useHorizontalTrack ? (
-            <motion.div
-              ref={trackRef}
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={portfolioViewport}
-              className="flex w-full min-w-0 gap-5 overflow-x-auto overscroll-x-contain pb-6 snap-x snap-proximity scrollbar-none md:gap-6 -mx-4 px-4 md:-mx-6 md:px-6 select-none"
-              style={{ cursor: 'grab', scrollBehavior: 'smooth' }}
-              onMouseDown={onDragStart}
-              onMouseMove={onDragMove}
-              onMouseUp={onDragEnd}
-              onMouseLeave={onDragEnd}
-              onClickCapture={onClickCapture}
-            >
-              {filteredProjects.map((project) => (
-                <motion.div key={project.id} variants={staggerItem} className="shrink-0">
-                  <ProjectCard project={project} layout="track" />
-                </motion.div>
-              ))}
-            </motion.div>
+            <StickyHorizontalTrack projects={filteredProjects} />
           ) : (
             <motion.div
               variants={staggerContainer}

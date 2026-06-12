@@ -7,6 +7,8 @@ interface Props {
   children: React.ReactNode
   className?: string
   id?: string
+  /** Disable the translateY lift (use fade only). Required when children rely on position: sticky. */
+  fadeOnly?: boolean
 }
 
 /**
@@ -14,7 +16,7 @@ interface Props {
  * the whole block slides up and fades in as it enters the viewport.
  * A full-width divider line draws across at the top of each section.
  */
-export default function SectionWrapper({ children, className = '', id }: Props) {
+export default function SectionWrapper({ children, className = '', id, fadeOnly = false }: Props) {
   return (
     <motion.section
       id={id}
@@ -38,12 +40,14 @@ export default function SectionWrapper({ children, className = '', id }: Props) 
       {/* Section content: slides up */}
       <motion.div
         variants={{
-          hidden: { opacity: 0, y: 60 },
-          visible: {
-            opacity: 1,
-            y: 0,
-            transition: { duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] },
-          },
+          hidden: fadeOnly ? { opacity: 0 } : { opacity: 0, y: 60 },
+          visible: fadeOnly
+            ? { opacity: 1, transition: { duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] } }
+            : {
+                opacity: 1,
+                y: 0,
+                transition: { duration: 0.85, delay: 0.1, ease: [0.22, 1, 0.36, 1] },
+              },
         }}
         className="h-full"
       >
