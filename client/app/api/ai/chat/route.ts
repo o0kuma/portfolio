@@ -4,24 +4,14 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
+import { checkAnonymousChatQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
 import * as fs from 'fs'
 import * as path from 'path'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
 const MAX_MESSAGE_LENGTH = 4000
-const INTERNAL_API_TIMEOUT_MS = 3000
 
 type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_fetch_error' | null
-
-async function fetchWithTimeout(input: string, init: RequestInit = {}, timeoutMs: number = INTERNAL_API_TIMEOUT_MS) {
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    return await fetch(input, { ...init, signal: controller.signal })
-  } finally {
-    clearTimeout(timeoutId)
-  }
-}
 
 // Gemini API 키를 가져오는 헬퍼 함수
 function getGeminiApiKey(): string | null {
@@ -209,22 +199,6 @@ function generateFallbackResponse(message: string, tone: string, fallbackReason:
     confidence: 0.7,
     fallbackReason
   }
-}
-
-function getInternalApiBaseUrl(): string {
-  const publicAppUrl = process.env.NEXT_PUBLIC_APP_URL?.trim()
-  if (publicAppUrl) {
-    return publicAppUrl
-  }
-
-  const vercelUrl = process.env.VERCEL_URL?.trim()
-  if (vercelUrl) {
-    return vercelUrl.startsWith('http://') || vercelUrl.startsWith('https://')
-      ? vercelUrl
-      : `https://${vercelUrl}`
-  }
-
-  return 'http://localhost:3000'
 }
 
 function estimateTokensUsed(responseText: string): number {
@@ -434,66 +408,10 @@ export async function POST(request: Request) {
     const quotaJson = (body: any, init?: ResponseInit) =>
       applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
-    const internalApiBaseUrl = getInternalApiBaseUrl()
-
-    // 구독 상태 확인 및 사용량 제한 체크
-    try {
-      const subscriptionParams = new URLSearchParams({
-        sessionId: quotaIdentity.sessionId
-      })
-      const subscriptionCheck = await fetchWithTimeout(
-        `${internalApiBaseUrl}/api/subscription/check?${subscriptionParams}`
-      )
-
-      const contentType = subscriptionCheck.headers.get('content-type') || ''
-      if (!contentType.includes('application/json')) {
-        console.error('구독 상태 확인 실패로 AI 응답을 차단합니다: JSON이 아닌 응답 수신', contentType)
-        return quotaJson(
-          {
-            success: false,
-            error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
-            errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
-          },
-          { status: 503 }
-        )
-      }
-
-      const subscriptionData = await subscriptionCheck.json().catch(() => null)
-      if (!subscriptionCheck.ok || !subscriptionData?.success || !subscriptionData?.subscription) {
-        console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', {
-          status: subscriptionCheck.status,
-          error: subscriptionData?.error,
-          errorCode: subscriptionData?.errorCode
-        })
-        return quotaJson(
-          {
-            success: false,
-            error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
-            errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
-          },
-          { status: 503 }
-        )
-      }
-
-      const { subscription: sub } = subscriptionData
-      const { usage, limits } = sub
-
-      // 무료 사용자의 일일 메시지 제한 체크
-      if (!sub.isPremium && usage.chat >= limits.dailyChatMessages) {
-        return quotaJson(
-          {
-            success: false,
-            error: '일일 무료 메시지 한도를 초과했습니다.',
-            errorCode: 'DAILY_LIMIT_EXCEEDED',
-            limit: limits.dailyChatMessages,
-            used: usage.chat,
-            upgradeRequired: true
-          },
-          { status: 403 }
-        )
-      }
-    } catch (subError: any) {
-      console.error('구독 상태 확인 실패로 AI 응답을 차단합니다:', subError?.message || 'unknown')
+    // 사용량 제한 체크 (DB 직접 조회 — 내부 HTTP self-fetch는 Vercel에서 실패함)
+    const quota = await checkAnonymousChatQuota(quotaIdentity.sessionId)
+    if (!quota.ok) {
+      console.error('사용량 한도 확인 실패로 AI 응답을 차단합니다 (DB 조회 실패)')
       return quotaJson(
         {
           success: false,
@@ -501,6 +419,19 @@ export async function POST(request: Request) {
           errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
         },
         { status: 503 }
+      )
+    }
+    if (quota.exceeded) {
+      return quotaJson(
+        {
+          success: false,
+          error: '일일 무료 메시지 한도를 초과했습니다.',
+          errorCode: 'DAILY_LIMIT_EXCEEDED',
+          limit: quota.limit,
+          used: quota.used,
+          upgradeRequired: true
+        },
+        { status: 403 }
       )
     }
 
@@ -540,51 +471,15 @@ export async function POST(request: Request) {
     const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
-    // 4-1. 사용량 기록
-    try {
-      const usageResponse = await fetchWithTimeout(`${internalApiBaseUrl}/api/subscription/usage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: null,
-          sessionId: quotaIdentity.sessionId,
-          usageType: 'chat',
-          messageCount: 1,
-          tokensUsed: estimateTokensUsed(aiResponse.response)
-        })
-      })
-
-      const usageContentType = usageResponse.headers.get('content-type') || ''
-      if (!usageContentType.includes('application/json')) {
-        console.error('사용량 기록 실패로 AI 응답을 차단합니다: JSON이 아닌 응답 수신', usageContentType)
-        return quotaJson(
-          {
-            success: false,
-            error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
-            errorCode: 'USAGE_RECORD_UNAVAILABLE'
-          },
-          { status: 503 }
-        )
-      }
-
-      const usageData = await usageResponse.json().catch(() => null)
-      if (!usageResponse.ok || !usageData?.success) {
-        console.error('사용량 기록 실패로 AI 응답을 차단합니다:', {
-          status: usageResponse.status,
-          error: usageData?.error,
-          errorCode: usageData?.errorCode
-        })
-        return quotaJson(
-          {
-            success: false,
-            error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
-            errorCode: 'USAGE_RECORD_UNAVAILABLE'
-          },
-          { status: 503 }
-        )
-      }
-    } catch (usageError: any) {
-      console.error('사용량 기록 실패로 AI 응답을 차단합니다:', usageError?.message || 'unknown')
+    // 4-1. 사용량 기록 (DB 직접 upsert)
+    const usageRecorded = await recordAnonymousUsage(
+      quotaIdentity.sessionId,
+      'chat',
+      1,
+      estimateTokensUsed(aiResponse.response)
+    )
+    if (!usageRecorded) {
+      console.error('사용량 기록 실패로 AI 응답을 차단합니다 (DB 기록 실패)')
       return quotaJson(
         {
           success: false,
