@@ -158,57 +158,58 @@
 }
 
 /* ─── Portfolio page: light minimal theme ─────────────────────────────────── */
-/* Scoped under .portfolio-page so the dark home route is unaffected.          */
+/* Components use hardcoded dark neutral classes; these overrides remap them   */
+/* to the light palette only when dark mode is off, so the header toggle works. */
 
-.portfolio-page {
+html:not(.dark) .portfolio-page {
   background-color: #faf9f7 !important;
   color: #3d3a36 !important;
 }
 
 /* Backgrounds */
-.portfolio-page .bg-neutral-950,
-.portfolio-page .bg-neutral-950\/90 { background-color: #faf9f7 !important; }
-.portfolio-page .bg-neutral-900 { background-color: #f3f0eb !important; }
-.portfolio-page .bg-neutral-800 { background-color: #eae6e0 !important; }
+html:not(.dark) .portfolio-page .bg-neutral-950,
+html:not(.dark) .portfolio-page .bg-neutral-950\/90 { background-color: #faf9f7 !important; }
+html:not(.dark) .portfolio-page .bg-neutral-900 { background-color: #f3f0eb !important; }
+html:not(.dark) .portfolio-page .bg-neutral-800 { background-color: #eae6e0 !important; }
 
 /* Text */
-.portfolio-page .text-neutral-50,
-.portfolio-page .text-neutral-100 { color: #3d3a36 !important; }
-.portfolio-page .text-neutral-200 { color: #524f4b !important; }
-.portfolio-page .text-neutral-300 { color: #706c67 !important; }
-.portfolio-page .text-neutral-400 { color: #928c84 !important; }
-.portfolio-page .text-neutral-500 { color: #a8a098 !important; }
-.portfolio-page .text-neutral-600 { color: #bfb9b0 !important; }
+html:not(.dark) .portfolio-page .text-neutral-50,
+html:not(.dark) .portfolio-page .text-neutral-100 { color: #3d3a36 !important; }
+html:not(.dark) .portfolio-page .text-neutral-200 { color: #524f4b !important; }
+html:not(.dark) .portfolio-page .text-neutral-300 { color: #706c67 !important; }
+html:not(.dark) .portfolio-page .text-neutral-400 { color: #928c84 !important; }
+html:not(.dark) .portfolio-page .text-neutral-500 { color: #a8a098 !important; }
+html:not(.dark) .portfolio-page .text-neutral-600 { color: #bfb9b0 !important; }
 
 /* Hover text */
-.portfolio-page .hover\:text-neutral-50:hover,
-.portfolio-page .hover\:text-neutral-100:hover { color: #1e1c1a !important; }
+html:not(.dark) .portfolio-page .hover\:text-neutral-50:hover,
+html:not(.dark) .portfolio-page .hover\:text-neutral-100:hover { color: #1e1c1a !important; }
 
 /* Borders */
-.portfolio-page .border-neutral-800 { border-color: #e2ddd8 !important; }
-.portfolio-page .border-neutral-700 { border-color: #cbc4bb !important; }
-.portfolio-page .border-neutral-600 { border-color: #b0a89e !important; }
+html:not(.dark) .portfolio-page .border-neutral-800 { border-color: #e2ddd8 !important; }
+html:not(.dark) .portfolio-page .border-neutral-700 { border-color: #cbc4bb !important; }
+html:not(.dark) .portfolio-page .border-neutral-600 { border-color: #b0a89e !important; }
 
 /* Underline hover accent on nav */
-.portfolio-page .bg-neutral-400 { background-color: #a8a098 !important; }
+html:not(.dark) .portfolio-page .bg-neutral-400 { background-color: #a8a098 !important; }
 
 /* Inputs */
-.portfolio-page input,
-.portfolio-page textarea {
+html:not(.dark) .portfolio-page input,
+html:not(.dark) .portfolio-page textarea {
   background-color: #ffffff !important;
   color: #3d3a36 !important;
   border-color: #e2ddd8 !important;
 }
-.portfolio-page input::placeholder,
-.portfolio-page textarea::placeholder { color: #bfb9b0 !important; }
-.portfolio-page input:focus,
-.portfolio-page textarea:focus { border-color: #c06a4d !important; }
+html:not(.dark) .portfolio-page input::placeholder,
+html:not(.dark) .portfolio-page textarea::placeholder { color: #bfb9b0 !important; }
+html:not(.dark) .portfolio-page input:focus,
+html:not(.dark) .portfolio-page textarea:focus { border-color: #c06a4d !important; }
 
 /* Scrolled header */
-.portfolio-page header.fixed .bg-neutral-950\/90 { background-color: rgb(250 249 247 / 0.92) !important; }
+html:not(.dark) .portfolio-page header.fixed .bg-neutral-950\/90 { background-color: rgb(250 249 247 / 0.92) !important; }
 
 /* Accent override: swap blue-ish accents with warm terracotta */
-.portfolio-page .text-primary-600 { color: #c06a4d !important; }
-.portfolio-page .border-primary-500 { border-color: #c06a4d !important; }
-.portfolio-page .bg-primary-600 { background-color: #c06a4d !important; }
-.portfolio-page .bg-primary-600:hover { background-color: #a2543c !important; }
+html:not(.dark) .portfolio-page .text-primary-600 { color: #c06a4d !important; }
+html:not(.dark) .portfolio-page .border-primary-500 { border-color: #c06a4d !important; }
+html:not(.dark) .portfolio-page .bg-primary-600 { background-color: #c06a4d !important; }
+html:not(.dark) .portfolio-page .bg-primary-600:hover { background-color: #a2543c !important; }

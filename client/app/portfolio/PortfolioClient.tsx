@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import Header from '../../components/Header'
 import Hero from '../../components/Hero'
 import About from '../../components/About'
@@ -13,16 +12,8 @@ import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollP
 import SectionWrapper from '../../components/SectionWrapper'
 
 export default function PortfolioClient() {
-  useEffect(() => {
-    document.documentElement.classList.remove('dark')
-    return () => {
-      const saved = localStorage.getItem('theme')
-      if (saved === 'dark' || !saved) document.documentElement.classList.add('dark')
-    }
-  }, [])
-
   return (
-    <main className="portfolio-page min-h-screen bg-[#faf9f7] text-[#3d3a36] antialiased">
+    <main className="portfolio-page min-h-screen bg-neutral-950 text-neutral-100 antialiased">
       <PortfolioScrollProgress />
       <Header />
       <Hero />
