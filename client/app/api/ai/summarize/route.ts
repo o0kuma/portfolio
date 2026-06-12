@@ -4,13 +4,8 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
-import {
-  applyQuotaCookieToResponse,
-  checkAiQuota,
-  isQuotaCheckFailure,
-  isUsageRecordFailure,
-  recordAiUsage,
-} from '@/lib/ai-quota'
+import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
+import { checkAnonymousAiQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
@@ -53,6 +48,10 @@ function loadServerEnv() {
 
 loadServerEnv()
 
+function estimateTokensUsed(text: string): number {
+  return Math.max(1, Math.ceil(text.length / 4))
+}
+
 export async function POST(request: Request) {
   try {
     const { text, summaryLength = 'medium' } = await request.json()
@@ -85,11 +84,34 @@ export async function POST(request: Request) {
       })
     }
 
-    const quotaCheck = await checkAiQuota(request, 'summarize')
-    if (isQuotaCheckFailure(quotaCheck)) {
-      return quotaCheck.response
+    const quotaIdentity = getAnonymousQuotaIdentity(request)
+    const quotaJson = (body: unknown, init?: ResponseInit) =>
+      applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
+
+    const quota = await checkAnonymousAiQuota(quotaIdentity.sessionId, 'summarize')
+    if (!quota.ok) {
+      return quotaJson(
+        {
+          success: false,
+          error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
+          errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE',
+        },
+        { status: 503 },
+      )
     }
-    const { quotaIdentity } = quotaCheck
+    if (quota.exceeded) {
+      return quotaJson(
+        {
+          success: false,
+          error: '일일 무료 사용 한도를 초과했습니다.',
+          errorCode: 'DAILY_LIMIT_EXCEEDED',
+          limit: quota.limit,
+          used: quota.used,
+          upgradeRequired: true,
+        },
+        { status: 403 },
+      )
+    }
 
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
@@ -120,15 +142,24 @@ export async function POST(request: Request) {
       summary = `[요약] ${fallback}`
     }
 
-    const usageRecord = await recordAiUsage(request, 'summarize', quotaIdentity, summary.length)
-    if (isUsageRecordFailure(usageRecord)) {
-      return usageRecord.response
+    const usageRecorded = await recordAnonymousUsage(
+      quotaIdentity.sessionId,
+      'summarize',
+      1,
+      estimateTokensUsed(summary),
+    )
+    if (!usageRecorded) {
+      return quotaJson(
+        {
+          success: false,
+          error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
+          errorCode: 'USAGE_RECORD_UNAVAILABLE',
+        },
+        { status: 503 },
+      )
     }
 
-    return applyQuotaCookieToResponse(
-      NextResponse.json({ success: true, originalText, summary, summaryLength }),
-      quotaIdentity,
-    )
+    return quotaJson({ success: true, originalText, summary, summaryLength })
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message || '요약 중 오류가 발생했습니다.' }, { status: 500 })
   }

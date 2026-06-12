@@ -17,6 +17,16 @@ export const FREE_LIMITS = {
   dailySuggestions: 3,
 } as const
 
+export type AnonymousUsageType = 'chat' | 'improve' | 'translate' | 'summarize' | 'suggest'
+
+const USAGE_TYPE_TO_LIMIT_KEY: Record<AnonymousUsageType, keyof typeof FREE_LIMITS> = {
+  chat: 'dailyChatMessages',
+  improve: 'dailyImprovements',
+  translate: 'dailyTranslations',
+  summarize: 'dailySummaries',
+  suggest: 'dailySuggestions',
+}
+
 export interface AnonymousQuotaStatus {
   ok: boolean
   used: number
@@ -28,27 +38,35 @@ function today(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-/** Returns today's chat usage for an anonymous quota session. */
-export async function checkAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
-  const limit = FREE_LIMITS.dailyChatMessages
+/** Returns today's usage for an anonymous quota session and usage type. */
+export async function checkAnonymousAiQuota(
+  quotaSessionId: string,
+  usageType: AnonymousUsageType,
+): Promise<AnonymousQuotaStatus> {
+  const limit = FREE_LIMITS[USAGE_TYPE_TO_LIMIT_KEY[usageType]]
   try {
     const result = await dbQuery<{ message_count: number }>(
       `SELECT message_count FROM ai_usage
-       WHERE session_id = $1 AND date = $2 AND usage_type = 'chat' AND user_id IS NULL`,
-      [quotaSessionId, today()],
+       WHERE session_id = $1 AND date = $2 AND usage_type = $3 AND user_id IS NULL`,
+      [quotaSessionId, today(), usageType],
     )
     const used = result.rows.reduce((sum, row) => sum + (row.message_count || 0), 0)
     return { ok: true, used, limit, exceeded: used >= limit }
   } catch (error: any) {
-    console.error('checkAnonymousChatQuota failed:', error?.message || error)
+    console.error(`checkAnonymousAiQuota(${usageType}) failed:`, error?.message || error)
     return { ok: false, used: 0, limit, exceeded: false }
   }
+}
+
+/** Returns today's chat usage for an anonymous quota session. */
+export async function checkAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
+  return checkAnonymousAiQuota(quotaSessionId, 'chat')
 }
 
 /** Upserts today's usage row for an anonymous quota session. */
 export async function recordAnonymousUsage(
   quotaSessionId: string,
-  usageType: 'chat' | 'improve' | 'translate' | 'summarize' | 'suggest',
+  usageType: AnonymousUsageType,
   messageCount: number,
   tokensUsed: number,
 ): Promise<boolean> {

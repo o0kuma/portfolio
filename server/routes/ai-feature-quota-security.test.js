@@ -10,10 +10,11 @@ describe('AI feature quota security', () => {
     'client/app/api/ai/summarize/route.ts',
   ];
 
-  test.each(featureRoutes)('%s enforces subscription quota before Gemini', (rel) => {
+  test.each(featureRoutes)('%s enforces direct DB quota before Gemini', (rel) => {
     const source = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
-    expect(source).toMatch(/checkAiQuota/);
-    expect(source).toMatch(/recordAiUsage/);
+    expect(source).toMatch(/checkAnonymousAiQuota/);
+    expect(source).toMatch(/recordAnonymousUsage/);
+    expect(source).not.toMatch(/checkAiQuota/);
   });
 
   test('anonymous quota trusts Vercel proxy headers for stable identity', () => {
