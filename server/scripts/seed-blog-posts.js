@@ -1010,7 +1010,7 @@ export async function POST(req: Request) {
         'Authorization': \`Bearer \${process.env.GEMINI_API_KEY}\`,
       },
       body: JSON.stringify({
-        model: 'gemini-2.5-flash-preview-05-20',
+        model: 'gemini-2.5-flash',
         messages: [
           {
             role: 'system',

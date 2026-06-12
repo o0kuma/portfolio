@@ -12,7 +12,7 @@ import {
   recordAiUsage,
 } from '@/lib/ai-quota'
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
 function getGeminiApiKey(): string | null {
   const key = process.env.GEMINI_API_KEY?.trim()

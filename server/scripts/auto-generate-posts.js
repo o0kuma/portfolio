@@ -377,7 +377,7 @@ async function main() {
   console.log('└─────────────────────────────────────────────┘');
   console.log(`카테고리 : ${isAll ? '전체 (' + Object.keys(CATEGORIES).join(', ') + ')' : categoryArg}`);
   console.log(`포스트 수: ${count}개${isAll ? ' (카테고리당)' : ''}`);
-  console.log(`모델     : gemini-2.5-flash-preview-05-20`);
+  console.log(`모델     : gemini-2.5-flash`);
   console.log(`저자     : iykyk  상태: published\n`);
 
   const total = { success: [], skipped: [], failed: [] };

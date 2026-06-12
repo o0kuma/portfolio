@@ -8,7 +8,7 @@ import { checkAnonymousChatQuota, recordAnonymousUsage } from '@/lib/ai-chat-quo
 import * as fs from 'fs'
 import * as path from 'path'
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash-preview-05-20'
+const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 const MAX_MESSAGE_LENGTH = 4000
 
 type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_fetch_error' | null
