@@ -30,4 +30,13 @@ describe('AI feature routes use direct DB quota (no Vercel self-fetch)', () => {
     expect(source).toContain('checkAnonymousChatQuota');
     expect(source).not.toContain('/api/subscription/check');
   });
+
+  test('chat route awaits usage recording so Vercel does not drop the DB write', () => {
+    const source = fs.readFileSync(
+      path.join(repoRoot, 'client/app/api/ai/chat/route.ts'),
+      'utf8',
+    );
+    expect(source).toContain('await recordAnonymousUsage');
+    expect(source).not.toMatch(/recordAnonymousUsage\([\s\S]*?\)\.then/);
+  });
 });
