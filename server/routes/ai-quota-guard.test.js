@@ -28,9 +28,10 @@ describe('AI quota guard on Gemini proxy routes', () => {
     expect(source).toContain('getAnonymousQuotaIdentity');
   });
 
-  test('chat route already enforces subscription quota', () => {
+  test('chat route enforces subscription quota via direct DB reserve', () => {
     const source = readClientFile('app/api/ai/chat/route.ts');
-    expect(source).toContain('subscription/check');
+    expect(source).toContain("from '@/lib/ai-chat-quota'");
+    expect(source).toContain('reserveAnonymousChatQuota');
     expect(source).toContain('DAILY_LIMIT_EXCEEDED');
   });
 
