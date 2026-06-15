@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
-import { checkAnonymousChatQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
+import { reserveAnonymousChatQuota, addAnonymousChatTokens } from '@/lib/ai-chat-quota'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -408,10 +408,10 @@ export async function POST(request: Request) {
     const quotaJson = (body: any, init?: ResponseInit) =>
       applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
-    // 사용량 제한 체크 (DB 직접 조회 — 내부 HTTP self-fetch는 Vercel에서 실패함)
-    const quota = await checkAnonymousChatQuota(quotaIdentity.sessionId)
+    // Reserve one message atomically before Gemini (prevents concurrent quota bypass).
+    const quota = await reserveAnonymousChatQuota(quotaIdentity.sessionId)
     if (!quota.ok) {
-      console.error('사용량 한도 확인 실패로 AI 응답을 차단합니다 (DB 조회 실패)')
+      console.error('사용량 예약 실패로 AI 응답을 차단합니다 (DB 기록 실패)')
       return quotaJson(
         {
           success: false,
@@ -471,16 +471,10 @@ export async function POST(request: Request) {
     const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
-    // 4-1. 사용량 기록 (실패해도 응답은 정상 반환 — best-effort; must await so Vercel doesn't freeze mid-write)
-    const usageRecorded = await recordAnonymousUsage(
+    await addAnonymousChatTokens(
       quotaIdentity.sessionId,
-      'chat',
-      1,
       estimateTokensUsed(aiResponse.response),
     )
-    if (!usageRecorded) {
-      console.warn('사용량 기록 실패 (응답은 정상 반환)')
-    }
 
     // 5. AI 응답 저장
     try {

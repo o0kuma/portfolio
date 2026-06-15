@@ -14,12 +14,11 @@ describe('AI quota guard on Gemini proxy routes', () => {
   'app/api/ai/summarize/route.ts',
 ];
 
-  test.each(protectedRoutes)('%s enforces direct DB quota before Gemini', (routePath) => {
+  test.each(protectedRoutes)('%s enforces subscription quota before Gemini', (routePath) => {
     const source = readClientFile(routePath);
-    expect(source).toContain("from '@/lib/ai-chat-quota'");
-    expect(source).toContain('checkAnonymousAiQuota');
-    expect(source).toContain('recordAnonymousUsage');
-    expect(source).not.toContain('checkAiQuota');
+    expect(source).toContain("from '@/lib/ai-quota'");
+    expect(source).toContain('checkAiQuota(request');
+    expect(source).toContain('recordAiUsage(request');
   });
 
   test('ai-quota-guard blocks when subscription check is unavailable', () => {
@@ -29,11 +28,11 @@ describe('AI quota guard on Gemini proxy routes', () => {
     expect(source).toContain('getAnonymousQuotaIdentity');
   });
 
-  test('chat route enforces direct DB quota', () => {
+  test('chat route enforces subscription quota via direct DB reserve', () => {
     const source = readClientFile('app/api/ai/chat/route.ts');
-    expect(source).toContain('checkAnonymousChatQuota');
+    expect(source).toContain("from '@/lib/ai-chat-quota'");
+    expect(source).toContain('reserveAnonymousChatQuota');
     expect(source).toContain('DAILY_LIMIT_EXCEEDED');
-    expect(source).not.toContain('/api/subscription/check');
   });
 
   test('test-email-config is disabled on production/Vercel', () => {
