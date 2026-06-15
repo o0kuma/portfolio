@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
-import { checkAnonymousAiQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
+import { checkAnonymousChatQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     const quotaJson = (body: unknown, init?: ResponseInit) =>
       applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
-    const quota = await checkAnonymousAiQuota(quotaIdentity.sessionId, 'summarize')
+    const quota = await checkAnonymousChatQuota(quotaIdentity.sessionId)
     if (!quota.ok) {
       return quotaJson(
         {
