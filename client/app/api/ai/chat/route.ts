@@ -471,15 +471,16 @@ export async function POST(request: Request) {
     const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
     const responseTime = Date.now() - startTime
 
-    // 4-1. 사용량 기록 (실패해도 응답은 정상 반환 — best-effort)
-    recordAnonymousUsage(
+    // 4-1. 사용량 기록 (실패해도 응답은 정상 반환 — best-effort; must await so Vercel doesn't freeze mid-write)
+    const usageRecorded = await recordAnonymousUsage(
       quotaIdentity.sessionId,
       'chat',
       1,
-      estimateTokensUsed(aiResponse.response)
-    ).then(recorded => {
-      if (!recorded) console.warn('사용량 기록 실패 (응답은 정상 반환)')
-    })
+      estimateTokensUsed(aiResponse.response),
+    )
+    if (!usageRecorded) {
+      console.warn('사용량 기록 실패 (응답은 정상 반환)')
+    }
 
     // 5. AI 응답 저장
     try {
