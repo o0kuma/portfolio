@@ -4,17 +4,19 @@ import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
 import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type GameCardProps = {
   href: string
   title: string
   description: string
-  tags: string[]
+  tags: readonly string[]
   color: string
   emoji: string
+  playLabel: string
 }
 
-function GameCard({ href, title, description, tags, color, emoji }: GameCardProps) {
+function GameCard({ href, title, description, tags, color, emoji, playLabel }: GameCardProps) {
   return (
     <div
       className={`group relative overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 p-6 transition hover:border-slate-500`}
@@ -38,13 +40,14 @@ function GameCard({ href, title, description, tags, color, emoji }: GameCardProp
         href={href}
         className="inline-flex items-center gap-2 rounded-lg bg-slate-700 px-5 py-2 text-sm font-semibold text-white transition hover:bg-slate-600"
       >
-        플레이
+        {playLabel}
       </Link>
     </div>
   )
 }
 
 export default function GamesPageClient() {
+  const { t } = useLanguage()
   return (
     <div className="min-h-screen bg-slate-950 pb-16 text-white">
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
@@ -54,47 +57,49 @@ export default function GamesPageClient() {
             className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            홈으로
+            {t.common.backHome}
           </Link>
-          <span className="text-sm font-semibold">Games</span>
+          <span className="text-sm font-semibold">{t.games.title}</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 pt-10">
         <div className="mb-10">
-          <h1 className="mb-2 font-display text-4xl font-bold">게임</h1>
-          <p className="text-slate-400">브라우저에서 바로 즐기는 미니 게임들입니다.</p>
+          <h1 className="mb-2 font-display text-4xl font-bold">{t.games.heading}</h1>
+          <p className="text-slate-400">{t.games.subtitle}</p>
         </div>
 
         {/* Game cards */}
         <div className="mb-14 grid gap-5 sm:grid-cols-2">
           <GameCard
             href="/tetris"
-            title="테트리스"
+            title={t.games.tetrisTitle}
             emoji="🧱"
             color="bg-indigo-900/60"
-            description="SRS 회전, 7-bag, 홀드, 고스트 피스. 단계가 올라갈수록 점점 빨라집니다. 키보드 또는 터치로 조작하세요."
-            tags={['퍼즐', '키보드', '모바일 지원', '랭킹']}
+            description={t.games.tetrisDesc}
+            tags={t.games.tetrisTags}
+            playLabel={t.games.play}
           />
           <GameCard
             href="/survive"
-            title="서바이브"
+            title={t.games.surviveTitle}
             emoji="⚔️"
             color="bg-cyan-900/60"
-            description="뱀서라이크 스타일 생존 게임. 자동 공격으로 적을 처치하고 레벨업 강화를 선택하며 최대한 오래 버티세요."
-            tags={['액션', 'WASD', '모바일 지원', '랭킹']}
+            description={t.games.surviveDesc}
+            tags={t.games.surviveTags}
+            playLabel={t.games.play}
           />
         </div>
 
         {/* Leaderboards */}
-        <h2 className="mb-5 text-xl font-bold">글로벌 랭킹</h2>
+        <h2 className="mb-5 text-xl font-bold">{t.games.globalRanking}</h2>
         <div className="grid gap-6 sm:grid-cols-2">
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">🧱 테트리스</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.tetrisEmoji}</p>
             <TetrisLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">⚔️ 서바이브</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.surviveEmoji}</p>
             <SurviveLeaderboard />
           </div>
         </div>

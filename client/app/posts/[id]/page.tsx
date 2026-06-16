@@ -11,6 +11,8 @@ import { getApiBaseUrl } from '@/lib/api-base-url'
 import CreatePostForm from '@/components/CreatePostForm'
 import { adminAuthHeaders } from '@/lib/admin-token'
 import { toast } from '@/lib/toast'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -24,7 +26,8 @@ interface Comment {
 export default function PostDetailPage() {
   const params = useParams()
   const postId = params.id as string
-  
+  const { t } = useLanguage()
+
   const [post, setPost] = useState<Post | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLiking, setIsLiking] = useState(false)
@@ -32,13 +35,12 @@ export default function PostDetailPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
 
-  // 포스트 데이터 가져오기
   const fetchPost = async () => {
     try {
       setIsLoading(true)
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`)
       const data = await response.json()
-      
+
       if (response.ok) {
         setPost(normalizePostDetail(data as Record<string, unknown>))
       } else {
@@ -59,15 +61,14 @@ export default function PostDetailPage() {
 
   const handleLike = async () => {
     if (isLiking) return
-    
+
     try {
       setIsLiking(true)
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
         method: 'POST'
       })
-      
+
       if (response.ok) {
-        // 좋아요 성공 시 포스트 데이터 새로고침
         fetchPost()
       }
     } catch (error) {
@@ -79,9 +80,9 @@ export default function PostDetailPage() {
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!newComment.author.trim() || !newComment.content.trim()) {
-      toast.warning('작성자와 댓글 내용을 모두 입력해주세요.')
+      toast.warning(t.postDetail.commentRequired)
       return
     }
 
@@ -94,25 +95,24 @@ export default function PostDetailPage() {
         },
         body: JSON.stringify(newComment)
       })
-      
+
       if (response.ok) {
-        // 댓글 작성 성공 시 포스트 데이터 새로고침
         setNewComment({ author: '', content: '' })
         fetchPost()
       } else {
         const data = await response.json()
-        toast.error('댓글 작성 실패: ' + data.message)
+        toast.error(t.postDetail.commentFailed + data.message)
       }
     } catch (error) {
       console.error('Error submitting comment:', error)
-      toast.error('댓글 작성 중 오류가 발생했습니다.')
+      toast.error(t.postDetail.commentError)
     } finally {
       setIsSubmittingComment(false)
     }
   }
 
   const handleDeletePost = async () => {
-    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
+    if (!confirm(t.postDetail.deleteConfirm)) return
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
@@ -121,15 +121,14 @@ export default function PostDetailPage() {
       })
 
       if (response.ok) {
-        // 삭제 성공 시 게시판 목록으로 이동
         window.location.href = '/posts'
       } else {
         const data = await response.json()
-        toast.error('삭제 실패: ' + data.message)
+        toast.error(t.postDetail.deleteFailed + data.message)
       }
     } catch (error) {
       console.error('Error deleting post:', error)
-      toast.error('삭제 중 오류가 발생했습니다.')
+      toast.error(t.postDetail.deleteError)
     }
   }
 
@@ -161,7 +160,7 @@ export default function PostDetailPage() {
                 <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 border-r-primary-600 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                게시글을 불러오는 중...
+                {t.postDetail.loading}
               </h3>
             </div>
           </div>
@@ -176,17 +175,17 @@ export default function PostDetailPage() {
         <div className="page-shell py-16">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
-              게시글을 찾을 수 없습니다
+              {t.postDetail.notFound}
             </h2>
             <p className="text-gray-600 dark:text-gray-400 mb-8">
-              요청하신 게시글이 존재하지 않거나 삭제되었습니다.
+              {t.postDetail.notFoundDetail}
             </p>
             <Link
               href="/posts"
               className="btn-primary inline-flex items-center space-x-2"
             >
               <FiArrowLeft size={20} />
-              <span>게시판으로 돌아가기</span>
+              <span>{t.postDetail.backToPosts}</span>
             </Link>
           </div>
         </div>
@@ -199,12 +198,12 @@ export default function PostDetailPage() {
       <div className="border-b border-border glass-panel">
         <div className="page-shell py-6">
           <div className="flex items-center justify-between">
-            <Link 
+            <Link
               href="/posts"
               className="flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
             >
               <FiArrowLeft size={20} className="mr-2" />
-              게시판으로
+              {t.postDetail.backToBoard}
             </Link>
             <div className="flex items-center space-x-2">
               <button
@@ -228,7 +227,6 @@ export default function PostDetailPage() {
 
       <div className="page-shell py-8">
         <div className="mx-auto max-w-4xl">
-          {/* 게시글 헤더 */}
           <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8 mb-8">
             <div className="flex items-center gap-2 mb-4">
               {post.featured && (
@@ -252,7 +250,6 @@ export default function PostDetailPage() {
               {post.title}
             </h1>
 
-            {/* 메타 정보 */}
             <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-6">
               <div className="flex items-center gap-2">
                 <FiUser size={16} />
@@ -280,7 +277,6 @@ export default function PostDetailPage() {
               </div>
             </div>
 
-            {/* 태그 */}
             <div className="flex flex-wrap gap-2 mb-8">
               {post.tags.map((tag) => (
                 <span
@@ -293,9 +289,7 @@ export default function PostDetailPage() {
               ))}
             </div>
 
-            {/* 게시글 내용 */}
             <div className="prose prose-lg max-w-none text-gray-700 dark:text-gray-300">
-              {/* 상단 광고 */}
               <div className="mb-8">
                 <AdBanner
                   adType="banner"
@@ -306,12 +300,10 @@ export default function PostDetailPage() {
                 />
               </div>
 
-              {/* 게시물 내용 (단락 사이에 광고 삽입) */}
               <div className="whitespace-pre-wrap">
                 {insertAdsInContent(post.content, post._id, post.category, post.tags)}
               </div>
 
-              {/* 하단 광고 */}
               <div className="mt-8">
                 <AdBanner
                   adType="banner"
@@ -324,18 +316,16 @@ export default function PostDetailPage() {
             </div>
           </div>
 
-          {/* 댓글 섹션 */}
           <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8">
             <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
-              댓글 ({post.comments.length})
+              {interpolate(t.postDetail.comments, { n: post.comments.length })}
             </h3>
 
-            {/* 댓글 작성 폼 */}
             <form onSubmit={handleSubmitComment} className="mb-8">
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <input
                   type="text"
-                  placeholder="작성자"
+                  placeholder={t.postDetail.commentAuthorPlaceholder}
                   value={newComment.author}
                   onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
                   className="input-field"
@@ -343,7 +333,7 @@ export default function PostDetailPage() {
                 />
                 <div className="flex">
                   <textarea
-                    placeholder="댓글을 작성하세요..."
+                    placeholder={t.postDetail.commentPlaceholder}
                     value={newComment.content}
                     onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
                     className="input-field flex-1 mr-2"
@@ -361,7 +351,6 @@ export default function PostDetailPage() {
               </div>
             </form>
 
-            {/* 댓글 목록 */}
             <div className="space-y-4">
               {post.comments.length > 0 ? (
                 post.comments.map((comment) => (
@@ -385,7 +374,7 @@ export default function PostDetailPage() {
               ) : (
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                   <FiMessageSquare size={48} className="mx-auto mb-4 opacity-50" />
-                  <p>아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!</p>
+                  <p>{t.postDetail.noComments}</p>
                 </div>
               )}
             </div>
@@ -393,7 +382,6 @@ export default function PostDetailPage() {
         </div>
       </div>
 
-      {/* 게시글 수정 폼 */}
       {post && (
         <CreatePostForm
           isOpen={showEditForm}

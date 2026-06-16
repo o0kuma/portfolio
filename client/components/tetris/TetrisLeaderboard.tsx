@@ -4,6 +4,7 @@ import {
   fetchTetrisLeaderboard,
   type LeaderboardEntry,
 } from '@/lib/tetris/leaderboardClient'
+import { useLanguage } from '@/lib/LanguageContext'
 import { useCallback, useEffect, useState } from 'react'
 
 function formatDate(iso: string): string {
@@ -21,6 +22,7 @@ function formatDate(iso: string): string {
 }
 
 export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: number }) {
+  const { t } = useLanguage()
   const [entries, setEntries] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -40,31 +42,31 @@ export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: num
   return (
     <div className="flex w-full max-w-xs flex-col gap-3 rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">랭킹 TOP 20</h2>
+        <h2 className="text-sm font-semibold text-slate-900 dark:text-white">{t.leaderboard.title}</h2>
         <button
           type="button"
           onClick={() => load()}
           className="text-xs text-slate-500 transition hover:text-primary-600 dark:hover:text-primary-400"
           disabled={loading}
         >
-          새로고침
+          {t.leaderboard.refresh}
         </button>
       </div>
 
       {loading && entries.length === 0 && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">불러오는 중…</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t.leaderboard.loading}</p>
       )}
 
       {error && (
         <p className="text-xs text-amber-700 dark:text-amber-400/90">
           {error.includes('DATABASE') || error.includes('테이블') || error.includes('마이그레이션')
-            ? 'DB 연결 또는 마이그레이션이 필요합니다.'
+            ? t.leaderboard.dbError
             : error}
         </p>
       )}
 
       {!loading && !error && entries.length === 0 && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">아직 기록이 없습니다.</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{t.leaderboard.noRecords}</p>
       )}
 
       {entries.length > 0 && (
@@ -74,11 +76,11 @@ export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: num
             aria-hidden
           >
             <span>#</span>
-            <span>이름</span>
-            <span className="text-right">단계</span>
-            <span className="text-right">줄</span>
-            <span className="text-right">점수</span>
-            <span className="text-right">날짜</span>
+            <span>{t.leaderboard.colName}</span>
+            <span className="text-right">{t.leaderboard.colStage}</span>
+            <span className="text-right">{t.leaderboard.colLines}</span>
+            <span className="text-right">{t.leaderboard.colScore}</span>
+            <span className="text-right">{t.leaderboard.colDate}</span>
           </div>
           <ol className="space-y-0">
             {entries.map((row) => (

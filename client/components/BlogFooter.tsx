@@ -124,7 +124,7 @@ export default function BlogFooter() {
               onClick={toggleLocale}
               className="rounded-lg border border-border px-3 py-1 text-xs font-semibold text-textMuted hover:text-textPrimary"
             >
-              {locale === 'ko' ? 'EN' : 'KO'}
+              {t.blogFooter.langToggle}
             </button>
             <div className="flex items-center gap-2 text-sm text-textMuted">
               <FiUser size={16} />

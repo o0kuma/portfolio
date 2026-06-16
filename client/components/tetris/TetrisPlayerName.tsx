@@ -1,9 +1,11 @@
 'use client'
 
 import { readTetrisPlayerName, writeTetrisPlayerName } from '@/lib/tetris/leaderboardClient'
+import { useLanguage } from '@/lib/LanguageContext'
 import { useEffect, useState } from 'react'
 
 export default function TetrisPlayerName() {
+  const { t } = useLanguage()
   const [value, setValue] = useState('')
 
   useEffect(() => {
@@ -13,13 +15,13 @@ export default function TetrisPlayerName() {
   return (
     <div className="flex w-full max-w-xs flex-col gap-2 rounded-xl border border-slate-200 bg-white/90 p-4 dark:border-slate-700 dark:bg-slate-900/90">
       <label htmlFor="tetris-player-name" className="text-xs font-medium text-slate-500 dark:text-slate-400">
-        랭킹 닉네임
+        {t.tetrisPlayerName.label}
       </label>
       <input
         id="tetris-player-name"
         type="text"
         maxLength={20}
-        placeholder="미입력 시 Anonymous"
+        placeholder={t.tetrisPlayerName.placeholder}
         value={value}
         onChange={(e) => {
           const next = e.target.value
@@ -30,7 +32,7 @@ export default function TetrisPlayerName() {
         autoComplete="nickname"
       />
       <p className="text-[10px] text-slate-500 dark:text-slate-500">
-        2~20자 · 게임 오버 시 점수가 서버에 기록됩니다.
+        {t.tetrisPlayerName.hint}
       </p>
     </div>
   )
