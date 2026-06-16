@@ -13,8 +13,8 @@ describe('AI feature routes use direct DB quota (no Vercel self-fetch)', () => {
   test.each(featureRoutes)('%s avoids internal subscription HTTP round-trips', (rel) => {
     const source = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
     expect(source).toContain("from '@/lib/ai-chat-quota'");
-    expect(source).toContain('checkAnonymousAiQuota');
-    expect(source).toContain('recordAnonymousUsage');
+    expect(source).toContain('reserveAnonymousAiQuota');
+    expect(source).toContain('addAnonymousAiTokens');
     expect(source).not.toContain('checkAiQuota');
     expect(source).not.toContain('recordAiUsage');
     expect(source).not.toContain('/api/subscription/check');
@@ -27,16 +27,16 @@ describe('AI feature routes use direct DB quota (no Vercel self-fetch)', () => {
       'utf8',
     );
     expect(source).toContain("from '@/lib/ai-chat-quota'");
-    expect(source).toContain('checkAnonymousChatQuota');
+    expect(source).toContain('reserveAnonymousChatQuota');
     expect(source).not.toContain('/api/subscription/check');
   });
 
-  test('chat route awaits usage recording so Vercel does not drop the DB write', () => {
+  test('chat route awaits token tally after reserved quota', () => {
     const source = fs.readFileSync(
       path.join(repoRoot, 'client/app/api/ai/chat/route.ts'),
       'utf8',
     );
-    expect(source).toContain('await recordAnonymousUsage');
+    expect(source).toContain('await addAnonymousChatTokens');
     expect(source).not.toMatch(/recordAnonymousUsage\([\s\S]*?\)\.then/);
   });
 });
