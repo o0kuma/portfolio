@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { FiPlus, FiEdit, FiTrash2, FiEye, FiMousePointer, FiDollarSign, FiX, FiSave } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 
 interface Advertisement {
   id: string
@@ -49,6 +51,7 @@ const AD_TYPES = ['banner', 'sidebar', 'inline', 'popup', 'native', 'video']
 const AD_POSITIONS = ['top', 'bottom', 'sidebar-left', 'sidebar-right', 'inline', 'header', 'footer']
 
 export default function AdsManagementPage() {
+  const { t } = useLanguage()
   const [ads, setAds] = useState<Advertisement[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -133,11 +136,11 @@ export default function AdsManagementPage() {
     setFormError('')
 
     if (!formData.title.trim()) {
-      setFormError('제목은 필수입니다.')
+      setFormError(t.adminAds.errorTitleRequired)
       return
     }
     if (!adminToken.trim()) {
-      setFormError('관리자 토큰이 없습니다. 우측 상단의 [토큰 설정]을 먼저 해주세요.')
+      setFormError(t.adminAds.errorNoToken)
       return
     }
 
@@ -165,23 +168,23 @@ export default function AdsManagementPage() {
 
       const result = await response.json()
       if (!result.success) {
-        setFormError(result.error || '저장에 실패했습니다.')
+        setFormError(result.error || t.adminAds.errorSaveFailed)
         return
       }
 
       closeForm()
       await fetchAds()
     } catch (err: any) {
-      setFormError(err.message || '네트워크 오류가 발생했습니다.')
+      setFormError(err.message || t.adminAds.errorNetwork)
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleDelete = async (ad: Advertisement) => {
-    if (!confirm(`"${ad.title}" 광고를 삭제하시겠습니까?`)) return
+    if (!confirm(interpolate(t.adminAds.deleteConfirm, { title: ad.title }))) return
     if (!adminToken.trim()) {
-      toast.warning('관리자 토큰이 없습니다. 토큰 설정을 먼저 해주세요.')
+      toast.warning(t.adminAds.errorNoTokenDelete)
       return
     }
     try {
@@ -191,7 +194,7 @@ export default function AdsManagementPage() {
       })
       const result = await response.json()
       if (result.success) await fetchAds()
-      else toast.error(result.error || '삭제에 실패했습니다.')
+      else toast.error(result.error || t.adminAds.errorDeleteFailed)
     } catch (err) {
       console.error('삭제 오류:', err)
     }
@@ -209,34 +212,32 @@ export default function AdsManagementPage() {
   return (
     <div className="min-h-screen bg-canvas px-4 py-8 text-textPrimary">
       <div className="page-shell max-w-7xl">
-        {/* 헤더 */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">광고 관리</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t.adminAds.pageTitle}</h1>
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowTokenInput((v) => !v)}
               className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
             >
-              {adminToken ? '토큰 변경' : '토큰 설정'}
+              {adminToken ? t.adminAds.tokenChange : t.adminAds.tokenSet}
             </button>
             <button onClick={openNewForm} className="btn-primary flex items-center gap-2">
               <FiPlus className="w-5 h-5" />
-              새 광고 추가
+              {t.adminAds.addNew}
             </button>
           </div>
         </div>
 
-        {/* 토큰 입력 인라인 패널 */}
         {showTokenInput && (
           <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
             <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-2 font-medium">
-              관리자 API 토큰 설정 (localStorage에 저장됩니다)
+              {t.adminAds.tokenPanelLabel}
             </p>
             <div className="flex gap-2">
               <input
                 type="password"
                 defaultValue={adminToken}
-                placeholder="ADMIN_API_TOKEN 값 입력"
+                placeholder={t.adminAds.tokenPlaceholder}
                 className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') saveToken((e.target as HTMLInputElement).value)
@@ -250,18 +251,17 @@ export default function AdsManagementPage() {
                 }}
                 className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium"
               >
-                저장
+                {t.adminAds.save}
               </button>
             </div>
           </div>
         )}
 
-        {/* 통계 카드 */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">총 광고 수</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t.adminAds.statTotalAds}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{ads.length}</p>
               </div>
               <FiEye className="w-8 h-8 text-blue-500" />
@@ -270,7 +270,7 @@ export default function AdsManagementPage() {
           <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">총 노출 수</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t.adminAds.statImpressions}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {ads.reduce((sum, ad) => sum + (ad.current_impressions || 0), 0).toLocaleString()}
                 </p>
@@ -281,7 +281,7 @@ export default function AdsManagementPage() {
           <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">총 클릭 수</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t.adminAds.statClicks}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   {ads.reduce((sum, ad) => sum + (ad.current_clicks || 0), 0).toLocaleString()}
                 </p>
@@ -292,7 +292,7 @@ export default function AdsManagementPage() {
           <div className="card rounded-xl p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">총 수익</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t.adminAds.statRevenue}</p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
                   ₩{ads.reduce((sum, ad) => sum + Number(calculateRevenue(ad)), 0).toLocaleString()}
                 </p>
@@ -302,16 +302,15 @@ export default function AdsManagementPage() {
           </div>
         </div>
 
-        {/* 광고 목록 */}
         {isLoading ? (
           <div className="text-center py-16">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto" />
           </div>
         ) : ads.length === 0 ? (
           <div className="text-center py-16 text-gray-500 dark:text-gray-400">
-            <p className="text-lg">등록된 광고가 없습니다.</p>
+            <p className="text-lg">{t.adminAds.emptyMessage}</p>
             <button onClick={openNewForm} className="mt-4 btn-primary">
-              첫 광고 추가하기
+              {t.adminAds.addFirst}
             </button>
           </div>
         ) : (
@@ -319,7 +318,17 @@ export default function AdsManagementPage() {
             <table className="w-full">
               <thead className="bg-gray-100 dark:bg-gray-700">
                 <tr>
-                  {['제목', '타입', '위치', '노출', '클릭', 'CTR', '수익', '상태', '작업'].map((h) => (
+                  {[
+                    t.adminAds.colTitle,
+                    t.adminAds.colType,
+                    t.adminAds.colPosition,
+                    t.adminAds.colImpressions,
+                    t.adminAds.colClicks,
+                    t.adminAds.colCTR,
+                    t.adminAds.colRevenue,
+                    t.adminAds.colStatus,
+                    t.adminAds.colAction,
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
@@ -370,7 +379,7 @@ export default function AdsManagementPage() {
                             : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                         }`}
                       >
-                        {ad.is_active ? '활성' : '비활성'}
+                        {ad.is_active ? t.adminAds.statusActive : t.adminAds.statusInactive}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -397,14 +406,12 @@ export default function AdsManagementPage() {
         )}
       </div>
 
-      {/* 광고 추가/수정 모달 */}
       {showForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            {/* 모달 헤더 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingAd ? '광고 수정' : '새 광고 추가'}
+                {editingAd ? t.adminAds.modalTitleEdit : t.adminAds.modalTitleNew}
               </h2>
               <button
                 onClick={closeForm}
@@ -414,44 +421,40 @@ export default function AdsManagementPage() {
               </button>
             </div>
 
-            {/* 폼 */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              {/* 제목 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  제목 <span className="text-red-500">*</span>
+                  {t.adminAds.fieldTitle} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  placeholder="광고 제목을 입력하세요"
+                  placeholder={t.adminAds.fieldTitle}
                   required
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
-              {/* 설명 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  설명
+                  {t.adminAds.fieldDesc}
                 </label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  placeholder="광고 설명 (선택사항)"
+                  placeholder={t.adminAds.fieldDesc}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
 
-              {/* 타입 & 위치 */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    광고 타입 <span className="text-red-500">*</span>
+                    {t.adminAds.fieldType} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="ad_type"
@@ -460,14 +463,14 @@ export default function AdsManagementPage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                   >
-                    {AD_TYPES.map((t) => (
-                      <option key={t} value={t}>{t}</option>
+                    {AD_TYPES.map((adType) => (
+                      <option key={adType} value={adType}>{adType}</option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    위치 <span className="text-red-500">*</span>
+                    {t.adminAds.fieldPosition} <span className="text-red-500">*</span>
                   </label>
                   <select
                     name="position"
@@ -476,17 +479,16 @@ export default function AdsManagementPage() {
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm focus:ring-2 focus:ring-blue-500"
                   >
-                    {AD_POSITIONS.map((p) => (
-                      <option key={p} value={p}>{p}</option>
+                    {AD_POSITIONS.map((pos) => (
+                      <option key={pos} value={pos}>{pos}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* 타겟 URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  타겟 URL (클릭 시 이동)
+                  {t.adminAds.fieldTargetUrl}
                 </label>
                 <input
                   type="url"
@@ -498,10 +500,9 @@ export default function AdsManagementPage() {
                 />
               </div>
 
-              {/* 이미지 URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  이미지 URL
+                  {t.adminAds.fieldImageUrl}
                 </label>
                 <input
                   type="url"
@@ -513,11 +514,10 @@ export default function AdsManagementPage() {
                 />
               </div>
 
-              {/* CPC & CPM */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    CPC (클릭당 단가, ₩)
+                    {t.adminAds.fieldCpc}
                   </label>
                   <input
                     type="number"
@@ -532,7 +532,7 @@ export default function AdsManagementPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    CPM (1,000 노출당 단가, ₩)
+                    {t.adminAds.fieldCpm}
                   </label>
                   <input
                     type="number"
@@ -547,7 +547,6 @@ export default function AdsManagementPage() {
                 </div>
               </div>
 
-              {/* 활성 상태 */}
               <div className="flex items-center gap-3">
                 <input
                   type="checkbox"
@@ -558,25 +557,23 @@ export default function AdsManagementPage() {
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label htmlFor="is_active" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  광고 활성화
+                  {t.adminAds.fieldActive}
                 </label>
               </div>
 
-              {/* 에러 메시지 */}
               {formError && (
                 <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300">
                   {formError}
                 </div>
               )}
 
-              {/* 버튼 */}
               <div className="flex justify-end gap-3 pt-2">
                 <button
                   type="button"
                   onClick={closeForm}
                   className="px-5 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium transition"
                 >
-                  취소
+                  {t.adminAds.cancel}
                 </button>
                 <button
                   type="submit"
@@ -584,7 +581,7 @@ export default function AdsManagementPage() {
                   className="px-5 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium flex items-center gap-2 transition"
                 >
                   <FiSave className="w-4 h-4" />
-                  {isSaving ? '저장 중...' : editingAd ? '수정 저장' : '광고 추가'}
+                  {isSaving ? t.adminAds.saving : editingAd ? t.adminAds.savingEdit : t.adminAds.savingNew}
                 </button>
               </div>
             </form>

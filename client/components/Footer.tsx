@@ -43,7 +43,7 @@ export default function Footer() {
             type="button"
             onClick={scrollToTop}
             className="flex items-center gap-1.5 text-neutral-600 hover:text-neutral-200 transition-colors text-xs font-mono order-3"
-            aria-label="상단으로 이동"
+            aria-label={t.footer.scrollToTop}
           >
             <FiArrowUp size={13} />
             TOP

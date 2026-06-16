@@ -137,7 +137,7 @@ export default function Header() {
                 type="button"
                 onClick={() => setIsAIMessengerOpen(!isAIMessengerOpen)}
                 className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors relative rounded-lg"
-                title="AI 어시스턴트"
+                title={t.header.aiAssistant}
               >
                 <FiMessageSquare size={20} />
                 {!isAIMessengerOpen && (
@@ -150,7 +150,7 @@ export default function Header() {
                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                 className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
                 aria-expanded={isSearchOpen}
-                aria-label="검색"
+                aria-label={t.header.search}
               >
                 <FiSearch size={20} />
               </button>
@@ -160,7 +160,7 @@ export default function Header() {
                   type="button"
                   onClick={() => setIsAdminPanelOpen(true)}
                   className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
-                  title="관리자 패널"
+                  title={t.header.adminPanel}
                 >
                   <FiSettings size={20} />
                 </button>
@@ -179,7 +179,7 @@ export default function Header() {
                 type="button"
                 onClick={toggleDarkMode}
                 className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
-                aria-label={isDarkMode ? '라이트 모드' : '다크 모드'}
+                aria-label={isDarkMode ? t.header.lightMode : t.header.darkMode}
               >
                 {isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
               </button>
@@ -188,7 +188,7 @@ export default function Header() {
                 type="button"
                 onClick={toggleMenu}
                 className="md:hidden p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
-                aria-label="메뉴"
+                aria-label={t.header.menu}
               >
                 {isMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
               </button>

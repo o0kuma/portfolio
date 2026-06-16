@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiSave, FiTag } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import { adminAuthHeaders } from '@/lib/admin-token'
+import { useLanguage } from '@/lib/LanguageContext'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -26,6 +27,7 @@ interface CreatePostFormProps {
 }
 
 export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }: CreatePostFormProps) {
+  const { t } = useLanguage()
   const isEditMode = !!editPost
 
   const [formData, setFormData] = useState({
@@ -71,7 +73,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
     setError('')
 
     if (!formData.title.trim() || !formData.content.trim() || !formData.author.trim()) {
-      setError('제목, 내용, 작성자는 필수입니다.')
+      setError(t.createPostForm.errorRequired)
       return
     }
 
@@ -108,7 +110,6 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
         onSuccess()
         onClose()
       } else {
-        // author 컬럼 오류인 경우 특별 처리
         if (data.solution) {
           setError(
             `${data.message}\n\n` +
@@ -119,12 +120,12 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
             `SQL: ${data.solution.sql}`
           )
         } else {
-          setError(data.message || '게시글 생성에 실패했습니다.')
+          setError(data.message || t.createPostForm.errorCreate)
         }
       }
     } catch (error) {
       console.error('게시글 생성 오류:', error)
-      setError('게시글 생성 중 오류가 발생했습니다.')
+      setError(t.createPostForm.errorNetwork)
     } finally {
       setIsSubmitting(false)
     }
@@ -158,10 +159,9 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
           exit={{ opacity: 0, scale: 0.9 }}
           className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col"
         >
-          {/* 헤더 */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {isEditMode ? '게시글 수정' : '새 게시글 작성'}
+              {isEditMode ? t.createPostForm.titleEdit : t.createPostForm.titleNew}
             </h2>
             <button
               onClick={onClose}
@@ -171,7 +171,6 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
             </button>
           </div>
 
-          {/* 폼 */}
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
             {error && (
               <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
@@ -180,40 +179,37 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
             )}
 
             <div className="space-y-6">
-              {/* 제목 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  제목 *
+                  {t.createPostForm.fieldTitle} *
                 </label>
                 <input
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="게시글 제목을 입력하세요"
+                  placeholder={t.createPostForm.fieldTitlePlaceholder}
                   required
                 />
               </div>
 
-              {/* 작성자 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  작성자 *
+                  {t.createPostForm.fieldAuthor} *
                 </label>
                 <input
                   type="text"
                   value={formData.author}
                   onChange={(e) => setFormData({ ...formData, author: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  placeholder="작성자 이름"
+                  placeholder={t.createPostForm.fieldAuthorPlaceholder}
                   required
                 />
               </div>
 
-              {/* 카테고리 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  카테고리 *
+                  {t.createPostForm.fieldCategory} *
                 </label>
                 <select
                   value={formData.category}
@@ -228,25 +224,23 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                 </select>
               </div>
 
-              {/* 내용 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  내용 *
+                  {t.createPostForm.fieldContent} *
                 </label>
                 <textarea
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                   rows={12}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                  placeholder="게시글 내용을 입력하세요"
+                  placeholder={t.createPostForm.fieldContentPlaceholder}
                   required
                 />
               </div>
 
-              {/* 태그 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  태그
+                  {t.createPostForm.fieldTags}
                 </label>
                 <div className="flex gap-2 mb-2">
                   <input
@@ -260,14 +254,14 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                       }
                     }}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="태그 입력 후 Enter"
+                    placeholder={t.createPostForm.fieldTagPlaceholder}
                   />
                   <button
                     type="button"
                     onClick={handleAddTag}
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
                   >
-                    추가
+                    {t.createPostForm.addTag}
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -290,7 +284,6 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                 </div>
               </div>
 
-              {/* Featured */}
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -300,20 +293,19 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                   className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                 />
                 <label htmlFor="featured" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Featured 포스트로 설정
+                  {t.createPostForm.featured}
                 </label>
               </div>
             </div>
           </form>
 
-          {/* 푸터 */}
           <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
-              취소
+              {t.createPostForm.cancel}
             </button>
             <button
               type="submit"
@@ -322,7 +314,7 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
               className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               <FiSave className="w-4 h-4" />
-              {isSubmitting ? '저장 중...' : isEditMode ? '수정 완료' : '저장'}
+              {isSubmitting ? t.createPostForm.saving : isEditMode ? t.createPostForm.saveEdit : t.createPostForm.saveNew}
             </button>
           </div>
         </motion.div>
@@ -330,4 +322,3 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
     </AnimatePresence>
   )
 }
-

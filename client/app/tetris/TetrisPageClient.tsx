@@ -8,6 +8,8 @@ import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import TetrisPlayerName from '@/components/tetris/TetrisPlayerName'
 import TetrisTouchPad from '@/components/tetris/TetrisTouchPad'
 import { useTetrisGame } from '@/hooks/useTetrisGame'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef } from 'react'
 import { FiArrowLeft } from 'react-icons/fi'
@@ -22,6 +24,7 @@ export default function TetrisPageClient() {
     submitError,
     clearSubmitError,
   } = useTetrisGame()
+  const { t } = useLanguage()
   const surfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -64,9 +67,9 @@ export default function TetrisPageClient() {
             className="inline-flex items-center gap-2 text-sm font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            홈으로
+            {t.common.backHome}
           </Link>
-          <span className="text-sm font-semibold text-textPrimary">테트리스</span>
+          <span className="text-sm font-semibold text-textPrimary">{t.tetrisPage.title}</span>
         </div>
       </header>
 
@@ -90,24 +93,26 @@ export default function TetrisPageClient() {
                 {snapshot.paused && (
                   <div className="absolute inset-0 z-20 flex items-center justify-center rounded-lg bg-slate-900/55 backdrop-blur-[2px]">
                     <p className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-slate-800 shadow dark:bg-slate-800 dark:text-slate-100">
-                      일시정지 · P 또는 Esc
+                      {t.tetrisPage.paused}
                     </p>
                   </div>
                 )}
                 {snapshot.gameOver && (
                   <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-900/65 backdrop-blur-[2px]">
-                    <p className="text-lg font-semibold text-white">게임 오버</p>
+                    <p className="text-lg font-semibold text-white">{t.tetrisPage.gameOver}</p>
                     <p className="text-sm text-slate-200">
-                      {snapshot.stage}단계 · {snapshot.lines}줄 · 점수{' '}
+                      {snapshot.stage}{t.tetrisPage.stageUnit} · {snapshot.lines}{t.tetrisPage.lineUnit} · {t.tetrisPage.scoreLabel}{' '}
                       {snapshot.score.toLocaleString()}
                     </p>
-                    <p className="text-xs text-slate-300">최고 {bestStage}단계</p>
+                    <p className="text-xs text-slate-300">
+                      {interpolate(t.tetrisPage.bestStageLabel, { n: bestStage })}
+                    </p>
                     <button
                       type="button"
                       onClick={actions.resetGame}
                       className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
                     >
-                      다시 하기
+                      {t.tetrisPage.restart}
                     </button>
                   </div>
                 )}
@@ -135,20 +140,19 @@ export default function TetrisPageClient() {
                   role="status"
                   className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
                 >
-                  랭킹 저장 실패: {submitError}
+                  {t.tetrisPage.submitErrorPrefix}{submitError}
                   <button
                     type="button"
                     className="ml-2 underline"
                     onClick={clearSubmitError}
                   >
-                    닫기
+                    {t.common.close}
                   </button>
                 </p>
               )}
               <TetrisHelp />
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                키보드 포커스가 이 영역에 있을 때 단축키가 동작합니다. 첫 로드 후
-                보드를 한 번 탭하거나 Tab으로 포커스를 주세요.
+                {t.tetrisPage.keyboardHint}
               </p>
             </div>
           </div>

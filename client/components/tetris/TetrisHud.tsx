@@ -7,6 +7,8 @@ import {
   stageProgressRatio,
 } from '@/lib/tetris/stages'
 import type { GameSnapshot } from '@/lib/tetris/types'
+import { useLanguage } from '@/lib/LanguageContext'
+import { interpolate } from '@/lib/i18n'
 import PieceMini from './PieceMini'
 
 export default function TetrisHud({
@@ -18,6 +20,7 @@ export default function TetrisHud({
   highScore: number
   bestStage: number
 }) {
+  const { t } = useLanguage()
   const nextPrimary = snapshot.next[0] ?? null
   const nextQueue = snapshot.next.slice(1, 5)
   const progress = stageProgressRatio(snapshot.lines)
@@ -29,15 +32,15 @@ export default function TetrisHud({
       <div>
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm font-semibold text-slate-900 dark:text-white">
-            {snapshot.stage}단계
+            {interpolate(t.tetrisHud.stageLabel, { n: snapshot.stage })}
             {!atMax && (
               <span className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400">
-                / {MAX_STAGE}단계
+                / {interpolate(t.tetrisHud.stageMax, { max: MAX_STAGE })}
               </span>
             )}
           </p>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            최고 {bestStage}단계
+            {interpolate(t.tetrisHud.bestStage, { n: bestStage })}
           </p>
         </div>
         {!atMax && (
@@ -48,7 +51,7 @@ export default function TetrisHud({
               aria-valuenow={intoStage}
               aria-valuemin={0}
               aria-valuemax={LINES_PER_STAGE}
-              aria-label="다음 단계까지 진행"
+              aria-label={t.tetrisHud.progressAriaLabel}
             >
               <div
                 className="h-full rounded-full bg-primary-500 transition-[width] duration-200"
@@ -56,48 +59,48 @@ export default function TetrisHud({
               />
             </div>
             <p className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-              다음 단계까지 {intoStage}/{LINES_PER_STAGE}줄
+              {interpolate(t.tetrisHud.nextStageProgress, { into: intoStage, total: LINES_PER_STAGE })}
             </p>
           </div>
         )}
         {atMax && (
           <p className="mt-1 text-[10px] text-primary-600 dark:text-primary-400">
-            최대 단계 도달
+            {t.tetrisHud.maxStageReached}
           </p>
         )}
       </div>
 
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm border-t border-slate-200 pt-4 dark:border-slate-700">
-        <dt className="text-slate-500 dark:text-slate-400">점수</dt>
+        <dt className="text-slate-500 dark:text-slate-400">{t.tetrisHud.score}</dt>
         <dd className="font-mono font-semibold tabular-nums text-slate-900 dark:text-white">
           {snapshot.score.toLocaleString()}
         </dd>
-        <dt className="text-slate-500 dark:text-slate-400">최고 점수</dt>
+        <dt className="text-slate-500 dark:text-slate-400">{t.tetrisHud.highScore}</dt>
         <dd className="font-mono tabular-nums text-primary-600 dark:text-primary-400">
           {highScore.toLocaleString()}
         </dd>
-        <dt className="text-slate-500 dark:text-slate-400">레벨</dt>
+        <dt className="text-slate-500 dark:text-slate-400">{t.tetrisHud.level}</dt>
         <dd className="font-mono tabular-nums">{snapshot.level}</dd>
-        <dt className="text-slate-500 dark:text-slate-400">총 줄</dt>
+        <dt className="text-slate-500 dark:text-slate-400">{t.tetrisHud.totalLines}</dt>
         <dd className="font-mono tabular-nums">{snapshot.lines}</dd>
       </dl>
 
       <div className="flex flex-wrap gap-6 border-t border-slate-200 pt-4 dark:border-slate-700">
         <div className={snapshot.holdLocked ? 'opacity-50' : ''}>
-          <PieceMini id={snapshot.hold} label="홀드" />
+          <PieceMini id={snapshot.hold} label={t.tetrisHud.hold} />
           {snapshot.holdLocked && (
-            <p className="mt-1 text-[10px] text-slate-500">고정 후 교체</p>
+            <p className="mt-1 text-[10px] text-slate-500">{t.tetrisHud.holdLocked}</p>
           )}
         </div>
         <div>
-          <PieceMini id={nextPrimary} label="다음" />
+          <PieceMini id={nextPrimary} label={t.tetrisHud.next} />
         </div>
       </div>
 
       {nextQueue.length > 0 && (
         <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
           <p className="mb-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-            대기열
+            {t.tetrisHud.queue}
           </p>
           <ul className="flex flex-wrap gap-2">
             {nextQueue.map((id, i) => (
