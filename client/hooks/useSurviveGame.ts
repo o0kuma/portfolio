@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { SurviveEngine } from '@/lib/survive/engine'
 import { readBest, maybePersistBest } from '@/lib/survive/storage'
+import { submitSurviveScore } from '@/lib/survive/leaderboardClient'
 import { rollUpgrades, type Upgrade } from '@/lib/survive/upgrades'
 import type { SurviveHudSnapshot, Vec } from '@/lib/survive/types'
 
@@ -82,6 +83,7 @@ export function useSurviveGame() {
       if (e.status === 'gameover' && !persistedRef.current) {
         persistedRef.current = true
         maybePersistBest({ timeSec: e.timeSec, level: e.player.level, kills: e.kills })
+        submitSurviveScore({ timeSec: e.timeSec, level: e.player.level, kills: e.kills })
         syncHud()
       }
 

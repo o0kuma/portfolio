@@ -33,6 +33,8 @@ export function enemyHpScale(elapsedSec: number): number {
 }
 
 export const HIGH_SCORE_KEY = 'survive-best'
+export const SURVIVE_SESSION_ID_KEY = 'survive-session-id'
+export const SURVIVE_PLAYER_NAME_KEY = 'survive-player-name'
 
 /** Local best record shape persisted to localStorage. */
 export type SurviveBest = {

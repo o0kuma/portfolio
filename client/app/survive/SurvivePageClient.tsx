@@ -6,12 +6,15 @@ import SurviveCanvas from '@/components/survive/SurviveCanvas'
 import SurviveHud from '@/components/survive/SurviveHud'
 import SurviveJoystick from '@/components/survive/SurviveJoystick'
 import SurviveLevelUp from '@/components/survive/SurviveLevelUp'
+import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import { useSurviveGame } from '@/hooks/useSurviveGame'
 import { formatTime } from '@/lib/survive/storage'
+import { useState } from 'react'
 
 export default function SurvivePageClient() {
   const { engineRef, hud, choices, actions } = useSurviveGame()
   const status = hud.status
+  const [lbRefreshKey, setLbRefreshKey] = useState(0)
 
   return (
     <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
@@ -103,7 +106,7 @@ export default function SurvivePageClient() {
               </p>
               <button
                 type="button"
-                onClick={actions.restart}
+                onClick={() => { setLbRefreshKey(k => k + 1); actions.restart() }}
                 className="mt-2 rounded-lg bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400"
               >
                 다시 하기
@@ -116,6 +119,10 @@ export default function SurvivePageClient() {
           데스크톱은 WASD 또는 방향키로 이동하고, 모바일은 게임 화면을 드래그해 조이스틱으로 조작합니다.
           무기는 가장 가까운 적을 자동으로 공격합니다.
         </p>
+
+        <div className="mt-8">
+          <SurviveLeaderboard refreshKey={lbRefreshKey} />
+        </div>
       </main>
     </div>
   )
