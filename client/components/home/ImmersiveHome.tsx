@@ -59,6 +59,9 @@ function ImmersiveHomeInner() {
             <Link href="/tetris" className="transition-colors hover:text-white">
               {t.home.navTetris}
             </Link>
+            <Link href="/survive" className="transition-colors hover:text-white">
+              {t.home.navSurvive}
+            </Link>
           </nav>
         </header>
 
