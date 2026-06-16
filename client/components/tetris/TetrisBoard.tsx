@@ -69,13 +69,13 @@ export default function TetrisBoard({ snapshot }: TetrisBoardProps) {
         const y = vy + VISIBLE_ROW_START
         const value = cellAt(x, y)
 
-        const base = 'aspect-square border border-slate-800/70 rounded-[2px] bg-slate-800'
+        const base = 'aspect-square rounded-[2px]'
         const cls =
           value === 0
-            ? base
+            ? `${base} border border-slate-800/70 bg-slate-800`
             : value === 'ghost'
-            ? `${base} ${piece ? pieceGhostClass(piece.id || piece.type || 'I') : ''}`
-            : `${base} ${pieceSolidClass(value)}`
+            ? `${base} border-2 ${piece ? pieceGhostClass(piece.id || piece.type || 'I') : 'border-white/40 bg-white/10'}`
+            : `${base} border border-slate-800/70 ${pieceSolidClass(value)}`
 
         return <div key={`${x}-${y}`} className={cls} />
       })}

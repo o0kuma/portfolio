@@ -61,7 +61,7 @@ export function createInitialState(): GameEngineState {
 
 export function toSnapshot(s: GameEngineState): GameSnapshot {
   const ghostY =
-    s.piece && !s.gameOver && !s.paused && s.level <= 5
+    s.piece && !s.gameOver && !s.paused && stageFromLines(s.lines) <= 5
       ? getGhostY(s.board, s.piece)
       : null
   return {

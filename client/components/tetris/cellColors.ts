@@ -14,16 +14,16 @@ export function pieceSolidClass(id: PieceId): string {
   return map[id]
 }
 
-/** Ghost piece — outline only */
+/** Ghost piece — outline + subtle fill */
 export function pieceGhostClass(id: PieceId): string {
   const map: Record<PieceId, string> = {
-    I: 'border-cyan-500/70 bg-cyan-500/15 dark:border-cyan-400/60',
-    O: 'border-amber-400/70 bg-amber-400/15',
-    J: 'border-blue-600/70 bg-blue-600/15',
-    L: 'border-orange-500/70 bg-orange-500/15',
-    S: 'border-emerald-500/70 bg-emerald-500/15',
-    Z: 'border-rose-500/70 bg-rose-500/15',
-    T: 'border-violet-600/70 bg-violet-600/15',
+    I: 'border-cyan-400 bg-cyan-400/30',
+    O: 'border-amber-300 bg-amber-300/30',
+    J: 'border-blue-400 bg-blue-400/30',
+    L: 'border-orange-400 bg-orange-400/30',
+    S: 'border-emerald-400 bg-emerald-400/30',
+    Z: 'border-rose-400 bg-rose-400/30',
+    T: 'border-violet-400 bg-violet-400/30',
   }
-  return `border-2 ${map[id]}`
+  return map[id]
 }
