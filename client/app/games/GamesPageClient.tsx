@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
 import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
+import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLeaderboard'
 import { useLanguage } from '@/lib/LanguageContext'
 
 type GameCardProps = {
@@ -70,7 +71,7 @@ export default function GamesPageClient() {
         </div>
 
         {/* Game cards */}
-        <div className="mb-14 grid gap-5 sm:grid-cols-2">
+        <div className="mb-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           <GameCard
             href="/tetris"
             title={t.games.tetrisTitle}
@@ -89,11 +90,20 @@ export default function GamesPageClient() {
             tags={t.games.surviveTags}
             playLabel={t.games.play}
           />
+          <GameCard
+            href="/tower-defense"
+            title={t.games.towerDefenseTitle}
+            emoji="🏰"
+            color="bg-amber-900/60"
+            description={t.games.towerDefenseDesc}
+            tags={t.games.towerDefenseTags}
+            playLabel={t.games.play}
+          />
         </div>
 
         {/* Leaderboards */}
         <h2 className="mb-5 text-xl font-bold">{t.games.globalRanking}</h2>
-        <div className="grid gap-6 sm:grid-cols-2">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.tetrisEmoji}</p>
             <TetrisLeaderboard />
@@ -101,6 +111,10 @@ export default function GamesPageClient() {
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.surviveEmoji}</p>
             <SurviveLeaderboard />
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.towerDefenseEmoji}</p>
+            <TowerDefenseLeaderboard />
           </div>
         </div>
       </main>
