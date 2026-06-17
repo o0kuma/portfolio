@@ -3,13 +3,14 @@ import {
   EVOLVE_COST,
   GRID_COLS,
   GRID_ROWS,
+  PATH_CELLS,
   START_GOLD,
   START_LIVES,
   TILE,
   UPGRADE_EVERY_WAVES,
-  WAYPOINTS,
   bountyScale,
   buildPathCellSet,
+  buildWaypoints,
   cellCenter,
   enemyHpScale,
   enemySpeedScale,
@@ -19,6 +20,7 @@ import {
   MAX_TOWER_LEVEL,
   TOWER_DEFS,
   evolutionFor,
+  recipesForBase,
   sellValue as defSellValue,
   towerStats,
   upgradeCost as defUpgradeCost,
@@ -26,19 +28,63 @@ import {
 import type { Upgradable, Upgrade } from './upgrades'
 import type {
   Beam,
+  Cell,
   Enemy,
   EnemyKind,
   FloatText,
   GameStatus,
   Particle,
   Projectile,
+  RunStats,
   Tower,
   TowerDefenseHudSnapshot,
   TowerKind,
+  Vec,
+  WaveEvent,
+  WavePreview,
 } from './types'
 
 const SPAWN_INTERVAL_MS = 650
 const FAST_SPAWN_INTERVAL_MS = 380
+
+/** Mulberry32 — small deterministic PRNG seeded from a 32-bit int. */
+function mulberry32(seed: number): () => number {
+  let a = seed >>> 0
+  return () => {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
+/** A pre-built wave: the spawn queue plus the event modifying it. */
+interface PreparedWave {
+  queue: EnemyKind[]
+  event: WaveEvent
+}
+
+/** Options for constructing the engine (Feature 3 + 8). */
+export interface EngineOptions {
+  bestWave?: number
+  pathCells?: Cell[]
+  /** when set, wave/event generation is deterministic (daily challenge) */
+  seed?: number | null
+}
+
+function emptyKillsByKind(): Record<TowerKind, number> {
+  return {
+    pulse: 0,
+    splash: 0,
+    frost: 0,
+    beam: 0,
+    blizzard: 0,
+    railgun: 0,
+    tempest: 0,
+    prism: 0,
+  }
+}
 const PALETTE_BEAM = '#c084fc'
 const PALETTE_PRISM = '#e9d5ff'
 const PALETTE_RAILGUN = '#fca5a5'
@@ -93,7 +139,9 @@ export class TowerDefenseEngine implements Upgradable {
   selected: TowerKind | null = null
   selectedTowerId: number | null = null
 
-  private pathCells = buildPathCellSet()
+  /** active map's waypoints (world px) and path cell set (Feature 3) */
+  readonly waypoints: Vec[]
+  private pathCells: Set<string>
   private nextTowerId = 1
   private nextEnemyId = 1
   private taken: Record<string, number> = {}
@@ -103,9 +151,35 @@ export class TowerDefenseEngine implements Upgradable {
   private toSpawn = 0
   private spawnTimer = 0
   private waveQueue: EnemyKind[] = []
+  /** event applied to the currently-active wave (Feature 4) */
+  activeEvent: WaveEvent = null
 
-  constructor(bestWave = 0) {
-    this.bestWave = bestWave
+  /** lazily-generated upcoming wave (Feature 1) so the preview matches spawns */
+  private nextWave: PreparedWave | null = null
+
+  /** in-run aggregate stats (Feature 5) */
+  stats: RunStats = {
+    goldEarned: 0,
+    goldSpent: 0,
+    evolveCount: 0,
+    killsByKind: emptyKillsByKind(),
+  }
+
+  /** RNG used for wave/event generation; deterministic for daily runs (Feature 8). */
+  private rng: () => number
+
+  constructor(opts: EngineOptions | number = {}) {
+    const o: EngineOptions = typeof opts === 'number' ? { bestWave: opts } : opts
+    this.bestWave = o.bestWave ?? 0
+    const cells = o.pathCells ?? PATH_CELLS
+    this.waypoints = buildWaypoints(cells)
+    this.pathCells = buildPathCellSet(cells)
+    this.rng = o.seed != null ? mulberry32(o.seed) : Math.random
+  }
+
+  /** Public read access for the renderer (Feature 3). */
+  get pathCellSet(): Set<string> {
+    return this.pathCells
   }
 
   get takenUpgrades(): Record<string, number> {
@@ -171,7 +245,41 @@ export class TowerDefenseEngine implements Upgradable {
       canEvolve: evo != null && this.gold >= EVOLVE_COST,
       evolveKind: evo?.kind ?? null,
       evolveCost: EVOLVE_COST,
+      nextWavePreview: this.waveIdle ? this.peekNextWave() : null,
+      activeEvent: this.activeEvent,
+      stats: this.stats,
+      synergyHint: this.synergyHintFor(insp),
     }
+  }
+
+  /**
+   * Feature 6: for an inspected base tower (any level), the first recipe it can
+   * participate in — the evolved kind and the partner base kind required.
+   */
+  private synergyHintFor(
+    insp: Tower | null,
+  ): { evolveKind: TowerKind; partnerKind: TowerKind } | null {
+    if (!insp || TOWER_DEFS[insp.kind].evolved) return null
+    const recipes = recipesForBase(insp.kind)
+    if (recipes.length === 0) return null
+    const r = recipes[0]
+    return { evolveKind: r.evolveKind, partnerKind: r.partner }
+  }
+
+  /**
+   * Feature 1: composition of the upcoming wave (generated/stored lazily so the
+   * preview is identical to what will actually spawn).
+   */
+  peekNextWave(): WavePreview {
+    const w = this.ensureNextWave()
+    const counts = { normal: 0, fast: 0, tank: 0, boss: 0 }
+    for (const k of w.queue) counts[k] += 1
+    return { ...counts, event: w.event }
+  }
+
+  private ensureNextWave(): PreparedWave {
+    if (!this.nextWave) this.nextWave = this.buildPreparedWave(this.wave + 1)
+    return this.nextWave
   }
 
   /**
@@ -251,6 +359,7 @@ export class TowerDefenseEngine implements Upgradable {
     if (this.gold < cost) return false
 
     this.gold -= cost
+    this.stats.goldSpent += cost
     const c = cellCenter(col, row)
     const s = towerStats(kind, 1)
     this.towers.push({
@@ -284,6 +393,8 @@ export class TowerDefenseEngine implements Upgradable {
     const evo = this.evolveInfo()
     if (!t || !evo || this.gold < EVOLVE_COST) return
     this.gold -= EVOLVE_COST
+    this.stats.goldSpent += EVOLVE_COST
+    this.stats.evolveCount += 1
     const col = t.col
     const row = t.row
     const partnerId = evo.partner.id
@@ -325,6 +436,7 @@ export class TowerDefenseEngine implements Upgradable {
     const cost = this.upgradeCostFor(t)
     if (this.gold < cost) return
     this.gold -= cost
+    this.stats.goldSpent += cost
     t.level += 1
     const s = towerStats(t.kind, t.level)
     t.range = s.range
@@ -347,27 +459,54 @@ export class TowerDefenseEngine implements Upgradable {
   startNextWave(): void {
     if (this.status !== 'playing' || !this.waveIdle) return
     this.wave += 1
-    this.gold += this.interest
+    if (this.interest > 0) {
+      this.gold += this.interest
+      this.stats.goldEarned += this.interest
+    }
     this.waveActive = true
     this.spawnTimer = 0
-    this.buildWaveQueue(this.wave)
+    const prepared = this.ensureNextWave()
+    this.waveQueue = prepared.queue
+    this.activeEvent = prepared.event
+    this.nextWave = null // consume; the next preview regenerates for wave+1
     this.toSpawn = this.waveQueue.length
     if (this.wave % BOSS_EVERY === 0) this.shake = Math.max(this.shake, 10)
     this.onSfx?.('wave')
   }
 
-  private buildWaveQueue(wave: number): void {
+  /**
+   * Build the stored queue + event for a given wave deterministically against
+   * `this.rng` (Feature 1 + 4 + 8). Called lazily; the result is cached so the
+   * preview and the actual spawns are identical.
+   */
+  private buildPreparedWave(wave: number): PreparedWave {
+    const isBoss = wave % BOSS_EVERY === 0
+    // roll a special event on non-boss waves past a threshold
+    let event: WaveEvent = null
+    if (!isBoss && wave >= 4 && this.rng() < 0.28) {
+      const roll = this.rng()
+      event =
+        roll < 0.25 ? 'rush' : roll < 0.5 ? 'armored' : roll < 0.75 ? 'swarm' : 'elite'
+    }
+
+    let count = waveEnemyCount(wave)
+    if (event === 'swarm') count = Math.round(count * 3)
+    else if (event === 'elite') count = Math.max(2, Math.round(count * 0.5))
+
     const queue: EnemyKind[] = []
-    const count = waveEnemyCount(wave)
     for (let i = 0; i < count; i++) {
-      const r = Math.random()
       let kind: EnemyKind = 'normal'
-      if (wave > 4 && r < 0.22) kind = 'tank'
-      else if (r < 0.5) kind = 'fast'
+      if (event === 'armored') {
+        kind = this.rng() < 0.85 ? 'tank' : 'normal'
+      } else {
+        const r = this.rng()
+        if (wave > 4 && r < 0.22) kind = 'tank'
+        else if (r < 0.5) kind = 'fast'
+      }
       queue.push(kind)
     }
-    if (wave % BOSS_EVERY === 0) queue.push('boss')
-    this.waveQueue = queue
+    if (isBoss) queue.push('boss')
+    return { queue, event }
   }
 
   /** Advance the simulation by dtMs (clamped to avoid tunnelling on refocus). */
@@ -404,10 +543,19 @@ export class TowerDefenseEngine implements Upgradable {
   }
 
   private spawnEnemy(kind: EnemyKind): void {
-    const start = WAYPOINTS[0]
-    const hpScale = enemyHpScale(this.wave)
-    const spScale = enemySpeedScale(this.wave)
+    const start = this.waypoints[0]
+    let hpScale = enemyHpScale(this.wave)
+    let spScale = enemySpeedScale(this.wave)
     const bScale = bountyScale(this.wave)
+    // Feature 4 event modifiers (don't apply to bosses)
+    if (kind !== 'boss') {
+      if (this.activeEvent === 'rush') spScale *= 1.5
+      else if (this.activeEvent === 'swarm') hpScale *= 0.5
+      else if (this.activeEvent === 'elite') {
+        hpScale *= 2
+        spScale *= 2
+      }
+    }
     let base: Omit<
       Enemy,
       'id' | 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul' | 'hitFlashMs' | 'ageMs'
@@ -471,7 +619,7 @@ export class TowerDefenseEngine implements Upgradable {
         e.slowMs -= dt * 1000
         if (e.slowMs <= 0) e.slowMul = 1
       }
-      const target = WAYPOINTS[e.wpIndex]
+      const target = this.waypoints[e.wpIndex]
       if (!target) {
         // reached the exit
         this.lives -= e.kind === 'boss' ? 5 : 1
@@ -532,7 +680,7 @@ export class TowerDefenseEngine implements Upgradable {
 
     // Beam-type towers fire an instantaneous hitscan line + transient visual.
     if (t.kind === 'beam' || t.kind === 'prism') {
-      this.damageEnemy(target, dmg)
+      this.damageEnemy(target, dmg, t.kind)
       if (s.slowMs > 0) {
         target.slowMs = s.slowMs
         target.slowMul = s.slowMul
@@ -561,6 +709,7 @@ export class TowerDefenseEngine implements Upgradable {
       radius: t.kind === 'splash' || t.kind === 'blizzard' ? 6 : 4,
       damage: dmg,
       kind: t.kind,
+      sourceKind: t.kind,
       lifeMs: 1600,
       splash: s.splash,
       slowMs: s.slowMs,
@@ -611,7 +760,7 @@ export class TowerDefenseEngine implements Upgradable {
       const r2 = pr.splash * pr.splash
       for (const other of this.enemies) {
         if (dist2(pr.x, pr.y, other.x, other.y) <= r2) {
-          this.damageEnemy(other, pr.damage)
+          this.damageEnemy(other, pr.damage, pr.sourceKind)
           if (pr.slowMs > 0) {
             other.slowMs = pr.slowMs
             other.slowMul = pr.slowMul
@@ -627,7 +776,7 @@ export class TowerDefenseEngine implements Upgradable {
       return true
     }
     // single / piercing target
-    this.damageEnemy(e, pr.damage)
+    this.damageEnemy(e, pr.damage, pr.sourceKind)
     if (pr.slowMs > 0) {
       e.slowMs = pr.slowMs
       e.slowMul = pr.slowMul
@@ -651,7 +800,7 @@ export class TowerDefenseEngine implements Upgradable {
     this.beams = this.beams.filter((b) => b.lifeMs > 0)
   }
 
-  private damageEnemy(e: Enemy, dmg: number): void {
+  private damageEnemy(e: Enemy, dmg: number, sourceKind?: TowerKind): void {
     if (e.hp <= 0) return
     e.hp -= dmg
     e.hitFlashMs = 90
@@ -662,16 +811,18 @@ export class TowerDefenseEngine implements Upgradable {
       lifeMs: 520,
       color: '#ffffff',
     })
-    if (e.hp <= 0) this.killEnemy(e)
+    if (e.hp <= 0) this.killEnemy(e, sourceKind)
   }
 
-  private killEnemy(e: Enemy): void {
+  private killEnemy(e: Enemy, sourceKind?: TowerKind): void {
     const idx = this.enemies.indexOf(e)
     if (idx === -1) return
     this.enemies.splice(idx, 1)
     this.kills += 1
+    if (sourceKind) this.stats.killsByKind[sourceKind] += 1
     const bounty = e.bounty + this.bonusBounty
     this.gold += bounty
+    this.stats.goldEarned += bounty
     this.floats.push({
       x: e.x,
       y: e.y - e.radius - 14,

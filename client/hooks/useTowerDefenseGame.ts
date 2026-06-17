@@ -3,14 +3,50 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TowerDefenseEngine } from '@/lib/tower-defense/engine'
 import { readBest, maybePersistBest } from '@/lib/tower-defense/storage'
-import { submitTowerDefenseScore } from '@/lib/tower-defense/leaderboardClient'
+import {
+  submitTowerDefenseScore,
+  dailyChallengeDay,
+  dailySeedFromDay,
+} from '@/lib/tower-defense/leaderboardClient'
 import { rollUpgrades, type Upgrade } from '@/lib/tower-defense/upgrades'
-import { START_GOLD, START_LIVES } from '@/lib/tower-defense/constants'
+import {
+  START_GOLD,
+  START_LIVES,
+  TD_AUTOSTART_KEY,
+  TD_MAP_KEY,
+  mapDefById,
+  type MapId,
+} from '@/lib/tower-defense/constants'
 import { TOWER_ORDER } from '@/lib/tower-defense/towers'
 import { tdAudio } from '@/lib/tower-defense/audio'
-import type { TowerDefenseHudSnapshot, TowerKind } from '@/lib/tower-defense/types'
+import type { TowerDefenseHudSnapshot, TowerKind, RunStats } from '@/lib/tower-defense/types'
 
 const HUD_THROTTLE_MS = 80 // ~12fps HUD updates
+const AUTO_START_DELAY_MS = 3000 // Feature 7: idle countdown before auto next wave
+
+/** The daily-challenge map is fixed per day (rotates through the 3 maps). */
+const DAILY_MAPS: MapId[] = ['classic', 'maze', 'highway']
+function dailyMapFor(day: string): MapId {
+  return DAILY_MAPS[dailySeedFromDay(day) % DAILY_MAPS.length]
+}
+
+function emptyStats(): RunStats {
+  return {
+    goldEarned: 0,
+    goldSpent: 0,
+    evolveCount: 0,
+    killsByKind: {
+      pulse: 0,
+      splash: 0,
+      frost: 0,
+      beam: 0,
+      blizzard: 0,
+      railgun: 0,
+      tempest: 0,
+      prism: 0,
+    },
+  }
+}
 
 function emptyHud(bestWave: number): TowerDefenseHudSnapshot {
   return {
@@ -32,7 +68,21 @@ function emptyHud(bestWave: number): TowerDefenseHudSnapshot {
     canEvolve: false,
     evolveKind: null,
     evolveCost: 0,
+    nextWavePreview: null,
+    activeEvent: null,
+    stats: emptyStats(),
+    synergyHint: null,
   }
+}
+
+function readStoredMap(): MapId {
+  if (typeof window === 'undefined') return 'classic'
+  return mapDefById(window.localStorage.getItem(TD_MAP_KEY)).id
+}
+
+function readStoredAuto(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.localStorage.getItem(TD_AUTOSTART_KEY) === '1'
 }
 
 export function useTowerDefenseGame() {
@@ -41,7 +91,15 @@ export function useTowerDefenseGame() {
   const [choices, setChoices] = useState<Upgrade[]>([])
   const [speed, setSpeed] = useState(1)
   const [muted, setMuted] = useState(false)
+  const [mapId, setMapId] = useState<MapId>('classic')
+  const [autoStart, setAutoStart] = useState(false)
+  const [autoCountdown, setAutoCountdown] = useState<number | null>(null)
+  /** non-null while this run is a daily challenge (the YYYYMMDD tag) */
+  const [challengeDay, setChallengeDay] = useState<string | null>(null)
   const speedRef = useRef(1)
+  const autoStartRef = useRef(false)
+  const autoTimerRef = useRef<number | null>(null)
+  const challengeDayRef = useRef<string | null>(null)
 
   const rafRef = useRef<number | null>(null)
   const lastTsRef = useRef<number>(0)
@@ -49,11 +107,16 @@ export function useTowerDefenseGame() {
   const persistedRef = useRef(false)
   const choicesEmptyRef = useRef(true)
 
-  // Load best score once mounted.
+  // Load best score + persisted prefs once mounted.
   useEffect(() => {
     const best = readBest()
     setHud(emptyHud(best.wave))
     setMuted(tdAudio.isMuted())
+    const m = readStoredMap()
+    setMapId(m)
+    const a = readStoredAuto()
+    setAutoStart(a)
+    autoStartRef.current = a
   }, [])
 
   const syncHud = useCallback(() => {
@@ -86,8 +149,10 @@ export function useTowerDefenseGame() {
 
       if (e.status === 'gameover' && !persistedRef.current) {
         persistedRef.current = true
-        maybePersistBest({ wave: e.bestWave, kills: e.kills })
-        submitTowerDefenseScore({ wave: e.wave, kills: e.kills })
+        const day = challengeDayRef.current
+        // Only the endless mode contributes to the local best record.
+        if (!day) maybePersistBest({ wave: e.bestWave, kills: e.kills })
+        submitTowerDefenseScore({ wave: e.wave, kills: e.kills, challengeDay: day })
         syncHud()
       }
 
@@ -115,22 +180,45 @@ export function useTowerDefenseGame() {
     }
   }, [])
 
-  const start = useCallback(() => {
-    const best = readBest()
-    const engine = new TowerDefenseEngine(best.wave)
-    engine.status = 'playing'
-    engine.onSfx = (ev) => tdAudio.play(ev)
-    engineRef.current = engine
-    persistedRef.current = false
-    choicesEmptyRef.current = true
-    setChoices([])
-    syncHud()
-    startLoop()
-  }, [startLoop, syncHud])
+  const clearAutoTimer = useCallback(() => {
+    if (autoTimerRef.current != null) {
+      clearTimeout(autoTimerRef.current)
+      autoTimerRef.current = null
+    }
+    setAutoCountdown(null)
+  }, [])
+
+  /** Start a run. Pass a daily YYYYMMDD to begin a deterministic daily challenge. */
+  const start = useCallback(
+    (opts?: { daily?: boolean }) => {
+      clearAutoTimer()
+      const daily = opts?.daily ?? false
+      const day = daily ? dailyChallengeDay() : null
+      const useMap = daily ? dailyMapFor(day as string) : readStoredMap()
+      const best = readBest()
+      const engine = new TowerDefenseEngine({
+        bestWave: daily ? 0 : best.wave,
+        pathCells: mapDefById(useMap).pathCells,
+        seed: daily ? dailySeedFromDay(day as string) : null,
+      })
+      engine.status = 'playing'
+      engine.onSfx = (ev) => tdAudio.play(ev)
+      engineRef.current = engine
+      persistedRef.current = false
+      choicesEmptyRef.current = true
+      challengeDayRef.current = day
+      setChallengeDay(day)
+      setMapId(useMap)
+      setChoices([])
+      syncHud()
+      startLoop()
+    },
+    [clearAutoTimer, startLoop, syncHud],
+  )
 
   const restart = useCallback(() => {
     stopLoop()
-    start()
+    start(challengeDayRef.current ? { daily: true } : undefined)
   }, [start, stopLoop])
 
   const togglePause = useCallback(() => {
@@ -218,9 +306,56 @@ export function useTowerDefenseGame() {
   const nextWave = useCallback(() => {
     const e = engineRef.current
     if (!e) return
+    clearAutoTimer()
     e.startNextWave()
     syncHud()
-  }, [syncHud])
+  }, [syncHud, clearAutoTimer])
+
+  const selectMap = useCallback((id: MapId) => {
+    setMapId(id)
+    if (typeof window !== 'undefined') window.localStorage.setItem(TD_MAP_KEY, id)
+  }, [])
+
+  const toggleAuto = useCallback(() => {
+    setAutoStart((a) => {
+      const next = !a
+      autoStartRef.current = next
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(TD_AUTOSTART_KEY, next ? '1' : '0')
+      }
+      return next
+    })
+  }, [])
+
+  // Feature 7: auto-start the next wave after a delay while idle.
+  useEffect(() => {
+    const canAuto =
+      autoStart &&
+      hud.status === 'playing' &&
+      hud.waveIdle &&
+      hud.enemiesLeft === 0 &&
+      hud.wave > 0
+    if (!canAuto) {
+      clearAutoTimer()
+      return
+    }
+    if (autoTimerRef.current != null) return // already counting down
+    let remaining = Math.ceil(AUTO_START_DELAY_MS / 1000)
+    setAutoCountdown(remaining)
+    const tick = window.setInterval(() => {
+      remaining -= 1
+      setAutoCountdown(remaining > 0 ? remaining : 0)
+    }, 1000)
+    autoTimerRef.current = window.setTimeout(() => {
+      window.clearInterval(tick)
+      autoTimerRef.current = null
+      setAutoCountdown(null)
+      nextWave()
+    }, AUTO_START_DELAY_MS)
+    return () => {
+      window.clearInterval(tick)
+    }
+  }, [autoStart, hud.status, hud.waveIdle, hud.enemiesLeft, hud.wave, clearAutoTimer, nextWave])
 
   // Keyboard listeners: pause, build selection (1-4), next wave (space)
   useEffect(() => {
@@ -251,6 +386,10 @@ export function useTowerDefenseGame() {
     choices,
     speed,
     muted,
+    mapId,
+    autoStart,
+    autoCountdown,
+    challengeDay,
     actions: {
       start,
       restart,
@@ -265,6 +404,8 @@ export function useTowerDefenseGame() {
       nextWave,
       toggleSpeed,
       toggleMute,
+      selectMap,
+      toggleAuto,
     },
   }
 }

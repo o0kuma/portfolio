@@ -32,10 +32,30 @@ export function writeTowerDefensePlayerName(name: string): void {
   }
 }
 
+/** Today's daily-challenge id as a UTC `YYYYMMDD` string (Feature 8). */
+export function dailyChallengeDay(date = new Date()): string {
+  const y = date.getUTCFullYear()
+  const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(date.getUTCDate()).padStart(2, '0')
+  return `${y}${m}${d}`
+}
+
+/** Deterministic 32-bit seed derived from a `YYYYMMDD` string (Feature 8). */
+export function dailySeedFromDay(day: string): number {
+  let h = 2166136261 >>> 0
+  for (let i = 0; i < day.length; i++) {
+    h ^= day.charCodeAt(i)
+    h = Math.imul(h, 16777619)
+  }
+  return h >>> 0
+}
+
 export type SubmitTowerDefenseScoreInput = {
   wave: number
   kills: number
   playerName?: string
+  /** when set, the score is tagged as a daily challenge entry */
+  challengeDay?: string | null
 }
 
 export async function submitTowerDefenseScore(
@@ -55,6 +75,7 @@ export async function submitTowerDefenseScore(
         wave: input.wave,
         kills: input.kills,
         sessionId,
+        challengeDay: input.challengeDay || undefined,
       }),
     })
     if (!res.ok) {
@@ -77,9 +98,12 @@ export type TowerDefenseLeaderboardEntry = {
 
 export async function fetchTowerDefenseLeaderboard(
   limit = 20,
+  day?: string | null,
 ): Promise<{ scores: TowerDefenseLeaderboardEntry[]; error?: string }> {
   try {
-    const res = await fetch(`/api/tower-defense/scores?limit=${limit}`, {
+    const qs = new URLSearchParams({ limit: String(limit) })
+    if (day) qs.set('day', day)
+    const res = await fetch(`/api/tower-defense/scores?${qs.toString()}`, {
       cache: 'no-store',
     })
     if (!res.ok) {

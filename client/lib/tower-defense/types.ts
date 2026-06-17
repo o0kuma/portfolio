@@ -4,6 +4,26 @@ export type TowerKind = BaseTowerKind | EvolvedTowerKind
 
 export type EnemyKind = 'normal' | 'fast' | 'tank' | 'boss'
 
+/** Special wave events that modify a wave's composition/stats (Feature 4). */
+export type WaveEvent = 'rush' | 'armored' | 'swarm' | 'elite' | null
+
+/** Per-kind composition counts of an upcoming wave (preview / Feature 1). */
+export interface WavePreview {
+  normal: number
+  fast: number
+  tank: number
+  boss: number
+  event: WaveEvent
+}
+
+/** In-run aggregate stats (Feature 5). */
+export interface RunStats {
+  goldEarned: number
+  goldSpent: number
+  evolveCount: number
+  killsByKind: Record<TowerKind, number>
+}
+
 export interface Vec {
   x: number
   y: number
@@ -69,6 +89,8 @@ export interface Projectile {
   radius: number
   damage: number
   kind: TowerKind
+  /** kind of the tower that fired this (for kill attribution) */
+  sourceKind: TowerKind
   lifeMs: number
   /** splash radius (0 = single target) */
   splash: number
@@ -150,4 +172,15 @@ export interface TowerDefenseHudSnapshot {
   evolveKind: TowerKind | null
   /** gold cost to evolve */
   evolveCost: number
+  /** composition of the upcoming wave shown between waves (Feature 1) */
+  nextWavePreview: WavePreview | null
+  /** the currently-active wave's special event, if any (Feature 4) */
+  activeEvent: WaveEvent
+  /** in-run aggregate stats (Feature 5) */
+  stats: RunStats
+  /**
+   * Synergy/recipe hint for the inspected base tower (Feature 6): the evolved
+   * kind it could become and the neighbor kind required. Null when none / evolved.
+   */
+  synergyHint: { evolveKind: TowerKind; partnerKind: TowerKind } | null
 }

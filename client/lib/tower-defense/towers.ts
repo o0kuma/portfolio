@@ -193,11 +193,28 @@ export const TOWER_ORDER: BaseTowerKind[] = ['pulse', 'splash', 'frost', 'beam']
  * Evolution recipes: two MAX-LEVEL base towers placed in orthogonally adjacent
  * cells fuse into an evolved tower. Keyed by sorted base-kind pair.
  */
-const RECIPES: Record<string, EvolvedTowerKind> = {
+export const RECIPES: Record<string, EvolvedTowerKind> = {
   'frost|splash': 'blizzard',
   'beam|pulse': 'railgun',
   'pulse|splash': 'tempest',
   'beam|frost': 'prism',
+}
+
+/**
+ * For a base tower kind, return the recipes it participates in: the required
+ * adjacent partner base kind and the resulting evolved kind. Empty for evolved.
+ */
+export function recipesForBase(
+  kind: TowerKind,
+): Array<{ partner: BaseTowerKind; evolveKind: EvolvedTowerKind }> {
+  if (TOWER_DEFS[kind].evolved) return []
+  const out: Array<{ partner: BaseTowerKind; evolveKind: EvolvedTowerKind }> = []
+  for (const [key, evolveKind] of Object.entries(RECIPES)) {
+    const [a, b] = key.split('|') as [BaseTowerKind, BaseTowerKind]
+    if (a === kind) out.push({ partner: b, evolveKind })
+    else if (b === kind) out.push({ partner: a, evolveKind })
+  }
+  return out
 }
 
 function recipeKey(a: BaseTowerKind, b: BaseTowerKind): string {
