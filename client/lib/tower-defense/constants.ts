@@ -11,6 +11,9 @@ export const WORLD_HEIGHT = GRID_ROWS * TILE
 export const START_GOLD = 150
 export const START_LIVES = 20
 
+/** Gold cost to fuse two adjacent max-level towers into an evolved tower. */
+export const EVOLVE_COST = 80
+
 /**
  * Fixed path as grid cells (col,row), entrance -> exit. Enemies walk cell
  * centers. Every cell on this list is non-buildable.
@@ -94,6 +97,10 @@ export const PALETTE = {
   splash: '#f87171',
   frost: '#5eead4',
   beam: '#c084fc',
+  blizzard: '#7dd3fc',
+  railgun: '#fca5a5',
+  tempest: '#fcd34d',
+  prism: '#e9d5ff',
   enemyNormal: '#a3e635',
   enemyFast: '#fbbf24',
   enemyTank: '#94a3b8',

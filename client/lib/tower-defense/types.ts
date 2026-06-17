@@ -1,4 +1,6 @@
-export type TowerKind = 'pulse' | 'splash' | 'frost' | 'beam'
+export type BaseTowerKind = 'pulse' | 'splash' | 'frost' | 'beam'
+export type EvolvedTowerKind = 'blizzard' | 'railgun' | 'tempest' | 'prism'
+export type TowerKind = BaseTowerKind | EvolvedTowerKind
 
 export type EnemyKind = 'normal' | 'fast' | 'tank' | 'boss'
 
@@ -14,6 +16,7 @@ export interface Cell {
 }
 
 export interface Enemy {
+  id: number
   x: number
   y: number
   radius: number
@@ -29,6 +32,8 @@ export interface Enemy {
   slowMul: number
   /** gold granted on kill */
   bounty: number
+  /** render-only: white hit-flash timer (ms), set on damage */
+  hitFlashMs: number
 }
 
 export interface Tower {
@@ -54,6 +59,9 @@ export interface Tower {
 export interface Projectile {
   x: number
   y: number
+  /** previous-frame position, for motion trails */
+  px: number
+  py: number
   vx: number
   vy: number
   radius: number
@@ -65,6 +73,10 @@ export interface Projectile {
   /** slow effect applied on hit */
   slowMs: number
   slowMul: number
+  /** remaining number of enemies this projectile can pierce through (0 = stop on first hit) */
+  pierce: number
+  /** ids of enemies already hit (pierce tracking) */
+  hitIds: number[]
 }
 
 export interface Particle {
@@ -76,6 +88,18 @@ export interface Particle {
   maxLifeMs: number
   size: number
   color: string
+}
+
+/** A short-lived instantaneous beam/streak visual (railgun, prism). */
+export interface Beam {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  lifeMs: number
+  maxLifeMs: number
+  color: string
+  width: number
 }
 
 export interface FloatText {
@@ -110,4 +134,10 @@ export interface TowerDefenseHudSnapshot {
   upgradeCost: number
   sellValue: number
   canUpgrade: boolean
+  /** true when the inspected tower can be evolved with an adjacent tower */
+  canEvolve: boolean
+  /** the evolved kind the inspected tower would become (null = none) */
+  evolveKind: TowerKind | null
+  /** gold cost to evolve */
+  evolveCost: number
 }

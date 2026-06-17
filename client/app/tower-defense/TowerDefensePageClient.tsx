@@ -12,9 +12,10 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 
 export default function TowerDefensePageClient() {
-  const { engineRef, hud, choices, actions } = useTowerDefenseGame()
+  const { engineRef, hud, choices, speed, muted, actions } = useTowerDefenseGame()
   const { t } = useLanguage()
   const p = t.towerDefensePage
+  const g = t.towerDefenseGame
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
 
@@ -51,16 +52,26 @@ export default function TowerDefensePageClient() {
           className="relative w-full overflow-hidden rounded-xl ring-1 ring-slate-700"
           style={{ height: 'min(64vh, 560px)' }}
         >
-          <TowerDefenseCanvas engineRef={engineRef} status={status} onTap={actions.tapWorld} />
+          <TowerDefenseCanvas
+            engineRef={engineRef}
+            status={status}
+            onTap={actions.tapWorld}
+            labels={{ boss: g.boss, wave: g.waveBanner }}
+          />
 
           {(status === 'playing' || status === 'paused' || status === 'upgrade') && (
             <TowerDefenseHud
               hud={hud}
+              speed={speed}
+              muted={muted}
               onSelectBuild={actions.selectBuild}
               onNextWave={actions.nextWave}
               onUpgrade={actions.upgradeTower}
               onSell={actions.sellTower}
+              onEvolve={actions.evolveTower}
               onDeselect={actions.deselect}
+              onToggleSpeed={actions.toggleSpeed}
+              onToggleMute={actions.toggleMute}
             />
           )}
 
@@ -82,6 +93,7 @@ export default function TowerDefensePageClient() {
               <h2 className="font-display text-3xl font-bold text-white">{p.readyTitle}</h2>
               <p className="max-w-sm text-sm leading-relaxed text-white/65">{p.readyDesc}</p>
               <p className="text-xs text-white/45">{p.readyControls}</p>
+              <p className="max-w-sm text-xs text-amber-300/80">✦ {g.recipeHint}</p>
               {hud.bestWave > 0 && (
                 <p className="font-mono text-xs text-amber-300">
                   {interpolate(p.bestRecord, { n: hud.bestWave })}
