@@ -398,6 +398,7 @@ export const translations = {
       boss: '보스',
       waveBanner: '웨이브',
       waveCleared: '웨이브 클리어!',
+      evolved: '진화!',
       towers: {
         pulse: { name: '펄스', desc: '저렴하고 빠른 단일 공격' },
         splash: { name: '스플래시', desc: '광역 폭발, 느린 발사' },
@@ -826,6 +827,7 @@ export const translations = {
       boss: 'BOSS',
       waveBanner: 'WAVE',
       waveCleared: 'WAVE CLEARED!',
+      evolved: 'EVOLVED!',
       towers: {
         pulse: { name: 'Pulse', desc: 'Cheap, fast single-target' },
         splash: { name: 'Splash', desc: 'AoE blast, slow fire rate' },

@@ -34,6 +34,8 @@ export interface Enemy {
   bounty: number
   /** render-only: white hit-flash timer (ms), set on damage */
   hitFlashMs: number
+  /** render-only: age since spawn (ms), drives scale-in & tread animation */
+  ageMs: number
 }
 
 export interface Tower {
@@ -88,6 +90,14 @@ export interface Particle {
   maxLifeMs: number
   size: number
   color: string
+  /** optional: current rotation (rad) for spinning rect shards */
+  rot?: number
+  /** optional: angular velocity (rad/s) */
+  spin?: number
+  /** optional: rect width (px); when set with h, draws a rotated rect */
+  w?: number
+  /** optional: rect height (px) */
+  h?: number
 }
 
 /** A short-lived instantaneous beam/streak visual (railgun, prism). */

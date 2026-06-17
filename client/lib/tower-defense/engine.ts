@@ -75,6 +75,12 @@ export class TowerDefenseEngine implements Upgradable {
   /** screen-shake intensity (px), decays each frame; read by the renderer */
   shake = 0
 
+  /** full-screen white flash intensity (0..1), decays each frame; set on boss death */
+  flash = 0
+
+  /** render-only: position + timer for a localized "EVOLVED!" pop, decayed each frame */
+  evolveFlash: { x: number; y: number; ms: number } | null = null
+
   // meta-upgrade modifiers (Upgradable)
   damageMul = 1
   rangeMul = 1
@@ -308,6 +314,7 @@ export class TowerDefenseEngine implements Upgradable {
     this.spawnBurst(c.x, c.y, '#fde047', 28)
     this.spawnBurst(c.x, c.y, '#a5f3fc', 20)
     this.shake = Math.max(this.shake, 9)
+    this.evolveFlash = { x: c.x, y: c.y - 24, ms: 900 }
     this.onSfx?.('evolve')
   }
 
@@ -369,6 +376,11 @@ export class TowerDefenseEngine implements Upgradable {
     const dt = Math.min(dtMs, 50) / 1000 // seconds, clamped
 
     if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 30)
+    if (this.flash > 0) this.flash = Math.max(0, this.flash - dt * 2.2)
+    if (this.evolveFlash) {
+      this.evolveFlash.ms -= dt * 1000
+      if (this.evolveFlash.ms <= 0) this.evolveFlash = null
+    }
 
     this.spawnFromQueue(dt)
     this.moveEnemies(dt)
@@ -398,7 +410,7 @@ export class TowerDefenseEngine implements Upgradable {
     const bScale = bountyScale(this.wave)
     let base: Omit<
       Enemy,
-      'id' | 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul' | 'hitFlashMs'
+      'id' | 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul' | 'hitFlashMs' | 'ageMs'
     >
     if (kind === 'fast') {
       base = {
@@ -446,12 +458,14 @@ export class TowerDefenseEngine implements Upgradable {
       slowMs: 0,
       slowMul: 1,
       hitFlashMs: 0,
+      ageMs: 0,
     })
   }
 
   private moveEnemies(dt: number): void {
     const survivors: Enemy[] = []
     for (const e of this.enemies) {
+      e.ageMs += dt * 1000
       if (e.hitFlashMs > 0) e.hitFlashMs -= dt * 1000
       if (e.slowMs > 0) {
         e.slowMs -= dt * 1000
@@ -604,7 +618,11 @@ export class TowerDefenseEngine implements Upgradable {
           }
         }
       }
-      this.spawnBurst(pr.x, pr.y, pr.kind === 'blizzard' ? '#7dd3fc' : '#f87171', 14)
+      const aoeCyan = pr.kind === 'blizzard'
+      this.spawnBurst(pr.x, pr.y, aoeCyan ? '#7dd3fc' : '#f87171', 14)
+      if (aoeCyan) this.spawnShards(pr.x, pr.y, '#bae6fd', 8)
+      // visible expanding ring for the blast
+      this.spawnRing(pr.x, pr.y)
       this.shake = Math.max(this.shake, 2)
       return true
     }
@@ -613,6 +631,8 @@ export class TowerDefenseEngine implements Upgradable {
     if (pr.slowMs > 0) {
       e.slowMs = pr.slowMs
       e.slowMul = pr.slowMul
+      // frost/prism slow application: cyan crystal burst
+      this.spawnShards(pr.x, pr.y, '#a5f3fc', 5)
     }
     this.onSfx?.('hit')
     if (pr.pierce > 0) {
@@ -659,8 +679,20 @@ export class TowerDefenseEngine implements Upgradable {
       lifeMs: 700,
       color: '#fde047',
     })
-    this.spawnBurst(e.x, e.y, this.enemyColor(e.kind), e.kind === 'boss' ? 32 : 10)
-    if (e.kind === 'boss') this.shake = Math.max(this.shake, 8)
+    if (e.kind === 'tank') {
+      // spinning metal shards
+      this.spawnShards(e.x, e.y, '#9aa48a', 10)
+      this.spawnShards(e.x, e.y, '#5a614a', 6)
+      this.spawnBurst(e.x, e.y, '#3a3f30', 6)
+    } else if (e.kind === 'boss') {
+      this.spawnBurst(e.x, e.y, this.enemyColor(e.kind), 32)
+      this.spawnShards(e.x, e.y, '#fecdd3', 14)
+      this.spawnBurst(e.x, e.y, '#ffffff', 18)
+      this.flash = 1
+      this.shake = Math.max(this.shake, 12)
+    } else {
+      this.spawnBurst(e.x, e.y, this.enemyColor(e.kind), 10)
+    }
   }
 
   private enemyColor(kind: EnemyKind): string {
@@ -687,6 +719,29 @@ export class TowerDefenseEngine implements Upgradable {
     }
   }
 
+  /** Rotating rectangular shard particles (metal debris, ice crystals). */
+  private spawnShards(x: number, y: number, color: string, count: number): void {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2
+      const sp = 50 + Math.random() * 150
+      const w = 2 + Math.random() * 4
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        lifeMs: 360 + Math.random() * 320,
+        maxLifeMs: 680,
+        size: 0,
+        color,
+        rot: Math.random() * Math.PI * 2,
+        spin: (Math.random() - 0.5) * 16,
+        w,
+        h: w * (0.4 + Math.random() * 0.5),
+      })
+    }
+  }
+
   private spawnRing(x: number, y: number): void {
     this.floats.push({ x, y, text: '', lifeMs: 360, color: 'ring' })
   }
@@ -697,6 +752,7 @@ export class TowerDefenseEngine implements Upgradable {
       p.y += p.vy * dt
       p.vx *= 0.92
       p.vy *= 0.92
+      if (p.spin != null) p.rot = (p.rot ?? 0) + p.spin * dt
       p.lifeMs -= dt * 1000
     }
     this.particles = this.particles.filter((p) => p.lifeMs > 0)
