@@ -1,0 +1,560 @@
+import {
+  BOSS_EVERY,
+  GRID_COLS,
+  GRID_ROWS,
+  START_GOLD,
+  START_LIVES,
+  TILE,
+  UPGRADE_EVERY_WAVES,
+  WAYPOINTS,
+  bountyScale,
+  buildPathCellSet,
+  cellCenter,
+  enemyHpScale,
+  enemySpeedScale,
+  waveEnemyCount,
+} from './constants'
+import {
+  MAX_TOWER_LEVEL,
+  TOWER_DEFS,
+  sellValue as defSellValue,
+  towerStats,
+  upgradeCost as defUpgradeCost,
+} from './towers'
+import type { Upgradable, Upgrade } from './upgrades'
+import type {
+  Enemy,
+  EnemyKind,
+  FloatText,
+  GameStatus,
+  Particle,
+  Projectile,
+  Tower,
+  TowerDefenseHudSnapshot,
+  TowerKind,
+} from './types'
+
+const SPAWN_INTERVAL_MS = 650
+const FAST_SPAWN_INTERVAL_MS = 380
+
+function dist2(ax: number, ay: number, bx: number, by: number): number {
+  const dx = ax - bx
+  const dy = ay - by
+  return dx * dx + dy * dy
+}
+
+/**
+ * Fixed-path tower defense engine. Holds mutable entity arrays; `update(dt)`
+ * advances the simulation. Rendering reads the public fields directly.
+ */
+export class TowerDefenseEngine implements Upgradable {
+  enemies: Enemy[] = []
+  towers: Tower[] = []
+  projectiles: Projectile[] = []
+  particles: Particle[] = []
+  floats: FloatText[] = []
+
+  status: GameStatus = 'playing'
+  gold = START_GOLD
+  lives = START_LIVES
+  wave = 0
+  kills = 0
+  bestWave = 0
+
+  /** screen-shake intensity (px), decays each frame; read by the renderer */
+  shake = 0
+
+  // meta-upgrade modifiers (Upgradable)
+  damageMul = 1
+  rangeMul = 1
+  rateMul = 1
+  costMul = 1
+  bonusBounty = 0
+  interest = 0
+
+  /** build selection state, driven by the hook/HUD */
+  selected: TowerKind | null = null
+  selectedTowerId: number | null = null
+
+  private pathCells = buildPathCellSet()
+  private nextTowerId = 1
+  private taken: Record<string, number> = {}
+
+  // wave spawn state
+  private waveActive = false
+  private toSpawn = 0
+  private spawnTimer = 0
+  private waveQueue: EnemyKind[] = []
+
+  constructor(bestWave = 0) {
+    this.bestWave = bestWave
+  }
+
+  get takenUpgrades(): Record<string, number> {
+    return this.taken
+  }
+
+  /** Whether we're between waves and the next-wave button should be active. */
+  get waveIdle(): boolean {
+    return !this.waveActive && this.enemies.length === 0
+  }
+
+  private inspectedTower(): Tower | null {
+    if (this.selectedTowerId == null) return null
+    return this.towers.find((t) => t.id === this.selectedTowerId) ?? null
+  }
+
+  getHud(): TowerDefenseHudSnapshot {
+    const insp = this.inspectedTower()
+    const canUpgrade =
+      insp != null &&
+      insp.level < MAX_TOWER_LEVEL &&
+      this.gold >= this.upgradeCostFor(insp)
+    return {
+      status: this.status,
+      gold: Math.floor(this.gold),
+      lives: this.lives,
+      wave: this.wave,
+      kills: this.kills,
+      bestWave: this.bestWave,
+      waveIdle: this.waveIdle,
+      enemiesLeft: this.toSpawn + this.enemies.length,
+      selected: this.selected,
+      selectedTowerId: this.selectedTowerId,
+      inspectLevel: insp?.level ?? 0,
+      inspectKind: insp?.kind ?? null,
+      upgradeCost: insp ? this.upgradeCostFor(insp) : 0,
+      sellValue: insp ? defSellValue(insp.kind, insp.level) : 0,
+      canUpgrade,
+    }
+  }
+
+  private upgradeCostFor(t: Tower): number {
+    return Math.round(defUpgradeCost(t.kind, t.level) * this.costMul)
+  }
+
+  private buildCostFor(kind: TowerKind): number {
+    return Math.round(TOWER_DEFS[kind].cost * this.costMul)
+  }
+
+  applyUpgrade(u: Upgrade): void {
+    u.apply(this)
+    this.taken[u.id] = (this.taken[u.id] ?? 0) + 1
+    if (this.status === 'upgrade') this.status = 'playing'
+  }
+
+  /** Select a build tower kind (clears tower inspection). */
+  selectBuild(kind: TowerKind | null): void {
+    this.selected = kind
+    if (kind) this.selectedTowerId = null
+  }
+
+  /**
+   * Handle a tap at world coordinates: select an existing tower, or place the
+   * currently-selected build tower on an empty buildable cell.
+   */
+  handleTap(wx: number, wy: number): void {
+    if (this.status !== 'playing') return
+    const col = Math.floor(wx / TILE)
+    const row = Math.floor(wy / TILE)
+    if (col < 0 || row < 0 || col >= GRID_COLS || row >= GRID_ROWS) return
+
+    const existing = this.towers.find((t) => t.col === col && t.row === row)
+    if (existing) {
+      this.selectedTowerId = existing.id
+      this.selected = null
+      return
+    }
+
+    if (this.selected) {
+      this.tryPlace(this.selected, col, row)
+    } else {
+      this.selectedTowerId = null
+    }
+  }
+
+  private tryPlace(kind: TowerKind, col: number, row: number): boolean {
+    if (this.pathCells.has(`${col},${row}`)) return false
+    if (this.towers.some((t) => t.col === col && t.row === row)) return false
+    const cost = this.buildCostFor(kind)
+    if (this.gold < cost) return false
+
+    this.gold -= cost
+    const c = cellCenter(col, row)
+    const s = towerStats(kind, 1)
+    this.towers.push({
+      id: this.nextTowerId++,
+      kind,
+      col,
+      row,
+      x: c.x,
+      y: c.y,
+      level: 1,
+      range: s.range,
+      damage: s.damage,
+      fireRateMs: s.fireRateMs,
+      cooldownMs: 0,
+      aimAngle: 0,
+      flashMs: 0,
+    })
+    // place ring effect
+    this.spawnRing(c.x, c.y)
+    return true
+  }
+
+  /** Upgrade the currently inspected tower if affordable. */
+  upgradeSelected(): void {
+    const t = this.inspectedTower()
+    if (!t || t.level >= MAX_TOWER_LEVEL) return
+    const cost = this.upgradeCostFor(t)
+    if (this.gold < cost) return
+    this.gold -= cost
+    t.level += 1
+    const s = towerStats(t.kind, t.level)
+    t.range = s.range
+    t.damage = s.damage
+    t.fireRateMs = s.fireRateMs
+    this.spawnRing(t.x, t.y)
+  }
+
+  /** Sell the currently inspected tower for a partial refund. */
+  sellSelected(): void {
+    const t = this.inspectedTower()
+    if (!t) return
+    this.gold += defSellValue(t.kind, t.level)
+    this.towers = this.towers.filter((x) => x.id !== t.id)
+    this.selectedTowerId = null
+    this.spawnBurst(t.x, t.y, '#fde047', 10)
+  }
+
+  /** Begin the next wave (only valid while idle). */
+  startNextWave(): void {
+    if (this.status !== 'playing' || !this.waveIdle) return
+    this.wave += 1
+    this.gold += this.interest
+    this.waveActive = true
+    this.spawnTimer = 0
+    this.buildWaveQueue(this.wave)
+    this.toSpawn = this.waveQueue.length
+    if (this.wave % BOSS_EVERY === 0) this.shake = Math.max(this.shake, 10)
+  }
+
+  private buildWaveQueue(wave: number): void {
+    const queue: EnemyKind[] = []
+    const count = waveEnemyCount(wave)
+    for (let i = 0; i < count; i++) {
+      const r = Math.random()
+      let kind: EnemyKind = 'normal'
+      if (wave > 4 && r < 0.22) kind = 'tank'
+      else if (r < 0.5) kind = 'fast'
+      queue.push(kind)
+    }
+    if (wave % BOSS_EVERY === 0) queue.push('boss')
+    this.waveQueue = queue
+  }
+
+  /** Advance the simulation by dtMs (clamped to avoid tunnelling on refocus). */
+  update(dtMs: number): void {
+    if (this.status !== 'playing') return
+    const dt = Math.min(dtMs, 50) / 1000 // seconds, clamped
+
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt * 30)
+
+    this.spawnFromQueue(dt)
+    this.moveEnemies(dt)
+    this.updateTowers(dt)
+    this.updateProjectiles(dt)
+    this.updateParticles(dt)
+    this.updateFloats(dt)
+    this.checkWaveCleared()
+    this.checkDeath()
+  }
+
+  private spawnFromQueue(dt: number): void {
+    if (!this.waveActive || this.toSpawn <= 0) return
+    this.spawnTimer -= dt * 1000
+    if (this.spawnTimer > 0) return
+    const kind = this.waveQueue[this.waveQueue.length - this.toSpawn]
+    this.spawnEnemy(kind)
+    this.toSpawn -= 1
+    this.spawnTimer = kind === 'fast' ? FAST_SPAWN_INTERVAL_MS : SPAWN_INTERVAL_MS
+  }
+
+  private spawnEnemy(kind: EnemyKind): void {
+    const start = WAYPOINTS[0]
+    const hpScale = enemyHpScale(this.wave)
+    const spScale = enemySpeedScale(this.wave)
+    const bScale = bountyScale(this.wave)
+    let base: Omit<Enemy, 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul'>
+    if (kind === 'fast') {
+      base = {
+        radius: 9,
+        hp: 14 * hpScale,
+        maxHp: 14 * hpScale,
+        speed: 130 * spScale,
+        kind,
+        bounty: Math.round(4 * bScale),
+      }
+    } else if (kind === 'tank') {
+      base = {
+        radius: 16,
+        hp: 90 * hpScale,
+        maxHp: 90 * hpScale,
+        speed: 42 * spScale,
+        kind,
+        bounty: Math.round(10 * bScale),
+      }
+    } else if (kind === 'boss') {
+      base = {
+        radius: 24,
+        hp: 800 * hpScale,
+        maxHp: 800 * hpScale,
+        speed: 36 * spScale,
+        kind,
+        bounty: Math.round(120 * bScale),
+      }
+    } else {
+      base = {
+        radius: 12,
+        hp: 32 * hpScale,
+        maxHp: 32 * hpScale,
+        speed: 64 * spScale,
+        kind,
+        bounty: Math.round(6 * bScale),
+      }
+    }
+    this.enemies.push({
+      ...base,
+      x: start.x,
+      y: start.y,
+      wpIndex: 1,
+      slowMs: 0,
+      slowMul: 1,
+    })
+  }
+
+  private moveEnemies(dt: number): void {
+    const survivors: Enemy[] = []
+    for (const e of this.enemies) {
+      if (e.slowMs > 0) {
+        e.slowMs -= dt * 1000
+        if (e.slowMs <= 0) e.slowMul = 1
+      }
+      const target = WAYPOINTS[e.wpIndex]
+      if (!target) {
+        // reached the exit
+        this.lives -= e.kind === 'boss' ? 5 : 1
+        this.shake = Math.max(this.shake, e.kind === 'boss' ? 12 : 5)
+        continue
+      }
+      const dx = target.x - e.x
+      const dy = target.y - e.y
+      const d = Math.hypot(dx, dy)
+      const step = e.speed * (e.slowMs > 0 ? e.slowMul : 1) * dt
+      if (d <= step) {
+        e.x = target.x
+        e.y = target.y
+        e.wpIndex += 1
+      } else {
+        e.x += (dx / d) * step
+        e.y += (dy / d) * step
+      }
+      survivors.push(e)
+    }
+    this.enemies = survivors
+  }
+
+  private updateTowers(dt: number): void {
+    for (const t of this.towers) {
+      if (t.cooldownMs > 0) t.cooldownMs -= dt * 1000
+      if (t.flashMs > 0) t.flashMs -= dt * 1000
+      if (t.cooldownMs > 0) continue
+      const target = this.acquireTarget(t)
+      if (!target) continue
+      t.aimAngle = Math.atan2(target.y - t.y, target.x - t.x)
+      t.cooldownMs = t.fireRateMs * this.rateMul
+      t.flashMs = 90
+      this.fire(t, target)
+    }
+  }
+
+  /** Pick the enemy furthest along the path within range (classic "first"). */
+  private acquireTarget(t: Tower): Enemy | null {
+    let best: Enemy | null = null
+    let bestProgress = -1
+    const r2 = (t.range * this.rangeMul) ** 2
+    for (const e of this.enemies) {
+      if (dist2(e.x, e.y, t.x, t.y) > r2) continue
+      if (e.wpIndex > bestProgress) {
+        bestProgress = e.wpIndex
+        best = e
+      }
+    }
+    return best
+  }
+
+  private fire(t: Tower, target: Enemy): void {
+    const s = towerStats(t.kind, t.level)
+    const dmg = t.damage * this.damageMul
+    const ang = Math.atan2(target.y - t.y, target.x - t.x)
+    this.projectiles.push({
+      x: t.x,
+      y: t.y,
+      vx: Math.cos(ang) * s.bulletSpeed,
+      vy: Math.sin(ang) * s.bulletSpeed,
+      radius: t.kind === 'beam' ? 4 : t.kind === 'splash' ? 6 : 4,
+      damage: dmg,
+      kind: t.kind,
+      lifeMs: 1600,
+      splash: s.splash,
+      slowMs: s.slowMs,
+      slowMul: s.slowMul,
+    })
+  }
+
+  private updateProjectiles(dt: number): void {
+    const next: Projectile[] = []
+    for (const pr of this.projectiles) {
+      pr.x += pr.vx * dt
+      pr.y += pr.vy * dt
+      pr.lifeMs -= dt * 1000
+      if (
+        pr.lifeMs <= 0 ||
+        pr.x < -20 ||
+        pr.y < -20 ||
+        pr.x > GRID_COLS * TILE + 20 ||
+        pr.y > GRID_ROWS * TILE + 20
+      ) {
+        continue
+      }
+      let hit = false
+      for (const e of this.enemies) {
+        const rr = pr.radius + e.radius
+        if (dist2(pr.x, pr.y, e.x, e.y) <= rr * rr) {
+          this.onProjectileHit(pr, e)
+          hit = true
+          break
+        }
+      }
+      if (!hit) next.push(pr)
+    }
+    this.projectiles = next
+  }
+
+  private onProjectileHit(pr: Projectile, e: Enemy): void {
+    if (pr.splash > 0) {
+      // AoE: damage everyone in radius
+      const r2 = pr.splash * pr.splash
+      for (const other of this.enemies) {
+        if (dist2(pr.x, pr.y, other.x, other.y) <= r2) {
+          this.damageEnemy(other, pr.damage)
+        }
+      }
+      this.spawnBurst(pr.x, pr.y, '#f87171', 14)
+      this.shake = Math.max(this.shake, 2)
+    } else {
+      this.damageEnemy(e, pr.damage)
+      if (pr.slowMs > 0) {
+        e.slowMs = pr.slowMs
+        e.slowMul = pr.slowMul
+      }
+      this.spawnBurst(pr.x, pr.y, pr.kind === 'beam' ? '#c084fc' : '#bae6fd', 6)
+    }
+  }
+
+  private damageEnemy(e: Enemy, dmg: number): void {
+    if (e.hp <= 0) return
+    e.hp -= dmg
+    this.floats.push({
+      x: e.x,
+      y: e.y - e.radius - 4,
+      text: String(Math.round(dmg)),
+      lifeMs: 520,
+      color: '#ffffff',
+    })
+    if (e.hp <= 0) this.killEnemy(e)
+  }
+
+  private killEnemy(e: Enemy): void {
+    const idx = this.enemies.indexOf(e)
+    if (idx === -1) return
+    this.enemies.splice(idx, 1)
+    this.kills += 1
+    const bounty = e.bounty + this.bonusBounty
+    this.gold += bounty
+    this.floats.push({
+      x: e.x,
+      y: e.y - e.radius - 14,
+      text: `+${bounty}`,
+      lifeMs: 700,
+      color: '#fde047',
+    })
+    this.spawnBurst(e.x, e.y, this.enemyColor(e.kind), e.kind === 'boss' ? 32 : 10)
+    if (e.kind === 'boss') this.shake = Math.max(this.shake, 8)
+  }
+
+  private enemyColor(kind: EnemyKind): string {
+    if (kind === 'fast') return '#fbbf24'
+    if (kind === 'tank') return '#94a3b8'
+    if (kind === 'boss') return '#fb7185'
+    return '#a3e635'
+  }
+
+  private spawnBurst(x: number, y: number, color: string, count: number): void {
+    for (let i = 0; i < count; i++) {
+      const a = Math.random() * Math.PI * 2
+      const sp = 40 + Math.random() * 120
+      this.particles.push({
+        x,
+        y,
+        vx: Math.cos(a) * sp,
+        vy: Math.sin(a) * sp,
+        lifeMs: 320 + Math.random() * 240,
+        maxLifeMs: 560,
+        size: 2 + Math.floor(Math.random() * 3),
+        color,
+      })
+    }
+  }
+
+  private spawnRing(x: number, y: number): void {
+    this.floats.push({ x, y, text: '', lifeMs: 360, color: 'ring' })
+  }
+
+  private updateParticles(dt: number): void {
+    for (const p of this.particles) {
+      p.x += p.vx * dt
+      p.y += p.vy * dt
+      p.vx *= 0.92
+      p.vy *= 0.92
+      p.lifeMs -= dt * 1000
+    }
+    this.particles = this.particles.filter((p) => p.lifeMs > 0)
+  }
+
+  private updateFloats(dt: number): void {
+    for (const f of this.floats) {
+      if (f.color !== 'ring') f.y -= dt * 26
+      f.lifeMs -= dt * 1000
+    }
+    this.floats = this.floats.filter((f) => f.lifeMs > 0)
+  }
+
+  private checkWaveCleared(): void {
+    if (this.waveActive && this.toSpawn <= 0 && this.enemies.length === 0) {
+      this.waveActive = false
+      if (this.wave > this.bestWave) this.bestWave = this.wave
+      if (this.wave > 0 && this.wave % UPGRADE_EVERY_WAVES === 0) {
+        this.status = 'upgrade'
+      }
+    }
+  }
+
+  private checkDeath(): void {
+    if (this.lives <= 0) {
+      this.lives = 0
+      this.status = 'gameover'
+      if (this.wave > this.bestWave) this.bestWave = this.wave
+    }
+  }
+}
