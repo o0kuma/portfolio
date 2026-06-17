@@ -43,16 +43,59 @@ function parseLimit(searchParams: URLSearchParams): number {
   return Math.min(n, MAX_LIMIT)
 }
 
+/** Validate a `YYYYMMDD` challenge day, else null. */
+function parseChallengeDay(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null
+  const v = raw.trim()
+  return /^\d{8}$/.test(v) ? v : null
+}
+
+/** True when the DB error is a missing challenge_day column (migration not run). */
+function isMissingChallengeColumn(msg: string): boolean {
+  return msg.includes('challenge_day') && /column|does not exist|undefined/i.test(msg)
+}
+
 export async function GET(request: NextRequest) {
   try {
     const limit = parseLimit(request.nextUrl.searchParams)
-    const result = await dbQuery<TowerDefenseScoreRow>(
-      `SELECT id, player_name, wave, kills, created_at
-       FROM tower_defense_scores
-       ORDER BY wave DESC, kills DESC, created_at ASC
-       LIMIT $1`,
-      [limit],
-    )
+    const day = parseChallengeDay(request.nextUrl.searchParams.get('day'))
+
+    let result
+    if (day) {
+      // Daily-challenge leaderboard for the requested day.
+      result = await dbQuery<TowerDefenseScoreRow>(
+        `SELECT id, player_name, wave, kills, created_at
+         FROM tower_defense_scores
+         WHERE challenge_day = $2
+         ORDER BY wave DESC, kills DESC, created_at ASC
+         LIMIT $1`,
+        [limit, day],
+      )
+    } else {
+      // Normal mode: rows not tagged to a challenge (when the column exists).
+      // Use COALESCE so the query is safe even if every row predates the column.
+      try {
+        result = await dbQuery<TowerDefenseScoreRow>(
+          `SELECT id, player_name, wave, kills, created_at
+           FROM tower_defense_scores
+           WHERE challenge_day IS NULL
+           ORDER BY wave DESC, kills DESC, created_at ASC
+           LIMIT $1`,
+          [limit],
+        )
+      } catch (inner: unknown) {
+        const im = inner instanceof Error ? inner.message : ''
+        if (!isMissingChallengeColumn(im)) throw inner
+        // Migration not applied: fall back to the original unfiltered query.
+        result = await dbQuery<TowerDefenseScoreRow>(
+          `SELECT id, player_name, wave, kills, created_at
+           FROM tower_defense_scores
+           ORDER BY wave DESC, kills DESC, created_at ASC
+           LIMIT $1`,
+          [limit],
+        )
+      }
+    }
 
     const scores = result.rows.map((row, index) => ({
       rank: index + 1,
@@ -69,7 +112,7 @@ export async function GET(request: NextRequest) {
     if (msg.includes('DATABASE_URL')) {
       return NextResponse.json({ message: '랭킹을 불러올 수 없습니다.' }, { status: 503 })
     }
-    if (msg.includes('relation "tower_defense_scores"')) {
+    if (msg.includes('relation "tower_defense_scores"') || isMissingChallengeColumn(msg)) {
       return NextResponse.json({ message: 'DB 마이그레이션이 필요합니다.' }, { status: 503 })
     }
     return NextResponse.json({ message: msg }, { status: 500 })
@@ -116,12 +159,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const insert = await dbQuery<{ id: string }>(
-      `INSERT INTO tower_defense_scores (player_name, wave, kills, session_id)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id`,
-      [playerName, wave, kills, sessionId],
-    )
+    const challengeDay = parseChallengeDay(body?.challengeDay)
+
+    let insert
+    if (challengeDay) {
+      try {
+        insert = await dbQuery<{ id: string }>(
+          `INSERT INTO tower_defense_scores (player_name, wave, kills, session_id, challenge_day)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`,
+          [playerName, wave, kills, sessionId, challengeDay],
+        )
+      } catch (inner: unknown) {
+        const im = inner instanceof Error ? inner.message : ''
+        if (!isMissingChallengeColumn(im)) throw inner
+        // Migration not applied: store as a normal score so play isn't lost.
+        insert = await dbQuery<{ id: string }>(
+          `INSERT INTO tower_defense_scores (player_name, wave, kills, session_id)
+           VALUES ($1, $2, $3, $4)
+           RETURNING id`,
+          [playerName, wave, kills, sessionId],
+        )
+      }
+    } else {
+      insert = await dbQuery<{ id: string }>(
+        `INSERT INTO tower_defense_scores (player_name, wave, kills, session_id)
+         VALUES ($1, $2, $3, $4)
+         RETURNING id`,
+        [playerName, wave, kills, sessionId],
+      )
+    }
 
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {

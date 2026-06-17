@@ -10,18 +10,28 @@ import {
   GRID_ROWS,
   PALETTE,
   TILE,
-  WAYPOINTS,
   WORLD_HEIGHT,
   WORLD_WIDTH,
   buildPathCellSet,
+  buildWaypoints,
+  PATH_CELLS,
+  mapDefById,
 } from '@/lib/tower-defense/constants'
+import type { Vec, WaveEvent } from '@/lib/tower-defense/types'
 
 type Props = {
   engineRef: React.MutableRefObject<TowerDefenseEngine | null>
   status: GameStatus
+  /** active map id; changing it rebuilds the static road background */
+  mapId: string
   onTap: (wx: number, wy: number) => void
-  /** localized banner labels */
-  labels: { boss: string; wave: string; evolved: string }
+  /** localized banner labels (events keyed by WaveEvent name) */
+  labels: {
+    boss: string
+    wave: string
+    evolved: string
+    events: { rush: string; armored: string; swarm: string; elite: string }
+  }
 }
 
 const TOWER_COLORS: Record<TowerKind, string> = {
@@ -36,7 +46,12 @@ const TOWER_COLORS: Record<TowerKind, string> = {
 }
 
 const EVOLVED = new Set<TowerKind>(['blizzard', 'railgun', 'tempest', 'prism'])
-const PATH_SET = buildPathCellSet()
+
+// Active map geometry, set by the component effect before each render frame so
+// module-level draw helpers (background, portals, enemy facing) stay in sync
+// with the engine's chosen map (Feature 3).
+let activeWaypoints: Vec[] = buildWaypoints(PATH_CELLS)
+let activePathSet: Set<string> = buildPathCellSet(PATH_CELLS)
 
 /** Deterministic hash-based PRNG so decorative variation never flickers. */
 function hash01(n: number): number {
@@ -63,7 +78,7 @@ function darken(hex: string, amt: number): string {
 }
 
 /** Imperative pixel-retro canvas renderer. Runs its own rAF reading engine state. */
-export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }: Props) {
+export default function TowerDefenseCanvas({ engineRef, status, mapId, onTap, labels }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef({ scale: 1, ox: 0, oy: 0, dpr: 1, w: 0, h: 0 })
@@ -72,7 +87,11 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
   const labelsRef = useRef(labels)
   labelsRef.current = labels
   const hoverRef = useRef<{ col: number; row: number } | null>(null)
-  const waveBannerRef = useRef({ wave: 0, t: 0 })
+  const waveBannerRef = useRef<{ wave: number; t: number; event: WaveEvent }>({
+    wave: 0,
+    t: 0,
+    event: null,
+  })
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -98,7 +117,12 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
     const ro = new ResizeObserver(resize)
     ro.observe(wrap)
 
-    // static background cached to an offscreen canvas (rebuilt once)
+    // sync active map geometry for the module-level draw helpers (Feature 3)
+    const cells = mapDefById(mapId).pathCells
+    activeWaypoints = buildWaypoints(cells)
+    activePathSet = buildPathCellSet(cells)
+
+    // static background cached to an offscreen canvas (rebuilt per map)
     const bgCanvas = document.createElement('canvas')
     const bgCtx = bgCanvas.getContext('2d')
     if (bgCtx) buildBackground(bgCtx, bgCanvas)
@@ -141,15 +165,15 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
         }
       }
 
-      drawPortal(ctx, WAYPOINTS[0].x, WAYPOINTS[0].y, '#4ade80', now)
-      const ex = WAYPOINTS[WAYPOINTS.length - 1]
+      drawPortal(ctx, activeWaypoints[0].x, activeWaypoints[0].y, '#4ade80', now)
+      const ex = activeWaypoints[activeWaypoints.length - 1]
       drawPortal(ctx, ex.x, ex.y, '#f87171', now)
 
       if (e) {
         // build placement preview
         if (e.selected && hoverRef.current) {
           const { col, row } = hoverRef.current
-          const onPath = PATH_SET.has(`${col},${row}`)
+          const onPath = activePathSet.has(`${col},${row}`)
           const occupied = e.towers.some((t) => t.col === col && t.row === row)
           const afford = e.gold >= TOWER_DEFS[e.selected].cost
           const placeable = !onPath && !occupied && afford
@@ -316,9 +340,11 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
 
         // wave banner
         if (e.wave > waveBannerRef.current.wave) {
-          waveBannerRef.current = { wave: e.wave, t: now }
+          waveBannerRef.current = { wave: e.wave, t: now, event: e.activeEvent }
         }
-        drawWaveBanner(ctx, waveBannerRef.current, now, labelsRef.current.wave)
+        const evt = waveBannerRef.current.event
+        const evtLabel = evt ? labelsRef.current.events[evt] : null
+        drawWaveBanner(ctx, waveBannerRef.current, now, labelsRef.current.wave, evtLabel)
       }
 
       if (status === 'paused' || status === 'upgrade') {
@@ -342,7 +368,7 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
       cancelAnimationFrame(raf)
       ro.disconnect()
     }
-  }, [engineRef, status])
+  }, [engineRef, status, mapId])
 
   // pointer -> world coords (tap + hover)
   useEffect(() => {
@@ -416,7 +442,7 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
 
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let col = 0; col < GRID_COLS; col++) {
-      if (PATH_SET.has(`${col},${r}`)) continue
+      if (activePathSet.has(`${col},${r}`)) continue
       const x = col * TILE
       const y = r * TILE
       const checker = (col + r) % 2 === 0
@@ -442,16 +468,16 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
   // road
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let col = 0; col < GRID_COLS; col++) {
-      if (!PATH_SET.has(`${col},${r}`)) continue
+      if (!activePathSet.has(`${col},${r}`)) continue
       const x = col * TILE
       const y = r * TILE
       c.fillStyle = PALETTE.road
       c.fillRect(x, y, TILE, TILE)
       c.fillStyle = darken(PALETTE.road, 18)
-      if (!PATH_SET.has(`${col},${r - 1}`)) c.fillRect(x, y, TILE, 3)
-      if (!PATH_SET.has(`${col},${r + 1}`)) c.fillRect(x, y + TILE - 3, TILE, 3)
-      if (!PATH_SET.has(`${col - 1},${r}`)) c.fillRect(x, y, 3, TILE)
-      if (!PATH_SET.has(`${col + 1},${r}`)) c.fillRect(x + TILE - 3, y, 3, TILE)
+      if (!activePathSet.has(`${col},${r - 1}`)) c.fillRect(x, y, TILE, 3)
+      if (!activePathSet.has(`${col},${r + 1}`)) c.fillRect(x, y + TILE - 3, TILE, 3)
+      if (!activePathSet.has(`${col - 1},${r}`)) c.fillRect(x, y, 3, TILE)
+      if (!activePathSet.has(`${col + 1},${r}`)) c.fillRect(x + TILE - 3, y, 3, TILE)
       c.fillStyle = lighten(PALETTE.road, 22)
       c.fillRect(x + TILE / 2 - 4, y + TILE / 2 - 4, 8, 8)
       const h2 = hash01(col * 53 + r * 97 + 999)
@@ -466,9 +492,9 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
 
   // directional chevrons toward exit
   c.fillStyle = 'rgba(255,235,190,0.18)'
-  for (let i = 0; i < WAYPOINTS.length - 1; i++) {
-    const a = WAYPOINTS[i]
-    const b = WAYPOINTS[i + 1]
+  for (let i = 0; i < activeWaypoints.length - 1; i++) {
+    const a = activeWaypoints[i]
+    const b = activeWaypoints[i + 1]
     const ang = Math.atan2(b.y - a.y, b.x - a.x)
     const len = Math.hypot(b.x - a.x, b.y - a.y)
     const steps = Math.max(1, Math.floor(len / 28))
@@ -491,7 +517,7 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
 
   // spawn-zone marker behind the entrance portal (soft circle)
   {
-    const sp = WAYPOINTS[0]
+    const sp = activeWaypoints[0]
     const sg = c.createRadialGradient(sp.x, sp.y, 2, sp.x, sp.y, 30)
     sg.addColorStop(0, 'rgba(74,222,128,0.20)')
     sg.addColorStop(1, 'rgba(74,222,128,0)')
@@ -502,7 +528,7 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
   // deterministic tire-track / crack marks along the road tiles
   for (let r = 0; r < GRID_ROWS; r++) {
     for (let col = 0; col < GRID_COLS; col++) {
-      if (!PATH_SET.has(`${col},${r}`)) continue
+      if (!activePathSet.has(`${col},${r}`)) continue
       const hh = hash01(col * 41 + r * 113 + 555)
       if (hh < 0.62) continue
       const x = col * TILE
@@ -1110,7 +1136,7 @@ function drawProjectile(
 
 /** Facing angle from the enemy toward its next waypoint (radians). */
 function enemyFacing(en: Enemy): number {
-  const t = WAYPOINTS[en.wpIndex]
+  const t = activeWaypoints[en.wpIndex]
   if (!t) return 0
   const dx = t.x - en.x
   const dy = t.y - en.y
@@ -1188,6 +1214,7 @@ function drawWaveBanner(
   banner: { wave: number; t: number },
   now: number,
   waveLabel: string,
+  eventLabel: string | null,
 ) {
   const age = now - banner.t
   if (banner.wave <= 0 || age > 1600) return
@@ -1210,6 +1237,13 @@ function drawWaveBanner(
   ctx.fillText(`${waveLabel} ${banner.wave}`, x + 2, WORLD_HEIGHT / 2 + 2)
   ctx.fillStyle = '#fde047'
   ctx.fillText(`${waveLabel} ${banner.wave}`, x, WORLD_HEIGHT / 2)
+  if (eventLabel) {
+    ctx.font = 'bold 14px "Courier New", monospace'
+    ctx.fillStyle = 'rgba(0,0,0,0.7)'
+    ctx.fillText(eventLabel, x + 1, WORLD_HEIGHT / 2 + 23)
+    ctx.fillStyle = '#fb7185'
+    ctx.fillText(eventLabel, x, WORLD_HEIGHT / 2 + 22)
+  }
   ctx.restore()
   ctx.globalAlpha = 1
   ctx.textAlign = 'left'

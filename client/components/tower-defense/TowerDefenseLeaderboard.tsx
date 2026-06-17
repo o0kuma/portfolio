@@ -21,7 +21,14 @@ function formatDate(iso: string, locale: string): string {
   }
 }
 
-export default function TowerDefenseLeaderboard({ refreshKey = 0 }: { refreshKey?: number }) {
+export default function TowerDefenseLeaderboard({
+  refreshKey = 0,
+  day = null,
+}: {
+  refreshKey?: number
+  /** when set, shows that day's daily-challenge leaderboard */
+  day?: string | null
+}) {
   const { t, locale } = useLanguage()
   const lb = t.towerDefenseGame.leaderboard
   const [entries, setEntries] = useState<TowerDefenseLeaderboardEntry[]>([])
@@ -30,11 +37,11 @@ export default function TowerDefenseLeaderboard({ refreshKey = 0 }: { refreshKey
 
   const load = useCallback(async () => {
     setLoading(true)
-    const { scores, error: err } = await fetchTowerDefenseLeaderboard(20)
+    const { scores, error: err } = await fetchTowerDefenseLeaderboard(20, day)
     setEntries(scores)
     setError(err ?? null)
     setLoading(false)
-  }, [])
+  }, [day])
 
   useEffect(() => {
     load()
@@ -43,7 +50,7 @@ export default function TowerDefenseLeaderboard({ refreshKey = 0 }: { refreshKey
   return (
     <div className="flex w-full flex-col gap-3 rounded-xl border border-slate-700 bg-slate-900/90 p-4">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold text-white">{lb.title}</h2>
+        <h2 className="text-sm font-semibold text-white">{day ? lb.dailyTitle : lb.title}</h2>
         <button
           type="button"
           onClick={() => load()}

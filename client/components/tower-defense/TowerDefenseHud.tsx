@@ -11,6 +11,8 @@ type Props = {
   hud: TowerDefenseHudSnapshot
   speed: number
   muted: boolean
+  autoStart: boolean
+  autoCountdown: number | null
   onSelectBuild: (kind: TowerKind) => void
   onNextWave: () => void
   onUpgrade: () => void
@@ -19,6 +21,14 @@ type Props = {
   onDeselect: () => void
   onToggleSpeed: () => void
   onToggleMute: () => void
+  onToggleAuto: () => void
+}
+
+const ENEMY_ICON: Record<'normal' | 'fast' | 'tank' | 'boss', string> = {
+  normal: '🟢',
+  fast: '🟡',
+  tank: '⬜',
+  boss: '🔴',
 }
 
 /** Pill whose value flashes briefly when it changes. */
@@ -57,6 +67,8 @@ export default function TowerDefenseHud({
   hud,
   speed,
   muted,
+  autoStart,
+  autoCountdown,
   onSelectBuild,
   onNextWave,
   onUpgrade,
@@ -65,9 +77,11 @@ export default function TowerDefenseHud({
   onDeselect,
   onToggleSpeed,
   onToggleMute,
+  onToggleAuto,
 }: Props) {
   const { t } = useLanguage()
   const g = t.towerDefenseGame
+  const preview = hud.nextWavePreview
 
   // wave progress: how much of the active wave is dealt with
   const totalWave = hud.enemiesLeft
@@ -102,6 +116,18 @@ export default function TowerDefenseHud({
             className="pointer-events-auto inline-flex items-center rounded-md border border-white/10 bg-black/55 px-2 py-1 text-white/70 transition hover:border-white/40"
           >
             {muted ? <FiVolumeX className="h-3 w-3" /> : <FiVolume2 className="h-3 w-3" />}
+          </button>
+          <button
+            type="button"
+            onClick={onToggleAuto}
+            aria-label="auto next wave"
+            className={`pointer-events-auto inline-flex items-center rounded-md border px-2 py-1 font-semibold transition ${
+              autoStart
+                ? 'border-emerald-400/60 bg-emerald-400/20 text-emerald-300'
+                : 'border-white/10 bg-black/55 text-white/60 hover:border-white/40'
+            }`}
+          >
+            {g.autoLabel}
           </button>
         </div>
       </div>
@@ -159,6 +185,41 @@ export default function TowerDefenseHud({
             >
               ✕
             </button>
+            {hud.synergyHint && (
+              <p className="w-full text-center text-[10px] text-amber-300/80">
+                ✦{' '}
+                {interpolate(g.synergyHint, {
+                  self: g.towers[hud.inspectKind].name,
+                  partner: g.towers[hud.synergyHint.partnerKind].name,
+                  result: g.towers[hud.synergyHint.evolveKind].name,
+                })}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* next-wave preview (Feature 1) + event badge (Feature 4) */}
+        {hud.waveIdle && preview && (
+          <div className="pointer-events-auto mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] text-white/85 backdrop-blur-sm">
+            <span className="text-white/55">{g.nextWavePreview}</span>
+            {(['normal', 'fast', 'tank', 'boss'] as const).map((k) =>
+              preview[k] > 0 ? (
+                <span key={k} className="inline-flex items-center gap-0.5 tabular-nums">
+                  <span>{ENEMY_ICON[k]}</span>
+                  {preview[k]}
+                </span>
+              ) : null,
+            )}
+            {preview.boss > 0 && (
+              <span className="rounded bg-rose-500/30 px-1.5 py-0.5 font-bold text-rose-300">
+                {g.boss}
+              </span>
+            )}
+            {preview.event && (
+              <span className="rounded bg-amber-500/30 px-1.5 py-0.5 font-bold text-amber-300">
+                {g.events[preview.event]}
+              </span>
+            )}
           </div>
         )}
 
@@ -199,7 +260,11 @@ export default function TowerDefenseHud({
             disabled={!hud.waveIdle}
             className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-slate-950 transition enabled:hover:bg-emerald-400 disabled:opacity-40"
           >
-            {hud.waveIdle ? g.nextWave : interpolate(g.enemiesLeft, { n: hud.enemiesLeft })}
+            {hud.waveIdle
+              ? autoStart && autoCountdown != null
+                ? interpolate(g.autoCountdown, { n: autoCountdown })
+                : g.nextWave
+              : interpolate(g.enemiesLeft, { n: hud.enemiesLeft })}
           </button>
         </div>
       </div>

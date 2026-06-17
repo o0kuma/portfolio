@@ -381,12 +381,22 @@ export const translations = {
       restart: '다시 하기',
       controlsHint:
         '타워를 골라 빈 칸에 배치하세요. 타워를 누르면 강화/판매 메뉴가 열립니다. 모바일에서는 탭으로 동일하게 조작합니다. 적이 출구에 닿으면 생명이 줄고, 생명이 0이 되면 게임이 끝납니다.',
+      dailyChallenge: '데일리 챌린지',
+      maps: {
+        classic: '클래식',
+        maze: '미로',
+        highway: '하이웨이',
+      },
     },
     towerDefenseGame: {
       waveLabel: 'W{n}',
       waveColumn: '웨이브',
       nextWave: '다음 웨이브 ▶',
       enemiesLeft: '남은 적 {n}',
+      nextWavePreview: '다음:',
+      autoLabel: '자동',
+      autoCountdown: '자동 {n}초',
+      synergyHint: '{self} + 인접 {partner} (둘 다 Lv.3) → {result}',
       upgradeTitle: '강화!',
       chooseUpgrade: '글로벌 강화를 하나 선택하세요',
       upgradeFor: '강화 🪙{cost}',
@@ -399,6 +409,23 @@ export const translations = {
       waveBanner: '웨이브',
       waveCleared: '웨이브 클리어!',
       evolved: '진화!',
+      playerName: {
+        label: '랭킹 닉네임',
+        placeholder: '미입력 시 Anonymous',
+        hint: '2~20자 · 게임 오버 시 점수가 서버에 기록됩니다.',
+      },
+      events: {
+        rush: '러시! (이동 속도 +50%)',
+        armored: '중장갑! (탱크 다수)',
+        swarm: '스웜! (적 3배, 체력 절반)',
+        elite: '엘리트! (수 절반, 체력·속도 2배)',
+      },
+      stats: {
+        goldEarned: '획득 골드',
+        goldSpent: '소비 골드',
+        evolveCount: '진화 횟수',
+        topTower: '최다 처치 타워',
+      },
       towers: {
         pulse: { name: '펄스', desc: '저렴하고 빠른 단일 공격' },
         splash: { name: '스플래시', desc: '광역 폭발, 느린 발사' },
@@ -419,6 +446,7 @@ export const translations = {
       },
       leaderboard: {
         title: '랭킹 TOP 20',
+        dailyTitle: '데일리 챌린지 랭킹',
         refresh: '새로고침',
         loading: '불러오는 중…',
         dbError: 'DB 연결 또는 마이그레이션이 필요합니다.',
@@ -810,12 +838,22 @@ export const translations = {
       restart: 'Play Again',
       controlsHint:
         'Pick a tower and place it on an empty cell. Tap a placed tower to upgrade or sell it. Touch works the same way on mobile. Enemies reaching the exit cost lives; the game ends when lives hit 0.',
+      dailyChallenge: 'Daily Challenge',
+      maps: {
+        classic: 'Classic',
+        maze: 'Maze',
+        highway: 'Highway',
+      },
     },
     towerDefenseGame: {
       waveLabel: 'W{n}',
       waveColumn: 'Wave',
       nextWave: 'Next Wave ▶',
       enemiesLeft: 'Enemies: {n}',
+      nextWavePreview: 'Next:',
+      autoLabel: 'AUTO',
+      autoCountdown: 'Auto {n}s',
+      synergyHint: '{self} + adjacent {partner} (both Lv.3) → {result}',
       upgradeTitle: 'Upgrade!',
       chooseUpgrade: 'Choose a global upgrade',
       upgradeFor: 'Upgrade 🪙{cost}',
@@ -828,6 +866,23 @@ export const translations = {
       waveBanner: 'WAVE',
       waveCleared: 'WAVE CLEARED!',
       evolved: 'EVOLVED!',
+      playerName: {
+        label: 'Leaderboard nickname',
+        placeholder: 'Anonymous if blank',
+        hint: '2–20 chars · your score is recorded on game over.',
+      },
+      events: {
+        rush: 'RUSH! (+50% speed)',
+        armored: 'ARMORED! (mostly tanks)',
+        swarm: 'SWARM! (3x count, half HP)',
+        elite: 'ELITE! (half count, 2x HP & speed)',
+      },
+      stats: {
+        goldEarned: 'Gold earned',
+        goldSpent: 'Gold spent',
+        evolveCount: 'Evolutions',
+        topTower: 'Top tower',
+      },
       towers: {
         pulse: { name: 'Pulse', desc: 'Cheap, fast single-target' },
         splash: { name: 'Splash', desc: 'AoE blast, slow fire rate' },
@@ -848,6 +903,7 @@ export const translations = {
       },
       leaderboard: {
         title: 'Top 20',
+        dailyTitle: 'Daily Challenge',
         refresh: 'Refresh',
         loading: 'Loading…',
         dbError: 'DB connection or migration required.',

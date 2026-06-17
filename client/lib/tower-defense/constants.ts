@@ -40,11 +40,11 @@ export function cellCenter(col: number, row: number): Vec {
 export const WAYPOINTS: Vec[] = PATH_CELLS.map((c) => cellCenter(c.col, c.row))
 
 /** Build the set of path-occupied cells (so towers can't be placed on the road). */
-export function buildPathCellSet(): Set<string> {
+export function buildPathCellSet(cells: Cell[] = PATH_CELLS): Set<string> {
   const set = new Set<string>()
-  for (let i = 0; i < PATH_CELLS.length - 1; i++) {
-    const a = PATH_CELLS[i]
-    const b = PATH_CELLS[i + 1]
+  for (let i = 0; i < cells.length - 1; i++) {
+    const a = cells[i]
+    const b = cells[i + 1]
     const dc = Math.sign(b.col - a.col)
     const dr = Math.sign(b.row - a.row)
     let c = a.col
@@ -58,6 +58,64 @@ export function buildPathCellSet(): Set<string> {
   }
   return set
 }
+
+/** Build the waypoint list (world px) from a list of path corner cells. */
+export function buildWaypoints(cells: Cell[]): Vec[] {
+  return cells.map((c) => cellCenter(c.col, c.row))
+}
+
+// ---------------------------------------------------------------------------
+// Multiple maps (Feature 3)
+// ---------------------------------------------------------------------------
+
+export type MapId = 'classic' | 'maze' | 'highway'
+
+export interface MapDef {
+  id: MapId
+  /** localization key into towerDefensePage.maps */
+  nameKey: MapId
+  pathCells: Cell[]
+}
+
+const MAZE_CELLS: Cell[] = [
+  { col: 0, row: 1 },
+  { col: 4, row: 1 },
+  { col: 4, row: 4 },
+  { col: 1, row: 4 },
+  { col: 1, row: 7 },
+  { col: 6, row: 7 },
+  { col: 6, row: 3 },
+  { col: 9, row: 3 },
+  { col: 9, row: 9 },
+  { col: 13, row: 9 },
+  { col: 13, row: 5 },
+  { col: 15, row: 5 },
+]
+
+const HIGHWAY_CELLS: Cell[] = [
+  { col: 0, row: 3 },
+  { col: 13, row: 3 },
+  { col: 13, row: 8 },
+  { col: 2, row: 8 },
+  { col: 2, row: 10 },
+  { col: 15, row: 10 },
+]
+
+export const MAP_DEFS: MapDef[] = [
+  { id: 'classic', nameKey: 'classic', pathCells: PATH_CELLS },
+  { id: 'maze', nameKey: 'maze', pathCells: MAZE_CELLS },
+  { id: 'highway', nameKey: 'highway', pathCells: HIGHWAY_CELLS },
+]
+
+export function mapDefById(id: MapId | string | null | undefined): MapDef {
+  return MAP_DEFS.find((m) => m.id === id) ?? MAP_DEFS[0]
+}
+
+export const TD_MAP_KEY = 'tower-defense-map'
+export const TD_AUTOSTART_KEY = 'tower-defense-autostart'
+
+/** Special wave events (Feature 4). */
+export type WaveEvent = 'rush' | 'armored' | 'swarm' | 'elite' | null
 
 /** Endless scaling. Wave N (1-indexed). */
 export function waveEnemyCount(wave: number): number {
