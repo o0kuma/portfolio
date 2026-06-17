@@ -7,6 +7,7 @@ import { submitTowerDefenseScore } from '@/lib/tower-defense/leaderboardClient'
 import { rollUpgrades, type Upgrade } from '@/lib/tower-defense/upgrades'
 import { START_GOLD, START_LIVES } from '@/lib/tower-defense/constants'
 import { TOWER_ORDER } from '@/lib/tower-defense/towers'
+import { tdAudio } from '@/lib/tower-defense/audio'
 import type { TowerDefenseHudSnapshot, TowerKind } from '@/lib/tower-defense/types'
 
 const HUD_THROTTLE_MS = 80 // ~12fps HUD updates
@@ -28,6 +29,9 @@ function emptyHud(bestWave: number): TowerDefenseHudSnapshot {
     upgradeCost: 0,
     sellValue: 0,
     canUpgrade: false,
+    canEvolve: false,
+    evolveKind: null,
+    evolveCost: 0,
   }
 }
 
@@ -35,6 +39,9 @@ export function useTowerDefenseGame() {
   const engineRef = useRef<TowerDefenseEngine | null>(null)
   const [hud, setHud] = useState<TowerDefenseHudSnapshot>(() => emptyHud(0))
   const [choices, setChoices] = useState<Upgrade[]>([])
+  const [speed, setSpeed] = useState(1)
+  const [muted, setMuted] = useState(false)
+  const speedRef = useRef(1)
 
   const rafRef = useRef<number | null>(null)
   const lastTsRef = useRef<number>(0)
@@ -46,6 +53,7 @@ export function useTowerDefenseGame() {
   useEffect(() => {
     const best = readBest()
     setHud(emptyHud(best.wave))
+    setMuted(tdAudio.isMuted())
   }, [])
 
   const syncHud = useCallback(() => {
@@ -57,10 +65,17 @@ export function useTowerDefenseGame() {
     (ts: number) => {
       const e = engineRef.current
       if (!e) return
-      const dt = lastTsRef.current ? ts - lastTsRef.current : 16
+      const rawDt = lastTsRef.current ? ts - lastTsRef.current : 16
       lastTsRef.current = ts
+      const dt = rawDt * speedRef.current
 
-      e.update(dt)
+      // step the sim in <=50ms chunks so 2x speed never tunnels
+      let remaining = dt
+      while (remaining > 0) {
+        const chunk = Math.min(remaining, 50)
+        e.update(chunk)
+        remaining -= chunk
+      }
 
       if (e.status === 'upgrade' && choicesEmptyRef.current) {
         const rolled = rollUpgrades(e, e.takenUpgrades, 3)
@@ -104,6 +119,7 @@ export function useTowerDefenseGame() {
     const best = readBest()
     const engine = new TowerDefenseEngine(best.wave)
     engine.status = 'playing'
+    engine.onSfx = (ev) => tdAudio.play(ev)
     engineRef.current = engine
     persistedRef.current = false
     choicesEmptyRef.current = true
@@ -172,6 +188,25 @@ export function useTowerDefenseGame() {
     syncHud()
   }, [syncHud])
 
+  const evolveTower = useCallback(() => {
+    const e = engineRef.current
+    if (!e) return
+    e.evolveSelected()
+    syncHud()
+  }, [syncHud])
+
+  const toggleSpeed = useCallback(() => {
+    setSpeed((s) => {
+      const next = s === 1 ? 2 : 1
+      speedRef.current = next
+      return next
+    })
+  }, [])
+
+  const toggleMute = useCallback(() => {
+    setMuted(tdAudio.toggleMute())
+  }, [])
+
   const deselect = useCallback(() => {
     const e = engineRef.current
     if (!e) return
@@ -214,6 +249,8 @@ export function useTowerDefenseGame() {
     engineRef,
     hud,
     choices,
+    speed,
+    muted,
     actions: {
       start,
       restart,
@@ -223,8 +260,11 @@ export function useTowerDefenseGame() {
       tapWorld,
       upgradeTower,
       sellTower,
+      evolveTower,
       deselect,
       nextWave,
+      toggleSpeed,
+      toggleMute,
     },
   }
 }

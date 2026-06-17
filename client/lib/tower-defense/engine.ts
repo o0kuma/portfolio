@@ -1,5 +1,6 @@
 import {
   BOSS_EVERY,
+  EVOLVE_COST,
   GRID_COLS,
   GRID_ROWS,
   START_GOLD,
@@ -17,12 +18,14 @@ import {
 import {
   MAX_TOWER_LEVEL,
   TOWER_DEFS,
+  evolutionFor,
   sellValue as defSellValue,
   towerStats,
   upgradeCost as defUpgradeCost,
 } from './towers'
 import type { Upgradable, Upgrade } from './upgrades'
 import type {
+  Beam,
   Enemy,
   EnemyKind,
   FloatText,
@@ -36,6 +39,9 @@ import type {
 
 const SPAWN_INTERVAL_MS = 650
 const FAST_SPAWN_INTERVAL_MS = 380
+const PALETTE_BEAM = '#c084fc'
+const PALETTE_PRISM = '#e9d5ff'
+const PALETTE_RAILGUN = '#fca5a5'
 
 function dist2(ax: number, ay: number, bx: number, by: number): number {
   const dx = ax - bx
@@ -53,6 +59,11 @@ export class TowerDefenseEngine implements Upgradable {
   projectiles: Projectile[] = []
   particles: Particle[] = []
   floats: FloatText[] = []
+  beams: Beam[] = []
+
+  /** optional SFX hook fired on notable events (set by the host) */
+  onSfx: ((event: 'shoot' | 'hit' | 'place' | 'evolve' | 'wave' | 'over') => void) | null =
+    null
 
   status: GameStatus = 'playing'
   gold = START_GOLD
@@ -78,6 +89,7 @@ export class TowerDefenseEngine implements Upgradable {
 
   private pathCells = buildPathCellSet()
   private nextTowerId = 1
+  private nextEnemyId = 1
   private taken: Record<string, number> = {}
 
   // wave spawn state
@@ -104,12 +116,36 @@ export class TowerDefenseEngine implements Upgradable {
     return this.towers.find((t) => t.id === this.selectedTowerId) ?? null
   }
 
+  /**
+   * If the inspected tower is a max-level base tower with a max-level
+   * orthogonally-adjacent base tower forming a recipe, return the evolution
+   * (the partner tower + resulting kind). Otherwise null.
+   */
+  private evolveInfo(): { partner: Tower; kind: TowerKind } | null {
+    const t = this.inspectedTower()
+    if (!t || t.level < MAX_TOWER_LEVEL || TOWER_DEFS[t.kind].evolved) return null
+    const neighbours: Array<[number, number]> = [
+      [t.col + 1, t.row],
+      [t.col - 1, t.row],
+      [t.col, t.row + 1],
+      [t.col, t.row - 1],
+    ]
+    for (const [c, r] of neighbours) {
+      const p = this.towers.find((x) => x.col === c && x.row === r)
+      if (!p || p.level < MAX_TOWER_LEVEL || TOWER_DEFS[p.kind].evolved) continue
+      const kind = evolutionFor(t.kind, p.kind)
+      if (kind) return { partner: p, kind }
+    }
+    return null
+  }
+
   getHud(): TowerDefenseHudSnapshot {
     const insp = this.inspectedTower()
     const canUpgrade =
       insp != null &&
       insp.level < MAX_TOWER_LEVEL &&
       this.gold >= this.upgradeCostFor(insp)
+    const evo = this.evolveInfo()
     return {
       status: this.status,
       gold: Math.floor(this.gold),
@@ -126,7 +162,36 @@ export class TowerDefenseEngine implements Upgradable {
       upgradeCost: insp ? this.upgradeCostFor(insp) : 0,
       sellValue: insp ? defSellValue(insp.kind, insp.level) : 0,
       canUpgrade,
+      canEvolve: evo != null && this.gold >= EVOLVE_COST,
+      evolveKind: evo?.kind ?? null,
+      evolveCost: EVOLVE_COST,
     }
+  }
+
+  /**
+   * Render hint: pairs of adjacent max-level base towers that form a valid
+   * recipe (used to draw a pulsing link). Returns dedup'd tower-id pairs.
+   */
+  evolveLinks(): Array<{ a: Tower; b: Tower }> {
+    const out: Array<{ a: Tower; b: Tower }> = []
+    const seen = new Set<string>()
+    for (const t of this.towers) {
+      if (t.level < MAX_TOWER_LEVEL || TOWER_DEFS[t.kind].evolved) continue
+      const neighbours: Array<[number, number]> = [
+        [t.col + 1, t.row],
+        [t.col, t.row + 1],
+      ]
+      for (const [c, r] of neighbours) {
+        const p = this.towers.find((x) => x.col === c && x.row === r)
+        if (!p || p.level < MAX_TOWER_LEVEL || TOWER_DEFS[p.kind].evolved) continue
+        if (!evolutionFor(t.kind, p.kind)) continue
+        const key = [t.id, p.id].sort().join('-')
+        if (seen.has(key)) continue
+        seen.add(key)
+        out.push({ a: t, b: p })
+      }
+    }
+    return out
   }
 
   private upgradeCostFor(t: Tower): number {
@@ -199,7 +264,51 @@ export class TowerDefenseEngine implements Upgradable {
     })
     // place ring effect
     this.spawnRing(c.x, c.y)
+    this.onSfx?.('place')
     return true
+  }
+
+  /**
+   * Fuse the inspected tower with its valid adjacent partner into the evolved
+   * kind. Removes both base towers, places the evolved tower (level 1) on the
+   * inspected cell, plays a big ring + burst + shake.
+   */
+  evolveSelected(): void {
+    const t = this.inspectedTower()
+    const evo = this.evolveInfo()
+    if (!t || !evo || this.gold < EVOLVE_COST) return
+    this.gold -= EVOLVE_COST
+    const col = t.col
+    const row = t.row
+    const partnerId = evo.partner.id
+    // remove both base towers
+    this.towers = this.towers.filter((x) => x.id !== t.id && x.id !== partnerId)
+    const c = cellCenter(col, row)
+    const s = towerStats(evo.kind, 1)
+    const newTower: Tower = {
+      id: this.nextTowerId++,
+      kind: evo.kind,
+      col,
+      row,
+      x: c.x,
+      y: c.y,
+      level: 1,
+      range: s.range,
+      damage: s.damage,
+      fireRateMs: s.fireRateMs,
+      cooldownMs: 0,
+      aimAngle: 0,
+      flashMs: 0,
+    }
+    this.towers.push(newTower)
+    this.selectedTowerId = newTower.id
+    // big effect
+    this.spawnRing(c.x, c.y)
+    this.spawnRing(c.x, c.y)
+    this.spawnBurst(c.x, c.y, '#fde047', 28)
+    this.spawnBurst(c.x, c.y, '#a5f3fc', 20)
+    this.shake = Math.max(this.shake, 9)
+    this.onSfx?.('evolve')
   }
 
   /** Upgrade the currently inspected tower if affordable. */
@@ -237,6 +346,7 @@ export class TowerDefenseEngine implements Upgradable {
     this.buildWaveQueue(this.wave)
     this.toSpawn = this.waveQueue.length
     if (this.wave % BOSS_EVERY === 0) this.shake = Math.max(this.shake, 10)
+    this.onSfx?.('wave')
   }
 
   private buildWaveQueue(wave: number): void {
@@ -266,6 +376,7 @@ export class TowerDefenseEngine implements Upgradable {
     this.updateProjectiles(dt)
     this.updateParticles(dt)
     this.updateFloats(dt)
+    this.updateBeams(dt)
     this.checkWaveCleared()
     this.checkDeath()
   }
@@ -285,7 +396,10 @@ export class TowerDefenseEngine implements Upgradable {
     const hpScale = enemyHpScale(this.wave)
     const spScale = enemySpeedScale(this.wave)
     const bScale = bountyScale(this.wave)
-    let base: Omit<Enemy, 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul'>
+    let base: Omit<
+      Enemy,
+      'id' | 'x' | 'y' | 'wpIndex' | 'slowMs' | 'slowMul' | 'hitFlashMs'
+    >
     if (kind === 'fast') {
       base = {
         radius: 9,
@@ -325,17 +439,20 @@ export class TowerDefenseEngine implements Upgradable {
     }
     this.enemies.push({
       ...base,
+      id: this.nextEnemyId++,
       x: start.x,
       y: start.y,
       wpIndex: 1,
       slowMs: 0,
       slowMul: 1,
+      hitFlashMs: 0,
     })
   }
 
   private moveEnemies(dt: number): void {
     const survivors: Enemy[] = []
     for (const e of this.enemies) {
+      if (e.hitFlashMs > 0) e.hitFlashMs -= dt * 1000
       if (e.slowMs > 0) {
         e.slowMs -= dt * 1000
         if (e.slowMs <= 0) e.slowMul = 1
@@ -375,6 +492,7 @@ export class TowerDefenseEngine implements Upgradable {
       t.cooldownMs = t.fireRateMs * this.rateMul
       t.flashMs = 90
       this.fire(t, target)
+      this.onSfx?.('shoot')
     }
   }
 
@@ -397,24 +515,52 @@ export class TowerDefenseEngine implements Upgradable {
     const s = towerStats(t.kind, t.level)
     const dmg = t.damage * this.damageMul
     const ang = Math.atan2(target.y - t.y, target.x - t.x)
+
+    // Beam-type towers fire an instantaneous hitscan line + transient visual.
+    if (t.kind === 'beam' || t.kind === 'prism') {
+      this.damageEnemy(target, dmg)
+      if (s.slowMs > 0) {
+        target.slowMs = s.slowMs
+        target.slowMul = s.slowMul
+      }
+      this.beams.push({
+        x1: t.x,
+        y1: t.y,
+        x2: target.x,
+        y2: target.y,
+        lifeMs: 140,
+        maxLifeMs: 140,
+        color: t.kind === 'prism' ? PALETTE_PRISM : PALETTE_BEAM,
+        width: t.kind === 'prism' ? 3 : 2,
+      })
+      this.spawnBurst(target.x, target.y, t.kind === 'prism' ? '#e9d5ff' : '#c084fc', 6)
+      return
+    }
+
     this.projectiles.push({
       x: t.x,
       y: t.y,
+      px: t.x,
+      py: t.y,
       vx: Math.cos(ang) * s.bulletSpeed,
       vy: Math.sin(ang) * s.bulletSpeed,
-      radius: t.kind === 'beam' ? 4 : t.kind === 'splash' ? 6 : 4,
+      radius: t.kind === 'splash' || t.kind === 'blizzard' ? 6 : 4,
       damage: dmg,
       kind: t.kind,
       lifeMs: 1600,
       splash: s.splash,
       slowMs: s.slowMs,
       slowMul: s.slowMul,
+      pierce: s.pierce,
+      hitIds: [],
     })
   }
 
   private updateProjectiles(dt: number): void {
     const next: Projectile[] = []
     for (const pr of this.projectiles) {
+      pr.px = pr.x
+      pr.py = pr.y
       pr.x += pr.vx * dt
       pr.y += pr.vy * dt
       pr.lifeMs -= dt * 1000
@@ -427,44 +573,68 @@ export class TowerDefenseEngine implements Upgradable {
       ) {
         continue
       }
-      let hit = false
+      let consumed = false
       for (const e of this.enemies) {
+        if (pr.hitIds.length > 0 && pr.hitIds.includes(e.id)) continue
         const rr = pr.radius + e.radius
         if (dist2(pr.x, pr.y, e.x, e.y) <= rr * rr) {
-          this.onProjectileHit(pr, e)
-          hit = true
-          break
+          const stop = this.onProjectileHit(pr, e)
+          if (stop) {
+            consumed = true
+            break
+          }
         }
       }
-      if (!hit) next.push(pr)
+      if (!consumed) next.push(pr)
     }
     this.projectiles = next
   }
 
-  private onProjectileHit(pr: Projectile, e: Enemy): void {
+  /** Returns true if the projectile should be destroyed (no more piercing). */
+  private onProjectileHit(pr: Projectile, e: Enemy): boolean {
     if (pr.splash > 0) {
       // AoE: damage everyone in radius
       const r2 = pr.splash * pr.splash
       for (const other of this.enemies) {
         if (dist2(pr.x, pr.y, other.x, other.y) <= r2) {
           this.damageEnemy(other, pr.damage)
+          if (pr.slowMs > 0) {
+            other.slowMs = pr.slowMs
+            other.slowMul = pr.slowMul
+          }
         }
       }
-      this.spawnBurst(pr.x, pr.y, '#f87171', 14)
+      this.spawnBurst(pr.x, pr.y, pr.kind === 'blizzard' ? '#7dd3fc' : '#f87171', 14)
       this.shake = Math.max(this.shake, 2)
-    } else {
-      this.damageEnemy(e, pr.damage)
-      if (pr.slowMs > 0) {
-        e.slowMs = pr.slowMs
-        e.slowMul = pr.slowMul
-      }
-      this.spawnBurst(pr.x, pr.y, pr.kind === 'beam' ? '#c084fc' : '#bae6fd', 6)
+      return true
     }
+    // single / piercing target
+    this.damageEnemy(e, pr.damage)
+    if (pr.slowMs > 0) {
+      e.slowMs = pr.slowMs
+      e.slowMul = pr.slowMul
+    }
+    this.onSfx?.('hit')
+    if (pr.pierce > 0) {
+      pr.hitIds.push(e.id)
+      this.spawnBurst(pr.x, pr.y, PALETTE_RAILGUN, 4)
+      pr.pierce -= 1
+      return pr.pierce < 0 ? true : false
+    }
+    this.spawnBurst(pr.x, pr.y, pr.kind === 'beam' ? '#c084fc' : '#bae6fd', 6)
+    return true
+  }
+
+  private updateBeams(dt: number): void {
+    if (this.beams.length === 0) return
+    for (const b of this.beams) b.lifeMs -= dt * 1000
+    this.beams = this.beams.filter((b) => b.lifeMs > 0)
   }
 
   private damageEnemy(e: Enemy, dmg: number): void {
     if (e.hp <= 0) return
     e.hp -= dmg
+    e.hitFlashMs = 90
     this.floats.push({
       x: e.x,
       y: e.y - e.radius - 4,
@@ -554,6 +724,7 @@ export class TowerDefenseEngine implements Upgradable {
     if (this.lives <= 0) {
       this.lives = 0
       this.status = 'gameover'
+      this.onSfx?.('over')
       if (this.wave > this.bestWave) this.bestWave = this.wave
     }
   }
