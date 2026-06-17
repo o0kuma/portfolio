@@ -56,7 +56,7 @@ export default function TowerDefensePageClient() {
             engineRef={engineRef}
             status={status}
             onTap={actions.tapWorld}
-            labels={{ boss: g.boss, wave: g.waveBanner }}
+            labels={{ boss: g.boss, wave: g.waveBanner, evolved: g.evolved }}
           />
 
           {(status === 'playing' || status === 'paused' || status === 'upgrade') && (

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react'
 import type { TowerDefenseEngine } from '@/lib/tower-defense/engine'
-import type { Enemy, GameStatus, Tower, TowerKind } from '@/lib/tower-defense/types'
+import type { Enemy, GameStatus, Projectile, Tower, TowerKind } from '@/lib/tower-defense/types'
 import { TOWER_DEFS } from '@/lib/tower-defense/towers'
 import {
+  BOSS_EVERY,
   GRID_COLS,
   GRID_ROWS,
   PALETTE,
@@ -20,7 +21,7 @@ type Props = {
   status: GameStatus
   onTap: (wx: number, wy: number) => void
   /** localized banner labels */
-  labels: { boss: string; wave: string }
+  labels: { boss: string; wave: string; evolved: string }
 }
 
 const TOWER_COLORS: Record<TowerKind, string> = {
@@ -128,6 +129,18 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
 
       ctx.drawImage(bgCanvas, 0, 0)
 
+      // boss-wave ambiance: subtle pulsing red tint over the world
+      if (e) {
+        const bossActive =
+          e.enemies.some((en) => en.kind === 'boss') ||
+          (e.wave > 0 && e.wave % BOSS_EVERY === 0 && e.enemies.length > 0)
+        if (bossActive) {
+          const pulse = 0.06 + 0.04 * (0.5 + 0.5 * Math.sin(now / 420))
+          ctx.fillStyle = `rgba(248,80,80,${pulse})`
+          ctx.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+        }
+      }
+
       drawPortal(ctx, WAYPOINTS[0].x, WAYPOINTS[0].y, '#4ade80', now)
       const ex = WAYPOINTS[WAYPOINTS.length - 1]
       drawPortal(ctx, ex.x, ex.y, '#f87171', now)
@@ -205,38 +218,43 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
           ctx.globalCompositeOperation = 'lighter'
           for (const b of e.beams) {
             const a = b.lifeMs / b.maxLifeMs
+            // prism refraction: hue-shift the outer glow over its short life
+            let outer = b.color
+            if (b.color === PALETTE.prism) {
+              const hue = (200 + (1 - a) * 120) % 360
+              outer = `hsl(${hue},90%,72%)`
+            }
             ctx.globalAlpha = a
-            ctx.strokeStyle = b.color
-            ctx.lineWidth = b.width + 3
+            ctx.strokeStyle = outer
+            ctx.lineWidth = b.width + 5
             ctx.beginPath()
             ctx.moveTo(b.x1, b.y1)
             ctx.lineTo(b.x2, b.y2)
             ctx.stroke()
-            ctx.lineWidth = b.width
+            // bright white core line
+            ctx.lineWidth = Math.max(1, b.width - 1)
             ctx.strokeStyle = '#ffffff'
             ctx.stroke()
+            // impact flash at the far end
+            ctx.globalAlpha = a * 0.9
+            ctx.fillStyle = outer
+            ctx.beginPath()
+            ctx.arc(b.x2, b.y2, 5 + (1 - a) * 6, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.fillStyle = '#ffffff'
+            ctx.beginPath()
+            ctx.arc(b.x2, b.y2, 2.5, 0, Math.PI * 2)
+            ctx.fill()
           }
           ctx.restore()
           ctx.globalAlpha = 1
         }
 
-        // projectiles w/ trail + additive glow
+        // projectiles w/ trail + additive glow (per-kind silhouette)
         ctx.save()
         ctx.globalCompositeOperation = 'lighter'
         for (const pr of e.projectiles) {
-          const col = TOWER_COLORS[pr.kind]
-          ctx.strokeStyle = col
-          ctx.globalAlpha = 0.5
-          ctx.lineWidth = pr.radius
-          ctx.beginPath()
-          ctx.moveTo(pr.px, pr.py)
-          ctx.lineTo(pr.x, pr.y)
-          ctx.stroke()
-          ctx.globalAlpha = 1
-          ctx.fillStyle = col
-          ctx.fillRect(Math.round(pr.x - pr.radius), Math.round(pr.y - pr.radius), pr.radius * 2, pr.radius * 2)
-          ctx.fillStyle = '#ffffff'
-          ctx.fillRect(Math.round(pr.x - pr.radius / 2), Math.round(pr.y - pr.radius / 2), pr.radius, pr.radius)
+          drawProjectile(ctx, pr, now)
         }
         ctx.restore()
         ctx.globalAlpha = 1
@@ -249,7 +267,16 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
         for (const p of e.particles) {
           ctx.globalAlpha = Math.max(0, p.lifeMs / p.maxLifeMs)
           ctx.fillStyle = p.color
-          ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+          if (p.w != null && p.h != null) {
+            // spinning rectangular shard
+            ctx.save()
+            ctx.translate(p.x, p.y)
+            ctx.rotate(p.rot ?? 0)
+            ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h)
+            ctx.restore()
+          } else {
+            ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size)
+          }
         }
         ctx.restore()
         ctx.globalAlpha = 1
@@ -269,6 +296,24 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
         ctx.globalAlpha = 1
         ctx.textAlign = 'left'
 
+        // evolution "EVOLVED!" pop (localized, position from engine)
+        if (e.evolveFlash) {
+          const ev = e.evolveFlash
+          const p = Math.min(1, (900 - ev.ms) / 200)
+          const rise = (1 - ev.ms / 900) * 14
+          ctx.save()
+          ctx.globalAlpha = Math.min(1, ev.ms / 300)
+          ctx.textAlign = 'center'
+          ctx.font = `bold ${10 + p * 4}px "Courier New", monospace`
+          ctx.fillStyle = 'rgba(0,0,0,0.8)'
+          ctx.fillText(labelsRef.current.evolved, ev.x + 1, ev.y - rise + 1)
+          ctx.fillStyle = PALETTE.gold
+          ctx.fillText(labelsRef.current.evolved, ev.x, ev.y - rise)
+          ctx.restore()
+          ctx.globalAlpha = 1
+          ctx.textAlign = 'left'
+        }
+
         // wave banner
         if (e.wave > waveBannerRef.current.wave) {
           waveBannerRef.current = { wave: e.wave, t: now }
@@ -279,6 +324,13 @@ export default function TowerDefenseCanvas({ engineRef, status, onTap, labels }:
       if (status === 'paused' || status === 'upgrade') {
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
         ctx.fillStyle = 'rgba(8,10,22,0.55)'
+        ctx.fillRect(0, 0, w, h)
+      }
+
+      // boss-death full-screen white flash (screen-space, after world reset)
+      if (e && e.flash > 0) {
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+        ctx.fillStyle = `rgba(255,255,255,${Math.min(0.85, e.flash)})`
         ctx.fillRect(0, 0, w, h)
       }
 
@@ -437,6 +489,42 @@ function buildBackground(c: CanvasRenderingContext2D, canvas: HTMLCanvasElement)
     }
   }
 
+  // spawn-zone marker behind the entrance portal (soft circle)
+  {
+    const sp = WAYPOINTS[0]
+    const sg = c.createRadialGradient(sp.x, sp.y, 2, sp.x, sp.y, 30)
+    sg.addColorStop(0, 'rgba(74,222,128,0.20)')
+    sg.addColorStop(1, 'rgba(74,222,128,0)')
+    c.fillStyle = sg
+    c.fillRect(sp.x - 30, sp.y - 30, 60, 60)
+  }
+
+  // deterministic tire-track / crack marks along the road tiles
+  for (let r = 0; r < GRID_ROWS; r++) {
+    for (let col = 0; col < GRID_COLS; col++) {
+      if (!PATH_SET.has(`${col},${r}`)) continue
+      const hh = hash01(col * 41 + r * 113 + 555)
+      if (hh < 0.62) continue
+      const x = col * TILE
+      const y = r * TILE
+      c.fillStyle = darken(PALETTE.road, 16)
+      if (hh > 0.84) {
+        // crack: short forked line
+        const sx = x + 8 + Math.floor(hash01(col * 7 + r) * (TILE - 16))
+        const sy = y + 8 + Math.floor(hash01(col * 3 + r * 5) * (TILE - 16))
+        c.fillRect(sx, sy, 6, 1)
+        c.fillRect(sx + 5, sy - 3, 1, 5)
+      } else {
+        // twin tire tracks across the tile
+        const ty = y + 12 + Math.floor(hash01(col + r * 9) * (TILE - 24))
+        for (let tx = x + 3; tx < x + TILE - 3; tx += 5) {
+          c.fillRect(tx, ty, 3, 1)
+          c.fillRect(tx, ty + 7, 3, 1)
+        }
+      }
+    }
+  }
+
   // vignette
   const vg = c.createRadialGradient(
     WORLD_WIDTH / 2,
@@ -546,6 +634,27 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
   ctx.fillRect(t.x - plate, t.y + plate - 2, plate * 2, 2)
   ctx.fillRect(t.x + plate - 2, t.y - plate, 2, plate * 2)
 
+  if (evolved) {
+    // octagonal base plate over the square one
+    const o = plate
+    const c = o * 0.42
+    ctx.fillStyle = darken(col, 38)
+    ctx.beginPath()
+    ctx.moveTo(t.x - o + c, t.y - o)
+    ctx.lineTo(t.x + o - c, t.y - o)
+    ctx.lineTo(t.x + o, t.y - o + c)
+    ctx.lineTo(t.x + o, t.y + o - c)
+    ctx.lineTo(t.x + o - c, t.y + o)
+    ctx.lineTo(t.x - o + c, t.y + o)
+    ctx.lineTo(t.x - o, t.y + o - c)
+    ctx.lineTo(t.x - o, t.y - o + c)
+    ctx.closePath()
+    ctx.fill()
+    ctx.strokeStyle = lighten(col, 24)
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+  }
+
   const flash = t.flashMs > 0
   ctx.save()
   ctx.translate(t.x, t.y)
@@ -557,6 +666,14 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
   const corePulse = 0.6 + 0.4 * Math.sin(now / 280 + t.id)
   ctx.save()
   ctx.globalCompositeOperation = 'lighter'
+  if (evolved) {
+    // brighter halo + white core for evolved towers
+    ctx.globalAlpha = corePulse * 0.7
+    ctx.fillStyle = lighten(col, 50)
+    ctx.beginPath()
+    ctx.arc(t.x, t.y, 8, 0, Math.PI * 2)
+    ctx.fill()
+  }
   ctx.globalAlpha = corePulse
   ctx.fillStyle = evolved ? '#ffffff' : lighten(col, 40)
   const cs = evolved ? 6 : 4
@@ -594,26 +711,47 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
 
 function drawTurret(ctx: CanvasRenderingContext2D, kind: TowerKind, plate: number) {
   switch (kind) {
-    case 'pulse':
-      ctx.fillRect(0, -5, plate + 5, 3)
-      ctx.fillRect(0, 2, plate + 5, 3)
-      break
-    case 'splash':
-      ctx.fillRect(2, -5, plate, 10)
-      ctx.fillRect(plate + 2, -3, 4, 6)
-      break
-    case 'frost':
+    case 'pulse': {
+      // twin round-capped barrels
+      ctx.fillRect(0, -5, plate + 4, 3)
+      ctx.fillRect(0, 2, plate + 4, 3)
       ctx.beginPath()
-      ctx.moveTo(2, 0)
-      ctx.lineTo(plate, -5)
-      ctx.lineTo(plate + 6, 0)
-      ctx.lineTo(plate, 5)
+      ctx.arc(plate + 4, -3.5, 2, 0, Math.PI * 2)
+      ctx.arc(plate + 4, 3.5, 2, 0, Math.PI * 2)
+      ctx.fill()
+      break
+    }
+    case 'splash': {
+      // wide open mortar cup (U), no long barrel
+      ctx.fillRect(0, -7, 5, 14)
+      ctx.fillRect(0, 5, plate + 4, 4)
+      ctx.fillRect(0, -9, plate + 4, 4)
+      ctx.fillRect(plate, -9, 4, 18)
+      break
+    }
+    case 'frost': {
+      // faceted crystal/prism emitter
+      ctx.beginPath()
+      ctx.moveTo(2, -6)
+      ctx.lineTo(plate + 2, -3)
+      ctx.lineTo(plate + 8, 0)
+      ctx.lineTo(plate + 2, 3)
+      ctx.lineTo(2, 6)
+      ctx.lineTo(plate - 2, 0)
       ctx.closePath()
       ctx.fill()
       break
+    }
     case 'beam':
-      ctx.fillRect(0, -2, plate + 10, 4)
-      ctx.fillRect(plate + 8, -3, 3, 6)
+      // long thin lens barrel with glowing lens dot at tip
+      ctx.fillRect(0, -1.5, plate + 12, 3)
+      ctx.save()
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.fillStyle = '#ffffff'
+      ctx.beginPath()
+      ctx.arc(plate + 12, 0, 2.5, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
       break
     case 'tempest':
       ctx.fillRect(0, -6, plate, 3)
@@ -653,6 +791,333 @@ function enemyColor(en: Enemy): string {
   return PALETTE.enemyNormal
 }
 
+/** 🟡 NORMAL — round slime blob with squash/stretch bob and forward eyes. */
+function drawSlime(
+  ctx: CanvasRenderingContext2D,
+  en: Enemy,
+  now: number,
+  col: string,
+) {
+  const slowed = en.slowMs > 0
+  const bobSpeed = slowed ? 360 : 180
+  const t = Math.sin(now / bobSpeed + en.id)
+  const bob = t * 1.5
+  const rad = en.radius
+  const rx = rad * (1 + t * 0.07)
+  const ry = rad * (1 - t * 0.07)
+  const cx = en.x
+  const cy = en.y + bob
+  const face = enemyFacing(en)
+  const fx = Math.cos(face)
+
+  // body
+  ctx.fillStyle = darken(col, 36)
+  ctx.beginPath()
+  ctx.ellipse(cx, cy + 1, rx, ry, 0, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = col
+  ctx.beginPath()
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // rim light on top
+  ctx.fillStyle = lighten(col, 40)
+  ctx.beginPath()
+  ctx.ellipse(cx - rx * 0.25, cy - ry * 0.45, rx * 0.5, ry * 0.28, 0, 0, Math.PI * 2)
+  ctx.fill()
+  // forward-leaning eyes
+  const ex = fx * rad * 0.3
+  ctx.fillStyle = '#0b0f1f'
+  ctx.fillRect(Math.round(cx + ex - 3), Math.round(cy - 2), 2, 3)
+  ctx.fillRect(Math.round(cx + ex + 2), Math.round(cy - 2), 2, 3)
+}
+
+/** 🟠 FAST — small diamond drone with motion streak + jitter + glow core. */
+function drawFast(
+  ctx: CanvasRenderingContext2D,
+  en: Enemy,
+  now: number,
+  col: string,
+) {
+  const rad = en.radius
+  const jitter = Math.sin(now / 40 + en.id * 3) * 1.2
+  const cx = en.x
+  const cy = en.y + jitter
+  const face = enemyFacing(en)
+
+  // motion streak behind (opposite of facing)
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.globalAlpha = 0.5
+  ctx.strokeStyle = col
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.moveTo(cx, cy)
+  ctx.lineTo(cx - Math.cos(face) * rad * 2.4, cy - Math.sin(face) * rad * 2.4)
+  ctx.stroke()
+  ctx.restore()
+  ctx.globalAlpha = 1
+
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate(face + Math.PI / 4)
+  // diamond (rotated square) silhouette
+  const s = rad
+  ctx.fillStyle = '#0b0f1f'
+  ctx.fillRect(-s - 1, -s - 1, (s + 1) * 2, (s + 1) * 2)
+  ctx.fillStyle = col
+  ctx.fillRect(-s, -s, s * 2, s * 2)
+  ctx.fillStyle = lighten(col, 36)
+  ctx.fillRect(-s, -s, s * 2, 2)
+  ctx.fillRect(-s, -s, 2, s * 2)
+  ctx.restore()
+
+  // glowing core dot
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.fillStyle = '#fffbe6'
+  const cs = 3 + Math.sin(now / 90 + en.id) * 1
+  ctx.fillRect(Math.round(cx - cs / 2), Math.round(cy - cs / 2), cs, cs)
+  ctx.restore()
+}
+
+/** 🟤 TANK — top-down hull + animated treads + rotating turret & barrel. */
+function drawTank(ctx: CanvasRenderingContext2D, en: Enemy, now: number) {
+  const rad = en.radius
+  const cx = en.x
+  const cy = en.y
+  const face = enemyFacing(en)
+  const body = PALETTE.enemyTankBody
+  const tread = PALETTE.enemyTankTread
+
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.rotate(face)
+
+  // local frame: +x = forward. hull longer than tall.
+  const hl = rad * 1.15 // half length
+  const hh = rad * 0.7 // half height
+  const treadH = rad * 0.32
+
+  // treads (perpendicular to travel — top & bottom bars)
+  for (const sign of [-1, 1]) {
+    const ty = sign * (hh + treadH * 0.2)
+    ctx.fillStyle = tread
+    ctx.fillRect(-hl, ty - treadH / 2, hl * 2, treadH)
+    // rolling tick pattern scrolling with time
+    ctx.fillStyle = lighten(tread, 28)
+    const period = 5
+    const scroll = (now / 22) % period
+    for (let x = -hl - period + ((scroll + period) % period); x < hl; x += period) {
+      ctx.fillRect(Math.round(x), Math.round(ty - treadH / 2), 2, treadH)
+    }
+  }
+
+  // hull with bevel rim-light (top/left) + shadow (bottom/right)
+  ctx.fillStyle = '#0b0f1f'
+  ctx.fillRect(-hl - 1, -hh - 1, (hl + 1) * 2, (hh + 1) * 2)
+  ctx.fillStyle = body
+  ctx.fillRect(-hl, -hh, hl * 2, hh * 2)
+  ctx.fillStyle = lighten(body, 30)
+  ctx.fillRect(-hl, -hh, hl * 2, 2)
+  ctx.fillRect(-hl, -hh, 2, hh * 2)
+  ctx.fillStyle = darken(body, 34)
+  ctx.fillRect(-hl, hh - 2, hl * 2, 2)
+  ctx.fillRect(hl - 2, -hh, 2, hh * 2)
+
+  // rounded turret box centered on hull
+  const ts = rad * 0.5
+  ctx.fillStyle = darken(body, 14)
+  ctx.fillRect(-ts, -ts, ts * 2, ts * 2)
+  ctx.fillStyle = lighten(body, 18)
+  ctx.fillRect(-ts, -ts, ts * 2, 1.5)
+  // gun barrel pointing forward (+x)
+  ctx.fillStyle = darken(body, 40)
+  ctx.fillRect(ts - 1, -2, rad * 0.9, 4)
+  ctx.fillStyle = lighten(body, 10)
+  ctx.fillRect(ts - 1, -2, rad * 0.9, 1)
+
+  ctx.restore()
+
+  // hit-flash hull (additive) handled by shared overlay in drawEnemy
+}
+
+/** 🔴 BOSS — armored core, shoulder pads, pulsing eye, cracks, spawn scale-in. */
+function drawBoss(
+  ctx: CanvasRenderingContext2D,
+  en: Enemy,
+  now: number,
+  col: string,
+) {
+  const rad = en.radius
+  // scale-in spawn animation over first ~400ms
+  const scale = Math.min(1, 0.4 + (en.ageMs / 400) * 0.6)
+  const cx = en.x
+  const cy = en.y
+  const face = enemyFacing(en)
+
+  ctx.save()
+  ctx.translate(cx, cy)
+  ctx.scale(scale, scale)
+  ctx.rotate(face)
+
+  const r = rad
+
+  // shoulder pads (trapezoids) on each side (perpendicular to travel)
+  ctx.fillStyle = darken(col, 30)
+  for (const sign of [-1, 1]) {
+    ctx.beginPath()
+    ctx.moveTo(-r * 0.3, sign * r)
+    ctx.lineTo(r * 0.3, sign * r)
+    ctx.lineTo(r * 0.55, sign * (r + r * 0.5))
+    ctx.lineTo(-r * 0.55, sign * (r + r * 0.5))
+    ctx.closePath()
+    ctx.fill()
+  }
+  ctx.fillStyle = lighten(col, 18)
+  for (const sign of [-1, 1]) {
+    ctx.fillRect(-r * 0.5, sign * (r + r * 0.5) - (sign > 0 ? 2 : 0), r, 2)
+  }
+
+  // armored core box
+  ctx.fillStyle = '#0b0f1f'
+  ctx.fillRect(-r - 2, -r - 2, (r + 2) * 2, (r + 2) * 2)
+  ctx.fillStyle = col
+  ctx.fillRect(-r, -r, r * 2, r * 2)
+  ctx.fillStyle = darken(col, 38)
+  for (let i = -r; i < r; i += 8) ctx.fillRect(i, -r, 2, r * 2)
+  ctx.fillStyle = lighten(col, 30)
+  ctx.fillRect(-r, -r, r * 2, 2)
+  ctx.fillStyle = darken(col, 30)
+  ctx.fillRect(-r, r - 2, r * 2, 2)
+
+  // damage cracks growing as hp drops (deterministic via hash)
+  const ratio = Math.max(0, en.hp / en.maxHp)
+  const thresholds = [0.75, 0.5, 0.25]
+  ctx.strokeStyle = 'rgba(10,12,20,0.85)'
+  ctx.lineWidth = 1.5
+  for (let ci = 0; ci < thresholds.length; ci++) {
+    if (ratio >= thresholds[ci]) continue
+    const seed = en.id * 31 + ci * 97
+    const ox = (hash01(seed) - 0.5) * r * 1.4
+    const oy = (hash01(seed + 7) - 0.5) * r * 1.4
+    const a1 = hash01(seed + 13) * Math.PI * 2
+    const len = r * (0.5 + hash01(seed + 19) * 0.5)
+    ctx.beginPath()
+    ctx.moveTo(ox, oy)
+    const mx = ox + Math.cos(a1) * len
+    const my = oy + Math.sin(a1) * len
+    ctx.lineTo(mx, my)
+    // branch
+    const a2 = a1 + (hash01(seed + 23) - 0.5) * 1.6
+    ctx.lineTo(mx + Math.cos(a2) * len * 0.5, my + Math.sin(a2) * len * 0.5)
+    ctx.stroke()
+  }
+
+  // pulsing additive core / eye
+  ctx.save()
+  ctx.globalCompositeOperation = 'lighter'
+  const pulse = 0.5 + 0.5 * Math.sin(now / 180 + en.id)
+  ctx.globalAlpha = 0.5 + 0.5 * pulse
+  ctx.fillStyle = '#fff1f2'
+  const es = r * 0.4 + pulse * 2
+  ctx.beginPath()
+  ctx.arc(0, 0, es, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
+
+  ctx.restore()
+  ctx.globalAlpha = 1
+}
+
+/** Per-kind projectile rendering (called inside the additive-glow block). */
+function drawProjectile(
+  ctx: CanvasRenderingContext2D,
+  pr: Projectile,
+  now: number,
+) {
+  const col = TOWER_COLORS[pr.kind]
+  const r = pr.radius
+  const ang = Math.atan2(pr.y - pr.py, pr.x - pr.px)
+
+  // trail
+  ctx.strokeStyle = col
+  ctx.globalAlpha = 0.45
+  ctx.lineWidth = r
+  ctx.beginPath()
+  ctx.moveTo(pr.px, pr.py)
+  ctx.lineTo(pr.x, pr.y)
+  ctx.stroke()
+  ctx.globalAlpha = 1
+
+  if (pr.kind === 'frost' || pr.kind === 'blizzard') {
+    // hexagonal cyan shard
+    ctx.save()
+    ctx.translate(pr.x, pr.y)
+    ctx.rotate(now / 120)
+    ctx.fillStyle = col
+    ctx.beginPath()
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2
+      const px = Math.cos(a) * (r + 1)
+      const py = Math.sin(a) * (r + 1)
+      if (i === 0) ctx.moveTo(px, py)
+      else ctx.lineTo(px, py)
+    }
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(-1, -1, 2, 2)
+    ctx.restore()
+    return
+  }
+
+  if (pr.kind === 'splash') {
+    // larger round shell
+    ctx.fillStyle = col
+    ctx.beginPath()
+    ctx.arc(pr.x, pr.y, r + 1, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.fillStyle = '#ffffff'
+    ctx.beginPath()
+    ctx.arc(pr.x, pr.y, r * 0.45, 0, Math.PI * 2)
+    ctx.fill()
+    return
+  }
+
+  if (pr.kind === 'railgun') {
+    // bright lance
+    ctx.save()
+    ctx.translate(pr.x, pr.y)
+    ctx.rotate(ang)
+    ctx.fillStyle = col
+    ctx.fillRect(-r * 2, -r / 2, r * 4, r)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(-r * 2, -1, r * 4, 2)
+    ctx.restore()
+    return
+  }
+
+  // pulse / tempest / generic round glowing dot
+  ctx.fillStyle = col
+  ctx.beginPath()
+  ctx.arc(pr.x, pr.y, r, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#ffffff'
+  ctx.beginPath()
+  ctx.arc(pr.x, pr.y, r * 0.5, 0, Math.PI * 2)
+  ctx.fill()
+}
+
+/** Facing angle from the enemy toward its next waypoint (radians). */
+function enemyFacing(en: Enemy): number {
+  const t = WAYPOINTS[en.wpIndex]
+  if (!t) return 0
+  const dx = t.x - en.x
+  const dy = t.y - en.y
+  if (dx === 0 && dy === 0) return 0
+  return Math.atan2(dy, dx)
+}
+
 function drawEnemy(
   ctx: CanvasRenderingContext2D,
   en: Enemy,
@@ -662,59 +1127,32 @@ function drawEnemy(
   const slowed = en.slowMs > 0
   const col = enemyColor(en)
   const rad = en.radius
-  const bobSpeed = slowed ? 360 : 180
-  const bob = Math.sin(now / bobSpeed + en.id) * 1.5
-  const squash = 1 + Math.sin(now / bobSpeed + en.id) * 0.06
-  const cx = en.x
-  const cy = en.y + bob
 
+  // ground shadow (always)
   ctx.fillStyle = 'rgba(0,0,0,0.3)'
   ctx.beginPath()
   ctx.ellipse(en.x, en.y + rad, rad, rad * 0.4, 0, 0, Math.PI * 2)
   ctx.fill()
 
-  if (en.kind === 'boss') {
-    ctx.fillStyle = '#0b0f1f'
-    ctx.fillRect(cx - rad - 2, cy - rad - 2, (rad + 2) * 2, (rad + 2) * 2)
-    ctx.fillStyle = col
-    ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2)
-    ctx.fillStyle = darken(col, 40)
-    for (let i = -rad; i < rad; i += 8) ctx.fillRect(cx + i, cy - rad, 2, rad * 2)
-    ctx.fillStyle = lighten(col, 30)
-    ctx.fillRect(cx - rad, cy - rad, rad * 2, 2)
-    ctx.save()
-    ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = '#fff1f2'
-    ctx.fillRect(cx - rad / 2 - 2, cy - 4, 4, 4)
-    ctx.fillRect(cx + rad / 2 - 2, cy - 4, 4, 4)
-    ctx.restore()
-  } else {
-    const hw = rad
-    const hh = rad / squash
-    ctx.fillStyle = '#0b0f1f'
-    ctx.fillRect(cx - hw - 1, cy - hh - 1, (hw + 1) * 2, (hh + 1) * 2)
-    ctx.fillStyle = col
-    ctx.fillRect(cx - hw, cy - hh, hw * 2, hh * 2)
-    ctx.fillStyle = lighten(col, 30)
-    ctx.fillRect(cx - hw, cy - hh, hw * 2, 2)
-    ctx.fillStyle = '#0b0f1f'
-    ctx.fillRect(cx - hw / 2 - 1, cy - 2, 3, 3)
-    ctx.fillRect(cx + hw / 2 - 2, cy - 2, 3, 3)
-  }
+  if (en.kind === 'tank') drawTank(ctx, en, now)
+  else if (en.kind === 'fast') drawFast(ctx, en, now, col)
+  else if (en.kind === 'boss') drawBoss(ctx, en, now, col)
+  else drawSlime(ctx, en, now, col)
 
+  // shared slowed / hit overlays drawn over the body box footprint
+  const cy = en.y
   if (slowed) {
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
-    ctx.fillStyle = 'rgba(125,211,252,0.4)'
-    ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2)
+    ctx.fillStyle = 'rgba(125,211,252,0.32)'
+    ctx.fillRect(en.x - rad, cy - rad, rad * 2, rad * 2)
     ctx.restore()
   }
-
   if (en.hitFlashMs > 0) {
     ctx.save()
     ctx.globalCompositeOperation = 'lighter'
     ctx.fillStyle = `rgba(255,255,255,${Math.min(1, en.hitFlashMs / 90)})`
-    ctx.fillRect(cx - rad, cy - rad, rad * 2, rad * 2)
+    ctx.fillRect(en.x - rad, cy - rad, rad * 2, rad * 2)
     ctx.restore()
   }
 

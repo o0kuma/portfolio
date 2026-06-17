@@ -104,6 +104,8 @@ export const PALETTE = {
   enemyNormal: '#a3e635',
   enemyFast: '#fbbf24',
   enemyTank: '#94a3b8',
+  enemyTankBody: '#6b7150',
+  enemyTankTread: '#2f3326',
   enemyBoss: '#fb7185',
   gold: '#fde047',
   life: '#fb7185',
