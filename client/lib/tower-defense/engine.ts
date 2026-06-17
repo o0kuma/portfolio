@@ -458,6 +458,9 @@ export class TowerDefenseEngine implements Upgradable {
   /** Begin the next wave (only valid while idle). */
   startNextWave(): void {
     if (this.status !== 'playing' || !this.waveIdle) return
+    // Resolve the prepared wave (built for this.wave + 1) BEFORE incrementing so
+    // it stays correct whether or not the HUD already peeked/cached it.
+    const prepared = this.ensureNextWave()
     this.wave += 1
     if (this.interest > 0) {
       this.gold += this.interest
@@ -465,7 +468,6 @@ export class TowerDefenseEngine implements Upgradable {
     }
     this.waveActive = true
     this.spawnTimer = 0
-    const prepared = this.ensureNextWave()
     this.waveQueue = prepared.queue
     this.activeEvent = prepared.event
     this.nextWave = null // consume; the next preview regenerates for wave+1
