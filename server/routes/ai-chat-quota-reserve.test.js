@@ -11,10 +11,12 @@ describe('anonymous chat quota reserve', () => {
     );
 
     expect(source).toMatch(/export async function reserveAnonymousChatQuota/);
+    expect(source).toMatch(/export async function reserveAnonymousAiQuota/);
+    expect(source).toMatch(/export async function checkAnonymousAiQuota/);
     expect(source).toMatch(
       /ON CONFLICT \(session_id, date, usage_type\) WHERE user_id IS NULL AND session_id IS NOT NULL/,
     );
-    expect(source).toMatch(/WHERE ai_usage\.message_count < \$3/);
+    expect(source).toMatch(/WHERE ai_usage\.message_count < \$4/);
     expect(source).toMatch(/RETURNING message_count/);
   });
 

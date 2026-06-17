@@ -1,11 +1,11 @@
 import { dbQuery } from '@/lib/neon-server'
 
 /**
- * Direct-DB quota helpers for the AI chat route.
+ * Direct-DB quota helpers for AI routes.
  *
- * The chat endpoint previously re-entered the app over HTTP
+ * AI endpoints previously re-entered the app over HTTP
  * (fetch → /api/subscription/check, /api/subscription/usage), which fails on
- * Vercel (self-fetch timeouts / deployment protection) and blocked all chat
+ * Vercel (self-fetch timeouts / deployment protection) and blocked responses
  * with 503. These helpers run the same queries in-process instead.
  */
 
@@ -16,6 +16,16 @@ export const FREE_LIMITS = {
   dailySummaries: 3,
   dailySuggestions: 3,
 } as const
+
+export type AnonymousUsageType = 'chat' | 'improve' | 'translate' | 'summarize' | 'suggest'
+
+const USAGE_TYPE_TO_LIMIT_KEY: Record<AnonymousUsageType, keyof typeof FREE_LIMITS> = {
+  chat: 'dailyChatMessages',
+  improve: 'dailyImprovements',
+  translate: 'dailyTranslations',
+  summarize: 'dailySummaries',
+  suggest: 'dailySuggestions',
+}
 
 export interface AnonymousQuotaStatus {
   ok: boolean
@@ -28,21 +38,29 @@ function today(): string {
   return new Date().toISOString().split('T')[0]
 }
 
-/** Returns today's chat usage for an anonymous quota session. */
-export async function checkAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
-  const limit = FREE_LIMITS.dailyChatMessages
+/** Returns today's usage for an anonymous quota session and usage type. */
+export async function checkAnonymousAiQuota(
+  quotaSessionId: string,
+  usageType: AnonymousUsageType,
+): Promise<AnonymousQuotaStatus> {
+  const limit = FREE_LIMITS[USAGE_TYPE_TO_LIMIT_KEY[usageType]]
   try {
     const result = await dbQuery<{ message_count: number }>(
       `SELECT message_count FROM ai_usage
-       WHERE session_id = $1 AND date = $2 AND usage_type = 'chat' AND user_id IS NULL`,
-      [quotaSessionId, today()],
+       WHERE session_id = $1 AND date = $2 AND usage_type = $3 AND user_id IS NULL`,
+      [quotaSessionId, today(), usageType],
     )
     const used = result.rows.reduce((sum, row) => sum + (row.message_count || 0), 0)
     return { ok: true, used, limit, exceeded: used >= limit }
   } catch (error: any) {
-    console.error('checkAnonymousChatQuota failed:', error?.message || error)
+    console.error(`checkAnonymousAiQuota(${usageType}) failed:`, error?.message || error)
     return { ok: false, used: 0, limit, exceeded: false }
   }
+}
+
+/** Returns today's chat usage for an anonymous quota session. */
+export async function checkAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
+  return checkAnonymousAiQuota(quotaSessionId, 'chat')
 }
 
 function isMissingAnonIndexError(error: any): boolean {
@@ -54,40 +72,43 @@ function isMissingAnonIndexError(error: any): boolean {
 }
 
 /**
- * Atomically reserves one chat message against the daily limit before calling Gemini.
+ * Atomically reserves one usage unit against the daily limit before calling Gemini.
  * Uses ON CONFLICT ... WHERE message_count < limit so concurrent requests cannot
  * all pass a separate read-then-write quota check.
  */
-export async function reserveAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
-  const limit = FREE_LIMITS.dailyChatMessages
+export async function reserveAnonymousAiQuota(
+  quotaSessionId: string,
+  usageType: AnonymousUsageType,
+): Promise<AnonymousQuotaStatus> {
+  const limit = FREE_LIMITS[USAGE_TYPE_TO_LIMIT_KEY[usageType]]
   const date = today()
   try {
     try {
       const reserved = await dbQuery<{ message_count: number }>(
         `INSERT INTO ai_usage (user_id, session_id, usage_type, message_count, tokens_used, date)
-         VALUES (NULL, $1, 'chat', 1, 0, $2)
+         VALUES (NULL, $1, $2, 1, 0, $3)
          ON CONFLICT (session_id, date, usage_type) WHERE user_id IS NULL AND session_id IS NOT NULL
          DO UPDATE SET
            message_count = ai_usage.message_count + EXCLUDED.message_count
-         WHERE ai_usage.message_count < $3
+         WHERE ai_usage.message_count < $4
          RETURNING message_count`,
-        [quotaSessionId, date, limit],
+        [quotaSessionId, usageType, date, limit],
       )
       if (reserved.rows[0]) {
         const used = reserved.rows[0].message_count || 0
         return { ok: true, used, limit, exceeded: used > limit }
       }
 
-      const current = await checkAnonymousChatQuota(quotaSessionId)
+      const current = await checkAnonymousAiQuota(quotaSessionId, usageType)
       return { ok: true, used: current.used, limit, exceeded: true }
     } catch (upsertError: any) {
       if (!isMissingAnonIndexError(upsertError)) throw upsertError
 
-      const current = await checkAnonymousChatQuota(quotaSessionId)
+      const current = await checkAnonymousAiQuota(quotaSessionId, usageType)
       if (!current.ok) return current
       if (current.exceeded) return current
 
-      const recorded = await recordAnonymousUsage(quotaSessionId, 'chat', 1, 0)
+      const recorded = await recordAnonymousUsage(quotaSessionId, usageType, 1, 0)
       if (!recorded) {
         return { ok: false, used: current.used, limit, exceeded: false }
       }
@@ -96,31 +117,45 @@ export async function reserveAnonymousChatQuota(quotaSessionId: string): Promise
       return { ok: true, used, limit, exceeded: used > limit }
     }
   } catch (error: any) {
-    console.error('reserveAnonymousChatQuota failed:', error?.message || error)
+    console.error(`reserveAnonymousAiQuota(${usageType}) failed:`, error?.message || error)
     return { ok: false, used: 0, limit, exceeded: false }
   }
 }
 
-/** Best-effort token tally after a reserved chat message completes. */
-export async function addAnonymousChatTokens(quotaSessionId: string, tokensUsed: number): Promise<void> {
+/** Atomically reserves one chat message against the daily limit before calling Gemini. */
+export async function reserveAnonymousChatQuota(quotaSessionId: string): Promise<AnonymousQuotaStatus> {
+  return reserveAnonymousAiQuota(quotaSessionId, 'chat')
+}
+
+/** Best-effort token tally after a reserved usage unit completes. */
+export async function addAnonymousAiTokens(
+  quotaSessionId: string,
+  usageType: AnonymousUsageType,
+  tokensUsed: number,
+): Promise<void> {
   if (!Number.isFinite(tokensUsed) || tokensUsed <= 0) return
   const date = today()
   try {
     await dbQuery(
       `UPDATE ai_usage
-       SET tokens_used = tokens_used + $3
-       WHERE session_id = $1 AND date = $2 AND usage_type = 'chat' AND user_id IS NULL`,
-      [quotaSessionId, date, tokensUsed],
+       SET tokens_used = tokens_used + $4
+       WHERE session_id = $1 AND date = $2 AND usage_type = $3 AND user_id IS NULL`,
+      [quotaSessionId, date, usageType, tokensUsed],
     )
   } catch (error: any) {
-    console.warn('addAnonymousChatTokens failed:', error?.message || error)
+    console.warn(`addAnonymousAiTokens(${usageType}) failed:`, error?.message || error)
   }
+}
+
+/** Best-effort token tally after a reserved chat message completes. */
+export async function addAnonymousChatTokens(quotaSessionId: string, tokensUsed: number): Promise<void> {
+  return addAnonymousAiTokens(quotaSessionId, 'chat', tokensUsed)
 }
 
 /** Upserts today's usage row for an anonymous quota session. */
 export async function recordAnonymousUsage(
   quotaSessionId: string,
-  usageType: 'chat' | 'improve' | 'translate' | 'summarize' | 'suggest',
+  usageType: AnonymousUsageType,
   messageCount: number,
   tokensUsed: number,
 ): Promise<boolean> {

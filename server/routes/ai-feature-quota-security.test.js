@@ -12,8 +12,8 @@ describe('AI feature quota security', () => {
 
   test.each(featureRoutes)('%s enforces direct DB quota before Gemini', (rel) => {
     const source = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
-    expect(source).toMatch(/checkAnonymousAiQuota/);
-    expect(source).toMatch(/recordAnonymousUsage/);
+    expect(source).toMatch(/reserveAnonymousAiQuota/);
+    expect(source).toMatch(/addAnonymousAiTokens/);
     expect(source).not.toMatch(/checkAiQuota/);
   });
 

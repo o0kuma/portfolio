@@ -30,11 +30,15 @@ describe('AI feature routes enforce subscription quota', () => {
     { file: 'app/api/ai/summarize/route.ts', usageType: 'summarize' },
   ];
 
-  test.each(quotaRoutes)('$file checks quota before Gemini', ({ file, usageType }) => {
+  test.each(quotaRoutes)('$file reserves quota before Gemini', ({ file, usageType }) => {
     const source = readRoute(file);
     expect(source).toContain("from '@/lib/ai-chat-quota'");
-    expect(source).toContain(`checkAnonymousAiQuota(quotaIdentity.sessionId, '${usageType}')`);
-    expect(source).toContain(`recordAnonymousUsage(`);
+    expect(source).toContain(`reserveAnonymousAiQuota(quotaIdentity.sessionId, '${usageType}')`);
+    expect(source).toContain(`addAnonymousAiTokens(`);
+    const reserveIndex = source.indexOf('reserveAnonymousAiQuota');
+    const geminiIndex = source.indexOf('generativelanguage.googleapis.com');
+    expect(reserveIndex).toBeGreaterThan(-1);
+    expect(geminiIndex).toBeGreaterThan(reserveIndex);
   });
 
   test('shared ai-chat-quota helper exists', () => {
@@ -42,6 +46,7 @@ describe('AI feature routes enforce subscription quota', () => {
     expect(fs.existsSync(helperPath)).toBe(true);
     const source = readRoute('lib/ai-chat-quota.ts');
     expect(source).toContain('checkAnonymousAiQuota');
+    expect(source).toContain('reserveAnonymousAiQuota');
     expect(source).toContain('recordAnonymousUsage');
     expect(source).toContain('dailyTranslations');
   });
