@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 
@@ -39,6 +40,29 @@ function sanitizePlayerName(raw: unknown): string {
   return stripped
 }
 
+const fetchLeaderboard = unstable_cache(
+  async (limit: number) => {
+    const result = await dbQuery<SurviveScoreRow>(
+      `SELECT id, player_name, time_sec, level, kills, created_at
+       FROM survive_scores
+       ORDER BY time_sec DESC, kills DESC, created_at ASC
+       LIMIT $1`,
+      [limit],
+    )
+
+    return result.rows.map((row, index) => ({
+      rank: index + 1,
+      playerName: row.player_name,
+      timeSec: row.time_sec,
+      level: row.level,
+      kills: row.kills,
+      createdAt: row.created_at,
+    }))
+  },
+  ['survive-leaderboard'],
+  { revalidate: 30, tags: ['survive-leaderboard'] },
+)
+
 export async function GET(request: NextRequest) {
   try {
     const parsed = GetSchema.safeParse({
@@ -50,23 +74,7 @@ export async function GET(request: NextRequest) {
     }
     const { limit } = parsed.data
 
-    const result = await dbQuery<SurviveScoreRow>(
-      `SELECT id, player_name, time_sec, level, kills, created_at
-       FROM survive_scores
-       ORDER BY time_sec DESC, kills DESC, created_at ASC
-       LIMIT $1`,
-      [limit],
-    )
-
-    const scores = result.rows.map((row, index) => ({
-      rank: index + 1,
-      playerName: row.player_name,
-      timeSec: row.time_sec,
-      level: row.level,
-      kills: row.kills,
-      createdAt: row.created_at,
-    }))
-
+    const scores = await fetchLeaderboard(limit)
     return NextResponse.json({ scores })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -131,6 +139,7 @@ export async function POST(request: NextRequest) {
       [playerName, timeSec, level, kills, sessionId],
     )
 
+    revalidateTag('survive-leaderboard')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

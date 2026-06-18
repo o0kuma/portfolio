@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 
@@ -43,17 +44,8 @@ function isMissingChallengeColumn(msg: string): boolean {
   return msg.includes('challenge_day') && /column|does not exist|undefined/i.test(msg)
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    const parsed = GetSchema.safeParse({
-      day: request.nextUrl.searchParams.get('day') ?? undefined,
-      limit: request.nextUrl.searchParams.get('limit') ?? undefined,
-    })
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
-    }
-    const { day, limit } = parsed.data
-
+const fetchLeaderboard = unstable_cache(
+  async (day: string | undefined, limit: number) => {
     let result
     if (day) {
       // Daily-challenge leaderboard for the requested day.
@@ -91,14 +83,30 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const scores = result.rows.map((row, index) => ({
+    return result.rows.map((row, index) => ({
       rank: index + 1,
       playerName: row.player_name,
       wave: row.wave,
       kills: row.kills,
       createdAt: row.created_at,
     }))
+  },
+  ['td-leaderboard'],
+  { revalidate: 30, tags: ['td-leaderboard'] },
+)
 
+export async function GET(request: NextRequest) {
+  try {
+    const parsed = GetSchema.safeParse({
+      day: request.nextUrl.searchParams.get('day') ?? undefined,
+      limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+    })
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
+    }
+    const { day, limit } = parsed.data
+
+    const scores = await fetchLeaderboard(day, limit)
     return NextResponse.json({ scores })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -179,6 +187,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    revalidateTag('td-leaderboard')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

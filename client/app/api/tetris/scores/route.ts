@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache, revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 
@@ -60,6 +61,30 @@ function scoreLinesConsistent(score: number, lines: number): boolean {
   return true
 }
 
+const fetchLeaderboard = unstable_cache(
+  async (limit: number) => {
+    const result = await dbQuery<TetrisScoreRow>(
+      `SELECT id, player_name, score, lines, level, stage, created_at
+       FROM tetris_scores
+       ORDER BY stage DESC, lines DESC, score DESC, created_at ASC
+       LIMIT $1`,
+      [limit],
+    )
+
+    return result.rows.map((row, index) => ({
+      rank: index + 1,
+      playerName: row.player_name,
+      score: row.score,
+      lines: row.lines,
+      stage: row.stage,
+      level: row.level,
+      createdAt: row.created_at,
+    }))
+  },
+  ['tetris-leaderboard'],
+  { revalidate: 30, tags: ['tetris-leaderboard'] },
+)
+
 export async function GET(request: NextRequest) {
   try {
     const parsed = GetSchema.safeParse({
@@ -71,24 +96,7 @@ export async function GET(request: NextRequest) {
     }
     const { limit } = parsed.data
 
-    const result = await dbQuery<TetrisScoreRow>(
-      `SELECT id, player_name, score, lines, level, stage, created_at
-       FROM tetris_scores
-       ORDER BY stage DESC, lines DESC, score DESC, created_at ASC
-       LIMIT $1`,
-      [limit],
-    )
-
-    const scores = result.rows.map((row, index) => ({
-      rank: index + 1,
-      playerName: row.player_name,
-      score: row.score,
-      lines: row.lines,
-      stage: row.stage,
-      level: row.level,
-      createdAt: row.created_at,
-    }))
-
+    const scores = await fetchLeaderboard(limit)
     return NextResponse.json({ scores })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -159,6 +167,7 @@ export async function POST(request: NextRequest) {
       [playerName, score, lines, level ?? null, stage, sessionId],
     )
 
+    revalidateTag('tetris-leaderboard')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

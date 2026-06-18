@@ -10,6 +10,7 @@ import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLead
 import TowerDefensePlayerName from '@/components/tower-defense/TowerDefensePlayerName'
 import AchievementToast from '@/components/tower-defense/AchievementToast'
 import AchievementPanel from '@/components/tower-defense/AchievementPanel'
+import ShareCard from '@/components/tower-defense/ShareCard'
 import { useTowerDefenseGame } from '@/hooks/useTowerDefenseGame'
 import { useAchievements } from '@/hooks/useAchievements'
 import { useLanguage } from '@/lib/LanguageContext'
@@ -227,6 +228,12 @@ export default function TowerDefensePageClient() {
               >
                 {p.restart}
               </button>
+              <ShareCard
+                wave={hud.wave}
+                kills={hud.kills}
+                bestWave={hud.bestWave}
+                isDaily={!!challengeDay}
+              />
             </div>
           )}
         </div>
