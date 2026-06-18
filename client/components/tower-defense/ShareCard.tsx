@@ -11,10 +11,10 @@ type Props = {
 }
 
 export default function ShareCard({ wave, kills, bestWave, isDaily }: Props) {
-  const { lang } = useLanguage()
+  const { locale } = useLanguage()
   const [copied, setCopied] = useState(false)
 
-  const shareText = lang === 'ko'
+  const shareText = locale === 'ko'
     ? `🗼 타워 디펜스 | 웨이브 ${wave} | 처치 ${kills}\n${isDaily ? '📅 데일리 챌린지 ' : ''}최고 기록: 웨이브 ${bestWave}\n지금 도전해보세요!`
     : `🗼 Tower Defense | Wave ${wave} | Kills ${kills}\n${isDaily ? '📅 Daily Challenge ' : ''}Best: Wave ${bestWave}\nCan you beat me?`
 
@@ -37,7 +37,7 @@ export default function ShareCard({ wave, kills, bestWave, isDaily }: Props) {
         onClick={handleCopy}
         className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
       >
-        {copied ? (lang === 'ko' ? '복사됨 ✓' : 'Copied ✓') : (lang === 'ko' ? '결과 복사' : 'Copy Result')}
+        {copied ? (locale === 'ko' ? '복사됨 ✓' : 'Copied ✓') : (locale === 'ko' ? '결과 복사' : 'Copy Result')}
       </button>
       <a
         href={twitterUrl}
