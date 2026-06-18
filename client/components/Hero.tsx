@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import { portfolioViewport, maskReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import TypingText from '@/components/portfolio/TypingText'
 
 export default function Hero() {
   const { t } = useLanguage()
@@ -93,6 +94,15 @@ export default function Hero() {
               >
                 {t.hero.contactMe}
               </motion.a>
+              <motion.a
+                href="/cv.pdf"
+                download
+                whileHover={{ y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-neutral-700 text-neutral-500 font-semibold text-sm hover:border-neutral-500 hover:text-neutral-300 transition-colors"
+              >
+                ↓ CV
+              </motion.a>
             </motion.div>
 
             <motion.div variants={staggerItem} className="flex items-center gap-6">
@@ -123,9 +133,31 @@ export default function Hero() {
             className="hidden lg:flex items-center justify-center"
             aria-hidden="true"
           >
-            <div className="relative w-full max-w-md aspect-square border border-neutral-800 rounded-2xl flex items-center justify-center bg-neutral-900/50">
-              <div className="absolute inset-8 border border-neutral-700/60 rounded-xl" />
-              <p className="text-[10rem] font-black text-neutral-800/80 leading-none select-none">P</p>
+            <div className="relative w-full max-w-md aspect-square">
+              {/* Outer ring */}
+              <div className="absolute inset-0 rounded-full border border-neutral-800 animate-[spin_20s_linear_infinite]">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-neutral-600" />
+              </div>
+              {/* Inner ring */}
+              <div className="absolute inset-8 rounded-full border border-neutral-700/50 animate-[spin_12s_linear_infinite_reverse]">
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-1.5 h-1.5 rounded-full bg-neutral-500" />
+              </div>
+              {/* Center content */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+                <div className="text-6xl font-black text-neutral-800 select-none">⟨/⟩</div>
+                <div className="text-center space-y-1">
+                  <p className="text-neutral-300 font-mono text-sm font-semibold">
+                    <TypingText phrases={['Frontend Dev', 'Full-Stack Dev', 'Game Dev', 'UI Craftsman']} />
+                  </p>
+                  <p className="text-neutral-600 text-xs font-mono">since 2019</p>
+                </div>
+                {/* Skill dots */}
+                <div className="flex flex-wrap justify-center gap-1.5 max-w-[180px] mt-2">
+                  {['React', 'Next.js', 'TypeScript', 'Node.js', 'Go'].map(s => (
+                    <span key={s} className="text-[10px] font-mono px-2 py-0.5 rounded border border-neutral-700 text-neutral-500 bg-neutral-900/60">{s}</span>
+                  ))}
+                </div>
+              </div>
             </div>
           </motion.div>
         </div>
