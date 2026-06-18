@@ -14,7 +14,7 @@ const GetSchema = z.object({
 })
 
 const PostSchema = z.object({
-  playerName: z.string().min(1).max(50),
+  playerName: z.string().max(50).optional(),
   wave: z.number().int().min(1).max(9_999),
   kills: z.number().int().min(0).max(9_999_999),
   sessionId: z.string().max(100).optional(),
@@ -33,7 +33,7 @@ function sanitizePlayerName(raw: unknown): string {
   if (typeof raw !== 'string') return 'Anonymous'
   const stripped = raw
     .trim()
-    .replace(/[ -]/g, '')
+    .replace(/[\u0000-\u001f\u007f]/g, '')
     .replace(/[<>&"']/g, '')
   if (stripped.length < 2 || stripped.length > 20) return 'Anonymous'
   return stripped
