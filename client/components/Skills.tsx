@@ -5,42 +5,82 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import SkillRadar from '@/components/portfolio/SkillRadar'
 
-const DEPTH_ZONES = [
+type SkillCategory = {
+  id: string
+  label: string
+  labelKo: string
+  desc: string
+  descKo: string
+  color: string       // tailwind text color for the label
+  accent: string      // tailwind border/bg accent for chips
+  skills: string[]
+}
+
+const SKILL_CATEGORIES: SkillCategory[] = [
   {
-    id: 'surface' as const,
-    skills: [
-      'HTML5', 'CSS3', 'JavaScript', 'SCSS', 'Web Components',
-      'jQuery', 'Bootstrap', 'Tailwind CSS', 'Semantic UI',
-    ],
+    id: 'publishing',
+    label: 'Publishing',
+    labelKo: '퍼블리싱',
+    desc: 'HTML · CSS · Markup',
+    descKo: '마크업 · 스타일링',
+    color: 'text-orange-400',
+    accent: 'border-orange-400/20 bg-orange-400/5 text-orange-200/80',
+    skills: ['HTML5', 'CSS3', 'SCSS', 'Tailwind CSS', 'Bootstrap', 'Semantic UI', 'Web Components'],
   },
   {
-    id: 'mid' as const,
-    skills: [
-      'React', 'Svelte', 'Next.js', 'TypeScript',
-      'EJS', 'PixiJS',
-      'Git', 'GitHub', 'GitLab', 'Figma', 'Zeplin',
-    ],
+    id: 'frontend',
+    label: 'Frontend',
+    labelKo: '프론트엔드',
+    desc: 'UI Frameworks · SPA · SSR',
+    descKo: 'UI 프레임워크 · SPA · SSR',
+    color: 'text-cyan-400',
+    accent: 'border-cyan-400/20 bg-cyan-400/5 text-cyan-200/80',
+    skills: ['JavaScript', 'TypeScript', 'React', 'Next.js', 'Svelte', 'EJS', 'jQuery', 'PixiJS'],
   },
   {
-    id: 'backend' as const,
-    skills: [
-      'Node.js', 'Express', 'Java', 'Spring Boot',
-      'PostgreSQL', 'MySQL', 'MongoDB',
-      'Python', 'REST API',
-    ],
+    id: 'backend',
+    label: 'Backend',
+    labelKo: '백엔드',
+    desc: 'Server · API · Runtime',
+    descKo: '서버 · API · 런타임',
+    color: 'text-emerald-400',
+    accent: 'border-emerald-400/20 bg-emerald-400/5 text-emerald-200/80',
+    skills: ['Node.js', 'Express', 'Java', 'Spring Boot', 'Go', 'PHP', 'Python', 'REST API'],
   },
   {
-    id: 'deep' as const,
-    skills: [
-      'Go', 'PHP',
-      'Webpack', 'Vite',
-      'Adobe Photoshop', 'Confluence', 'Jira', 'Redmine',
-    ],
+    id: 'database',
+    label: 'Database',
+    labelKo: '데이터베이스',
+    desc: 'RDBMS · NoSQL',
+    descKo: '관계형 · 비관계형 DB',
+    color: 'text-violet-400',
+    accent: 'border-violet-400/20 bg-violet-400/5 text-violet-200/80',
+    skills: ['PostgreSQL', 'MySQL', 'MongoDB'],
+  },
+  {
+    id: 'devtools',
+    label: 'Dev Tools',
+    labelKo: '개발 도구',
+    desc: 'Version Control · Build · CI',
+    descKo: '버전 관리 · 빌드 · CI',
+    color: 'text-amber-400',
+    accent: 'border-amber-400/20 bg-amber-400/5 text-amber-200/80',
+    skills: ['Git', 'GitHub', 'GitLab', 'Webpack', 'Vite'],
+  },
+  {
+    id: 'design',
+    label: 'Design & PM',
+    labelKo: '디자인 · 협업',
+    desc: 'UI Design · Project Mgmt',
+    descKo: 'UI 디자인 · 프로젝트 관리',
+    color: 'text-pink-400',
+    accent: 'border-pink-400/20 bg-pink-400/5 text-pink-200/80',
+    skills: ['Figma', 'Zeplin', 'Adobe Photoshop', 'Confluence', 'Jira', 'Redmine'],
   },
 ]
 
 export default function Skills() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
 
   return (
     <div className="relative py-32">
@@ -80,57 +120,40 @@ export default function Skills() {
           </motion.p>
         </motion.div>
 
-        {/* Skill zones */}
-        <div className="space-y-14">
-          {DEPTH_ZONES.map((zone, zoneIndex) => {
-            const zoneLabel = t.skills.zones[zone.id]
-            return (
-              <motion.div
-                key={zone.id}
-                initial="hidden"
-                whileInView="visible"
-                viewport={portfolioViewport}
-                variants={staggerContainer}
-                custom={zoneIndex}
-              >
-                <motion.div variants={staggerItem} className="flex items-center gap-4 mb-5">
-                  <div className="flex items-baseline gap-2 shrink-0">
-                    <span className="text-base font-bold font-mono text-neutral-300">
-                      {zoneLabel.depth}
-                    </span>
-                    <span className="text-neutral-600 text-xs font-mono hidden sm:inline">
-                      {zoneLabel.subtitle}
-                    </span>
-                  </div>
-                  <div className="overflow-hidden flex-1 h-px">
-                    <motion.div
-                      variants={lineReveal}
-                      className="w-full h-full bg-neutral-800"
-                      style={{ originX: 0 }}
-                    />
-                  </div>
-                  <span className="text-neutral-600 text-xs shrink-0 hidden md:inline">
-                    {zoneLabel.description}
+        {/* Skill categories */}
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+          {SKILL_CATEGORIES.map((cat, i) => (
+            <motion.div
+              key={cat.id}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={portfolioViewport}
+              transition={{ duration: 0.55, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}
+              className="rounded-xl border border-neutral-800 bg-neutral-950/50 p-5 hover:border-neutral-700 transition-colors"
+            >
+              {/* Category header */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className={`text-sm font-bold font-mono ${cat.color}`}>
+                  {locale === 'ko' ? cat.labelKo : cat.label}
+                </span>
+                <div className="flex-1 h-px bg-neutral-800" />
+                <span className="text-neutral-700 text-[10px] font-mono hidden sm:inline">
+                  {locale === 'ko' ? cat.descKo : cat.desc}
+                </span>
+              </div>
+              {/* Chips */}
+              <div className="flex flex-wrap gap-1.5">
+                {cat.skills.map((skill) => (
+                  <span
+                    key={skill}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium border ${cat.accent}`}
+                  >
+                    {skill}
                   </span>
-                </motion.div>
-
-                <motion.div
-                  variants={staggerContainer}
-                  className="flex flex-wrap gap-2"
-                >
-                  {zone.skills.map((skill) => (
-                    <motion.span
-                      key={skill}
-                      variants={staggerItem}
-                      className="px-3.5 py-1.5 rounded-md text-sm font-medium border border-neutral-700 bg-neutral-950/60 text-neutral-300"
-                    >
-                      {skill}
-                    </motion.span>
-                  ))}
-                </motion.div>
-              </motion.div>
-            )
-          })}
+                ))}
+              </div>
+            </motion.div>
+          ))}
         </div>
 
         <motion.div
