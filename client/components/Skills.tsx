@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import SkillRadar from '@/components/portfolio/SkillRadar'
 
 const DEPTH_ZONES = [
   {
@@ -131,6 +132,21 @@ export default function Skills() {
             )
           })}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={portfolioViewport}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-24 pt-16 border-t border-neutral-800"
+        >
+          <p className="text-xs font-mono text-neutral-600 tracking-[0.2em] uppercase mb-10 text-center">
+            — Skill Overview
+          </p>
+          <div className="flex justify-center">
+            <SkillRadar />
+          </div>
+        </motion.div>
 
         <motion.p
           initial={{ opacity: 0 }}

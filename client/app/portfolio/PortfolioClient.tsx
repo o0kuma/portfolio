@@ -9,7 +9,10 @@ import Contact from '../../components/Contact'
 import RecentPostsSection from '../../components/RecentPostsSection'
 import Footer from '../../components/Footer'
 import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollProgress'
+import StatsCounter from '../../components/portfolio/StatsCounter'
+import CareerTimeline from '../../components/portfolio/CareerTimeline'
 import SectionWrapper from '../../components/SectionWrapper'
+import Testimonials from '../../components/portfolio/Testimonials'
 
 export default function PortfolioClient() {
   return (
@@ -17,6 +20,7 @@ export default function PortfolioClient() {
       <PortfolioScrollProgress />
       <Header />
       <Hero />
+      <StatsCounter />
 
       <SectionWrapper id="about" className="relative border-b border-neutral-800 bg-neutral-950">
         <About />
@@ -26,12 +30,20 @@ export default function PortfolioClient() {
         <Skills />
       </SectionWrapper>
 
+      <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-900">
+        <CareerTimeline />
+      </SectionWrapper>
+
       <SectionWrapper id="projects" fadeOnly className="relative border-b border-neutral-800 bg-neutral-950">
         <Projects />
       </SectionWrapper>
 
       <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-950">
         <RecentPostsSection />
+      </SectionWrapper>
+
+      <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-950">
+        <Testimonials />
       </SectionWrapper>
 
       <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">

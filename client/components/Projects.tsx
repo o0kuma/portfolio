@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import SearchBar from './SearchBar'
+import ProjectModal from './portfolio/ProjectModal'
 import {
   portfolioViewport,
   sectionReveal,
@@ -302,9 +303,11 @@ function formatProjectDate(d: string) {
 function ProjectCard({
   project,
   layout,
+  onClick,
 }: {
   project: Project
   layout: 'track' | 'grid'
+  onClick?: () => void
 }) {
   const widthClass =
     layout === 'track'
@@ -313,7 +316,8 @@ function ProjectCard({
 
   return (
     <article
-      className={`group flex flex-col h-full border border-neutral-800 rounded-xl bg-neutral-950 overflow-hidden hover:border-neutral-600 transition-colors ${widthClass}`}
+      className={`group flex flex-col h-full border border-neutral-800 rounded-xl bg-neutral-950 overflow-hidden hover:border-neutral-600 transition-colors cursor-pointer ${widthClass}`}
+      onClick={onClick}
     >
       <div className="relative h-36 bg-neutral-900 border-b border-neutral-800 overflow-hidden shrink-0">
         <img
@@ -432,7 +436,7 @@ function ProjectCard({
  * eilab-style horizontal track: the row of cards pins to the viewport
  * and translates horizontally as the user scrolls vertically.
  */
-function StickyHorizontalTrack({ projects }: { projects: Project[] }) {
+function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[]; onCardClick: (p: Project) => void }) {
   const sectionRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [overflow, setOverflow] = useState(0)
@@ -462,7 +466,7 @@ function StickyHorizontalTrack({ projects }: { projects: Project[] }) {
         <div ref={trackRef} className="flex w-max gap-5 md:gap-6 px-4 md:px-6">
           {projects.map((project) => (
             <div key={project.id} className="shrink-0">
-              <ProjectCard project={project} layout="track" />
+              <ProjectCard project={project} layout="track" onClick={() => onCardClick(project)} />
             </div>
           ))}
         </div>
@@ -484,7 +488,7 @@ function StickyHorizontalTrack({ projects }: { projects: Project[] }) {
         >
           {projects.map((project) => (
             <div key={project.id} className="shrink-0">
-              <ProjectCard project={project} layout="track" />
+              <ProjectCard project={project} layout="track" onClick={() => onCardClick(project)} />
             </div>
           ))}
         </motion.div>
@@ -500,6 +504,7 @@ export default function Projects() {
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilters, setActiveFilters] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const useHorizontalTrack = true
 
   useEffect(() => {
@@ -625,6 +630,7 @@ export default function Projects() {
   }
 
   return (
+    <>
     <div className="relative">
       <div className="container-custom relative z-10 pt-28 pb-24">
         <div className="mb-16 max-w-2xl">
@@ -698,7 +704,7 @@ export default function Projects() {
 
         {filteredProjects.length > 0 ? (
           useHorizontalTrack ? (
-            <StickyHorizontalTrack projects={filteredProjects} />
+            <StickyHorizontalTrack projects={filteredProjects} onCardClick={setSelectedProject} />
           ) : (
             <motion.div
               variants={staggerContainer}
@@ -709,7 +715,7 @@ export default function Projects() {
             >
               {filteredProjects.map((project) => (
                 <motion.div key={project.id} variants={staggerItem}>
-                  <ProjectCard project={project} layout="grid" />
+                  <ProjectCard project={project} layout="grid" onClick={() => setSelectedProject(project)} />
                 </motion.div>
               ))}
             </motion.div>
@@ -741,5 +747,9 @@ export default function Projects() {
         </motion.div>
       </div>
     </div>
+    {selectedProject && (
+      <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+    )}
+    </>
   )
 }
