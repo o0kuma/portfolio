@@ -12,6 +12,7 @@ import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollP
 import StatsCounter from '../../components/portfolio/StatsCounter'
 import CareerTimeline from '../../components/portfolio/CareerTimeline'
 import SectionWrapper from '../../components/SectionWrapper'
+import Testimonials from '../../components/portfolio/Testimonials'
 
 export default function PortfolioClient() {
   return (
@@ -39,6 +40,10 @@ export default function PortfolioClient() {
 
       <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-950">
         <RecentPostsSection />
+      </SectionWrapper>
+
+      <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-950">
+        <Testimonials />
       </SectionWrapper>
 
       <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">
