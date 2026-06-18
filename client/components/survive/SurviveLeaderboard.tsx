@@ -3,6 +3,7 @@
 import { fetchSurviveLeaderboard, type SurviveLeaderboardEntry } from '@/lib/survive/leaderboardClient'
 import { formatTime } from '@/lib/survive/storage'
 import { useCallback, useEffect, useState } from 'react'
+import { LeaderboardSkeleton } from '@/components/ui/Skeleton'
 
 function formatDate(iso: string): string {
   try {
@@ -49,9 +50,7 @@ export default function SurviveLeaderboard({ refreshKey = 0 }: { refreshKey?: nu
         </button>
       </div>
 
-      {loading && entries.length === 0 && (
-        <p className="text-xs text-slate-500">불러오는 중…</p>
-      )}
+      {loading && entries.length === 0 && <LeaderboardSkeleton />}
 
       {error && (
         <p className="text-xs text-amber-400/90">

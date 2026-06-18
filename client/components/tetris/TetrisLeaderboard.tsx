@@ -6,6 +6,7 @@ import {
 } from '@/lib/tetris/leaderboardClient'
 import { useLanguage } from '@/lib/LanguageContext'
 import { useCallback, useEffect, useState } from 'react'
+import { LeaderboardSkeleton } from '@/components/ui/Skeleton'
 
 function formatDate(iso: string): string {
   try {
@@ -53,9 +54,7 @@ export default function TetrisLeaderboard({ refreshKey = 0 }: { refreshKey?: num
         </button>
       </div>
 
-      {loading && entries.length === 0 && (
-        <p className="text-xs text-slate-500 dark:text-slate-400">{t.leaderboard.loading}</p>
-      )}
+      {loading && entries.length === 0 && <LeaderboardSkeleton />}
 
       {error && (
         <p className="text-xs text-amber-700 dark:text-amber-400/90">

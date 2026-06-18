@@ -9,6 +9,7 @@ import { getCategoryLabel } from '@/lib/post-categories'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, sectionReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import type { HomePost } from '@/components/home/post-types'
+import { SkeletonCard } from '@/components/ui/Skeleton'
 
 function formatDate(dateString: string, locale: string) {
   return new Date(dateString).toLocaleDateString(locale === 'ko' ? 'ko-KR' : 'en-US', {
@@ -63,7 +64,9 @@ export default function RecentPostsSection() {
         </motion.div>
 
         {loading ? (
-          <p className="text-neutral-600 font-mono text-sm">{t.recentPosts.loading}</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 3 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         ) : posts.length === 0 ? (
           <p className="text-neutral-600">{t.recentPosts.empty}</p>
         ) : (

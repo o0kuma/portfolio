@@ -6,6 +6,7 @@ import {
 } from '@/lib/tower-defense/leaderboardClient'
 import { useLanguage } from '@/lib/LanguageContext'
 import { useCallback, useEffect, useState } from 'react'
+import { LeaderboardSkeleton } from '@/components/ui/Skeleton'
 
 function formatDate(iso: string, locale: string): string {
   try {
@@ -61,7 +62,7 @@ export default function TowerDefenseLeaderboard({
         </button>
       </div>
 
-      {loading && entries.length === 0 && <p className="text-xs text-slate-500">{lb.loading}</p>}
+      {loading && entries.length === 0 && <LeaderboardSkeleton />}
 
       {error && (
         <p className="text-xs text-amber-400/90">
