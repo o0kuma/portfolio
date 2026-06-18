@@ -2,14 +2,28 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { unstable_cache, revalidateTag } from 'next/cache'
+import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 
 const MAX_SCORE = 999_999
 const MAX_STAGE = 10
 const LINES_PER_STAGE = 20
 const MAX_POSTS_PER_SESSION_PER_DAY = 10
-const DEFAULT_LIMIT = 20
-const MAX_LIMIT = 50
+
+const GetSchema = z.object({
+  day: z.string().regex(/^\d{8}$/).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+})
+
+const PostSchema = z.object({
+  playerName: z.string().min(1).max(50),
+  score: z.number().int().min(1).max(MAX_SCORE),
+  lines: z.number().int().min(0).max(MAX_SCORE),
+  stage: z.number().int().min(1).max(MAX_STAGE),
+  level: z.number().int().min(0).max(99).optional().nullable(),
+  sessionId: z.string().max(100).optional(),
+})
 
 export type TetrisScoreRow = {
   id: string
@@ -25,40 +39,10 @@ function sanitizePlayerName(raw: unknown): string {
   if (typeof raw !== 'string') return 'Anonymous'
   const stripped = raw
     .trim()
-    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .replace(/[ -]/g, '')
     .replace(/[<>&"']/g, '')
   if (stripped.length < 2 || stripped.length > 20) return 'Anonymous'
   return stripped
-}
-
-function parseOptionalInt(
-  raw: unknown,
-  min: number,
-  max: number,
-): number | null {
-  if (raw === undefined || raw === null) return null
-  const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10)
-  if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) {
-    return null
-  }
-  return n
-}
-
-function parseRequiredInt(
-  raw: unknown,
-  min: number,
-  max: number,
-): number | null {
-  if (raw === undefined || raw === null) return null
-  return parseOptionalInt(raw, min, max)
-}
-
-function parseScore(raw: unknown): number | null {
-  const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10)
-  if (!Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > MAX_SCORE) {
-    return null
-  }
-  return n
 }
 
 function expectedStageFromLines(lines: number): number {
@@ -77,17 +61,8 @@ function scoreLinesConsistent(score: number, lines: number): boolean {
   return true
 }
 
-function parseLimit(searchParams: URLSearchParams): number {
-  const raw = searchParams.get('limit')
-  if (!raw) return DEFAULT_LIMIT
-  const n = parseInt(raw, 10)
-  if (!Number.isFinite(n) || n < 1) return DEFAULT_LIMIT
-  return Math.min(n, MAX_LIMIT)
-}
-
-export async function GET(request: NextRequest) {
-  try {
-    const limit = parseLimit(request.nextUrl.searchParams)
+const fetchLeaderboard = unstable_cache(
+  async (limit: number) => {
     const result = await dbQuery<TetrisScoreRow>(
       `SELECT id, player_name, score, lines, level, stage, created_at
        FROM tetris_scores
@@ -96,7 +71,7 @@ export async function GET(request: NextRequest) {
       [limit],
     )
 
-    const scores = result.rows.map((row, index) => ({
+    return result.rows.map((row, index) => ({
       rank: index + 1,
       playerName: row.player_name,
       score: row.score,
@@ -105,7 +80,23 @@ export async function GET(request: NextRequest) {
       level: row.level,
       createdAt: row.created_at,
     }))
+  },
+  ['tetris-leaderboard'],
+  { revalidate: 30, tags: ['tetris-leaderboard'] },
+)
 
+export async function GET(request: NextRequest) {
+  try {
+    const parsed = GetSchema.safeParse({
+      day: request.nextUrl.searchParams.get('day') ?? undefined,
+      limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+    })
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
+    }
+    const { limit } = parsed.data
+
+    const scores = await fetchLeaderboard(limit)
     return NextResponse.json({ scores })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -126,20 +117,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const score = parseScore(body?.score)
-    if (score === null || score === 0) {
-      return NextResponse.json({ message: '유효한 점수가 필요합니다.' }, { status: 400 })
-    }
 
-    const lines = parseRequiredInt(body?.lines, 0, MAX_SCORE)
-    if (lines === null) {
-      return NextResponse.json({ message: '라인 값이 올바르지 않습니다.' }, { status: 400 })
+    const parsed = PostSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
     }
-
-    const stage = parseRequiredInt(body?.stage, 1, MAX_STAGE)
-    if (stage === null) {
-      return NextResponse.json({ message: '단계 값이 올바르지 않습니다.' }, { status: 400 })
-    }
+    const { score, lines, stage, level, sessionId: rawSessionId } = parsed.data
 
     if (!stageLinesConsistent(stage, lines)) {
       return NextResponse.json(
@@ -148,19 +131,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const level = parseOptionalInt(body?.level, 0, 99)
-    if (body?.level !== undefined && body?.level !== null && level === null) {
-      return NextResponse.json({ message: '레벨 값이 올바르지 않습니다.' }, { status: 400 })
-    }
-
     if (!scoreLinesConsistent(score, lines)) {
       return NextResponse.json({ message: '점수와 라인이 일치하지 않습니다.' }, { status: 400 })
     }
 
-    const playerName = sanitizePlayerName(body?.playerName)
+    const playerName = sanitizePlayerName(parsed.data.playerName)
+
     let sessionId: string | null = null
-    if (typeof body?.sessionId === 'string' && body.sessionId.trim()) {
-      const sid = body.sessionId.trim().slice(0, 64)
+    if (rawSessionId && rawSessionId.trim()) {
+      const sid = rawSessionId.trim().slice(0, 64)
       if (/^[a-zA-Z0-9_-]+$/.test(sid)) sessionId = sid
     }
 
@@ -185,9 +164,10 @@ export async function POST(request: NextRequest) {
       `INSERT INTO tetris_scores (player_name, score, lines, level, stage, session_id)
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [playerName, score, lines, level, stage, sessionId],
+      [playerName, score, lines, level ?? null, stage, sessionId],
     )
 
+    revalidateTag('tetris-leaderboard')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

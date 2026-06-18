@@ -1,17 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FiArrowLeft, FiPause, FiPlay } from 'react-icons/fi'
 import TowerDefenseCanvas from '@/components/tower-defense/TowerDefenseCanvas'
 import TowerDefenseHud from '@/components/tower-defense/TowerDefenseHud'
 import TowerDefenseUpgrade from '@/components/tower-defense/TowerDefenseUpgrade'
 import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLeaderboard'
 import TowerDefensePlayerName from '@/components/tower-defense/TowerDefensePlayerName'
+import AchievementToast from '@/components/tower-defense/AchievementToast'
+import AchievementPanel from '@/components/tower-defense/AchievementPanel'
+import ShareCard from '@/components/tower-defense/ShareCard'
 import { useTowerDefenseGame } from '@/hooks/useTowerDefenseGame'
+import { useAchievements } from '@/hooks/useAchievements'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { MAP_DEFS } from '@/lib/tower-defense/constants'
+import { MAP_DEFS, START_LIVES } from '@/lib/tower-defense/constants'
 import { dailyChallengeDay } from '@/lib/tower-defense/leaderboardClient'
 import { TOWER_DEFS } from '@/lib/tower-defense/towers'
 import type { TowerKind } from '@/lib/tower-defense/types'
@@ -25,6 +29,28 @@ export default function TowerDefensePageClient() {
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
   const [showDaily, setShowDaily] = useState(false)
+
+  const { unlocked, newlyUnlocked, checkAndUpdate, clearNew } = useAchievements()
+
+  // Check achievements whenever relevant HUD values change
+  useEffect(() => {
+    if (status !== 'playing' && status !== 'paused' && status !== 'upgrade' && status !== 'gameover') return
+    const builtKinds = new Set<string>(
+      (engineRef.current?.towers ?? []).map((t) => {
+        // Only count base tower kinds
+        const base = ['pulse', 'splash', 'frost', 'beam']
+        return base.includes(t.kind) ? t.kind : null
+      }).filter(Boolean) as string[]
+    )
+    checkAndUpdate({
+      wave: hud.wave,
+      kills: hud.kills,
+      evolveCount: hud.stats.evolveCount,
+      livesLost: START_LIVES - hud.lives,
+      builtKinds,
+      goldEarned: hud.stats.goldEarned,
+    })
+  }, [hud.wave, hud.kills, hud.stats.evolveCount, hud.lives, hud.stats.goldEarned, status, engineRef, checkAndUpdate])
 
   const eventLabels = {
     rush: g.events.rush,
@@ -202,6 +228,12 @@ export default function TowerDefensePageClient() {
               >
                 {p.restart}
               </button>
+              <ShareCard
+                wave={hud.wave}
+                kills={hud.kills}
+                bestWave={hud.bestWave}
+                isDaily={!!challengeDay}
+              />
             </div>
           )}
         </div>
@@ -238,8 +270,14 @@ export default function TowerDefensePageClient() {
               day={showDaily ? dailyChallengeDay() : undefined}
             />
           </div>
+
+          <AchievementPanel unlocked={unlocked} />
         </div>
       </main>
+
+      {newlyUnlocked.length > 0 && (
+        <AchievementToast achievements={newlyUnlocked} onDone={clearNew} />
+      )}
     </div>
   )
 }

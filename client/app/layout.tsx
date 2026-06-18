@@ -8,7 +8,6 @@ import {
   SITE_NAME,
   SITE_AUTHOR,
   SITE_GITHUB,
-  OG_IMAGE_PATH,
 } from '@/lib/site'
 
 const inter = Inter({
@@ -64,7 +63,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     images: [
       {
-        url: OG_IMAGE_PATH,
+        url: `/api/og?title=${encodeURIComponent(SITE_NAME)}`,
         width: 1200,
         height: 630,
         alt: SITE_NAME,
@@ -75,7 +74,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: SITE_NAME,
     description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
-    images: [OG_IMAGE_PATH],
+    images: [`/api/og?title=${encodeURIComponent(SITE_NAME)}`],
   },
   robots: {
     index: true,
