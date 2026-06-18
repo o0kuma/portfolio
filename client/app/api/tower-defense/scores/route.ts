@@ -2,13 +2,23 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 
-const MAX_WAVE = 9_999
-const MAX_KILLS = 9_999_999
 const MAX_POSTS_PER_SESSION_PER_DAY = 10
-const DEFAULT_LIMIT = 20
-const MAX_LIMIT = 50
+
+const GetSchema = z.object({
+  day: z.string().regex(/^\d{8}$/).optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(20),
+})
+
+const PostSchema = z.object({
+  playerName: z.string().min(1).max(50),
+  wave: z.number().int().min(1).max(9_999),
+  kills: z.number().int().min(0).max(9_999_999),
+  sessionId: z.string().max(100).optional(),
+  challengeDay: z.string().regex(/^\d{8}$/).optional(),
+})
 
 export type TowerDefenseScoreRow = {
   id: string
@@ -28,28 +38,6 @@ function sanitizePlayerName(raw: unknown): string {
   return stripped
 }
 
-function parseRequiredInt(raw: unknown, min: number, max: number): number | null {
-  if (raw === undefined || raw === null) return null
-  const n = typeof raw === 'number' ? raw : parseInt(String(raw), 10)
-  if (!Number.isFinite(n) || !Number.isInteger(n) || n < min || n > max) return null
-  return n
-}
-
-function parseLimit(searchParams: URLSearchParams): number {
-  const raw = searchParams.get('limit')
-  if (!raw) return DEFAULT_LIMIT
-  const n = parseInt(raw, 10)
-  if (!Number.isFinite(n) || n < 1) return DEFAULT_LIMIT
-  return Math.min(n, MAX_LIMIT)
-}
-
-/** Validate a `YYYYMMDD` challenge day, else null. */
-function parseChallengeDay(raw: unknown): string | null {
-  if (typeof raw !== 'string') return null
-  const v = raw.trim()
-  return /^\d{8}$/.test(v) ? v : null
-}
-
 /** True when the DB error is a missing challenge_day column (migration not run). */
 function isMissingChallengeColumn(msg: string): boolean {
   return msg.includes('challenge_day') && /column|does not exist|undefined/i.test(msg)
@@ -57,8 +45,14 @@ function isMissingChallengeColumn(msg: string): boolean {
 
 export async function GET(request: NextRequest) {
   try {
-    const limit = parseLimit(request.nextUrl.searchParams)
-    const day = parseChallengeDay(request.nextUrl.searchParams.get('day'))
+    const parsed = GetSchema.safeParse({
+      day: request.nextUrl.searchParams.get('day') ?? undefined,
+      limit: request.nextUrl.searchParams.get('limit') ?? undefined,
+    })
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
+    }
+    const { day, limit } = parsed.data
 
     let result
     if (day) {
@@ -123,25 +117,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const wave = parseRequiredInt(body?.wave, 1, MAX_WAVE)
-    if (wave === null) {
-      return NextResponse.json({ message: '웨이브 값이 올바르지 않습니다.' }, { status: 400 })
+    const parsed = PostSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.format() }, { status: 400 })
     }
-
-    const kills = parseRequiredInt(body?.kills, 0, MAX_KILLS)
-    if (kills === null) {
-      return NextResponse.json({ message: '처치 수가 올바르지 않습니다.' }, { status: 400 })
-    }
+    const { wave, kills, sessionId: rawSessionId, challengeDay } = parsed.data
 
     // Loose anti-cheat: kills should be plausible given waves cleared.
     if (kills > wave * 200 + 50) {
       return NextResponse.json({ message: '처치 수가 비정상적으로 높습니다.' }, { status: 400 })
     }
 
-    const playerName = sanitizePlayerName(body?.playerName)
+    const playerName = sanitizePlayerName(parsed.data.playerName)
+
     let sessionId: string | null = null
-    if (typeof body?.sessionId === 'string' && body.sessionId.trim()) {
-      const sid = body.sessionId.trim().slice(0, 64)
+    if (rawSessionId && rawSessionId.trim()) {
+      const sid = rawSessionId.trim().slice(0, 64)
       if (/^[a-zA-Z0-9_-]+$/.test(sid)) sessionId = sid
     }
 
@@ -158,8 +149,6 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ message: '오늘 제출 한도에 도달했습니다.' }, { status: 429 })
       }
     }
-
-    const challengeDay = parseChallengeDay(body?.challengeDay)
 
     let insert
     if (challengeDay) {
