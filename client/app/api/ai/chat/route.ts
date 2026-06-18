@@ -13,6 +13,19 @@ const MAX_MESSAGE_LENGTH = 4000
 
 type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_fetch_error' | null
 
+type ChatMessage = {
+  role: 'user' | 'model'
+  parts: Array<{ text: string }>
+}
+
+type ConversationMessage = {
+  id: string
+  content: string
+  isUser: boolean
+  timestamp: Date
+  aiFeatures: Record<string, unknown>
+}
+
 // Gemini API 키를 가져오는 헬퍼 함수
 function getGeminiApiKey(): string | null {
   const key = process.env.GEMINI_API_KEY?.trim()
@@ -70,7 +83,7 @@ async function generateAIResponse(
   message: string,
   tone: string = '친근하게',
   context: string = 'portfolio',
-  conversationHistory: any[] = []
+  conversationHistory: ConversationMessage[] = []
 ): Promise<{
   success: boolean
   response: string
@@ -93,18 +106,15 @@ async function generateAIResponse(
     return generateFallbackResponse(message, tone, 'missing_api_key')
   }
 
-  if (process.env.NODE_ENV === 'development') {
-    console.log('✅ Gemini API 키 확인됨 (길이:', geminiApiKey.length, ')')
-  }
-
   try {
     const systemPrompt = context === 'blog'
       ? `You are a helpful assistant for a blog website called "iykyk blog". The blog covers topics like Tech, Economy, Coin, Travel, Food, and Lottery. Always respond in Korean. Respond in a ${tone} tone. Keep responses concise and helpful.`
       : `You are a helpful assistant for a portfolio website. The portfolio showcases web development projects by 승짱(Okuma). Always respond in Korean. Respond in a ${tone} tone. Keep responses concise and helpful.`
 
-    const messages: any[] = [
+    type ApiMessage = { role: string; content: string }
+    const messages: ApiMessage[] = [
       { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-10).map((msg: any) => ({
+      ...conversationHistory.slice(-10).map((msg) => ({
         role: msg.isUser ? 'user' : 'assistant',
         content: msg.content
       })),
@@ -157,10 +167,11 @@ async function generateAIResponse(
       confidence: 0.9,
       fallbackReason: null
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const fallbackReason: FallbackReason = 'gemini_fetch_error'
+    const message_ = error instanceof Error ? error.message : String(error)
     console.error('Gemini API 호출 오류로 fallback 응답 사용:', {
-      message: error?.message || 'Unknown error',
+      message: message_ || 'Unknown error',
       fallbackReason
     })
     return generateFallbackResponse(message, tone, fallbackReason)
@@ -256,14 +267,24 @@ async function getOrCreateConversation(sessionId: string, userId: string) {
     )
 
     return newConv.rows[0] || null
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('getOrCreateConversation 전체 오류:', error)
     return null
   }
 }
 
+type MessageInput = {
+  id?: string
+  content: string
+  isUser: boolean
+  timestamp: Date
+  responseTime?: number
+  context?: string
+  aiFeatures?: Record<string, unknown>
+}
+
 // 메시지 추가
-async function addMessage(sessionId: string, message: any) {
+async function addMessage(sessionId: string, message: MessageInput) {
   try {
     // 먼저 conversation의 UUID(id)를 가져와야 함
     const conversationResult = await dbQuery<{ id: string }>(
@@ -310,8 +331,9 @@ async function addMessage(sessionId: string, message: any) {
           ]
         )
         return
-      } catch (createError: any) {
-        console.warn('대화 생성 중 오류 (메시지 저장을 건너뜁니다):', createError?.message || createError)
+      } catch (createError: unknown) {
+        const errMsg = createError instanceof Error ? createError.message : String(createError)
+        console.warn('대화 생성 중 오류 (메시지 저장을 건너뜁니다):', errMsg)
         return
       }
     }
@@ -331,7 +353,7 @@ async function addMessage(sessionId: string, message: any) {
         new Date().toISOString()
       ]
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('addMessage 전체 오류:', error)
     // 메시지 저장 실패해도 계속 진행
   }
@@ -350,7 +372,8 @@ async function getConversationHistory(sessionId: string, limit: number = 20) {
       return []
     }
 
-    const messageResult = await dbQuery<any>(
+    type MessageRow = { message_id: string; content: string; is_user: boolean; timestamp: string; ai_features: Record<string, unknown> }
+    const messageResult = await dbQuery<MessageRow>(
       'SELECT * FROM messages WHERE conversation_id = $1 ORDER BY timestamp ASC LIMIT $2',
       [conversation.id, limit]
     )
@@ -360,7 +383,7 @@ async function getConversationHistory(sessionId: string, limit: number = 20) {
       return []
     }
 
-    return messages.map((msg: any) => ({
+    return messages.map((msg) => ({
       id: msg.message_id,
       content: msg.content,
       isUser: msg.is_user,
@@ -405,7 +428,7 @@ export async function POST(request: Request) {
     const safeTone = typeof tone === 'string' && allowedTones.has(tone) ? tone : '친근하게'
     const safeContext = context === 'blog' ? 'blog' : 'portfolio'
     const quotaIdentity = getAnonymousQuotaIdentity(request)
-    const quotaJson = (body: any, init?: ResponseInit) =>
+    const quotaJson = (body: unknown, init?: ResponseInit) =>
       applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
     // Reserve one message atomically before Gemini (prevents concurrent quota bypass).
@@ -444,7 +467,7 @@ export async function POST(request: Request) {
       if (!conversation) {
         console.warn('대화 세션을 생성할 수 없지만 계속 진행합니다:', sessionId)
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('대화 세션 처리 오류:', error)
       // 세션 생성 실패해도 계속 진행
     }
@@ -462,7 +485,7 @@ export async function POST(request: Request) {
         responseTime: 0,
         context: safeContext // 포트폴리오/블로그 구분 저장
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('사용자 메시지 저장 오류:', error)
       // 메시지 저장 실패해도 계속 진행
     }
@@ -493,7 +516,7 @@ export async function POST(request: Request) {
         responseTime: responseTime,
         context: safeContext
       })
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('AI 메시지 저장 오류:', error)
       // 메시지 저장 실패해도 계속 진행
     }
@@ -515,13 +538,14 @@ export async function POST(request: Request) {
       })
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
     console.error('AI 채팅 오류:', error)
     return NextResponse.json(
       {
         success: false,
         error: 'AI 응답 생성 중 오류가 발생했습니다.',
-        details: error.message
+        details: message
       },
       { status: 500 }
     )
