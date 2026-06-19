@@ -66,13 +66,13 @@ export default function PostsPage() {
         page: page.toString(),
         limit: '9'
       })
-      
+
       if (category !== 'all') params.append('category', category)
       if (search) params.append('search', search)
-      
+
       const response = await fetch(`${API_BASE_URL}/api/posts?${params}`)
       const data = await response.json()
-      
+
       if (response.ok) {
         const rawPosts = Array.isArray(data.posts)
           ? (data.posts as Record<string, unknown>[])
@@ -223,21 +223,21 @@ export default function PostsPage() {
 
   if (isInitialLoad) {
     return (
-      <div className="min-h-screen bg-canvas text-textPrimary">
+      <div className="min-h-screen bg-neutral-950 text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-primary-200 dark:border-primary-800 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 border-r-primary-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 border-4 border-neutral-800 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <h3 className="text-xl font-mono text-neutral-400 mb-2">
                 {t.postsPage.loading}
               </h3>
               <div className="flex items-center justify-center space-x-1">
-                <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                <div className="w-2 h-2 bg-primary-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
               </div>
             </div>
           </div>
@@ -247,19 +247,19 @@ export default function PostsPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-canvas text-textPrimary">
-      <header className="sticky top-0 z-40 glass-panel border-b border-border shadow-lg">
-        <div className="page-shell py-6">
+    <div className="relative min-h-screen bg-neutral-950 text-neutral-50">
+      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-800">
+        <div className="page-shell py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link 
+              <Link
                 href="/"
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 border border-white/30 dark:border-slate-700/30"
+                className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
               >
-                <FiArrowLeft size={20} />
-                <span className="font-medium">{t.postsPage.home}</span>
+                <FiArrowLeft size={16} />
+                <span>{t.postsPage.home}</span>
               </Link>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-black text-neutral-50 font-mono">
                 {t.postsPage.title}
               </h1>
             </div>
@@ -267,9 +267,9 @@ export default function PostsPage() {
               <button
                 type="button"
                 onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-xl hover:brightness-105"
+                className="inline-flex items-center gap-2 bg-neutral-800 border border-neutral-700 text-neutral-200 text-sm px-3 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors"
               >
-                <FiPlus size={20} />
+                <FiPlus size={16} />
                 <span>{t.postsPage.newPost}</span>
               </button>
             )}
@@ -279,30 +279,27 @@ export default function PostsPage() {
 
       <div className="page-shell relative z-10 py-12">
         <div className="relative z-[100] mb-10">
-          <div className="max-w-4xl mx-auto relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition duration-1000"></div>
-            <div className="relative bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-slate-700/30 shadow-2xl shadow-purple-500/10 dark:shadow-purple-900/20 overflow-visible">
-              <BlogSearchBar
-                onSearch={handleSearch}
-                onFilterChange={handleFilterChange}
-                placeholder={t.postsPage.searchPlaceholder}
-                filters={activeFilters}
-                className="max-w-4xl mx-auto"
-              />
-            </div>
+          <div className="max-w-4xl mx-auto">
+            <BlogSearchBar
+              onSearch={handleSearch}
+              onFilterChange={handleFilterChange}
+              placeholder={t.postsPage.searchPlaceholder}
+              filters={activeFilters}
+              className="max-w-4xl mx-auto"
+            />
           </div>
         </div>
 
-        <div className="relative z-10 mb-12 flex flex-wrap justify-center gap-3">
+        <div className="relative z-10 mb-12 flex flex-wrap justify-center gap-2">
           {categories.map((category) => (
             <button
               key={category.id}
               type="button"
               onClick={() => handleCategoryChange(category.id)}
-              className={`rounded-full px-6 py-3 font-semibold transition-all duration-300 ${
+              className={`text-xs font-mono px-3 py-1.5 rounded-lg transition-colors ${
                 selectedCategory === category.id
-                  ? 'scale-105 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl'
-                  : 'glass-panel text-textPrimary hover:border-primary-500/40'
+                  ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
+                  : 'text-neutral-600 hover:text-neutral-400 border border-transparent'
               }`}
             >
               {category.name}
@@ -312,10 +309,10 @@ export default function PostsPage() {
 
         {searchQuery && (
           <div className="mb-10 text-center">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl rounded-full border border-white/30 dark:border-slate-700/30 shadow-lg">
-              <p className="text-gray-600 dark:text-gray-400">
-                "<span className="font-semibold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">{searchQuery}</span>" search results: 
-                <span className="font-semibold text-gray-800 dark:text-white ml-2">{filteredPosts.length}</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 rounded-lg border border-neutral-800">
+              <p className="text-neutral-500 font-mono text-sm">
+                "<span className="text-cyan-400">{searchQuery}</span>" —{' '}
+                <span className="text-neutral-300">{filteredPosts.length}</span> results
               </p>
             </div>
           </div>
@@ -323,7 +320,7 @@ export default function PostsPage() {
 
         {/* 포스트 그리드 */}
         {filteredPosts.length > 0 ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 mb-12">
             {filteredPosts.map((post, index) => (
               <React.Fragment key={post._id}>
                 {/* 3개 포스트마다 광고 삽입 */}
@@ -336,78 +333,68 @@ export default function PostsPage() {
                     />
                   </div>
                 )}
-                <div className="relative group transition-transform duration-300 hover:-translate-y-1">
-                {/* 그라데이션 테두리 효과 */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700"></div>
+                <div className="relative group">
                 <Link
                   href={`/posts/${post._id}`}
-                  className="relative glass-panel rounded-3xl overflow-hidden border border-border shadow-xl transition-all duration-500 group-hover:border-primary-500/40 block"
+                  className="group block rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 transition-colors overflow-hidden"
                 >
                 {/* 포스트 헤더 */}
-                <div className="p-6">
+                <div className="p-5">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       {post.featured && (
-                        <span className="px-3 py-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs rounded-full font-semibold shadow-lg">
-                          ⭐ Featured
+                        <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-mono px-2 py-0.5 rounded">
+                          Featured
                         </span>
                       )}
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        post.category === 'tech' ? 'bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 backdrop-blur-sm' :
-                        post.category === 'economy' ? 'bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 backdrop-blur-sm' :
-                        post.category === 'coin' ? 'bg-amber-100/80 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 backdrop-blur-sm' :
-                        post.category === 'travel' ? 'bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-400 backdrop-blur-sm' :
-                        post.category === 'food' ? 'bg-orange-100/80 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 backdrop-blur-sm' :
-                        post.category === 'lottery' ? 'bg-pink-100/80 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400 backdrop-blur-sm' :
-                        'bg-gray-100/80 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400 backdrop-blur-sm'
-                      }`}>
+                      <span className="bg-neutral-800 text-neutral-400 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-wider">
                         {getCategoryLabel(post.category, locale)}
                       </span>
                     </div>
                     {isAdmin && (
-                      <div className="flex items-center space-x-2" onClick={(e) => e.preventDefault()}>
+                      <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
                         <button
                           onClick={(e) => { e.preventDefault(); handleEditPost(post) }}
-                          className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
+                          className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
                           title="수정"
                         >
-                          <FiEdit size={16} />
+                          <FiEdit size={14} />
                         </button>
                         <button
                           onClick={(e) => { e.preventDefault(); handleDeletePost(post._id) }}
-                          className="p-1 text-gray-400 hover:text-red-600 transition-colors"
+                          className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
                           title="삭제"
                         >
-                          <FiTrash2 size={16} />
+                          <FiTrash2 size={14} />
                         </button>
                       </div>
                     )}
                   </div>
 
-                  <h3 className="text-xl font-bold mb-3 text-gray-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200 line-clamp-2">
+                  <h3 className="text-neutral-100 font-bold text-base leading-snug group-hover:text-white transition-colors line-clamp-2 mb-2">
                     {post.title}
                   </h3>
 
-                  <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+                  <p className="text-neutral-500 text-sm line-clamp-3 mb-4">
                     {post.content}
                   </p>
 
                   {/* 태그 chips (first 2) */}
                   {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4" onClick={(e) => e.preventDefault()}>
+                    <div className="flex flex-wrap gap-1.5 mb-4" onClick={(e) => e.preventDefault()}>
                       {post.tags.slice(0, 2).map((tag) => (
                         <Link
                           key={tag}
                           href={`/posts/tags/${encodeURIComponent(tag)}`}
-                          className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full flex items-center gap-1 font-medium hover:bg-primary-200 dark:hover:bg-primary-800/40 transition-colors"
+                          className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1 hover:text-neutral-300 transition-colors"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <FiTag size={11} />
+                          <FiTag size={10} />
                           {tag}
                         </Link>
                       ))}
                       {post.tags.length > 2 && (
-                        <span className="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
+                        <span className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded">
                           +{post.tags.length - 2}
                         </span>
                       )}
@@ -415,51 +402,46 @@ export default function PostsPage() {
                   )}
 
                   {/* 메타 정보 */}
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
-                    <div className="flex items-center gap-2">
-                      <FiUser size={14} />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
+                      <FiUser size={11} />
                       <span>{post.author}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <FiCalendar size={14} />
+                    <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
+                      <FiCalendar size={11} />
                       <span>{formatDate(post.createdAt)}</span>
                     </div>
                   </div>
 
                   {/* 통계 + 읽기 시간 */}
-                  <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-1">
-                        <FiEye size={14} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
+                        <FiEye size={11} />
                         <span>{formatNumber(post.views)}</span>
                       </div>
                       <button
                         onClick={(e) => { e.preventDefault(); handleLikePost(post._id) }}
-                        className="flex items-center gap-1 hover:text-red-500 transition-colors"
+                        className="text-neutral-700 text-xs font-mono flex items-center gap-1 hover:text-red-400 transition-colors"
                       >
-                        <FiHeart size={14} />
+                        <FiHeart size={11} />
                         <span>{formatNumber(post.likes)}</span>
                       </button>
-                      <div className="flex items-center gap-1">
-                        <FiMessageSquare size={14} />
+                      <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
+                        <FiMessageSquare size={11} />
                         <span>{formatNumber(post.comments.length)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <FiClock size={12} />
-                      <span>{locale === 'ko' ? `${calcReadingTime(post.content)}분 읽기` : `${calcReadingTime(post.content)} min read`}</span>
+                    <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
+                      <FiClock size={11} />
+                      <span>{locale === 'ko' ? `${calcReadingTime(post.content)}분` : `${calcReadingTime(post.content)}m`}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* 읽기 버튼 */}
-                <div className="px-6 pb-6">
-                  <span
-                    className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-                  >
-                    {t.postsPage.readMore}
-                    <FiArrowLeft size={16} className="rotate-180" />
-                  </span>
+                <div className="w-full text-center text-xs font-mono text-neutral-600 hover:text-neutral-300 border-t border-neutral-800 py-2.5 transition-colors">
+                  {t.postsPage.readMore}
                 </div>
                 </Link>
               </div>
@@ -467,16 +449,10 @@ export default function PostsPage() {
             ))}
           </div>
         ) : (
-          <div className="py-16 text-center">
-            <div className="text-gray-400 dark:text-gray-500 mb-4">
-              <FiMessageSquare size={64} className="mx-auto" />
-            </div>
-            <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">
-              {t.postsPage.noPosts}
-            </h3>
-            <p className="text-textMuted">
-              {t.postsPage.noPostsHint}
-            </p>
+          <div className="text-neutral-700 font-mono text-sm text-center py-16">
+            <FiMessageSquare size={48} className="mx-auto mb-4 opacity-40" />
+            <p>{t.postsPage.noPosts}</p>
+            <p className="mt-1 text-neutral-800">{t.postsPage.noPostsHint}</p>
           </div>
         )}
 

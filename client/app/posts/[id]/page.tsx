@@ -253,15 +253,15 @@ export default function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-canvas text-textPrimary">
+      <div className="min-h-screen bg-neutral-950 text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-primary-200 dark:border-primary-800 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-transparent border-t-primary-600 border-r-primary-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 border-4 border-neutral-800 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-2">
+              <h3 className="text-xl font-mono text-neutral-400 mb-2">
                 {t.postDetail.loading}
               </h3>
             </div>
@@ -273,20 +273,20 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-canvas text-textPrimary">
+      <div className="min-h-screen bg-neutral-950 text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            <h2 className="text-2xl font-bold text-neutral-100 mb-4">
               {t.postDetail.notFound}
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
+            <p className="text-neutral-500 mb-8">
               {t.postDetail.notFoundDetail}
             </p>
             <Link
               href="/posts"
-              className="btn-primary inline-flex items-center space-x-2"
+              className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
             >
-              <FiArrowLeft size={20} />
+              <FiArrowLeft size={16} />
               <span>{t.postDetail.backToPosts}</span>
             </Link>
           </div>
@@ -299,31 +299,31 @@ export default function PostDetailPage() {
   const tocItems = parseHeadings(post.content)
 
   return (
-    <div className="min-h-screen bg-canvas text-textPrimary">
-      <div className="border-b border-border glass-panel">
-        <div className="page-shell py-6">
+    <div className="min-h-screen bg-neutral-950 text-neutral-50">
+      <div className="border-b border-neutral-800 bg-neutral-950/90 backdrop-blur-sm sticky top-0 z-40">
+        <div className="page-shell py-4">
           <div className="flex items-center justify-between">
             <Link
               href="/posts"
-              className="flex items-center text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
             >
-              <FiArrowLeft size={20} className="mr-2" />
+              <FiArrowLeft size={16} />
               {t.postDetail.backToBoard}
             </Link>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               <button
                 onClick={() => setShowEditForm(true)}
-                className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
+                className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
                 title="수정"
               >
-                <FiEdit size={20} />
+                <FiEdit size={18} />
               </button>
               <button
                 onClick={handleDeletePost}
-                className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
                 title="삭제"
               >
-                <FiTrash2 size={20} />
+                <FiTrash2 size={18} />
               </button>
             </div>
           </div>
@@ -335,26 +335,19 @@ export default function PostDetailPage() {
         <div className="mx-auto max-w-6xl flex gap-8 items-start">
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8 mb-8">
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
               <div className="flex items-center gap-2 mb-4">
                 {post.featured && (
-                  <span className="px-3 py-1 bg-primary-600 text-white text-sm rounded-full font-medium">
+                  <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-mono px-2 py-0.5 rounded">
                     Featured
                   </span>
                 )}
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  post.category === 'tech' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400' :
-                  post.category === 'project' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
-                  post.category === 'update' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
-                  'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400'
-                }`}>
-                  {post.category === 'tech' ? '기술' :
-                   post.category === 'project' ? '프로젝트' :
-                   post.category === 'update' ? '업데이트' : '일반'}
+                <span className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded uppercase">
+                  {post.category}
                 </span>
               </div>
 
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">
+              <h1 className="text-3xl md:text-4xl font-black text-neutral-50 leading-tight mb-4">
                 {post.title}
               </h1>
 
@@ -364,33 +357,33 @@ export default function PostDetailPage() {
                 <BookmarkButton postId={post._id} />
               </div>
 
-              <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-6">
-                <div className="flex items-center gap-2">
-                  <FiUser size={16} />
+              <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-600 mb-6">
+                <div className="flex items-center gap-1">
+                  <FiUser size={13} />
                   <span>{post.author}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <FiCalendar size={16} />
+                <div className="flex items-center gap-1">
+                  <FiCalendar size={13} />
                   <span>{formatDate(post.createdAt)}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <FiClock size={16} />
+                <div className="flex items-center gap-1">
+                  <FiClock size={13} />
                   <span>{interpolate(t.postDetail.readingTime, { n: readingTime })}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <FiEye size={16} />
+                <div className="flex items-center gap-1">
+                  <FiEye size={13} />
                   <span>{formatNumber(post.views)}</span>
                 </div>
                 <button
                   onClick={handleLike}
                   disabled={isLiking}
-                  className="flex items-center gap-2 hover:text-red-500 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 hover:text-red-400 transition-colors disabled:opacity-50"
                 >
-                  <FiHeart size={16} />
+                  <FiHeart size={13} />
                   <span>{formatNumber(optimisticLikes)}</span>
                 </button>
-                <div className="flex items-center gap-2">
-                  <FiMessageSquare size={16} />
+                <div className="flex items-center gap-1">
+                  <FiMessageSquare size={13} />
                   <span>{formatNumber(post.comments.length)}</span>
                 </div>
               </div>
@@ -400,15 +393,15 @@ export default function PostDetailPage() {
                   <Link
                     key={tag}
                     href={`/posts/tags/${encodeURIComponent(tag)}`}
-                    className="px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-sm rounded-md flex items-center gap-1 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-400 transition-colors"
+                    className="bg-neutral-800 text-neutral-500 text-xs font-mono px-2.5 py-1 rounded-md flex items-center gap-1 hover:text-neutral-300 transition-colors"
                   >
-                    <FiTag size={14} />
+                    <FiTag size={11} />
                     {tag}
                   </Link>
                 ))}
               </div>
 
-              <div className="prose prose-lg max-w-none text-gray-700 dark:text-gray-300">
+              <div className="text-neutral-300 leading-relaxed prose prose-invert prose-neutral max-w-none">
                 <div className="mb-8">
                   <AdBanner
                     adType="banner"
@@ -437,8 +430,8 @@ export default function PostDetailPage() {
 
             {/* Related posts */}
             {relatedPosts.length > 0 && (
-              <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8 mb-8">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
+              <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
+                <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-4">
                   {t.postDetail.relatedPosts}
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -446,15 +439,15 @@ export default function PostDetailPage() {
                     <Link
                       key={rp._id}
                       href={`/posts/${rp._id}`}
-                      className="block p-4 rounded-xl border border-border hover:border-primary-400 hover:bg-gray-50 dark:hover:bg-dark-800 transition-all group"
+                      className="block rounded-lg border border-neutral-800 p-4 hover:border-neutral-700 transition-colors group"
                     >
-                      <h4 className="font-semibold text-gray-800 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 line-clamp-2 mb-2 text-sm">
+                      <h4 className="font-semibold text-neutral-200 group-hover:text-white line-clamp-2 mb-2 text-sm transition-colors">
                         {rp.title}
                       </h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                      <p className="text-xs font-mono text-neutral-700 mb-3">
                         {formatDateShort(rp.createdAt)}
                       </p>
-                      <span className="text-xs font-medium text-primary-600 dark:text-primary-400">
+                      <span className="text-xs font-mono text-cyan-400 hover:text-cyan-300">
                         {t.postDetail.readMore}
                       </span>
                     </Link>
@@ -463,11 +456,11 @@ export default function PostDetailPage() {
               </div>
             )}
 
-            <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8">
+            <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8">
               <CommentSection postId={postId} />
 
-              <div className="mt-12 pt-8 border-t border-gray-200 dark:border-dark-700">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
+              <div className="mt-12 pt-8 border-t border-neutral-800">
+              <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-6">
                 {interpolate(t.postDetail.comments, { n: post.comments.length })}
               </h3>
 
@@ -478,7 +471,7 @@ export default function PostDetailPage() {
                     placeholder={t.postDetail.commentAuthorPlaceholder}
                     value={newComment.author}
                     onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
-                    className="input-field"
+                    className="bg-neutral-900 border border-neutral-800 text-neutral-200 placeholder-neutral-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-neutral-600"
                     required
                   />
                   <div className="flex">
@@ -486,16 +479,16 @@ export default function PostDetailPage() {
                       placeholder={t.postDetail.commentPlaceholder}
                       value={newComment.content}
                       onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
-                      className="input-field flex-1 mr-2"
+                      className="bg-neutral-900 border border-neutral-800 text-neutral-200 placeholder-neutral-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-neutral-600 flex-1 mr-2"
                       rows={3}
                       required
                     />
                     <button
                       type="submit"
                       disabled={isSubmittingComment}
-                      className="btn-primary px-4 py-2 disabled:opacity-50"
+                      className="bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
                     >
-                      <FiSend size={20} />
+                      <FiSend size={18} />
                     </button>
                   </div>
                 </div>
@@ -506,24 +499,24 @@ export default function PostDetailPage() {
                   post.comments.map((comment) => (
                     <div
                       key={comment._id}
-                      className="border-l-4 border-primary-200 dark:border-primary-800 pl-4 py-2"
+                      className="border-l-2 border-neutral-700 pl-4 py-2"
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="font-semibold text-gray-800 dark:text-white">
+                        <span className="font-mono text-sm text-neutral-300">
                           {comment.author}
                         </span>
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                        <span className="text-xs font-mono text-neutral-700">
                           {formatDate(comment.createdAt)}
                         </span>
                       </div>
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p className="text-neutral-400 text-sm">
                         {comment.content}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <FiMessageSquare size={48} className="mx-auto mb-4 opacity-50" />
+                  <div className="text-center py-8 text-neutral-700 font-mono text-sm">
+                    <FiMessageSquare size={40} className="mx-auto mb-4 opacity-30" />
                     <p>{t.postDetail.noComments}</p>
                   </div>
                 )}
@@ -536,19 +529,19 @@ export default function PostDetailPage() {
           {tocItems.length > 0 && (
             <aside className="hidden xl:block w-64 shrink-0">
               <nav
-                className="sticky rounded-xl bg-white dark:bg-dark-900 shadow-lg p-5"
+                className="sticky rounded-xl bg-neutral-900/50 border border-neutral-800 p-5"
                 style={{ top: '6rem' }}
                 aria-label={t.postDetail.tableOfContents}
               >
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">
+                <p className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-3">
                   {t.postDetail.tableOfContents}
                 </p>
-                <ul className="space-y-1">
+                <ul className="text-xs font-mono text-neutral-600 space-y-1">
                   {tocItems.map((item, idx) => (
                     <li key={idx} className={item.level === 3 ? 'pl-4' : ''}>
                       <a
                         href={`#${item.slug}`}
-                        className="block text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors py-0.5 truncate"
+                        className="block hover:text-neutral-300 transition-colors py-0.5 truncate"
                         title={item.text}
                       >
                         {item.text}
