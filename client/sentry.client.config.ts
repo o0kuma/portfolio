@@ -1,3 +1,4 @@
+// @ts-ignore – @sentry/nextjs is not installed until NEXT_PUBLIC_SENTRY_DSN is configured
 import * as Sentry from '@sentry/nextjs'
 
 Sentry.init({
