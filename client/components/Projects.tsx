@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
+import Link from 'next/link'
 import SearchBar from './SearchBar'
 import ProjectModal from './portfolio/ProjectModal'
 import {
@@ -295,6 +296,14 @@ const CATEGORIES = [
   { id: 'other', name: '기타' },
 ]
 
+function getCaseStudySlug(title: string): string | null {
+  if (/tower.?defense/i.test(title)) return 'tower-defense'
+  if (/portfolio/i.test(title)) return 'portfolio'
+  if (/survive/i.test(title)) return 'survive-game'
+  if (/tetris/i.test(title)) return 'tetris'
+  return null
+}
+
 function formatProjectDate(d: string) {
   if (!d) return '현재'
   return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
@@ -427,6 +436,18 @@ function ProjectCard({
             )}
           </div>
         )}
+        {(() => {
+          const slug = getCaseStudySlug(project.title)
+          return slug ? (
+            <Link
+              href={`/portfolio/${slug}`}
+              onClick={(e) => e.stopPropagation()}
+              className="mt-3 block text-center text-cyan-400 text-sm hover:text-cyan-300 transition-colors"
+            >
+              케이스 스터디 보기 →
+            </Link>
+          ) : null
+        })()}
       </div>
     </article>
   )
