@@ -11,8 +11,59 @@ import { useTetrisGame } from '@/hooks/useTetrisGame'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import Link from 'next/link'
-import { useCallback, useEffect, useRef } from 'react'
+import type { GameSnapshot } from '@/lib/tetris/types'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { FiArrowLeft } from 'react-icons/fi'
+
+function TetrisGameOverOverlay({
+  snapshot,
+  bestStage,
+  t,
+  onReset,
+}: {
+  snapshot: GameSnapshot
+  bestStage: number
+  t: ReturnType<typeof useLanguage>['t']
+  onReset: () => void
+}) {
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = useCallback(() => {
+    const url = typeof window !== 'undefined' ? window.location.href : 'https://portfolio.dev/tetris'
+    const text = `🧱 Tetris | Level ${snapshot.stage} | Lines ${snapshot.lines} | Score ${snapshot.score}\nCan you beat me? ${url}`
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [snapshot.stage, snapshot.lines, snapshot.score])
+
+  return (
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-900/65 backdrop-blur-[2px]">
+      <p className="text-lg font-semibold text-white">{t.tetrisPage.gameOver}</p>
+      <p className="text-sm text-slate-200">
+        {snapshot.stage}{t.tetrisPage.stageUnit} · {snapshot.lines}{t.tetrisPage.lineUnit} · {t.tetrisPage.scoreLabel}{' '}
+        {snapshot.score.toLocaleString()}
+      </p>
+      <p className="text-xs text-slate-300">
+        {interpolate(t.tetrisPage.bestStageLabel, { n: bestStage })}
+      </p>
+      <button
+        type="button"
+        onClick={onReset}
+        className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
+      >
+        {t.tetrisPage.restart}
+      </button>
+      <button
+        type="button"
+        onClick={handleShare}
+        className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+      >
+        {copied ? 'Copied!' : 'Share Result'}
+      </button>
+    </div>
+  )
+}
 
 export default function TetrisPageClient() {
   const {
@@ -98,23 +149,12 @@ export default function TetrisPageClient() {
                   </div>
                 )}
                 {snapshot.gameOver && (
-                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-900/65 backdrop-blur-[2px]">
-                    <p className="text-lg font-semibold text-white">{t.tetrisPage.gameOver}</p>
-                    <p className="text-sm text-slate-200">
-                      {snapshot.stage}{t.tetrisPage.stageUnit} · {snapshot.lines}{t.tetrisPage.lineUnit} · {t.tetrisPage.scoreLabel}{' '}
-                      {snapshot.score.toLocaleString()}
-                    </p>
-                    <p className="text-xs text-slate-300">
-                      {interpolate(t.tetrisPage.bestStageLabel, { n: bestStage })}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={actions.resetGame}
-                      className="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
-                    >
-                      {t.tetrisPage.restart}
-                    </button>
-                  </div>
+                  <TetrisGameOverOverlay
+                    snapshot={snapshot}
+                    bestStage={bestStage}
+                    t={t}
+                    onReset={actions.resetGame}
+                  />
                 )}
               </div>
 
