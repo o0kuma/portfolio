@@ -157,6 +157,7 @@ export default function PostDetailPage() {
 
     try {
       setIsLiking(true)
+      addOptimisticLike(undefined)
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
         method: 'POST'
       })
@@ -386,7 +387,7 @@ export default function PostDetailPage() {
                   className="flex items-center gap-2 hover:text-red-500 transition-colors disabled:opacity-50"
                 >
                   <FiHeart size={16} />
-                  <span>{formatNumber(post.likes)}</span>
+                  <span>{formatNumber(optimisticLikes)}</span>
                 </button>
                 <div className="flex items-center gap-2">
                   <FiMessageSquare size={16} />
