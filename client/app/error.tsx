@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
+import Button from '@/components/ui/Button'
 
 export default function GlobalError({
   error,
@@ -24,13 +25,9 @@ export default function GlobalError({
             예상치 못한 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
           </p>
           <div className="flex items-center justify-center gap-3">
-            <button
-              type="button"
-              onClick={reset}
-              className="px-5 py-2.5 rounded-lg bg-neutral-100 text-neutral-950 text-sm font-semibold hover:bg-white transition-colors"
-            >
+            <Button variant="primary" size="md" onClick={reset}>
               다시 시도
-            </button>
+            </Button>
             <Link
               href="/"
               className="px-5 py-2.5 rounded-lg border border-neutral-700 text-neutral-300 text-sm font-semibold hover:border-neutral-500 transition-colors"

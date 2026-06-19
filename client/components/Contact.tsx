@@ -6,6 +6,7 @@ import { FiGithub, FiSend, FiCheckCircle } from 'react-icons/fi'
 import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, sectionReveal, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import Button from '@/components/ui/Button'
 
 const inputClass =
   'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
@@ -158,16 +159,16 @@ export default function Contact() {
                     {t.contact.emailWarning}
                   </p>
                 )}
-                <button
-                  type="button"
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => {
                     setIsSubmitted(false)
                     setEmailDelivered(false)
                   }}
-                  className="px-5 py-2 rounded-lg border border-neutral-700 text-neutral-400 hover:text-neutral-200 text-sm transition-colors"
                 >
                   {t.contact.newMessage}
-                </button>
+                </Button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -212,20 +213,16 @@ export default function Contact() {
                   className={`${inputClass} resize-none`}
                 />
 
-                <button
+                <Button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="w-full py-3 rounded-lg font-semibold text-sm text-neutral-950 bg-neutral-100 hover:bg-white flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                  variant="primary"
+                  size="md"
+                  loading={isSubmitting}
+                  fullWidth
+                  leftIcon={<FiSend size={14} />}
                 >
-                  {isSubmitting ? (
-                    <div className="w-4 h-4 rounded-full border-2 border-neutral-400 border-t-neutral-900 animate-spin" />
-                  ) : (
-                    <>
-                      <FiSend size={14} />
-                      {t.contact.send}
-                    </>
-                  )}
-                </button>
+                  {t.contact.send}
+                </Button>
               </form>
             )}
           </motion.div>
