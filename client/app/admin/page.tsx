@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   FiFileText,
-  FiFolderOpen,
+  FiFolder,
   FiMail,
   FiAlertCircle,
   FiCpu,
@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
               <StatCard
                 label={t.adminDashboard.statProjects}
                 value={stats?.totalProjects ?? 0}
-                icon={<FiFolderOpen className="w-8 h-8" />}
+                icon={<FiFolder className="w-8 h-8" />}
                 color="text-purple-500"
               />
               <StatCard
