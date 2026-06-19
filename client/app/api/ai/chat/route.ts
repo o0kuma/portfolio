@@ -1,23 +1,18 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
 import { reserveAnonymousChatQuota, addAnonymousChatTokens } from '@/lib/ai-chat-quota'
+import { incrementAiStats } from '../admin/ai-stats/route'
 import * as fs from 'fs'
 import * as path from 'path'
-import { recordAiRequest } from '@/lib/aiStats'
 
-const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 const MAX_MESSAGE_LENGTH = 4000
 
-type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_fetch_error' | null
-
-type ChatMessage = {
-  role: 'user' | 'model'
-  parts: Array<{ text: string }>
-}
+type FallbackReason = 'missing_api_key' | `anthropic_http_${number}` | 'anthropic_error' | null
 
 type ConversationMessage = {
   id: string
@@ -27,16 +22,16 @@ type ConversationMessage = {
   aiFeatures: Record<string, unknown>
 }
 
-// Gemini API 키를 가져오는 헬퍼 함수
-function getGeminiApiKey(): string | null {
-  const key = process.env.GEMINI_API_KEY?.trim()
+// Anthropic API 키를 가져오는 헬퍼 함수
+function getAnthropicApiKey(): string | null {
+  const key = process.env.ANTHROPIC_API_KEY?.trim()
   if (key && key.length >= 10) {
     return key
   }
   return null
 }
 
-// server/.env 파일에서 GEMINI_API_KEY 로드 (개발 환경 전용)
+// server/.env 파일에서 ANTHROPIC_API_KEY 로드 (개발 환경 전용)
 function loadServerEnv() {
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
     return
@@ -60,14 +55,14 @@ function loadServerEnv() {
             if (match) {
               const key = match[1].trim()
               const value = match[2].trim().replace(/^["']|["']$/g, '')
-              if (key === 'GEMINI_API_KEY' && value && !process.env.GEMINI_API_KEY) {
-                process.env.GEMINI_API_KEY = value
+              if (key === 'ANTHROPIC_API_KEY' && value && !process.env.ANTHROPIC_API_KEY) {
+                process.env.ANTHROPIC_API_KEY = value
                 return
               }
             }
           }
         })
-        if (process.env.GEMINI_API_KEY) break
+        if (process.env.ANTHROPIC_API_KEY) break
       }
     }
   } catch (error) {
@@ -78,106 +73,6 @@ function loadServerEnv() {
 }
 
 loadServerEnv()
-
-// Google Gemini API를 사용한 AI 응답 생성
-async function generateAIResponse(
-  message: string,
-  tone: string = '친근하게',
-  context: string = 'portfolio',
-  conversationHistory: ConversationMessage[] = []
-): Promise<{
-  success: boolean
-  response: string
-  emotion: string
-  intent: string
-  confidence: number
-  fallbackReason: FallbackReason
-}> {
-  // 개발 환경에서 .env 파일 재로드 시도
-  if (!process.env.GEMINI_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-    loadServerEnv()
-  }
-
-  const geminiApiKey = getGeminiApiKey()
-
-  if (!geminiApiKey) {
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('⚠️ GEMINI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
-    }
-    return generateFallbackResponse(message, tone, 'missing_api_key')
-  }
-
-  try {
-    const systemPrompt = context === 'blog'
-      ? `You are a helpful assistant for a blog website called "iykyk blog". The blog covers topics like Tech, Economy, Coin, Travel, Food, and Lottery. Always respond in Korean. Respond in a ${tone} tone. Keep responses concise and helpful.`
-      : `You are a helpful assistant for a portfolio website. The portfolio showcases web development projects by 승짱(Okuma). Always respond in Korean. Respond in a ${tone} tone. Keep responses concise and helpful.`
-
-    type ApiMessage = { role: string; content: string }
-    const messages: ApiMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...conversationHistory.slice(-10).map((msg) => ({
-        role: msg.isUser ? 'user' : 'assistant',
-        content: msg.content
-      })),
-      { role: 'user', content: message }
-    ]
-
-    // Gemini OpenAI-compatible endpoint
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${geminiApiKey}`
-      },
-      body: JSON.stringify({
-        model: GEMINI_MODEL,
-        messages: messages,
-        temperature: 0.7,
-        max_tokens: 500
-      })
-    })
-
-    if (!response.ok) {
-      const fallbackReason: FallbackReason = `gemini_http_${response.status}`
-      const errorData = await response.json().catch(() => ({}))
-      console.error('Gemini API 오류로 fallback 응답 사용:', {
-        status: response.status,
-        statusText: response.statusText,
-        error: errorData?.error || errorData,
-        fallbackReason
-      })
-
-      if (response.status === 401 || response.status === 403) {
-        console.error('Gemini API 인증 오류: API 키를 확인하세요.')
-      }
-
-      return generateFallbackResponse(message, tone, fallbackReason)
-    }
-
-    const data = await response.json()
-    const aiResponse = data.choices[0]?.message?.content || '죄송합니다. 응답을 생성할 수 없습니다.'
-
-    const emotion = analyzeEmotion(message)
-    const intent = analyzeIntent(message)
-
-    return {
-      success: true,
-      response: aiResponse,
-      emotion,
-      intent,
-      confidence: 0.9,
-      fallbackReason: null
-    }
-  } catch (error: unknown) {
-    const fallbackReason: FallbackReason = 'gemini_fetch_error'
-    const message_ = error instanceof Error ? error.message : String(error)
-    console.error('Gemini API 호출 오류로 fallback 응답 사용:', {
-      message: message_ || 'Unknown error',
-      fallbackReason
-    })
-    return generateFallbackResponse(message, tone, fallbackReason)
-  }
-}
 
 // 기본 응답 생성 (fallback)
 function generateFallbackResponse(message: string, tone: string, fallbackReason: FallbackReason) {
@@ -203,18 +98,10 @@ function generateFallbackResponse(message: string, tone: string, fallbackReason:
     response += `"${messagePreview}"에 대해 확인했습니다. 핵심 목적과 원하는 결과를 알려주시면 맞춤형으로 정리해드릴게요.`
   }
 
-  return {
-    success: true,
-    response,
-    emotion: 'neutral',
-    intent: 'general',
-    confidence: 0.7,
-    fallbackReason
-  }
+  return { text: response, fallbackReason }
 }
 
 function estimateTokensUsed(responseText: string): number {
-  // The usage API validates tokensUsed as an integer, so round up the estimate.
   return Math.max(1, Math.ceil(responseText.length / 4))
 }
 
@@ -237,7 +124,6 @@ function analyzeIntent(message: string): string {
 // 대화 세션 가져오기 또는 생성
 async function getOrCreateConversation(sessionId: string, userId: string) {
   try {
-    // 먼저 session_id로 기존 대화 찾기
     const existing = await dbQuery<{ id: string }>(
       'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
       [sessionId]
@@ -246,7 +132,6 @@ async function getOrCreateConversation(sessionId: string, userId: string) {
       return existing.rows[0]
     }
 
-    // 없으면 새로 생성 (id는 자동 생성, session_id는 제공한 값 사용)
     const newConv = await dbQuery<{ id: string }>(
       `INSERT INTO conversations (session_id, user_id, settings, statistics, is_active)
        VALUES ($1, $2, $3::jsonb, $4::jsonb, true)
@@ -287,7 +172,6 @@ type MessageInput = {
 // 메시지 추가
 async function addMessage(sessionId: string, message: MessageInput) {
   try {
-    // 먼저 conversation의 UUID(id)를 가져와야 함
     const conversationResult = await dbQuery<{ id: string }>(
       'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
       [sessionId]
@@ -295,7 +179,6 @@ async function addMessage(sessionId: string, message: MessageInput) {
     const conversation = conversationResult.rows[0]
 
     if (!conversation) {
-      // 대화가 없으면 새로 생성 시도
       console.warn('대화를 찾을 수 없습니다. 새로 생성 시도:', sessionId)
       try {
         const newConv = await getOrCreateConversation(sessionId, 'anonymous')
@@ -303,19 +186,17 @@ async function addMessage(sessionId: string, message: MessageInput) {
           console.warn('대화 생성 실패 (Supabase 연결 문제일 수 있음). 메시지 저장을 건너뜁니다:', sessionId)
           return
         }
-        // 새로 생성된 대화로 다시 시도
         const retryResult = await dbQuery<{ id: string }>(
           'SELECT id FROM conversations WHERE session_id = $1 LIMIT 1',
           [sessionId]
         )
         const retryConv = retryResult.rows[0]
-        
+
         if (!retryConv) {
           console.warn('대화를 여전히 찾을 수 없습니다. 메시지 저장을 건너뜁니다:', sessionId)
           return
         }
-        
-        // 메시지 저장 계속 진행
+
         await dbQuery(
           `INSERT INTO messages (
             conversation_id, message_id, content, is_user, ai_features, metadata, response_time, timestamp
@@ -356,7 +237,6 @@ async function addMessage(sessionId: string, message: MessageInput) {
     )
   } catch (error: unknown) {
     console.error('addMessage 전체 오류:', error)
-    // 메시지 저장 실패해도 계속 진행
   }
 }
 
@@ -397,10 +277,16 @@ async function getConversationHistory(sessionId: string, limit: number = 20) {
   }
 }
 
+function buildCookieHeader(identity: ReturnType<typeof getAnonymousQuotaIdentity>): string | null {
+  if (!identity.shouldSetCookie || !identity.cookieValue) return null
+  const secure = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  const maxAge = 60 * 60 * 24 * 30
+  return `portfolio_ai_quota_id=${encodeURIComponent(identity.cookieValue)}; HttpOnly; SameSite=Lax; Path=/${secure}; Max-Age=${maxAge}`
+}
+
 export async function POST(request: Request) {
   try {
     const { message, tone = '친근하게', sessionId, context = 'portfolio' } = await request.json()
-    // This public endpoint has no authenticated identity; do not trust caller-supplied userId for quota checks.
     const effectiveUserId = 'anonymous'
 
     if (typeof message !== 'string' || !message.trim()) {
@@ -429,24 +315,28 @@ export async function POST(request: Request) {
     const safeTone = typeof tone === 'string' && allowedTones.has(tone) ? tone : '친근하게'
     const safeContext = context === 'blog' ? 'blog' : 'portfolio'
     const quotaIdentity = getAnonymousQuotaIdentity(request)
-    const quotaJson = (body: unknown, init?: ResponseInit) =>
-      applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
-    // Reserve one message atomically before Gemini (prevents concurrent quota bypass).
+    const errorJson = (body: unknown, status: number) => {
+      const res = NextResponse.json(body, { status })
+      applyAnonymousQuotaCookie(res, quotaIdentity)
+      return res
+    }
+
+    // Reserve one message atomically before AI call (prevents concurrent quota bypass)
     const quota = await reserveAnonymousChatQuota(quotaIdentity.sessionId)
     if (!quota.ok) {
       console.error('사용량 예약 실패로 AI 응답을 차단합니다 (DB 기록 실패)')
-      return quotaJson(
+      return errorJson(
         {
           success: false,
           error: '사용량 한도를 확인할 수 없어 AI 응답을 생성할 수 없습니다.',
           errorCode: 'SUBSCRIPTION_CHECK_UNAVAILABLE'
         },
-        { status: 503 }
+        503
       )
     }
     if (quota.exceeded) {
-      return quotaJson(
+      return errorJson(
         {
           success: false,
           error: '일일 무료 메시지 한도를 초과했습니다.',
@@ -455,22 +345,20 @@ export async function POST(request: Request) {
           used: quota.used,
           upgradeRequired: true
         },
-        { status: 403 }
+        403
       )
     }
 
     const startTime = Date.now()
 
     // 1. 대화 세션 가져오기 또는 생성
-    let conversation = null
     try {
-      conversation = await getOrCreateConversation(sessionId, effectiveUserId)
+      const conversation = await getOrCreateConversation(sessionId, effectiveUserId)
       if (!conversation) {
         console.warn('대화 세션을 생성할 수 없지만 계속 진행합니다:', sessionId)
       }
     } catch (error: unknown) {
       console.error('대화 세션 처리 오류:', error)
-      // 세션 생성 실패해도 계속 진행
     }
 
     // 2. 대화 히스토리 가져오기
@@ -484,65 +372,135 @@ export async function POST(request: Request) {
         isUser: true,
         timestamp: new Date(),
         responseTime: 0,
-        context: safeContext // 포트폴리오/블로그 구분 저장
-      })
-    } catch (error: unknown) {
-      console.error('사용자 메시지 저장 오류:', error)
-      // 메시지 저장 실패해도 계속 진행
-    }
-
-    // 4. AI 응답 생성 (Gemini API 사용)
-    const aiResponse = await generateAIResponse(normalizedMessage, safeTone, safeContext, conversationHistory)
-    const responseTime = Date.now() - startTime
-
-    await addAnonymousChatTokens(
-      quotaIdentity.sessionId,
-      estimateTokensUsed(aiResponse.response),
-    )
-
-    // 5. AI 응답 저장
-    try {
-      await addMessage(sessionId, {
-        id: (Date.now() + 1).toString(),
-        content: aiResponse.response,
-        isUser: false,
-        timestamp: new Date(),
-        aiFeatures: {
-          tone: safeTone,
-          emotion: aiResponse.emotion,
-          intent: aiResponse.intent,
-          confidence: aiResponse.confidence,
-          context: safeContext // 포트폴리오/블로그 구분 저장
-        },
-        responseTime: responseTime,
         context: safeContext
       })
     } catch (error: unknown) {
-      console.error('AI 메시지 저장 오류:', error)
-      // 메시지 저장 실패해도 계속 진행
+      console.error('사용자 메시지 저장 오류:', error)
     }
 
-    // D-3: Record AI request for admin stats
-    recordAiRequest()
+    // 4. Anthropic API 키 확인
+    if (!process.env.ANTHROPIC_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+      loadServerEnv()
+    }
+    const apiKey = getAnthropicApiKey()
 
-    // D-1: Stream the response text
-    const responseText = aiResponse.response
-    const readable = new ReadableStream({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode(responseText))
-        controller.close()
+    const cookieHeader = buildCookieHeader(quotaIdentity)
+    const streamHeaders: Record<string, string> = {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'X-Quota-Used': String(quota.used),
+      'X-Quota-Limit': String(quota.limit),
+    }
+    if (cookieHeader) streamHeaders['Set-Cookie'] = cookieHeader
+
+    if (!apiKey) {
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
       }
-    })
+      const fallback = generateFallbackResponse(normalizedMessage, safeTone, 'missing_api_key')
+      const responseTime = Date.now() - startTime
+      await addAnonymousChatTokens(quotaIdentity.sessionId, estimateTokensUsed(fallback.text)).catch(() => {})
+      await addMessage(sessionId, {
+        id: (Date.now() + 1).toString(),
+        content: fallback.text,
+        isUser: false,
+        timestamp: new Date(),
+        aiFeatures: { tone: safeTone, emotion: 'neutral', intent: 'general', confidence: 0.7, context: safeContext },
+        responseTime,
+        context: safeContext
+      }).catch(() => {})
 
-    const streamResponse = new NextResponse(readable, {
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'X-Quota-Used': String(quota.used),
-        'X-Quota-Limit': String(quota.limit),
-      },
-    })
+      const fallbackStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(fallback.text))
+          controller.close()
+        }
+      })
+      return new Response(fallbackStream, { headers: streamHeaders })
+    }
 
-    return applyAnonymousQuotaCookie(streamResponse, quotaIdentity)
+    // 5. Build Anthropic messages
+    const systemPrompt = safeContext === 'blog'
+      ? `You are a helpful assistant for a blog website called "iykyk blog". The blog covers topics like Tech, Economy, Coin, Travel, Food, and Lottery. Always respond in Korean. Respond in a ${safeTone} tone. Keep responses concise and helpful.`
+      : `You are a helpful assistant for a portfolio website. The portfolio showcases web development projects by 승짱(Okuma). Always respond in Korean. Respond in a ${safeTone} tone. Keep responses concise and helpful.`
+
+    const conversationMessages: Array<{ role: 'user' | 'assistant'; content: string }> = [
+      ...conversationHistory.slice(-10).map((msg: ConversationMessage) => ({
+        role: (msg.isUser ? 'user' : 'assistant') as 'user' | 'assistant',
+        content: msg.content
+      })),
+      { role: 'user' as const, content: normalizedMessage }
+    ]
+
+    // 6. Increment stats before streaming (can't do it after)
+    incrementAiStats()
+
+    const emotion = analyzeEmotion(normalizedMessage)
+    const intent = analyzeIntent(normalizedMessage)
+
+    try {
+      const anthropic = new Anthropic({ apiKey })
+      const stream = await anthropic.messages.stream({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 1024,
+        messages: conversationMessages,
+        system: systemPrompt,
+      })
+
+      let fullResponse = ''
+      const responseTime = Date.now() - startTime
+
+      const readableStream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of stream) {
+              if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
+                const text = chunk.delta.text
+                fullResponse += text
+                controller.enqueue(new TextEncoder().encode(text))
+              }
+            }
+          } finally {
+            controller.close()
+            await addAnonymousChatTokens(quotaIdentity.sessionId, estimateTokensUsed(fullResponse)).catch(() => {})
+            await addMessage(sessionId, {
+              id: (Date.now() + 1).toString(),
+              content: fullResponse,
+              isUser: false,
+              timestamp: new Date(),
+              aiFeatures: { tone: safeTone, emotion, intent, confidence: 0.9, context: safeContext },
+              responseTime,
+              context: safeContext
+            }).catch(() => {})
+          }
+        }
+      })
+
+      return new Response(readableStream, { headers: streamHeaders })
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error)
+      console.error('Anthropic API 호출 오류로 fallback 응답 사용:', errMsg)
+
+      const fallback = generateFallbackResponse(normalizedMessage, safeTone, 'anthropic_error')
+      const responseTime = Date.now() - startTime
+      await addAnonymousChatTokens(quotaIdentity.sessionId, estimateTokensUsed(fallback.text)).catch(() => {})
+      await addMessage(sessionId, {
+        id: (Date.now() + 1).toString(),
+        content: fallback.text,
+        isUser: false,
+        timestamp: new Date(),
+        aiFeatures: { tone: safeTone, emotion: 'neutral', intent: 'general', confidence: 0.7, context: safeContext },
+        responseTime,
+        context: safeContext
+      }).catch(() => {})
+
+      const fallbackStream = new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(fallback.text))
+          controller.close()
+        }
+      })
+      return new Response(fallbackStream, { headers: streamHeaders })
+    }
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
@@ -557,4 +515,3 @@ export async function POST(request: Request) {
     )
   }
 }
-

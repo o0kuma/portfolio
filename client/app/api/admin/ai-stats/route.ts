@@ -1,11 +1,33 @@
-import { NextResponse } from 'next/server'
-import { isAdminAuthenticated } from '@/lib/adminAuth'
-import { getAiStats, recordAiRequest } from '@/lib/aiStats'
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
-export { recordAiRequest }
+import { NextResponse } from 'next/server'
+
+let aiRequestCount = 0
+let aiRequestsToday = 0
+let lastResetDate = new Date().toDateString()
+
+export function incrementAiStats() {
+  const today = new Date().toDateString()
+  if (today !== lastResetDate) {
+    aiRequestsToday = 0
+    lastResetDate = today
+  }
+  aiRequestCount++
+  aiRequestsToday++
+}
 
 export async function GET() {
-  const ok = await isAdminAuthenticated()
-  if (!ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return NextResponse.json(getAiStats())
+  const today = new Date().toDateString()
+  if (today !== lastResetDate) {
+    aiRequestsToday = 0
+    lastResetDate = today
+  }
+  return NextResponse.json({
+    success: true,
+    stats: {
+      totalRequests: aiRequestCount,
+      requestsToday: aiRequestsToday,
+    }
+  })
 }
