@@ -44,6 +44,7 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 export default function AdminDashboardPage() {
   const { t } = useLanguage()
   const [stats, setStats] = useState<SiteStats | null>(null)
+  const [aiStats, setAiStats] = useState<{ totalRequests: number; requestsToday: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -53,7 +54,16 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     fetchStats()
+    fetchAiStats()
   }, [])
+
+  const fetchAiStats = async () => {
+    try {
+      const res = await fetch('/api/admin/ai-stats', { cache: 'no-store' })
+      const data = await res.json()
+      if (data.success) setAiStats(data.stats)
+    } catch {}
+  }
 
   const fetchStats = async () => {
     try {
@@ -213,10 +223,10 @@ export default function AdminDashboardPage() {
             <FiCpu className="w-10 h-10 text-indigo-400 flex-shrink-0" />
             <div>
               <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {t.adminDashboard.aiUsagePlaceholder}
+                {aiStats?.totalRequests ?? '–'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {t.adminDashboard.aiUsageNote}
+                {t.adminDashboard.aiUsageNote} (오늘: {aiStats?.requestsToday ?? '–'})
               </p>
             </div>
           </div>

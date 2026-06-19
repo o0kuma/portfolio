@@ -39,6 +39,15 @@ import { isStripeConfigured } from '@/lib/stripe-config'
 
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
+const STORAGE_KEY = 'ai_chat_history'
+
+const PRESETS = [
+  { label: '코드 리뷰', labelEn: 'Code Review', prompt: 'Please review this code and suggest improvements:\n\n' },
+  { label: '번역', labelEn: 'Translate', prompt: 'Translate the following to English:\n\n' },
+  { label: '요약', labelEn: 'Summarize', prompt: 'Please summarize the following:\n\n' },
+  { label: '설명', labelEn: 'Explain', prompt: 'Please explain this in simple terms:\n\n' },
+]
+
 interface AIMessengerProps {
   isOpen: boolean
   onClose: () => void
@@ -74,6 +83,12 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     scrollToBottom()
   }, [messages])
 
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-20)))
+    }
+  }, [messages])
+
   // 세션 ID 생성 및 대화 히스토리 로드
   useEffect(() => {
     if (isOpen && !sessionId) {
@@ -101,9 +116,23 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const loadConversationHistory = async (sessionId: string) => {
     try {
       setIsLoadingHistory(true)
+
+      // Try localStorage first
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed)
+            setIsLoadingHistory(false)
+            return
+          }
+        } catch {}
+      }
+
       const response = await fetch(`/api/ai/conversation/${sessionId}`)
       const data = await response.json()
-      
+
       if (data.success && data.messages) {
         setMessages(data.messages)
       } else {
@@ -173,14 +202,32 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
       if (quotaUsedHeader !== null) setQuotaUsed(parseInt(quotaUsedHeader, 10))
       if (quotaLimitHeader !== null) setQuotaLimit(parseInt(quotaLimitHeader, 10))
 
-      const data = await response.json()
+      if (!response.ok) {
+        // Handle error - parse as JSON
+        const errorData = await response.json()
+        if (errorData.errorCode === 'DAILY_LIMIT_EXCEEDED') {
+          const limitMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            content: `일일 무료 메시지 한도(${errorData.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
+            isUser: false,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, limitMessage])
+          setShowUsageLimit(true)
+        } else {
+          const fallbackResponse: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            content: '죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
+            isUser: false,
+            timestamp: new Date()
+          }
+          setMessages(prev => [...prev, fallbackResponse])
+        }
+      } else {
+        // Read the streaming response
+        const reader = response.body!.getReader()
+        const decoder = new TextDecoder()
 
-      if (data.success && data.response) {
-        // 구독 상태 업데이트
-        await checkSubscription(sessionId)
-
-        // Simulate streaming: reveal text character-by-character
-        const fullText: string = data.response
         const aiMsgId = (Date.now() + 1).toString()
         const aiResponse: ChatMessage = {
           id: aiMsgId,
@@ -188,48 +235,26 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           isUser: false,
           timestamp: new Date(),
           aiFeatures: {
-            tone: data.tone,
-            emotion: data.emotion,
-            intent: data.intent,
-            confidence: data.confidence,
             suggestions: generateSuggestions(currentInput)
           }
         }
         setMessages(prev => [...prev, aiResponse])
         setIsTyping(false)
 
-        // Stream text incrementally
-        const chunkSize = 4
-        for (let i = 0; i < fullText.length; i += chunkSize) {
-          const partial = fullText.slice(0, i + chunkSize)
-          setMessages(prev =>
-            prev.map(m => m.id === aiMsgId ? { ...m, content: partial } : m)
-          )
-          await new Promise<void>(resolve => setTimeout(resolve, 20))
+        let done = false
+        while (!done) {
+          const { value, done: doneReading } = await reader.read()
+          done = doneReading
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true })
+            setMessages(prev =>
+              prev.map(m => m.id === aiMsgId ? { ...m, content: m.content + chunk } : m)
+            )
+          }
         }
-        // Ensure final content is set exactly
-        setMessages(prev =>
-          prev.map(m => m.id === aiMsgId ? { ...m, content: fullText } : m)
-        )
-      } else if (data.errorCode === 'DAILY_LIMIT_EXCEEDED') {
-        // 일일 한도 초과
-        const limitMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: `일일 무료 메시지 한도(${data.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
-          isUser: false,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, limitMessage])
-        setShowUsageLimit(true)
-      } else {
-        // API 오류 시 기본 응답
-        const fallbackResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: '죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
-          isUser: false,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, fallbackResponse])
+
+        // 구독 상태 업데이트
+        await checkSubscription(sessionId)
       }
     } catch (error) {
       console.error('AI 응답 오류:', error)
@@ -466,6 +491,13 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               </button>
             )}
             <button
+              onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY) }}
+              className="p-1 hover:bg-white/20 rounded text-xs"
+              title="대화 지우기"
+            >
+              대화 지우기
+            </button>
+            <button
               onClick={() => setIsMinimized(!isMinimized)}
               className="p-1 hover:bg-white/20 rounded"
             >
@@ -622,6 +654,18 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
             {/* 입력 영역 */}
             <div className="p-4 border-t border-slate-200 dark:border-slate-600 flex-shrink-0">
+              {/* Quick prompt presets */}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {PRESETS.map((preset) => (
+                  <button
+                    key={preset.labelEn}
+                    onClick={() => { setInputText(preset.prompt); inputRef.current?.focus() }}
+                    className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
               <div className="flex items-end space-x-2">
                 <div className="flex-1 relative">
                   <textarea
