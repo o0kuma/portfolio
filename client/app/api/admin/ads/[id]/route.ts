@@ -3,16 +3,9 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
+import { isAdminAuthenticated } from '@/lib/adminAuth'
 
 type Ctx = { params: { id: string } }
-
-function checkAdminAuth(request: NextRequest): boolean {
-  const adminToken = process.env.ADMIN_API_TOKEN
-  if (!adminToken) return false
-  const auth = request.headers.get('authorization') ?? ''
-  const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-  return provided === adminToken
-}
 
 const ALLOWED_COLUMNS = new Set([
   'title', 'description', 'ad_type', 'position',
@@ -21,7 +14,7 @@ const ALLOWED_COLUMNS = new Set([
 
 export async function PUT(request: NextRequest, { params }: Ctx) {
   try {
-    if (!checkAdminAuth(request)) {
+    if (!(await isAdminAuthenticated())) {
       return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
@@ -54,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
 
 export async function DELETE(request: NextRequest, { params }: Ctx) {
   try {
-    if (!checkAdminAuth(request)) {
+    if (!(await isAdminAuthenticated())) {
       return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
