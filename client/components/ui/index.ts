@@ -1,0 +1,5 @@
+export { default as Modal } from './Modal'
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
+export { default as Input } from './Input'
+export { default as Textarea } from './Textarea'
+export { default as Select } from './Select'
