@@ -7,9 +7,8 @@ import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, sectionReveal, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import Button from '@/components/ui/Button'
-
-const inputClass =
-  'w-full px-4 py-3 rounded-lg text-sm text-neutral-100 placeholder-neutral-600 bg-neutral-900 border border-neutral-800 focus:outline-none focus:border-neutral-500 transition-colors'
+import Input from '@/components/ui/Input'
+import Textarea from '@/components/ui/Textarea'
 
 export default function Contact() {
   const { t } = useLanguage()
@@ -173,44 +172,40 @@ export default function Contact() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
-                  <input
+                  <Input
                     type="text"
                     name="name"
                     value={formData.name}
                     onChange={handleInputChange}
                     required
                     placeholder={t.contact.namePlaceholder}
-                    className={inputClass}
                   />
-                  <input
+                  <Input
                     type="email"
                     name="email"
                     value={formData.email}
                     onChange={handleInputChange}
                     required
                     placeholder={t.contact.emailPlaceholder}
-                    className={inputClass}
                   />
                 </div>
 
-                <input
+                <Input
                   type="text"
                   name="subject"
                   value={formData.subject}
                   onChange={handleInputChange}
                   required
                   placeholder={t.contact.subjectPlaceholder}
-                  className={inputClass}
                 />
 
-                <textarea
+                <Textarea
                   name="message"
                   value={formData.message}
                   onChange={handleInputChange}
                   required
                   rows={5}
                   placeholder={t.contact.messagePlaceholder}
-                  className={`${inputClass} resize-none`}
                 />
 
                 <Button
