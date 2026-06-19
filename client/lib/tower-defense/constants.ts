@@ -169,6 +169,12 @@ export const PALETTE = {
   life: '#fb7185',
   hpBack: '#1a1f33',
   hp: '#f87171',
+  enemyGhostBody: '#c8d8ff',
+  enemyGhostEye: '#1a1a3e',
+  enemyRegenBody: '#22bb66',
+  enemyRegenGlow: '#00ff88',
+  towerSniper: '#3a3a4a',
+  towerSupport: '#3b6fd4',
 } as const
 
 export const HIGH_SCORE_KEY = 'tower-defense-best'

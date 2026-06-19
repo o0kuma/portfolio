@@ -39,13 +39,17 @@ const TOWER_COLORS: Record<TowerKind, string> = {
   splash: PALETTE.splash,
   frost: PALETTE.frost,
   beam: PALETTE.beam,
+  sniper: PALETTE.towerSniper,
+  support: PALETTE.towerSupport,
   blizzard: PALETTE.blizzard,
   railgun: PALETTE.railgun,
   tempest: PALETTE.tempest,
   prism: PALETTE.prism,
+  omega: PALETTE.railgun,
+  fortress: PALETTE.towerSupport,
 }
 
-const EVOLVED = new Set<TowerKind>(['blizzard', 'railgun', 'tempest', 'prism'])
+const EVOLVED = new Set<TowerKind>(['blizzard', 'railgun', 'tempest', 'prism', 'omega', 'fortress'])
 
 // Active map geometry, set by the component effect before each render frame so
 // module-level draw helpers (background, portals, enemy facing) stay in sync
@@ -681,6 +685,20 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
     ctx.stroke()
   }
 
+  // Support tower: pulsing aura ring showing its buff radius
+  if (t.kind === 'support' || t.kind === 'fortress') {
+    const auraAlpha = 0.12 + Math.sin(now * 0.002 + t.id) * 0.06
+    ctx.save()
+    ctx.globalAlpha = Math.max(0.06, auraAlpha)
+    ctx.beginPath()
+    ctx.arc(t.x, t.y, t.range, 0, Math.PI * 2)
+    ctx.strokeStyle = t.kind === 'fortress' ? '#7dd3fc' : '#60a5fa'
+    ctx.lineWidth = 2
+    ctx.stroke()
+    ctx.restore()
+    ctx.globalAlpha = 1
+  }
+
   const flash = t.flashMs > 0
   ctx.save()
   ctx.translate(t.x, t.y)
@@ -688,6 +706,16 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
   ctx.fillStyle = flash ? '#ffffff' : col
   drawTurret(ctx, t.kind, plate)
   ctx.restore()
+
+  // Sniper: extra-long barrel extension drawn in world space
+  if (t.kind === 'sniper' || t.kind === 'omega') {
+    ctx.save()
+    ctx.translate(t.x, t.y)
+    ctx.rotate(t.aimAngle)
+    ctx.fillStyle = flash ? '#ffffff' : darken(col, 20)
+    ctx.fillRect(plate + 18, -2, 8, 4)
+    ctx.restore()
+  }
 
   const corePulse = 0.6 + 0.4 * Math.sin(now / 280 + t.id)
   ctx.save()
@@ -806,6 +834,35 @@ function drawTurret(ctx: CanvasRenderingContext2D, kind: TowerKind, plate: numbe
       ctx.lineTo(plate + 6, 6)
       ctx.closePath()
       ctx.fill()
+      break
+    case 'sniper':
+      // Long thin rifle barrel
+      ctx.fillRect(0, -1.5, plate + 18, 3)
+      ctx.fillRect(plate + 16, -3, 4, 6)
+      // scope bump
+      ctx.fillRect(plate - 2, -4, 8, 3)
+      break
+    case 'support':
+      // No directional barrel — draw a small shield emblem
+      ctx.beginPath()
+      ctx.moveTo(0, -5)
+      ctx.lineTo(8, -5)
+      ctx.lineTo(8, 2)
+      ctx.lineTo(4, 6)
+      ctx.lineTo(0, 2)
+      ctx.closePath()
+      ctx.fill()
+      break
+    case 'omega':
+      // Extra-long twin lance barrels
+      ctx.fillRect(0, -5, plate + 20, 3)
+      ctx.fillRect(0, 2, plate + 20, 3)
+      ctx.fillRect(plate + 18, -7, 4, 14)
+      break
+    case 'fortress':
+      // Wide squat cannon
+      ctx.fillRect(0, -6, plate + 6, 12)
+      ctx.fillRect(plate + 4, -8, 6, 16)
       break
   }
 }
@@ -1134,6 +1191,99 @@ function drawProjectile(
   ctx.fill()
 }
 
+/** 👻 GHOST — semi-transparent wispy blob with wavy skirt and dark oval eyes. */
+function drawGhost(ctx: CanvasRenderingContext2D, enemy: Enemy, now: number) {
+  const { x, y, radius, hp, maxHp } = enemy
+  const hpRatio = hp / maxHp
+
+  // Ghost is semi-transparent — overall alpha 0.55 + pulse
+  const pulse = 0.55 + Math.sin(now * 0.003 + enemy.id) * 0.15
+  ctx.save()
+  ctx.globalAlpha = pulse
+
+  // Body: white-blue wispy blob
+  ctx.beginPath()
+  ctx.ellipse(x, y - radius * 0.15, radius * 0.85, radius, 0, 0, Math.PI * 2)
+  ctx.fillStyle = '#c8d8ff'
+  ctx.fill()
+
+  // Bottom wavy skirt
+  ctx.beginPath()
+  ctx.moveTo(x - radius, y + radius * 0.3)
+  const wave = Math.sin(now * 0.004) * 3
+  ctx.quadraticCurveTo(x - radius * 0.5, y + radius + wave, x, y + radius * 0.7)
+  ctx.quadraticCurveTo(x + radius * 0.5, y + radius - wave, x + radius, y + radius * 0.3)
+  ctx.closePath()
+  ctx.fill()
+
+  // Eyes: two dark ovals
+  ctx.globalAlpha = pulse * 0.9
+  ctx.fillStyle = '#1a1a3e'
+  ctx.beginPath()
+  ctx.ellipse(x - radius * 0.28, y - radius * 0.1, radius * 0.16, radius * 0.22, 0, 0, Math.PI * 2)
+  ctx.ellipse(x + radius * 0.28, y - radius * 0.1, radius * 0.16, radius * 0.22, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  // HP bar (above)
+  if (hpRatio < 1) {
+    ctx.globalAlpha = 0.8
+    ctx.fillStyle = '#334'
+    ctx.fillRect(x - radius, y - radius * 1.6, radius * 2, 4)
+    ctx.fillStyle = '#88aaff'
+    ctx.fillRect(x - radius, y - radius * 1.6, radius * 2 * hpRatio, 4)
+  }
+
+  ctx.restore()
+}
+
+/** 💚 REGEN — chunky green circle with pulsing glow ring and regen cross symbol. */
+function drawRegen(ctx: CanvasRenderingContext2D, enemy: Enemy, now: number) {
+  const { x, y, radius, hp, maxHp } = enemy
+  const hpRatio = hp / maxHp
+
+  ctx.save()
+
+  // Outer glow: pulsing green ring
+  const glowPulse = 0.3 + Math.abs(Math.sin(now * 0.002)) * 0.3
+  ctx.shadowBlur = 14
+  ctx.shadowColor = '#00ff88'
+  ctx.globalAlpha = glowPulse
+  ctx.beginPath()
+  ctx.arc(x, y, radius + 4, 0, Math.PI * 2)
+  ctx.strokeStyle = '#00ff88'
+  ctx.lineWidth = 2
+  ctx.stroke()
+  ctx.shadowBlur = 0
+  ctx.globalAlpha = 1
+
+  // Body: green chunky circle
+  const grad = ctx.createRadialGradient(x - radius * 0.25, y - radius * 0.25, 1, x, y, radius)
+  grad.addColorStop(0, '#44ff99')
+  grad.addColorStop(0.6, '#22bb66')
+  grad.addColorStop(1, '#116633')
+  ctx.beginPath()
+  ctx.arc(x, y, radius, 0, Math.PI * 2)
+  ctx.fillStyle = grad
+  ctx.fill()
+
+  // Cross/plus regen symbol
+  ctx.fillStyle = 'rgba(255,255,255,0.7)'
+  const cs = radius * 0.35
+  ctx.fillRect(x - cs * 0.3, y - cs, cs * 0.6, cs * 2)
+  ctx.fillRect(x - cs, y - cs * 0.3, cs * 2, cs * 0.6)
+
+  // HP bar
+  if (hpRatio < 1) {
+    ctx.fillStyle = '#1a3322'
+    ctx.fillRect(x - radius, y - radius * 1.6, radius * 2, 4)
+    // Green HP bar with regen shimmer
+    ctx.fillStyle = '#00ee77'
+    ctx.fillRect(x - radius, y - radius * 1.6, radius * 2 * hpRatio, 4)
+  }
+
+  ctx.restore()
+}
+
 /** Facing angle from the enemy toward its next waypoint (radians). */
 function enemyFacing(en: Enemy): number {
   const t = activeWaypoints[en.wpIndex]
@@ -1163,6 +1313,8 @@ function drawEnemy(
   if (en.kind === 'tank') drawTank(ctx, en, now)
   else if (en.kind === 'fast') drawFast(ctx, en, now, col)
   else if (en.kind === 'boss') drawBoss(ctx, en, now, col)
+  else if (en.kind === 'ghost') drawGhost(ctx, en, now)
+  else if (en.kind === 'regen') drawRegen(ctx, en, now)
   else drawSlime(ctx, en, now, col)
 
   // shared slowed / hit overlays drawn over the body box footprint
