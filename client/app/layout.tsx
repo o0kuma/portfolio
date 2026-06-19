@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
-import ToastContainer from '@/components/Toast'
+import ToastContainer from '@/components/ui/ToastContainer'
 import {
   getSiteUrl,
   SITE_NAME,

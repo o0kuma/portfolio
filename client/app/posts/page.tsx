@@ -7,6 +7,7 @@ import BlogSearchBar from '../../components/BlogSearchBar'
 import AdBanner from '../../components/AdBanner'
 import CreatePostForm from '../../components/CreatePostForm'
 import { normalizePostBoardItem } from '@/lib/postApi'
+import Pagination from '@/components/ui/Pagination'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import { toast } from '@/lib/toast'
 import { adminAuthHeaders } from '@/lib/admin-token'
@@ -465,42 +466,9 @@ export default function PostsPage() {
         )}
 
         {/* 페이지네이션 */}
-        {totalPages > 1 && (
-          <div className="mt-12 flex justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
-            >
-              {t.postsPage.previous}
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                type="button"
-                onClick={() => handlePageChange(page)}
-                className={`rounded-xl px-5 py-2.5 font-semibold transition ${
-                  currentPage === page
-                    ? 'scale-105 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl'
-                    : 'glass-panel text-textPrimary hover:border-primary-500/40'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="rounded-xl border border-border bg-surface px-5 py-2.5 text-textPrimary shadow-lg transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-surfaceElevated/80"
-            >
-              {t.postsPage.next}
-            </button>
-          </div>
-        )}
+        <div className="flex justify-center mt-8">
+          <Pagination page={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
+        </div>
       </div>
 
       {/* 게시글 작성/수정 폼 */}
