@@ -72,19 +72,18 @@ function getGeminiApiKey(): string | null {
 // Category config (rotates daily)
 // ---------------------------------------------------------------------------
 const DAILY_SCHEDULE = [
-  { category: 'tech',    topic: '최신 AI 개발 도구와 개발자 워크플로우 혁신' },
+  { category: 'coin',    topic: '암호화폐 시장 최신 동향과 비트코인·알트코인 분석' },
   { category: 'economy', topic: '글로벌 주식 시장 동향과 개인 투자 전략' },
-  { category: 'coin',    topic: '암호화폐 시장 최신 동향과 블록체인 트렌드' },
-  { category: 'travel',  topic: '개발자를 위한 워케이션 추천 및 해외 여행 팁' },
-  { category: 'general', topic: '개발자 생산성과 커리어 성장 전략' },
+  { category: 'coin',    topic: '디파이(DeFi)·NFT·Web3 최신 트렌드와 투자 기회' },
+  { category: 'economy', topic: '환율·금리·인플레이션이 자산 시장에 미치는 영향' },
+  { category: 'coin',    topic: '이더리움·솔라나 등 레이어1·레이어2 블록체인 동향' },
+  { category: 'economy', topic: '국내외 부동산·주식·채권 포트폴리오 분산 전략' },
+  { category: 'coin',    topic: '암호화폐 규제 동향과 기관 투자자 참여 현황' },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
-  tech: '기술',
   economy: '경제',
   coin: '코인',
-  travel: '여행',
-  general: '일반',
 }
 
 // ---------------------------------------------------------------------------

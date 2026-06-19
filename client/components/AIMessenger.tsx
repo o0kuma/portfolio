@@ -449,84 +449,68 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
         className={`fixed bottom-4 right-4 z-50 ${
-          isMinimized ? 'w-80 h-16' : 'w-[95vw] sm:w-[420px] md:w-[480px] h-[80vh] max-h-[90vh]'
-        } bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 overflow-hidden flex flex-col`}
+          isMinimized ? 'w-80 h-14' : 'w-[95vw] sm:w-[420px] md:w-[460px] h-[80vh] max-h-[90vh]'
+        } bg-neutral-950 rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden flex flex-col`}
       >
         {/* 헤더 */}
-        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <FiZap className="w-4 h-4" />
+        <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
+              <FiZap className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <div>
-              <h3 className="font-semibold flex items-center gap-2">
-                AI 어시스턴트
-                {subscription?.isPremium && (
-                  <span className="text-xs bg-yellow-500 text-yellow-900 px-2 py-0.5 rounded-full font-bold">
-                    PRO
-                  </span>
-                )}
-              </h3>
-              <p className="text-xs text-white/80">
-                {subscription ? (
-                  subscription.isPremium ? (
-                    '프리미엄 - 무제한'
-                  ) : (
-                    `일일 ${subscription.usage?.chat || 0}/${subscription.limits?.dailyChatMessages || 10}`
-                  )
-                ) : (
-                  '온라인'
-                )}
-              </p>
+              <span className="text-sm font-semibold text-neutral-100 font-mono">AI 어시스턴트</span>
+              {subscription?.isPremium && (
+                <span className="ml-2 text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded font-mono">PRO</span>
+              )}
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1">
             {!subscription?.isPremium && stripeReady && (
               <button
                 onClick={() => window.open('/subscription', '_blank')}
-                className="px-2 py-1 text-xs bg-yellow-500 text-yellow-900 rounded font-semibold hover:bg-yellow-400 transition-colors"
-                title="프리미엄으로 업그레이드"
+                className="px-2 py-1 text-[10px] font-mono border border-neutral-700 text-neutral-400 rounded hover:border-neutral-500 hover:text-neutral-200 transition-colors"
               >
                 업그레이드
               </button>
             )}
             <button
               onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY) }}
-              className="p-1 hover:bg-white/20 rounded text-xs"
+              className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors rounded"
               title="대화 지우기"
             >
-              대화 지우기
+              <FiX className="w-3 h-3" />
             </button>
             <button
               onClick={() => setIsMinimized(!isMinimized)}
-              className="p-1 hover:bg-white/20 rounded"
+              className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors rounded"
             >
-              {isMinimized ? <FiMaximize2 className="w-4 h-4" /> : <FiMinimize2 className="w-4 h-4" />}
+              {isMinimized ? <FiMaximize2 className="w-3.5 h-3.5" /> : <FiMinimize2 className="w-3.5 h-3.5" />}
             </button>
             <button
               onClick={onClose}
-              className="p-1 hover:bg-white/20 rounded"
+              className="p-1.5 text-neutral-600 hover:text-neutral-300 transition-colors rounded"
             >
-              <FiX className="w-4 h-4" />
+              <FiX className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         {!isMinimized && (
           <>
-            {/* 톤 선택 및 사용량 표시 */}
-            <div className="p-3 bg-slate-50 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-600 space-y-2">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">톤:</span>
-                <div className="flex space-x-1">
+            {/* 톤 선택 및 사용량 */}
+            <div className="px-4 py-2.5 border-b border-neutral-800/60 space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">톤</span>
+                <div className="flex gap-1">
                   {tones.map((tone) => (
                     <button
                       key={tone.value}
                       onClick={() => setSelectedTone(tone.value)}
-                      className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                      className={`px-2 py-0.5 text-[10px] font-mono rounded border transition-colors ${
                         selectedTone === tone.value
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-500'
+                          ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                          : 'border-neutral-800 text-neutral-600 hover:border-neutral-700 hover:text-neutral-400'
                       }`}
                     >
                       {tone.icon} {tone.label}
@@ -534,34 +518,14 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                   ))}
                 </div>
               </div>
-              {!subscription?.isPremium && subscription && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-600 dark:text-slate-400">일일 사용량:</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-slate-600 dark:text-slate-400">
-                      채팅: {subscription.usage?.chat || 0}/{subscription.limits?.dailyChatMessages || 10}
-                    </span>
-                    {stripeReady &&
-                      (subscription.usage?.chat || 0) >=
-                        (subscription.limits?.dailyChatMessages || 10) * 0.8 && (
-                      <button
-                        onClick={() => window.open('/subscription', '_blank')}
-                        className="text-blue-600 dark:text-blue-400 font-semibold hover:underline"
-                      >
-                        업그레이드 →
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-              {/* Quota progress bar */}
+              {/* Quota bar */}
               {quotaLimit > 0 && (
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                    <span>쿼터 사용</span>
-                    <span>{quotaUsed}/{quotaLimit}</span>
+                  <div className="flex justify-between text-[10px] font-mono text-neutral-700">
+                    <span>쿼터</span>
+                    <span>{quotaUsed} / {quotaLimit}</span>
                   </div>
-                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                  <div className="w-full h-1 bg-neutral-800 rounded-full overflow-hidden">
                     <div
                       className={`h-full rounded-full transition-all duration-500 ${quotaColor}`}
                       style={{ width: `${quotaPct}%` }}
@@ -572,79 +536,76 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
             </div>
 
             {/* 메시지 영역 */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0 scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
               {messages.map((message) => (
                 <motion.div
                   key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15 }}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-2xl ${
+                    className={`max-w-[82%] px-3 py-2.5 rounded-xl text-sm leading-relaxed ${
                       message.isUser
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200'
+                        ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
+                        : 'bg-neutral-900 text-neutral-300 border border-neutral-800'
                     }`}
                   >
-                    <p className="text-sm">{message.content}</p>
-                    <div className="flex items-center justify-between mt-1 gap-2">
-                      <p className="text-xs opacity-70">
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <div className="flex items-center justify-between mt-1.5 gap-2">
+                      <span className="text-[10px] font-mono text-neutral-700">
                         {formatTime(message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp))}
-                      </p>
+                      </span>
                       <button
                         onClick={() => handleCopy(message.id, message.content)}
                         title="복사"
-                        className="p-1 opacity-50 hover:opacity-100 transition-opacity rounded"
+                        className="text-neutral-700 hover:text-neutral-400 transition-colors"
                       >
                         {copiedId === message.id
-                          ? <FiCheck className="w-3 h-3" />
+                          ? <FiCheck className="w-3 h-3 text-cyan-500" />
                           : <FiCopy className="w-3 h-3" />
                         }
                       </button>
                     </div>
-
                     {/* AI 기능 버튼들 */}
                     {!message.isUser && message.aiFeatures && (
-                      <div className="mt-2 flex flex-wrap gap-1">
+                      <div className="mt-2 flex flex-wrap gap-1 pt-1.5 border-t border-neutral-800">
                         <button
                           onClick={() => handleAIFeature('translate', message.content)}
-                          className="px-2 py-1 text-xs bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiGlobe className="w-3 h-3 inline mr-1" />
-                          번역
+                          <FiGlobe className="w-3 h-3 inline mr-1" />번역
                         </button>
                         <button
                           onClick={() => handleAIFeature('summarize', message.content)}
-                          className="px-2 py-1 text-xs bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiEdit3 className="w-3 h-3 inline mr-1" />
-                          요약
+                          <FiEdit3 className="w-3 h-3 inline mr-1" />요약
                         </button>
                         <button
                           onClick={() => handleAIFeature('improve', message.content)}
-                          className="px-2 py-1 text-xs bg-white/20 rounded-full hover:bg-white/30 transition-colors"
+                          className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiEdit3 className="w-3 h-3 inline mr-1" />
-                          개선
+                          <FiEdit3 className="w-3 h-3 inline mr-1" />개선
                         </button>
                       </div>
                     )}
                   </div>
                 </motion.div>
               ))}
-              
+
               {isTyping && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-slate-100 dark:bg-slate-700 p-3 rounded-2xl">
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="bg-neutral-900 border border-neutral-800 px-3 py-2.5 rounded-xl">
+                    <div className="flex space-x-1 items-center">
+                      <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-bounce"></div>
+                      <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-1.5 h-1.5 bg-neutral-600 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                   </div>
                 </motion.div>
@@ -653,38 +614,38 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
             </div>
 
             {/* 입력 영역 */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-600 flex-shrink-0">
+            <div className="p-3 border-t border-neutral-800 flex-shrink-0">
               {/* Quick prompt presets */}
               <div className="flex flex-wrap gap-1 mb-2">
                 {PRESETS.map((preset) => (
                   <button
                     key={preset.labelEn}
                     onClick={() => { setInputText(preset.prompt); inputRef.current?.focus() }}
-                    className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                    className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                   >
                     {preset.label}
                   </button>
                 ))}
               </div>
-              <div className="flex items-end space-x-2">
+              <div className="flex items-end gap-2">
                 <div className="flex-1 relative">
                   <textarea
                     ref={inputRef}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="메시지를 입력하세요... (Shift+Enter로 줄바꿈)"
-                    className="w-full p-3 pr-12 border border-slate-300 dark:border-slate-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-200"
+                    placeholder="메시지 입력... (Shift+Enter 줄바꿈)"
+                    className="w-full px-3 py-2.5 pr-10 border border-neutral-800 rounded-xl resize-none focus:outline-none focus:border-neutral-600 bg-neutral-900 text-neutral-200 placeholder-neutral-700 text-sm font-mono"
                     rows={1}
-                    style={{ minHeight: '44px', maxHeight: '120px' }}
+                    style={{ minHeight: '42px', maxHeight: '120px' }}
                   />
                   <button
                     onClick={handleMicClick}
                     title={isRecording ? '음성 인식 중지' : '음성으로 입력'}
-                    className={`absolute right-2 bottom-2 p-2 rounded-full transition-colors ${
-                      isRecording 
-                        ? 'bg-red-500 text-white animate-pulse' 
-                        : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    className={`absolute right-2 bottom-2 p-1.5 rounded transition-colors ${
+                      isRecording
+                        ? 'text-red-500 animate-pulse'
+                        : 'text-neutral-700 hover:text-neutral-400'
                     }`}
                   >
                     {isRecording ? <FiMicOff className="w-4 h-4" /> : <FiMic className="w-4 h-4" />}
@@ -693,47 +654,43 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputText.trim()}
-                  className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2.5 bg-neutral-800 border border-neutral-700 text-neutral-200 rounded-xl hover:bg-neutral-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                 >
                   <FiSend className="w-4 h-4" />
                 </button>
               </div>
-              
+
               {/* AI 기능 토글 및 버튼들 */}
-              <div className="mt-2 flex flex-wrap gap-2">
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   onClick={() => setShowAIFeatures(!showAIFeatures)}
-                  className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                  className={`px-2.5 py-1 text-[10px] font-mono rounded border transition-colors ${
                     showAIFeatures
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-500'
+                      ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-400'
+                      : 'border-neutral-800 text-neutral-600 hover:border-neutral-700 hover:text-neutral-400'
                   }`}
                 >
-                  <FiZap className="w-3 h-3 inline mr-1" />
-                  AI 기능
+                  <FiZap className="w-3 h-3 inline mr-1" />AI 기능
                 </button>
                 {showAIFeatures && (
                   <>
                     <button
                       onClick={() => handleAIFeature('summarize')}
-                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                      className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiEdit3 className="w-3 h-3 inline mr-1" />
-                      요약
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />요약
                     </button>
                     <button
                       onClick={() => handleAIFeature('improve')}
-                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                      className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiEdit3 className="w-3 h-3 inline mr-1" />
-                      텍스트 개선
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />개선
                     </button>
                     <button
                       onClick={() => handleAIFeature('translate')}
-                      className="px-3 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors"
+                      className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiGlobe className="w-3 h-3 inline mr-1" />
-                      번역
+                      <FiGlobe className="w-3 h-3 inline mr-1" />번역
                     </button>
                   </>
                 )}
