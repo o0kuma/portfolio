@@ -9,6 +9,7 @@ import {
   FiAlertCircle,
   FiCpu,
   FiArrowRight,
+  FiLogOut,
 } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 
@@ -45,25 +46,27 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<SiteStats | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
-  const [adminToken, setAdminToken] = useState('')
-  const [showTokenInput, setShowTokenInput] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [password, setPassword] = useState('')
+  const [loginError, setLoginError] = useState('')
+  const [loginLoading, setLoginLoading] = useState(false)
 
   useEffect(() => {
-    const saved = localStorage.getItem('admin_token') ?? ''
-    setAdminToken(saved)
-    fetchStats(saved)
+    fetchStats()
   }, [])
 
-  const fetchStats = async (token: string) => {
+  const fetchStats = async () => {
     try {
       setIsLoading(true)
       setError('')
-      const res = await fetch('/api/admin/stats', {
-        cache: 'no-store',
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const res = await fetch('/api/admin/stats', { cache: 'no-store' })
+      if (res.status === 401) {
+        setIsLoggedIn(false)
+        return
+      }
       const data = await res.json()
       if (!data.success) throw new Error(data.error || t.adminDashboard.errorLoad)
+      setIsLoggedIn(true)
       setStats(data.stats as SiteStats)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t.adminDashboard.errorLoad)
@@ -72,11 +75,71 @@ export default function AdminDashboardPage() {
     }
   }
 
-  const saveToken = (token: string) => {
-    setAdminToken(token)
-    localStorage.setItem('admin_token', token)
-    setShowTokenInput(false)
-    fetchStats(token)
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoginLoading(true)
+    setLoginError('')
+    try {
+      const res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+      if (!res.ok) {
+        setLoginError('Invalid password')
+        return
+      }
+      setIsLoggedIn(true)
+      setPassword('')
+      fetchStats()
+    } catch {
+      setLoginError('Login failed')
+    } finally {
+      setLoginLoading(false)
+    }
+  }
+
+  const handleLogout = async () => {
+    await fetch('/api/admin/logout', { method: 'POST' })
+    setIsLoggedIn(false)
+    setStats(null)
+  }
+
+  if (!isLoggedIn && !isLoading) {
+    return (
+      <div className="min-h-screen bg-canvas flex items-center justify-center px-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
+            {t.adminDashboard.pageTitle}
+          </h1>
+          <form onSubmit={handleLogin} className="card rounded-xl p-6 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter admin password"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
+                autoFocus
+              />
+            </div>
+            {loginError && (
+              <p className="text-red-600 dark:text-red-400 text-sm">{loginError}</p>
+            )}
+            <button
+              type="submit"
+              disabled={loginLoading}
+              className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition"
+            >
+              {loginLoading ? 'Logging in…' : 'Login'}
+            </button>
+          </form>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -88,45 +151,13 @@ export default function AdminDashboardPage() {
             {t.adminDashboard.pageTitle}
           </h1>
           <button
-            onClick={() => setShowTokenInput((v) => !v)}
-            className="text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-sm px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
           >
-            {adminToken ? t.adminPosts.tokenChange : t.adminPosts.tokenSet}
+            <FiLogOut className="w-4 h-4" />
+            Logout
           </button>
         </div>
-
-        {/* Token Panel */}
-        {showTokenInput && (
-          <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
-            <p className="text-sm text-yellow-800 dark:text-yellow-300 mb-2 font-medium">
-              {t.adminPosts.tokenPanelLabel}
-            </p>
-            <div className="flex gap-2">
-              <input
-                id="dashboard-token-input"
-                type="password"
-                defaultValue={adminToken}
-                placeholder={t.adminPosts.tokenPlaceholder}
-                className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter')
-                    saveToken((e.target as HTMLInputElement).value)
-                }}
-              />
-              <button
-                onClick={() => {
-                  const el = document.getElementById(
-                    'dashboard-token-input',
-                  ) as HTMLInputElement | null
-                  saveToken(el?.value ?? '')
-                }}
-                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-medium"
-              >
-                {t.adminPosts.save}
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Analytics Overview */}
         <section className="mb-10">
