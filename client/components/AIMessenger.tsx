@@ -39,6 +39,15 @@ import { isStripeConfigured } from '@/lib/stripe-config'
 
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
+const STORAGE_KEY = 'ai_chat_history'
+
+const PRESETS = [
+  { label: '코드 리뷰', labelEn: 'Code Review', prompt: 'Please review this code and suggest improvements:\n\n' },
+  { label: '번역', labelEn: 'Translate', prompt: 'Translate the following to English:\n\n' },
+  { label: '요약', labelEn: 'Summarize', prompt: 'Please summarize the following:\n\n' },
+  { label: '설명', labelEn: 'Explain', prompt: 'Please explain this in simple terms:\n\n' },
+]
+
 interface AIMessengerProps {
   isOpen: boolean
   onClose: () => void
@@ -49,20 +58,6 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const stripeReady = isStripeConfigured()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string>('')
-  // D-2: Load chat history from localStorage on mount
-  useEffect(() => {
-    try {
-      const saved = JSON.parse(localStorage.getItem('ai_chat_history') ?? '[]') as ChatMessage[]
-      if (Array.isArray(saved) && saved.length > 0) setMessages(saved)
-    } catch {}
-  }, [])
-
-  // D-2: Save chat history to localStorage on messages change
-  useEffect(() => {
-    if (messages.length > 0) {
-      localStorage.setItem('ai_chat_history', JSON.stringify(messages.slice(-20)))
-    }
-  }, [messages])
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -86,6 +81,12 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
   useEffect(() => {
     scrollToBottom()
+  }, [messages])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-20)))
+    }
   }, [messages])
 
   // 세션 ID 생성 및 대화 히스토리 로드
@@ -115,9 +116,23 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const loadConversationHistory = async (sessionId: string) => {
     try {
       setIsLoadingHistory(true)
+
+      // Try localStorage first
+      const stored = localStorage.getItem(STORAGE_KEY)
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setMessages(parsed)
+            setIsLoadingHistory(false)
+            return
+          }
+        } catch {}
+      }
+
       const response = await fetch(`/api/ai/conversation/${sessionId}`)
       const data = await response.json()
-      
+
       if (data.success && data.messages) {
         setMessages(data.messages)
       } else {
@@ -187,64 +202,60 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
       if (quotaUsedHeader !== null) setQuotaUsed(parseInt(quotaUsedHeader, 10))
       if (quotaLimitHeader !== null) setQuotaLimit(parseInt(quotaLimitHeader, 10))
 
-      if (response.status === 403) {
-        const errData = await response.json().catch(() => ({}))
-        if (errData.errorCode === 'DAILY_LIMIT_EXCEEDED') {
+      if (!response.ok) {
+        // Handle error - parse as JSON
+        const errorData = await response.json()
+        if (errorData.errorCode === 'DAILY_LIMIT_EXCEEDED') {
           const limitMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
-            content: `일일 무료 메시지 한도(${errData.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
+            content: `일일 무료 메시지 한도(${errorData.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
             isUser: false,
             timestamp: new Date()
           }
           setMessages(prev => [...prev, limitMessage])
           setShowUsageLimit(true)
-          return
-        }
-      }
-
-      if (!response.ok) {
-        const fallbackResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: '죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
-          isUser: false,
-          timestamp: new Date()
-        }
-        setMessages(prev => [...prev, fallbackResponse])
-        return
-      }
-
-      // D-1: Real streaming from ReadableStream
-      if (!response.body) throw new Error('No response body')
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      const aiMsgId = (Date.now() + 1).toString()
-      const aiResponse: ChatMessage = {
-        id: aiMsgId,
-        content: '',
-        isUser: false,
-        timestamp: new Date(),
-        aiFeatures: {
-          suggestions: generateSuggestions(currentInput)
-        }
-      }
-      setMessages(prev => [...prev, aiResponse])
-      setIsTyping(false)
-      let text = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        text += decoder.decode(value, { stream: true })
-        setMessages(prev => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          if (last && last.id === aiMsgId) {
-            updated[updated.length - 1] = { ...last, content: text }
+        } else {
+          const fallbackResponse: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            content: '죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
+            isUser: false,
+            timestamp: new Date()
           }
-          return updated
-        })
+          setMessages(prev => [...prev, fallbackResponse])
+        }
+      } else {
+        // Read the streaming response
+        const reader = response.body!.getReader()
+        const decoder = new TextDecoder()
+
+        const aiMsgId = (Date.now() + 1).toString()
+        const aiResponse: ChatMessage = {
+          id: aiMsgId,
+          content: '',
+          isUser: false,
+          timestamp: new Date(),
+          aiFeatures: {
+            suggestions: generateSuggestions(currentInput)
+          }
+        }
+        setMessages(prev => [...prev, aiResponse])
+        setIsTyping(false)
+
+        let done = false
+        while (!done) {
+          const { value, done: doneReading } = await reader.read()
+          done = doneReading
+          if (value) {
+            const chunk = decoder.decode(value, { stream: true })
+            setMessages(prev =>
+              prev.map(m => m.id === aiMsgId ? { ...m, content: m.content + chunk } : m)
+            )
+          }
+        }
+
+        // 구독 상태 업데이트
+        await checkSubscription(sessionId)
       }
-      // 구독 상태 업데이트
-      await checkSubscription(sessionId)
     } catch (error) {
       console.error('AI 응답 오류:', error)
       const errorResponse: ChatMessage = {
@@ -425,14 +436,6 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     }
   }
 
-  // D-4: Prompt presets
-  const PRESETS = [
-    { label: '코드 리뷰', prompt: '이 코드를 검토하고 개선 사항을 제안해주세요:\n\n' },
-    { label: '번역', prompt: '다음을 영어로 번역해주세요:\n\n' },
-    { label: '요약', prompt: '다음 내용을 요약해주세요:\n\n' },
-    { label: '설명', prompt: '이것을 쉽게 설명해주세요:\n\n' },
-  ]
-
   const quotaPct = quotaLimit > 0 ? Math.min(100, (quotaUsed / quotaLimit) * 100) : 0
   const quotaColor =
     quotaPct >= 90 ? 'bg-red-500' : quotaPct >= 70 ? 'bg-yellow-500' : 'bg-green-500'
@@ -487,6 +490,13 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 업그레이드
               </button>
             )}
+            <button
+              onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY) }}
+              className="p-1 hover:bg-white/20 rounded text-xs"
+              title="대화 지우기"
+            >
+              대화 지우기
+            </button>
             <button
               onClick={() => setIsMinimized(!isMinimized)}
               className="p-1 hover:bg-white/20 rounded"
@@ -644,25 +654,15 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
             {/* 입력 영역 */}
             <div className="p-4 border-t border-slate-200 dark:border-slate-600 flex-shrink-0">
-              {/* D-2: Clear chat button */}
-              <div className="flex justify-end mb-2">
-                <button
-                  onClick={() => { setMessages([]); localStorage.removeItem('ai_chat_history') }}
-                  className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                >
-                  대화 지우기
-                </button>
-              </div>
-              {/* D-4: Prompt presets */}
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                {PRESETS.map(p => (
+              {/* Quick prompt presets */}
+              <div className="flex flex-wrap gap-1 mb-2">
+                {PRESETS.map((preset) => (
                   <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => { setInputText(p.prompt); inputRef.current?.focus() }}
-                    className="text-xs px-2.5 py-1 rounded-md border border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-400 dark:hover:border-slate-500 transition-colors"
+                    key={preset.labelEn}
+                    onClick={() => { setInputText(preset.prompt); inputRef.current?.focus() }}
+                    className="px-2 py-1 text-xs bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
                   >
-                    {p.label}
+                    {preset.label}
                   </button>
                 ))}
               </div>
