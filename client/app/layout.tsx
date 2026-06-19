@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
+import PageTransition from '@/components/PageTransition'
 import ToastContainer from '@/components/ui/ToastContainer'
 import WebVitals from '@/components/WebVitals'
 import {
@@ -162,7 +163,7 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <WebVitals />
-        <Providers>{children}</Providers>
+        <Providers><PageTransition>{children}</PageTransition></Providers>
         <ToastContainer />
       </body>
     </html>
