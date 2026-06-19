@@ -87,7 +87,6 @@ export async function POST(request: Request) {
         [body.name, body.email, body.subject, body.message, ip_address, user_agent]
       )
       contactId = insertResult.rows[0]?.id
-      console.log('✅ DB 저장 성공, contactId:', contactId)
     } catch (dbErr: any) {
       dbError = dbErr?.message || 'DB 저장 실패'
       console.warn('⚠️ DB 저장 실패 (이메일 전송은 계속 진행):', dbError)
@@ -105,7 +104,6 @@ export async function POST(request: Request) {
 
     if (hasEmailConfig) {
       try {
-        console.log('이메일 전송 시작...')
         const emailResult = await sendContactEmail({
           name: body.name,
           email: body.email,
@@ -115,7 +113,6 @@ export async function POST(request: Request) {
 
         if (emailResult.success) {
           emailSent = true
-          console.log('✅ 이메일 전송 성공')
         } else {
           emailError = emailResult.error || emailResult.message
           console.error('❌ 이메일 전송 실패:', emailError)

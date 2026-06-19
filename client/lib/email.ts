@@ -133,7 +133,6 @@ export async function sendContactEmail(contactData: {
 
     // verify()는 OAuth2와 호환성 문제가 있을 수 있으므로 실제 전송에서 확인
     // await transporter.verify();
-    // console.log('전송기 연결 테스트 성공');
 
     const smtpUser = process.env.SMTP_USER || '';
 

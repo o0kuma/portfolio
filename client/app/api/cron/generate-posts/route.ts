@@ -340,12 +340,10 @@ export async function GET(req: NextRequest) {
   try {
     cleaned = await cleanupOldCronPosts()
     if (cleaned > 0) {
-      console.log(`[cron/generate-posts] Cleaned ${cleaned} old cron post(s)`)
     }
   } catch (cleanupErr) {
     console.warn('[cron/generate-posts] Cleanup skipped:', cleanupErr)
   }
 
-  console.log('[cron/generate-posts] Success:', JSON.stringify(results.map((p) => p.title)))
   return NextResponse.json({ ...payload, cleaned })
 }
