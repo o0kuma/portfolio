@@ -40,10 +40,14 @@ function emptyStats(): RunStats {
       splash: 0,
       frost: 0,
       beam: 0,
+      sniper: 0,
+      support: 0,
       blizzard: 0,
       railgun: 0,
       tempest: 0,
       prism: 0,
+      omega: 0,
+      fortress: 0,
     },
   }
 }
