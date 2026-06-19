@@ -15,12 +15,12 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
         if (match) {
           const key = match[1].trim()
           const value = match[2].trim().replace(/^["']|["']$/g, '')
-          
+
           // Neon/PostgreSQL 연결 문자열 로드
           if (key === 'DATABASE_URL' && !process.env.DATABASE_URL) {
             process.env.DATABASE_URL = value
           }
-          
+
           // GEMINI_API_KEY 로드
           if (key === 'GEMINI_API_KEY' && !process.env.GEMINI_API_KEY) {
             process.env.GEMINI_API_KEY = value
@@ -46,9 +46,26 @@ const nextConfig = {
     // Existing pages have pre-core-web-vitals issues; new code is linted in CI by path
     ignoreDuringBuilds: true,
   },
+
+  // Compress responses
+  compress: true,
+
+  // Image optimization
   images: {
     domains: ['localhost', 'kuuuma.com'],
+    formats: ['image/avif', 'image/webp'],
   },
+
+  // Compiler options
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production',
+  },
+
+  // Experimental: optimize package imports for large libraries
+  experimental: {
+    optimizePackageImports: ['framer-motion', 'react-icons'],
+  },
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -59,6 +76,21 @@ const nextConfig = {
   // 주의: env 설정은 클라이언트 사이드에 노출됩니다
   // GEMINI_API_KEY는 서버 사이드 전용이므로 env에 포함하지 않습니다
   // API 라우트에서는 process.env.GEMINI_API_KEY를 직접 사용합니다
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ]
+  },
 }
 
 module.exports = nextConfig
