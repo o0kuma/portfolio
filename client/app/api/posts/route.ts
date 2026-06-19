@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { dbQuery } from '@/lib/neon-server'
 
 export async function GET(request: NextRequest) {
@@ -88,6 +89,7 @@ export async function POST(request: NextRequest) {
         body.status ?? 'published',
       ],
     )
+    revalidateTag('posts')
     return NextResponse.json({ message: '포스트가 생성되었습니다.', post: result.rows[0] }, { status: 201 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

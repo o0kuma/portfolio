@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { dbQuery } from '@/lib/neon-server'
 
 type Ctx = { params: { id: string } }
@@ -70,6 +71,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
     if (!result.rows[0]) {
       return NextResponse.json({ message: '포스트를 찾을 수 없습니다.' }, { status: 404 })
     }
+    revalidateTag('posts')
     return NextResponse.json({ message: '포스트가 업데이트되었습니다.', post: result.rows[0] })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -90,6 +92,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
 
     const { id } = params
     await dbQuery('DELETE FROM posts WHERE id = $1', [id])
+    revalidateTag('posts')
     return NextResponse.json({ message: '포스트가 삭제되었습니다.' })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
