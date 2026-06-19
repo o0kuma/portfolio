@@ -7,6 +7,7 @@ import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anon
 import { reserveAnonymousChatQuota, addAnonymousChatTokens } from '@/lib/ai-chat-quota'
 import * as fs from 'fs'
 import * as path from 'path'
+import { recordAiRequest } from '@/lib/aiStats'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 const MAX_MESSAGE_LENGTH = 4000
@@ -521,28 +522,27 @@ export async function POST(request: Request) {
       // 메시지 저장 실패해도 계속 진행
     }
 
-    const isFallback = aiResponse.fallbackReason !== null
+    // D-3: Record AI request for admin stats
+    recordAiRequest()
 
-    const jsonResponse = quotaJson({
-      success: aiResponse.success,
-      response: aiResponse.response,
-      emotion: aiResponse.emotion,
-      intent: aiResponse.intent,
-      confidence: aiResponse.confidence,
-      responseTime: responseTime,
-      sessionId: sessionId,
-      isFallback: isFallback,
-      fallbackReason: aiResponse.fallbackReason,
-      ...(isFallback && {
-        warning: 'Gemini API를 사용할 수 없어 기본 응답을 반환했습니다. 환경 변수 GEMINI_API_KEY를 확인하세요.'
-      })
+    // D-1: Stream the response text
+    const responseText = aiResponse.response
+    const readable = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(responseText))
+        controller.close()
+      }
     })
 
-    // Attach quota headers so the UI can render a progress bar
-    jsonResponse.headers.set('X-Quota-Used', String(quota.used))
-    jsonResponse.headers.set('X-Quota-Limit', String(quota.limit))
+    const streamResponse = new NextResponse(readable, {
+      headers: {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'X-Quota-Used': String(quota.used),
+        'X-Quota-Limit': String(quota.limit),
+      },
+    })
 
-    return jsonResponse
+    return applyAnonymousQuotaCookie(streamResponse, quotaIdentity)
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)

@@ -44,6 +44,7 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
 export default function AdminDashboardPage() {
   const { t } = useLanguage()
   const [stats, setStats] = useState<SiteStats | null>(null)
+  const [aiStats, setAiStats] = useState<{ total: number; today: number } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -68,6 +69,14 @@ export default function AdminDashboardPage() {
       if (!data.success) throw new Error(data.error || t.adminDashboard.errorLoad)
       setIsLoggedIn(true)
       setStats(data.stats as SiteStats)
+      // Fetch AI stats
+      try {
+        const aiRes = await fetch('/api/admin/ai-stats', { cache: 'no-store' })
+        if (aiRes.ok) {
+          const aiData = await aiRes.json()
+          setAiStats(aiData)
+        }
+      } catch {}
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t.adminDashboard.errorLoad)
     } finally {
@@ -212,12 +221,25 @@ export default function AdminDashboardPage() {
           <div className="card rounded-xl p-6 flex items-center gap-4">
             <FiCpu className="w-10 h-10 text-indigo-400 flex-shrink-0" />
             <div>
-              <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                {t.adminDashboard.aiUsagePlaceholder}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {t.adminDashboard.aiUsageNote}
-              </p>
+              {aiStats ? (
+                <>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {aiStats.today} <span className="text-lg font-normal text-gray-500 dark:text-gray-400">today</span>
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Total requests: {aiStats.total}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {t.adminDashboard.aiUsagePlaceholder}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {t.adminDashboard.aiUsageNote}
+                  </p>
+                </>
+              )}
             </div>
           </div>
         </section>
