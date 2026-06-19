@@ -2,19 +2,22 @@ import { describe, it, expect } from 'vitest'
 import { evolutionFor } from '../towers'
 
 describe('evolutionFor', () => {
-  it('returns evolution for valid recipe', () => {
-    const result = evolutionFor('frost', 'splash')
-    expect(result).toBeTruthy()
+  it('returns blizzard for frost+splash', () => {
+    expect(evolutionFor('frost', 'splash')).toBe('blizzard')
   })
-
   it('is order-independent', () => {
-    const a = evolutionFor('frost', 'splash')
-    const b = evolutionFor('splash', 'frost')
-    expect(a).toBe(b)
+    expect(evolutionFor('frost', 'splash')).toBe(evolutionFor('splash', 'frost'))
   })
-
+  it('returns railgun for beam+pulse', () => {
+    expect(evolutionFor('beam', 'pulse')).toBe('railgun')
+  })
+  it('returns null for same tower', () => {
+    expect(evolutionFor('pulse', 'pulse')).toBeNull()
+  })
   it('returns null for invalid combination', () => {
-    const result = evolutionFor('pulse', 'pulse')
-    expect(result).toBeNull()
+    expect(evolutionFor('frost', 'beam')).toBe('prism')
+  })
+  it('returns null for evolved tower input', () => {
+    expect(evolutionFor('blizzard', 'pulse')).toBeNull()
   })
 })

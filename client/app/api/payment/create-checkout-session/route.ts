@@ -55,7 +55,8 @@ export async function POST(request: Request) {
       )
 
       // 새 구독 생성
-      const subscriptionResult = await dbQuery<any>(
+      type SubscriptionRow = { id: string; [key: string]: unknown }
+      const subscriptionResult = await dbQuery<SubscriptionRow>(
         `INSERT INTO subscriptions (
           user_id, plan_type, status, current_period_start, current_period_end
         ) VALUES ($1,$2,'active',$3,$4)
@@ -87,13 +88,14 @@ export async function POST(request: Request) {
       },
       { status: 501 }
     )
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error)
     console.error('결제 세션 생성 오류:', error)
     return NextResponse.json(
       {
         success: false,
         error: '결제 세션 생성 중 오류가 발생했습니다.',
-        details: error.message
+        details: message
       },
       { status: 500 }
     )

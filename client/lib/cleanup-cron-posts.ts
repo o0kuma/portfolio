@@ -1,16 +1,30 @@
 import { dbQuery } from '@/lib/neon-server'
 
-/** Delete non-featured cron posts older than 15 days. */
+/** Delete non-featured cron posts older than 15 days, and keep only the most recent 100 cron posts. */
 export async function cleanupOldCronPosts(): Promise<number> {
   try {
-    const result = await dbQuery<{ id: string }>(
+    // Step 1: delete cron posts older than 15 days
+    const byAge = await dbQuery<{ id: string }>(
       `DELETE FROM posts
        WHERE created_at < NOW() - INTERVAL '15 days'
          AND featured = false
          AND source = 'cron'
        RETURNING id`,
     )
-    return result.rows.length
+
+    // Step 2: prune so only the most recent 100 cron posts remain
+    const byCount = await dbQuery<{ id: string }>(
+      `DELETE FROM posts
+       WHERE id IN (
+         SELECT id FROM posts
+         WHERE source = 'cron'
+         ORDER BY created_at DESC
+         OFFSET 100
+       )
+       RETURNING id`,
+    )
+
+    return byAge.rows.length + byCount.rows.length
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     if (msg.includes('column') && msg.includes('source')) {
