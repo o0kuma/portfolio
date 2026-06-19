@@ -14,6 +14,7 @@ import { toast } from '@/lib/toast'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
+import CommentSection from '@/components/blog/CommentSection'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -453,6 +454,9 @@ export default function PostDetailPage() {
             )}
 
             <div className="bg-white dark:bg-dark-900 rounded-xl shadow-lg p-8">
+              <CommentSection postId={postId} />
+
+              <div className="mt-12 pt-8 border-t border-gray-200 dark:border-dark-700">
               <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-6">
                 {interpolate(t.postDetail.comments, { n: post.comments.length })}
               </h3>
@@ -513,6 +517,7 @@ export default function PostDetailPage() {
                     <p>{t.postDetail.noComments}</p>
                   </div>
                 )}
+              </div>
               </div>
             </div>
           </div>
