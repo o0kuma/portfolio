@@ -88,9 +88,9 @@ export default function AdminPostsPage() {
     try {
       const res = await fetch(`/api/posts/${id}`, {
         method: 'DELETE',
+        credentials: 'include',
       })
-      const result = await res.json()
-      if (result.message !== undefined || res.ok) {
+      if (res.ok) {
         setPosts((prev) => prev.filter((p) => p.id !== id))
         setSelectedIds((prev) => {
           const next = new Set(prev)
@@ -116,14 +116,16 @@ export default function AdminPostsPage() {
       )
     )
       return
-    const results = await Promise.allSettled(
-      ids.map((id) =>
-        fetch(`/api/posts/${id}`, {
+    const results = await Promise.all(
+      ids.map(async (id) => {
+        const res = await fetch(`/api/posts/${id}`, {
           method: 'DELETE',
-        }),
-      ),
+          credentials: 'include',
+        })
+        return { id, ok: res.ok }
+      }),
     )
-    const succeeded = ids.filter((_, i) => results[i].status === 'fulfilled')
+    const succeeded = results.filter((r) => r.ok).map((r) => r.id)
     setPosts((prev) => prev.filter((p) => !succeeded.includes(p.id)))
     setSelectedIds((prev) => {
       const next = new Set(prev)

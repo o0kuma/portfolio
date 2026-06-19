@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifyAdminSessionToken } from '@/lib/admin-session'
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Protect /admin routes (but not /api/admin/login itself)
   if (pathname.startsWith('/admin') && !pathname.startsWith('/api/admin/login')) {
     const session = request.cookies.get('admin_session')
-    if (session?.value !== 'authenticated') {
+    const authenticated = await verifyAdminSessionToken(session?.value)
+    if (!authenticated) {
       const loginUrl = new URL('/admin', request.url)
       // If it's an API call, return 401
       if (pathname.startsWith('/api/admin')) {

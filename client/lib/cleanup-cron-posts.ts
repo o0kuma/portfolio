@@ -18,6 +18,7 @@ export async function cleanupOldCronPosts(): Promise<number> {
        WHERE id IN (
          SELECT id FROM posts
          WHERE source = 'cron'
+           AND featured = false
          ORDER BY created_at DESC
          OFFSET 100
        )

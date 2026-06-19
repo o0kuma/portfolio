@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { dbQuery } from '@/lib/neon-server'
+import { isAdminRequest } from '@/lib/requireAdmin'
 
 type Ctx = { params: { id: string } }
 
@@ -30,12 +31,9 @@ export async function GET(_request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ message: '포스트를 찾을 수 없습니다.' }, { status: 404 })
     }
 
-    const commentsResult = await dbQuery(
-      'SELECT * FROM comments WHERE post_id = $1 ORDER BY created_at ASC',
-      [id],
-    )
+    const comments = await fetchPostComments(id)
 
-    return NextResponse.json({ ...post, comments: commentsResult.rows })
+    return NextResponse.json({ ...post, comments })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
     console.error('[/api/posts/[id] GET]', msg)
@@ -43,13 +41,32 @@ export async function GET(_request: NextRequest, { params }: Ctx) {
   }
 }
 
+async function fetchPostComments(postId: string) {
+  try {
+    const merged = await dbQuery(
+      `SELECT id::text, author, content, created_at
+       FROM comments
+       WHERE post_id::text = $1
+       UNION ALL
+       SELECT id::text, author_name AS author, content, created_at
+       FROM threaded_comments
+       WHERE post_id = $1
+       ORDER BY created_at ASC`,
+      [postId],
+    )
+    return merged.rows
+  } catch {
+    const legacy = await dbQuery(
+      'SELECT * FROM comments WHERE post_id::text = $1 ORDER BY created_at ASC',
+      [postId],
+    )
+    return legacy.rows
+  }
+}
+
 export async function PUT(request: NextRequest, { params }: Ctx) {
   try {
-    const adminToken = process.env.ADMIN_API_TOKEN
-    const auth = request.headers.get('authorization') ?? ''
-    const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-
-    if (!adminToken || provided !== adminToken) {
+    if (!(await isAdminRequest(request))) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
@@ -82,11 +99,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
 
 export async function DELETE(request: NextRequest, { params }: Ctx) {
   try {
-    const adminToken = process.env.ADMIN_API_TOKEN
-    const auth = request.headers.get('authorization') ?? ''
-    const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-
-    if (!adminToken || provided !== adminToken) {
+    if (!(await isAdminRequest(request))) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 

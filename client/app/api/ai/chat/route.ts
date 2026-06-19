@@ -460,7 +460,6 @@ export async function POST(request: Request) {
               }
             }
           } finally {
-            controller.close()
             await addAnonymousChatTokens(quotaIdentity.sessionId, estimateTokensUsed(fullResponse)).catch(() => {})
             await addMessage(sessionId, {
               id: (Date.now() + 1).toString(),
@@ -471,6 +470,7 @@ export async function POST(request: Request) {
               responseTime,
               context: safeContext
             }).catch(() => {})
+            controller.close()
           }
         }
       })
