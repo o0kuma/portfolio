@@ -9,12 +9,22 @@ import SurviveLevelUp from '@/components/survive/SurviveLevelUp'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import { useSurviveGame } from '@/hooks/useSurviveGame'
 import { formatTime } from '@/lib/survive/storage'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 
 export default function SurvivePageClient() {
   const { engineRef, hud, choices, actions } = useSurviveGame()
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
+  const [shareCopied, setShareCopied] = useState(false)
+
+  const handleSurviveShare = useCallback(() => {
+    const url = typeof window !== 'undefined' ? window.location.href : 'https://portfolio.dev/survive'
+    const text = `🎮 Survive | Wave ${hud.level} | Score ${hud.kills}\nCan you beat me? ${url}`
+    navigator.clipboard.writeText(text).then(() => {
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2000)
+    })
+  }, [hud.level, hud.kills])
 
   return (
     <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
