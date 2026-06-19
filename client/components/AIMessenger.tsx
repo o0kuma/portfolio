@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  FiSend, 
-  FiMic, 
-  FiMicOff, 
-  FiSettings, 
-  FiMessageSquare, 
+import {
+  FiSend,
+  FiMic,
+  FiMicOff,
+  FiSettings,
+  FiMessageSquare,
   FiZap,
   FiGlobe,
   FiEdit3,
@@ -15,7 +15,8 @@ import {
   FiX,
   FiMinimize2,
   FiMaximize2,
-  FiLoader
+  FiLoader,
+  FiCopy
 } from 'react-icons/fi'
 import { 
   sendChatMessage, 
@@ -57,7 +58,10 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const [showAIFeatures, setShowAIFeatures] = useState(false)
   const [subscription, setSubscription] = useState<any>(null)
   const [showUsageLimit, setShowUsageLimit] = useState(false)
-  
+  const [quotaUsed, setQuotaUsed] = useState(0)
+  const [quotaLimit, setQuotaLimit] = useState(10)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const recognitionRef = useRef<any>(null)
@@ -163,15 +167,24 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         }),
       })
 
+      // Parse quota headers
+      const quotaUsedHeader = response.headers.get('X-Quota-Used')
+      const quotaLimitHeader = response.headers.get('X-Quota-Limit')
+      if (quotaUsedHeader !== null) setQuotaUsed(parseInt(quotaUsedHeader, 10))
+      if (quotaLimitHeader !== null) setQuotaLimit(parseInt(quotaLimitHeader, 10))
+
       const data = await response.json()
-      
+
       if (data.success && data.response) {
         // 구독 상태 업데이트
         await checkSubscription(sessionId)
-        
+
+        // Simulate streaming: reveal text character-by-character
+        const fullText: string = data.response
+        const aiMsgId = (Date.now() + 1).toString()
         const aiResponse: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          content: data.response,
+          id: aiMsgId,
+          content: '',
           isUser: false,
           timestamp: new Date(),
           aiFeatures: {
@@ -183,6 +196,21 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           }
         }
         setMessages(prev => [...prev, aiResponse])
+        setIsTyping(false)
+
+        // Stream text incrementally
+        const chunkSize = 4
+        for (let i = 0; i < fullText.length; i += chunkSize) {
+          const partial = fullText.slice(0, i + chunkSize)
+          setMessages(prev =>
+            prev.map(m => m.id === aiMsgId ? { ...m, content: partial } : m)
+          )
+          await new Promise<void>(resolve => setTimeout(resolve, 20))
+        }
+        // Ensure final content is set exactly
+        setMessages(prev =>
+          prev.map(m => m.id === aiMsgId ? { ...m, content: fullText } : m)
+        )
       } else if (data.errorCode === 'DAILY_LIMIT_EXCEEDED') {
         // 일일 한도 초과
         const limitMessage: ChatMessage = {
@@ -367,11 +395,25 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   }
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
+    return date.toLocaleTimeString('ko-KR', {
+      hour: '2-digit',
+      minute: '2-digit'
     })
   }
+
+  const handleCopy = async (id: string, text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(prev => (prev === id ? null : prev)), 2000)
+    } catch {
+      // clipboard not available
+    }
+  }
+
+  const quotaPct = quotaLimit > 0 ? Math.min(100, (quotaUsed / quotaLimit) * 100) : 0
+  const quotaColor =
+    quotaPct >= 90 ? 'bg-red-500' : quotaPct >= 70 ? 'bg-yellow-500' : 'bg-green-500'
 
   if (!isOpen) return null
 
@@ -480,6 +522,21 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                   </div>
                 </div>
               )}
+              {/* Quota progress bar */}
+              {quotaLimit > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                    <span>쿼터 사용</span>
+                    <span>{quotaUsed}/{quotaLimit}</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${quotaColor}`}
+                      style={{ width: `${quotaPct}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 메시지 영역 */}
@@ -499,10 +556,22 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {formatTime(message.timestamp)}
-                    </p>
-                    
+                    <div className="flex items-center justify-between mt-1 gap-2">
+                      <p className="text-xs opacity-70">
+                        {formatTime(message.timestamp instanceof Date ? message.timestamp : new Date(message.timestamp))}
+                      </p>
+                      <button
+                        onClick={() => handleCopy(message.id, message.content)}
+                        title="복사"
+                        className="p-1 opacity-50 hover:opacity-100 transition-opacity rounded"
+                      >
+                        {copiedId === message.id
+                          ? <FiCheck className="w-3 h-3" />
+                          : <FiCopy className="w-3 h-3" />
+                        }
+                      </button>
+                    </div>
+
                     {/* AI 기능 버튼들 */}
                     {!message.isUser && message.aiFeatures && (
                       <div className="mt-2 flex flex-wrap gap-1">

@@ -523,7 +523,7 @@ export async function POST(request: Request) {
 
     const isFallback = aiResponse.fallbackReason !== null
 
-    return quotaJson({
+    const jsonResponse = quotaJson({
       success: aiResponse.success,
       response: aiResponse.response,
       emotion: aiResponse.emotion,
@@ -537,6 +537,12 @@ export async function POST(request: Request) {
         warning: 'Gemini API를 사용할 수 없어 기본 응답을 반환했습니다. 환경 변수 GEMINI_API_KEY를 확인하세요.'
       })
     })
+
+    // Attach quota headers so the UI can render a progress bar
+    jsonResponse.headers.set('X-Quota-Used', String(quota.used))
+    jsonResponse.headers.set('X-Quota-Limit', String(quota.limit))
+
+    return jsonResponse
 
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
