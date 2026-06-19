@@ -2,32 +2,18 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-
-let aiRequestCount = 0
-let aiRequestsToday = 0
-let lastResetDate = new Date().toDateString()
-
-export function incrementAiStats() {
-  const today = new Date().toDateString()
-  if (today !== lastResetDate) {
-    aiRequestsToday = 0
-    lastResetDate = today
-  }
-  aiRequestCount++
-  aiRequestsToday++
-}
+import { isAdminAuthenticated } from '@/lib/adminAuth'
+import { getAiStats } from '@/lib/aiStats'
 
 export async function GET() {
-  const today = new Date().toDateString()
-  if (today !== lastResetDate) {
-    aiRequestsToday = 0
-    lastResetDate = today
-  }
+  const ok = await isAdminAuthenticated()
+  if (!ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const stats = getAiStats()
   return NextResponse.json({
     success: true,
     stats: {
-      totalRequests: aiRequestCount,
-      requestsToday: aiRequestsToday,
-    }
+      totalRequests: stats.total,
+      requestsToday: stats.today,
+    },
   })
 }

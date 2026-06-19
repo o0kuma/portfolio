@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
 import { reserveAnonymousChatQuota, addAnonymousChatTokens } from '@/lib/ai-chat-quota'
-import { incrementAiStats } from '../admin/ai-stats/route'
+import { recordAiRequest } from '@/lib/aiStats'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -432,7 +432,7 @@ export async function POST(request: Request) {
     ]
 
     // 6. Increment stats before streaming (can't do it after)
-    incrementAiStats()
+    recordAiRequest()
 
     const emotion = analyzeEmotion(normalizedMessage)
     const intent = analyzeIntent(normalizedMessage)
