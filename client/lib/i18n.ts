@@ -285,6 +285,10 @@ export const translations = {
       commentError: '댓글 작성 중 오류가 발생했습니다.',
       deleteFailed: '삭제 실패: ',
       deleteError: '삭제 중 오류가 발생했습니다.',
+      readingTime: '{n}분 읽기',
+      tableOfContents: '목차',
+      relatedPosts: '관련 글',
+      readMore: '더 읽기 →',
     },
     adminAds: {
       pageTitle: '광고 관리',
@@ -746,6 +750,10 @@ export const translations = {
       commentError: 'An error occurred while posting the comment.',
       deleteFailed: 'Delete failed: ',
       deleteError: 'An error occurred while deleting.',
+      readingTime: '{n} min read',
+      tableOfContents: 'Table of Contents',
+      relatedPosts: 'Related Posts',
+      readMore: 'Read more →',
     },
     adminAds: {
       pageTitle: 'Ad Management',
