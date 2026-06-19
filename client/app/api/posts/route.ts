@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category') ?? ''
     const featured = searchParams.get('featured') ?? ''
     const search = searchParams.get('search') ?? ''
+    const q = searchParams.get('q')?.trim() ?? ''
+    const tag = searchParams.get('tag')?.trim() ?? ''
     const offset = (page - 1) * limit
 
     const where: string[] = []
@@ -30,8 +32,44 @@ export async function GET(request: NextRequest) {
       values.push(`%${search}%`)
       where.push(`(title ILIKE $${values.length} OR content ILIKE $${values.length})`)
     }
+    if (tag) {
+      values.push(tag)
+      where.push(`$${values.length} = ANY(tags)`)
+    }
 
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : ''
+
+    // Full-text search with tsvector when ?q= is provided
+    if (q) {
+      values.push(q)
+      const qIdx = values.length
+      const tsCondition = `to_tsvector('english', coalesce(title,'') || ' ' || coalesce(content,'')) @@ plainto_tsquery('english', $${qIdx})`
+      const tsWhere = where.length
+        ? `WHERE ${where.join(' AND ')} AND ${tsCondition}`
+        : `WHERE ${tsCondition}`
+
+      const countResult = await dbQuery<{ total: number }>(
+        `SELECT COUNT(*)::int AS total FROM posts ${tsWhere}`,
+        values,
+      )
+      const total: number = countResult.rows[0]?.total ?? 0
+
+      values.push(limit, offset)
+      const postsResult = await dbQuery(
+        `SELECT *, ts_rank(to_tsvector('english', coalesce(title,'') || ' ' || coalesce(content,'')), plainto_tsquery('english', $${qIdx})) AS rank
+         FROM posts ${tsWhere}
+         ORDER BY rank DESC, created_at DESC
+         LIMIT $${values.length - 1} OFFSET $${values.length}`,
+        values,
+      )
+
+      return NextResponse.json({
+        posts: postsResult.rows,
+        totalPages: Math.ceil(total / limit),
+        currentPage: page,
+        total,
+      })
+    }
 
     const countResult = await dbQuery<{ total: number }>(
       `SELECT COUNT(*)::int AS total FROM posts ${whereClause}`,

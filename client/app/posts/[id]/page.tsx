@@ -15,6 +15,7 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
 import CommentSection from '@/components/blog/CommentSection'
+import BookmarkButton from '@/components/blog/BookmarkButton'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -353,7 +354,10 @@ export default function PostDetailPage() {
               </h1>
 
               {/* Share bar below title */}
-              <PostShareBar title={post.title} />
+              <div className="flex items-center gap-3 mb-4">
+                <PostShareBar title={post.title} />
+                <BookmarkButton postId={post._id} />
+              </div>
 
               <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-6">
                 <div className="flex items-center gap-2">
@@ -388,13 +392,14 @@ export default function PostDetailPage() {
 
               <div className="flex flex-wrap gap-2 mb-8">
                 {post.tags.map((tag) => (
-                  <span
+                  <Link
                     key={tag}
-                    className="px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-sm rounded-md flex items-center gap-1"
+                    href={`/posts/tags/${encodeURIComponent(tag)}`}
+                    className="px-3 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-sm rounded-md flex items-center gap-1 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-700 dark:hover:text-primary-400 transition-colors"
                   >
                     <FiTag size={14} />
                     {tag}
-                  </span>
+                  </Link>
                 ))}
               </div>
 

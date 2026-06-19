@@ -394,15 +394,17 @@ export default function PostsPage() {
 
                   {/* 태그 chips (first 2) */}
                   {post.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-4">
+                    <div className="flex flex-wrap gap-2 mb-4" onClick={(e) => e.preventDefault()}>
                       {post.tags.slice(0, 2).map((tag) => (
-                        <span
+                        <Link
                           key={tag}
-                          className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full flex items-center gap-1 font-medium"
+                          href={`/posts/tags/${encodeURIComponent(tag)}`}
+                          className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full flex items-center gap-1 font-medium hover:bg-primary-200 dark:hover:bg-primary-800/40 transition-colors"
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <FiTag size={11} />
                           {tag}
-                        </span>
+                        </Link>
                       ))}
                       {post.tags.length > 2 && (
                         <span className="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
