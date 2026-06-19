@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
-import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
+import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus, FiClock } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../../components/BlogSearchBar'
 import AdBanner from '../../components/AdBanner'
@@ -165,6 +165,11 @@ export default function PostsPage() {
       return (num / 1000).toFixed(1) + 'k'
     }
     return num.toString()
+  }
+
+  const calcReadingTime = (content: string): number => {
+    const wordCount = content.trim().split(/\s+/).length
+    return Math.max(1, Math.round(wordCount / 200))
   }
 
   const handleEditPost = (post: Post) => {
@@ -334,7 +339,10 @@ export default function PostsPage() {
                 <div className="relative group transition-transform duration-300 hover:-translate-y-1">
                 {/* 그라데이션 테두리 효과 */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-xl opacity-0 group-hover:opacity-50 transition duration-700"></div>
-                <div className="relative glass-panel rounded-3xl overflow-hidden border border-border shadow-xl transition-all duration-500 group-hover:border-primary-500/40">
+                <Link
+                  href={`/posts/${post._id}`}
+                  className="relative glass-panel rounded-3xl overflow-hidden border border-border shadow-xl transition-all duration-500 group-hover:border-primary-500/40 block"
+                >
                 {/* 포스트 헤더 */}
                 <div className="p-6">
                   <div className="flex items-center justify-between mb-3">
@@ -357,16 +365,16 @@ export default function PostsPage() {
                       </span>
                     </div>
                     {isAdmin && (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2" onClick={(e) => e.preventDefault()}>
                         <button
-                          onClick={() => handleEditPost(post)}
+                          onClick={(e) => { e.preventDefault(); handleEditPost(post) }}
                           className="p-1 text-gray-400 hover:text-primary-600 transition-colors"
                           title="수정"
                         >
                           <FiEdit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDeletePost(post._id)}
+                          onClick={(e) => { e.preventDefault(); handleDeletePost(post._id) }}
                           className="p-1 text-gray-400 hover:text-red-600 transition-colors"
                           title="삭제"
                         >
@@ -384,23 +392,25 @@ export default function PostsPage() {
                     {post.content}
                   </p>
 
-                  {/* 태그 */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs rounded-md flex items-center gap-1"
-                      >
-                        <FiTag size={12} />
-                        {tag}
-                      </span>
-                    ))}
-                    {post.tags.length > 3 && (
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs rounded-md">
-                        +{post.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
+                  {/* 태그 chips (first 2) */}
+                  {post.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {post.tags.slice(0, 2).map((tag) => (
+                        <span
+                          key={tag}
+                          className="px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs rounded-full flex items-center gap-1 font-medium"
+                        >
+                          <FiTag size={11} />
+                          {tag}
+                        </span>
+                      ))}
+                      {post.tags.length > 2 && (
+                        <span className="px-2 py-1 bg-gray-100 dark:bg-dark-700 text-gray-600 dark:text-gray-300 text-xs rounded-full">
+                          +{post.tags.length - 2}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* 메타 정보 */}
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400 mb-4">
@@ -414,7 +424,7 @@ export default function PostsPage() {
                     </div>
                   </div>
 
-                  {/* 통계 */}
+                  {/* 통계 + 읽기 시간 */}
                   <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-1">
@@ -422,7 +432,7 @@ export default function PostsPage() {
                         <span>{formatNumber(post.views)}</span>
                       </div>
                       <button
-                        onClick={() => handleLikePost(post._id)}
+                        onClick={(e) => { e.preventDefault(); handleLikePost(post._id) }}
                         className="flex items-center gap-1 hover:text-red-500 transition-colors"
                       >
                         <FiHeart size={14} />
@@ -433,20 +443,23 @@ export default function PostsPage() {
                         <span>{formatNumber(post.comments.length)}</span>
                       </div>
                     </div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <FiClock size={12} />
+                      <span>{locale === 'ko' ? `${calcReadingTime(post.content)}분 읽기` : `${calcReadingTime(post.content)} min read`}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* 읽기 버튼 */}
                 <div className="px-6 pb-6">
-                  <Link
-                    href={`/posts/${post._id}`}
+                  <span
                     className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
                   >
                     {t.postsPage.readMore}
                     <FiArrowLeft size={16} className="rotate-180" />
-                  </Link>
+                  </span>
                 </div>
-                </div>
+                </Link>
               </div>
               </React.Fragment>
             ))}
