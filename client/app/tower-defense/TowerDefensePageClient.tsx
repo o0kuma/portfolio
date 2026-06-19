@@ -11,6 +11,8 @@ import TowerDefensePlayerName from '@/components/tower-defense/TowerDefensePlaye
 import AchievementToast from '@/components/tower-defense/AchievementToast'
 import AchievementPanel from '@/components/tower-defense/AchievementPanel'
 import ShareCard from '@/components/tower-defense/ShareCard'
+import TowerDefenseTutorial, { shouldShowTutorial } from '@/components/tower-defense/TowerDefenseTutorial'
+import TowerDefenseStats from '@/components/tower-defense/TowerDefenseStats'
 import { useTowerDefenseGame } from '@/hooks/useTowerDefenseGame'
 import { useAchievements } from '@/hooks/useAchievements'
 import { useLanguage } from '@/lib/LanguageContext'
@@ -23,12 +25,15 @@ import type { TowerKind } from '@/lib/tower-defense/types'
 export default function TowerDefensePageClient() {
   const { engineRef, hud, choices, speed, muted, mapId, autoStart, autoCountdown, challengeDay, actions } =
     useTowerDefenseGame()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const p = t.towerDefensePage
   const g = t.towerDefenseGame
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
   const [showDaily, setShowDaily] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
+
+  useEffect(() => { setShowTutorial(shouldShowTutorial()) }, [])
 
   const { unlocked, newlyUnlocked, checkAndUpdate, clearNew } = useAchievements()
 
@@ -127,6 +132,11 @@ export default function TowerDefensePageClient() {
           {status === 'upgrade' && (
             <TowerDefenseUpgrade choices={choices} onChoose={actions.chooseUpgrade} />
           )}
+
+          {showTutorial && status === 'playing' && (
+            <TowerDefenseTutorial locale={locale} onDone={() => setShowTutorial(false)} />
+          )}
+          <TowerDefenseStats stats={hud.stats} wave={hud.wave} />
 
           {status === 'paused' && (
             <div className="absolute inset-0 z-30 flex items-center justify-center px-6">
