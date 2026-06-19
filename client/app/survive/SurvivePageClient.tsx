@@ -121,6 +121,13 @@ export default function SurvivePageClient() {
               >
                 다시 하기
               </button>
+              <button
+                type="button"
+                onClick={handleSurviveShare}
+                className="text-xs text-white/50 hover:text-white/80 transition-colors"
+              >
+                {shareCopied ? 'Copied!' : 'Share Result'}
+              </button>
             </div>
           )}
         </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useOptimistic } from 'react'
 import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiSend, FiClock } from 'react-icons/fi'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
@@ -76,6 +76,10 @@ export default function PostDetailPage() {
   const [post, setPost] = useState<Post | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isLiking, setIsLiking] = useState(false)
+  const [optimisticLikes, addOptimisticLike] = useOptimistic(
+    post?.likes ?? 0,
+    (current: number) => current + 1,
+  )
   const [newComment, setNewComment] = useState<Comment>({ author: '', content: '' })
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
