@@ -145,6 +145,68 @@ export const TOWER_DEFS: Record<TowerKind, TowerDef> = {
     i18nKey: 'prism',
     evolved: true,
   },
+  // ---- new base towers ----
+  sniper: {
+    kind: 'sniper',
+    cost: 130,
+    range: 260,
+    damage: 80,
+    fireRateMs: 2200,
+    splash: 0,
+    slowMs: 0,
+    slowMul: 1,
+    bulletSpeed: 1800,
+    pierce: 1,
+    emoji: '🎯',
+    i18nKey: 'sniper',
+    evolved: false,
+  },
+  support: {
+    kind: 'support',
+    cost: 110,
+    range: 100,
+    damage: 0,
+    fireRateMs: 9999,
+    splash: 0,
+    slowMs: 0,
+    slowMul: 1,
+    bulletSpeed: 0,
+    pierce: 0,
+    emoji: '🛡️',
+    i18nKey: 'support',
+    evolved: false,
+  },
+  // ---- new evolved towers ----
+  omega: {
+    kind: 'omega',
+    cost: 0,
+    range: 999,
+    damage: 200,
+    fireRateMs: 3000,
+    splash: 0,
+    slowMs: 0,
+    slowMul: 1,
+    bulletSpeed: 2400,
+    pierce: 99,
+    emoji: '⚡',
+    i18nKey: 'omega',
+    evolved: true,
+  },
+  fortress: {
+    kind: 'fortress',
+    cost: 0,
+    range: 140,
+    damage: 15,
+    fireRateMs: 400,
+    splash: 60,
+    slowMs: 2500,
+    slowMul: 0.25,
+    bulletSpeed: 360,
+    pierce: 0,
+    emoji: '🏰',
+    i18nKey: 'fortress',
+    evolved: true,
+  },
 }
 
 export const MAX_TOWER_LEVEL = 3
@@ -187,7 +249,7 @@ export function towerStats(kind: TowerKind, level: number) {
 }
 
 /** Only base towers appear in the build dock. */
-export const TOWER_ORDER: BaseTowerKind[] = ['pulse', 'splash', 'frost', 'beam']
+export const TOWER_ORDER: BaseTowerKind[] = ['pulse', 'splash', 'frost', 'beam', 'sniper', 'support']
 
 /**
  * Evolution recipes: two MAX-LEVEL base towers placed in orthogonally adjacent
@@ -198,6 +260,8 @@ export const RECIPES: Record<string, EvolvedTowerKind> = {
   'beam|pulse': 'railgun',
   'pulse|splash': 'tempest',
   'beam|frost': 'prism',
+  'beam|sniper': 'omega',
+  'frost|support': 'fortress',
 }
 
 /**

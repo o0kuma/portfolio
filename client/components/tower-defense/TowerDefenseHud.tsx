@@ -24,11 +24,13 @@ type Props = {
   onToggleAuto: () => void
 }
 
-const ENEMY_ICON: Record<'normal' | 'fast' | 'tank' | 'boss', string> = {
+const ENEMY_ICON: Record<'normal' | 'fast' | 'tank' | 'boss' | 'ghost' | 'regen', string> = {
   normal: '🟢',
   fast: '🟡',
   tank: '⬜',
   boss: '🔴',
+  ghost: '👻',
+  regen: '💚',
 }
 
 /** Pill whose value flashes briefly when it changes. */
@@ -202,7 +204,7 @@ export default function TowerDefenseHud({
         {hud.waveIdle && preview && (
           <div className="pointer-events-auto mx-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-lg border border-white/10 bg-black/55 px-3 py-1.5 text-[11px] text-white/85 backdrop-blur-sm">
             <span className="text-white/55">{g.nextWavePreview}</span>
-            {(['normal', 'fast', 'tank', 'boss'] as const).map((k) =>
+            {(['normal', 'fast', 'tank', 'boss', 'ghost', 'regen'] as const).map((k) =>
               preview[k] > 0 ? (
                 <span key={k} className="inline-flex items-center gap-0.5 tabular-nums">
                   <span>{ENEMY_ICON[k]}</span>

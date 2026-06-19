@@ -1,8 +1,8 @@
-export type BaseTowerKind = 'pulse' | 'splash' | 'frost' | 'beam'
-export type EvolvedTowerKind = 'blizzard' | 'railgun' | 'tempest' | 'prism'
+export type BaseTowerKind = 'pulse' | 'splash' | 'frost' | 'beam' | 'sniper' | 'support'
+export type EvolvedTowerKind = 'blizzard' | 'railgun' | 'tempest' | 'prism' | 'omega' | 'fortress'
 export type TowerKind = BaseTowerKind | EvolvedTowerKind
 
-export type EnemyKind = 'normal' | 'fast' | 'tank' | 'boss'
+export type EnemyKind = 'normal' | 'fast' | 'tank' | 'boss' | 'ghost' | 'regen'
 
 /** Special wave events that modify a wave's composition/stats (Feature 4). */
 export type WaveEvent = 'rush' | 'armored' | 'swarm' | 'elite' | null
@@ -13,6 +13,8 @@ export interface WavePreview {
   fast: number
   tank: number
   boss: number
+  ghost: number
+  regen: number
   event: WaveEvent
 }
 

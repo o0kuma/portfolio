@@ -83,6 +83,10 @@ function emptyKillsByKind(): Record<TowerKind, number> {
     railgun: 0,
     tempest: 0,
     prism: 0,
+    sniper: 0,
+    support: 0,
+    omega: 0,
+    fortress: 0,
   }
 }
 const PALETTE_BEAM = '#c084fc'
@@ -272,7 +276,7 @@ export class TowerDefenseEngine implements Upgradable {
    */
   peekNextWave(): WavePreview {
     const w = this.ensureNextWave()
-    const counts = { normal: 0, fast: 0, tank: 0, boss: 0 }
+    const counts = { normal: 0, fast: 0, tank: 0, boss: 0, ghost: 0, regen: 0 }
     for (const k of w.queue) counts[k] += 1
     return { ...counts, event: w.event }
   }
@@ -508,6 +512,24 @@ export class TowerDefenseEngine implements Upgradable {
       queue.push(kind)
     }
     if (isBoss) queue.push('boss')
+
+    // Ghost enemies starting from wave 8
+    if (wave >= 8) {
+      const ghostCount = Math.floor((wave - 7) * 0.4)
+      for (let i = 0; i < ghostCount; i++) {
+        const insertAt = Math.floor(this.rng() * queue.length)
+        queue.splice(insertAt, 0, 'ghost')
+      }
+    }
+    // Regen enemies starting from wave 12
+    if (wave >= 12) {
+      const regenCount = Math.floor((wave - 11) * 0.3)
+      for (let i = 0; i < regenCount; i++) {
+        const insertAt = Math.floor(this.rng() * queue.length)
+        queue.splice(insertAt, 0, 'regen')
+      }
+    }
+
     return { queue, event }
   }
 
@@ -589,6 +611,24 @@ export class TowerDefenseEngine implements Upgradable {
         kind,
         bounty: Math.round(120 * bScale),
       }
+    } else if (kind === 'ghost') {
+      base = {
+        radius: 12,
+        hp: 22 * hpScale,
+        maxHp: 22 * hpScale,
+        speed: 83 * spScale,
+        kind,
+        bounty: Math.round(18 * bScale),
+      }
+    } else if (kind === 'regen') {
+      base = {
+        radius: 16,
+        hp: 80 * hpScale,
+        maxHp: 80 * hpScale,
+        speed: 45 * spScale,
+        kind,
+        bounty: Math.round(25 * bScale),
+      }
     } else {
       base = {
         radius: 12,
@@ -617,6 +657,10 @@ export class TowerDefenseEngine implements Upgradable {
     for (const e of this.enemies) {
       e.ageMs += dt * 1000
       if (e.hitFlashMs > 0) e.hitFlashMs -= dt * 1000
+      // Regen enemies slowly recover HP
+      if (e.kind === 'regen' && e.hp > 0 && e.hp < e.maxHp) {
+        e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.002 * (dt * 1000 / 16.67))
+      }
       if (e.slowMs > 0) {
         e.slowMs -= dt * 1000
         if (e.slowMs <= 0) e.slowMul = 1
@@ -646,16 +690,32 @@ export class TowerDefenseEngine implements Upgradable {
   }
 
   private updateTowers(dt: number): void {
+    // Build support aura map: for each support tower, boost adjacent towers' damage by 30%
+    const supportBonusMap = new Map<number, number>() // towerId -> multiplier
+    for (const t of this.towers) {
+      if (t.kind !== 'support') continue
+      for (const other of this.towers) {
+        if (other.id === t.id || other.kind === 'support') continue
+        const dist = Math.hypot(other.col - t.col, other.row - t.row)
+        if (dist <= 1.5) {
+          supportBonusMap.set(other.id, (supportBonusMap.get(other.id) ?? 1) * 1.3)
+        }
+      }
+    }
+
     for (const t of this.towers) {
       if (t.cooldownMs > 0) t.cooldownMs -= dt * 1000
       if (t.flashMs > 0) t.flashMs -= dt * 1000
+      // Support towers don't attack
+      if (t.kind === 'support') continue
       if (t.cooldownMs > 0) continue
       const target = this.acquireTarget(t)
       if (!target) continue
       t.aimAngle = Math.atan2(target.y - t.y, target.x - t.x)
       t.cooldownMs = t.fireRateMs * this.rateMul
       t.flashMs = 90
-      this.fire(t, target)
+      const supportMul = supportBonusMap.get(t.id) ?? 1
+      this.fire(t, target, supportMul)
       this.onSfx?.('shoot')
     }
   }
@@ -675,17 +735,21 @@ export class TowerDefenseEngine implements Upgradable {
     return best
   }
 
-  private fire(t: Tower, target: Enemy): void {
+  private fire(t: Tower, target: Enemy, supportMul = 1): void {
     const s = towerStats(t.kind, t.level)
-    const dmg = t.damage * this.damageMul
+    const dmg = t.damage * this.damageMul * supportMul
     const ang = Math.atan2(target.y - t.y, target.x - t.x)
 
     // Beam-type towers fire an instantaneous hitscan line + transient visual.
     if (t.kind === 'beam' || t.kind === 'prism') {
-      this.damageEnemy(target, dmg, t.kind)
-      if (s.slowMs > 0) {
-        target.slowMs = s.slowMs
-        target.slowMul = s.slowMul
+      // Ghost enemies are immune to beam but not prism (frost-based)
+      const ghostImmune = target.kind === 'ghost' && t.kind === 'beam'
+      if (!ghostImmune) {
+        this.damageEnemy(target, dmg, t.kind)
+        if (s.slowMs > 0) {
+          target.slowMs = s.slowMs
+          target.slowMul = s.slowMul
+        }
       }
       this.beams.push({
         x1: t.x,
@@ -757,6 +821,12 @@ export class TowerDefenseEngine implements Upgradable {
 
   /** Returns true if the projectile should be destroyed (no more piercing). */
   private onProjectileHit(pr: Projectile, e: Enemy): boolean {
+    // Ghost enemies are immune to most damage types
+    if (e.kind === 'ghost') {
+      const immuneKinds: TowerKind[] = ['pulse', 'splash', 'beam', 'railgun', 'tempest', 'omega', 'sniper']
+      if (immuneKinds.includes(pr.sourceKind)) return pr.pierce <= 0
+    }
+
     if (pr.splash > 0) {
       // AoE: damage everyone in radius
       const r2 = pr.splash * pr.splash
@@ -852,6 +922,8 @@ export class TowerDefenseEngine implements Upgradable {
     if (kind === 'fast') return '#fbbf24'
     if (kind === 'tank') return '#94a3b8'
     if (kind === 'boss') return '#fb7185'
+    if (kind === 'ghost') return '#c4b5fd'
+    if (kind === 'regen') return '#4ade80'
     return '#a3e635'
   }
 

@@ -435,6 +435,10 @@ export const translations = {
         railgun: { name: '레일건', desc: '일직선 관통 초고화력 (펄스+빔)' },
         tempest: { name: '템페스트', desc: '빠른 연사 소형 광역 (펄스+스플래시)' },
         prism: { name: '프리즘', desc: '초장거리 고화력 + 둔화 (프로스트+빔)' },
+        sniper: { name: '저격수', desc: '초장거리 고데미지. 아머 무시.' },
+        support: { name: '지원탑', desc: '인접 타워 공격력 +30%.' },
+        omega: { name: '오메가', desc: '전맵 관통 레이저. (저격+빔)' },
+        fortress: { name: '요새', desc: '광역 슬로우 구역 생성. (지원+프로스트)' },
       },
       upgrades: {
         damage: { name: '화력 강화', desc: '모든 타워 데미지 +10%' },
@@ -892,6 +896,10 @@ export const translations = {
         railgun: { name: 'Railgun', desc: 'Piercing high-damage line shot (Pulse+Beam)' },
         tempest: { name: 'Tempest', desc: 'Rapid-fire small AoE (Pulse+Splash)' },
         prism: { name: 'Prism', desc: 'Long-range high-damage + slow (Frost+Beam)' },
+        sniper: { name: 'Sniper', desc: 'Extreme range, high damage. Ignores armor.' },
+        support: { name: 'Support', desc: 'Boosts adjacent towers\' damage by 30%.' },
+        omega: { name: 'Omega', desc: 'Full-map piercing laser. (Sniper+Beam)' },
+        fortress: { name: 'Fortress', desc: 'Creates a slow zone. (Support+Frost)' },
       },
       upgrades: {
         damage: { name: 'Firepower', desc: 'All tower damage +10%' },
