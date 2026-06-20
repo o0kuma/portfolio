@@ -120,6 +120,11 @@ export default function AdminPostsPage() {
       ids.map((id) =>
         fetch(`/api/posts/${id}`, {
           method: 'DELETE',
+        }).then(async (res) => {
+          if (!res.ok) {
+            throw new Error(`delete failed: ${res.status}`)
+          }
+          return res
         }),
       ),
     )
