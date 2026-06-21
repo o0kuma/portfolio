@@ -27,10 +27,10 @@ describe('anonymous chat quota reserve', () => {
     );
 
     const reserveIndex = source.indexOf('reserveAnonymousChatQuota');
-    const generateIndex = source.indexOf('generateAIResponse(');
+    const anthropicIndex = source.indexOf('anthropic.messages.stream');
 
     expect(reserveIndex).toBeGreaterThan(-1);
-    expect(generateIndex).toBeGreaterThan(reserveIndex);
+    expect(anthropicIndex).toBeGreaterThan(reserveIndex);
     expect(source).not.toMatch(/recordAnonymousUsage\([\s\S]*?\)\.then/);
   });
 });

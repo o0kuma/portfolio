@@ -16,9 +16,9 @@ describe('AI quota guard on Gemini proxy routes', () => {
 
   test.each(protectedRoutes)('%s enforces subscription quota before Gemini', (routePath) => {
     const source = readClientFile(routePath);
-    expect(source).toContain("from '@/lib/ai-quota'");
-    expect(source).toContain('checkAiQuota(request');
-    expect(source).toContain('recordAiUsage(request');
+    expect(source).toContain("from '@/lib/ai-chat-quota'");
+    expect(source).toContain('reserveAnonymousAiQuota');
+    expect(source).toContain('addAnonymousAiTokens');
   });
 
   test('ai-quota-guard blocks when subscription check is unavailable', () => {
