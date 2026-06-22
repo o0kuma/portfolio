@@ -31,6 +31,8 @@ export interface Enemy {
   kind: EnemyKind
   /** per-orb / per-blast hit cooldown to avoid every-frame multi-hits, keyed by source */
   hitCooldownMs: number
+  /** true if this is a boss enemy */
+  isBoss?: boolean
 }
 
 export interface Projectile {
@@ -78,4 +80,10 @@ export interface SurviveHudSnapshot {
   timeSec: number
   kills: number
   bestTimeSec: number
+  /** Boss health (0 if no boss alive) */
+  bossHp: number
+  /** Boss max health (0 if no boss) */
+  bossMaxHp: number
+  /** Remaining ms for boss announcement overlay (0 = not showing) */
+  bossAnnounceMs: number
 }

@@ -96,18 +96,40 @@ export default function SurviveCanvas({ engineRef, status }: Props) {
 
         // enemies
         for (const en of e.enemies) {
-          ctx.fillStyle = ENEMY_COLORS[en.kind] ?? '#34d399'
-          ctx.beginPath()
-          ctx.arc(sx(en.x), sy(en.y), en.radius, 0, Math.PI * 2)
-          ctx.fill()
-          // hp sliver for damaged enemies
-          if (en.hp < en.maxHp) {
+          if (en.isBoss) {
+            // Boss: red/gold gradient via two-layer draw + gold outline
+            const grad = ctx.createRadialGradient(sx(en.x), sy(en.y), 0, sx(en.x), sy(en.y), en.radius)
+            grad.addColorStop(0, '#fbbf24')
+            grad.addColorStop(0.5, '#dc2626')
+            grad.addColorStop(1, '#7f1d1d')
+            ctx.fillStyle = grad
+            ctx.beginPath()
+            ctx.arc(sx(en.x), sy(en.y), en.radius, 0, Math.PI * 2)
+            ctx.fill()
+            ctx.strokeStyle = '#fbbf24'
+            ctx.lineWidth = 3
+            ctx.stroke()
+            // Boss HP bar (wider/taller)
             const bw = en.radius * 2
             const ratio = Math.max(0, en.hp / en.maxHp)
-            ctx.fillStyle = 'rgba(0,0,0,0.5)'
-            ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 7, bw, 3)
-            ctx.fillStyle = '#f87171'
-            ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 7, bw * ratio, 3)
+            ctx.fillStyle = 'rgba(0,0,0,0.6)'
+            ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 10, bw, 5)
+            ctx.fillStyle = '#fbbf24'
+            ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 10, bw * ratio, 5)
+          } else {
+            ctx.fillStyle = ENEMY_COLORS[en.kind] ?? '#34d399'
+            ctx.beginPath()
+            ctx.arc(sx(en.x), sy(en.y), en.radius, 0, Math.PI * 2)
+            ctx.fill()
+            // hp sliver for damaged enemies
+            if (en.hp < en.maxHp) {
+              const bw = en.radius * 2
+              const ratio = Math.max(0, en.hp / en.maxHp)
+              ctx.fillStyle = 'rgba(0,0,0,0.5)'
+              ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 7, bw, 3)
+              ctx.fillStyle = '#f87171'
+              ctx.fillRect(sx(en.x) - en.radius, sy(en.y) - en.radius - 7, bw * ratio, 3)
+            }
           }
         }
 

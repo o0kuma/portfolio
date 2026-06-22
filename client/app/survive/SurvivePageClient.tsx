@@ -71,6 +71,16 @@ export default function SurvivePageClient() {
             <SurviveLevelUp choices={choices} onChoose={actions.chooseUpgrade} />
           )}
 
+          {/* Boss announcement overlay */}
+          {(status === 'playing' || status === 'paused') && hud.bossAnnounceMs > 0 && (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+              <div className="animate-pulse rounded-2xl bg-black/75 px-8 py-5 text-center ring-2 ring-red-500/70">
+                <p className="text-2xl font-bold text-red-400">⚠️ BOSS WAVE</p>
+                <p className="mt-1 text-sm text-amber-300">준비하세요!</p>
+              </div>
+            </div>
+          )}
+
           {status === 'paused' && (
             <div className="absolute inset-0 z-30 flex items-center justify-center">
               <div className="rounded-xl bg-white/90 px-6 py-4 text-center shadow-lg dark:bg-slate-800/90">

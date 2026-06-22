@@ -27,6 +27,11 @@ import type {
 const ORB_HIT_COOLDOWN_MS = 220
 const BLAST_HIT_COOLDOWN_MS = 240
 
+/** Boss spawns every BOSS_INTERVAL_SEC seconds (first at 2 min). */
+const BOSS_INTERVAL_SEC = 120
+/** Duration of the "BOSS WAVE" announcement overlay in ms. */
+const BOSS_ANNOUNCE_MS = 2000
+
 function dist2(ax: number, ay: number, bx: number, by: number): number {
   const dx = ax - bx
   const dy = ay - by
@@ -67,6 +72,9 @@ export class SurviveEngine implements Upgradable {
   blastRadius = 0
   blastCooldownMs = 1600
 
+  /** Remaining ms of the boss announcement overlay (0 = not showing). */
+  bossAnnounceMs = 0
+
   /** input movement direction (already normalized), set by the hook each frame */
   private moveDir: Vec = { x: 0, y: 0 }
 
@@ -75,6 +83,10 @@ export class SurviveEngine implements Upgradable {
   private spawnTimer = 0
   private orbAngle = 0
   private taken: Record<string, number> = {}
+  /** The next second at which a boss should be announced (then spawned after announce). */
+  private nextBossSec = BOSS_INTERVAL_SEC
+  /** When > 0, spawn the boss once the announcement finishes. */
+  private bossSpawnPending = false
 
   constructor(bestTimeSec = 0) {
     this.bestTimeSec = bestTimeSec
@@ -115,6 +127,7 @@ export class SurviveEngine implements Upgradable {
   }
 
   getHud(): SurviveHudSnapshot {
+    const boss = this.enemies.find((e) => e.isBoss)
     return {
       status: this.status,
       hp: Math.max(0, Math.ceil(this.player.hp)),
@@ -125,6 +138,9 @@ export class SurviveEngine implements Upgradable {
       timeSec: this.timeSec,
       kills: this.kills,
       bestTimeSec: this.bestTimeSec,
+      bossHp: boss ? Math.max(0, Math.ceil(boss.hp)) : 0,
+      bossMaxHp: boss ? boss.maxHp : 0,
+      bossAnnounceMs: this.bossAnnounceMs,
     }
   }
 
@@ -141,6 +157,7 @@ export class SurviveEngine implements Upgradable {
     this.elapsedMs += dt * 1000
 
     this.movePlayer(dt)
+    this.checkBossWave(dt)
     this.spawnEnemies(dt)
     this.moveEnemies(dt)
     this.updateBullets(dt)
@@ -199,6 +216,56 @@ export class SurviveEngine implements Upgradable {
       base = { radius: 14, hp: 30 * scale, maxHp: 30 * scale, speed: 66, damage: 10, kind }
     }
     this.enemies.push({ ...base, x, y, hitCooldownMs: 0 })
+  }
+
+  private checkBossWave(dt: number): void {
+    // Tick announcement timer first.
+    if (this.bossAnnounceMs > 0) {
+      this.bossAnnounceMs = Math.max(0, this.bossAnnounceMs - dt * 1000)
+      // When announcement finishes, actually spawn the boss.
+      if (this.bossAnnounceMs === 0 && this.bossSpawnPending) {
+        this.bossSpawnPending = false
+        this.spawnBoss()
+      }
+      return
+    }
+    // Check if it's time to announce a new boss.
+    if (this.timeSec >= this.nextBossSec) {
+      // Only one boss at a time.
+      const bossAlive = this.enemies.some((e) => e.isBoss)
+      if (!bossAlive) {
+        this.nextBossSec += BOSS_INTERVAL_SEC
+        this.bossAnnounceMs = BOSS_ANNOUNCE_MS
+        this.bossSpawnPending = true
+      } else {
+        // Delay until the current boss is dead.
+        this.nextBossSec += 10
+      }
+    }
+  }
+
+  private spawnBoss(): void {
+    const t = this.timeSec
+    const angle = Math.random() * Math.PI * 2
+    const spawnDist = 520
+    const x = clamp(this.player.x + Math.cos(angle) * spawnDist, 10, WORLD_WIDTH - 10)
+    const y = clamp(this.player.y + Math.sin(angle) * spawnDist, 10, WORLD_HEIGHT - 10)
+
+    const scale = enemyHpScale(t)
+    const baseHp = 300 * scale * 10 // 10x tank base health
+    const boss: Enemy = {
+      x,
+      y,
+      radius: 44, // ~2x tank radius
+      hp: baseHp,
+      maxHp: baseHp,
+      speed: 52,
+      damage: 25,
+      kind: 'tank',
+      hitCooldownMs: 0,
+      isBoss: true,
+    }
+    this.enemies.push(boss)
   }
 
   private moveEnemies(dt: number): void {
@@ -354,8 +421,21 @@ export class SurviveEngine implements Upgradable {
     if (idx === -1) return
     this.enemies.splice(idx, 1)
     this.kills += 1
-    const value = e.kind === 'tank' ? 5 : e.kind === 'fast' ? 2 : 1
-    this.gems.push({ x: e.x, y: e.y, value })
+    if (e.isBoss) {
+      // Boss drops a large XP gem (guaranteed level-up boost) + bonus gems.
+      this.gems.push({ x: e.x, y: e.y, value: 50 })
+      for (let i = 0; i < 8; i++) {
+        this.gems.push({
+          x: e.x + (Math.random() - 0.5) * 80,
+          y: e.y + (Math.random() - 0.5) * 80,
+          value: 10,
+        })
+      }
+      this.floats.push({ x: e.x, y: e.y - 30, text: '👑 BOSS DOWN', lifeMs: 2000, color: '#fbbf24' })
+    } else {
+      const value = e.kind === 'tank' ? 5 : e.kind === 'fast' ? 2 : 1
+      this.gems.push({ x: e.x, y: e.y, value })
+    }
   }
 
   private collideEnemiesWithPlayer(dt: number): void {
