@@ -27,7 +27,30 @@ function CategoryBadge({ category }: { category: string }) {
   )
 }
 
+function MapPinIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+function ExternalLinkIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  )
+}
+
 function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }) {
+  const mapUrl = item.address
+    ? `https://map.naver.com/v5/search/${encodeURIComponent(item.name + ' ' + item.address)}`
+    : `https://map.naver.com/v5/search/${encodeURIComponent(item.name)}`
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -44,6 +67,16 @@ function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }
             </span>
           )}
           {item.category && <CategoryBadge category={item.category} />}
+          <a
+            href={mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="네이버 지도에서 보기"
+            className="flex items-center justify-center text-neutral-600 hover:text-emerald-400 transition-colors duration-150 p-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MapPinIcon />
+          </a>
         </div>
       </div>
 
@@ -102,6 +135,10 @@ export default function FoodClient({
     setActiveCategory(null)
     setVisitedOnly(false)
   }
+
+  const regionMapUrl = current
+    ? `https://map.naver.com/v5/search/${encodeURIComponent(current.title)}`
+    : ''
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -184,9 +221,21 @@ export default function FoodClient({
                         {current.emoji && <span>{current.emoji}</span>}
                         <span>{current.title}</span>
                       </h2>
-                      <span className="text-xs font-mono text-neutral-600">
-                        총 {current.items.length}곳
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-neutral-600">
+                          총 {current.items.length}곳
+                        </span>
+                        <a
+                          href={regionMapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
+                        >
+                          <MapPinIcon />
+                          <span>전체 지도 보기</span>
+                          <ExternalLinkIcon />
+                        </a>
+                      </div>
                     </div>
 
                     {/* Search input */}
