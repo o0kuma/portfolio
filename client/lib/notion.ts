@@ -73,23 +73,19 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
   return res.results.map((page: any) => {
     const props = page.properties
 
-    const name = getRichText(props['이름'] ?? props['Name'] ?? props['name'])
-      || getTitle(props['이름'] ?? props['Name'] ?? props['name'])
-      || Object.values(props).find((p: any) => p.type === 'title')
-        ? getTitle(Object.values(props).find((p: any) => p.type === 'title') as any)
-        : '(이름 없음)'
+    // find title property
+    const titleProp = Object.values(props).find((p: any) => p.type === 'title') as any
+    const name = titleProp?.title?.map((t: any) => t.plain_text).join('') ?? ''
 
     const category = getSelect(props['카테고리'] ?? props['Category'])
     const location = getSelect(props['위치'] ?? props['Location'])
-    const menu = getRichText(props['추천 메뉴'] ?? props['Menu'])
+    const menu = getRichText(props['추천 메뉴'] ?? props['Menu'] ?? props['추천메뉴'])
     const address = getRichText(props['주소'] ?? props['Address'])
-
-    const emoji = extractEmoji(name as string)
 
     return {
       id: page.id,
-      name: stripEmoji(name as string),
-      emoji: emoji || '🍽️',
+      name: name.trim(),
+      emoji: extractEmoji(name),
       checked: false,
       category,
       location,
@@ -125,7 +121,7 @@ async function getItemsFromPage(pageId: string): Promise<RestaurantItem[]> {
     items.push({
       id: b.id,
       name: stripEmoji(text),
-      emoji: extractEmoji(text) || '🍽️',
+      emoji: extractEmoji(text),
       checked,
     })
   }
@@ -134,12 +130,6 @@ async function getItemsFromPage(pageId: string): Promise<RestaurantItem[]> {
 }
 
 // ── helpers ──────────────────────────────────────────────
-function getTitle(prop: any): string {
-  if (!prop) return ''
-  if (prop.type === 'title') return prop.title?.map((t: any) => t.plain_text).join('') ?? ''
-  return ''
-}
-
 function getRichText(prop: any): string {
   if (!prop) return ''
   if (prop.type === 'rich_text') return prop.rich_text?.map((t: any) => t.plain_text).join('') ?? ''
@@ -153,19 +143,20 @@ function getSelect(prop: any): string {
   return ''
 }
 
+// only match actual emoji codepoints (U+1F300 and above, plus U+2600–U+27BF symbols)
 function extractEmoji(str: string): string {
   if (!str) return ''
   const cp = str.codePointAt(0) ?? 0
-  if (cp > 0x2600) return String.fromCodePoint(cp)
+  if (cp >= 0x1f300 || (cp >= 0x2600 && cp <= 0x27bf)) return String.fromCodePoint(cp)
   return ''
 }
 
 function stripEmoji(str: string): string {
   if (!str) return ''
   const cp = str.codePointAt(0) ?? 0
-  if (cp > 0x2600) {
+  if (cp >= 0x1f300 || (cp >= 0x2600 && cp <= 0x27bf)) {
     const skip = cp > 0xffff ? 2 : 1
-    return str.slice(skip).trimLeft()
+    return str.slice(skip).trimStart()
   }
   return str.trim()
 }
