@@ -1,10 +1,9 @@
-import type { Metadata, Viewport } from 'next'
+import type { Metadata } from 'next'
 import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
-import PageTransition from '@/components/PageTransition'
-import ToastContainer from '@/components/ui/ToastContainer'
-import WebVitals from '@/components/WebVitals'
+import ToastContainer from '@/components/Toast'
+import MarketWidget from '@/components/MarketWidget'
 import {
   getSiteUrl,
   SITE_NAME,
@@ -89,13 +88,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  manifest: '/manifest.json',
-}
-
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#0a0a0a',
 }
 
 export default function RootLayout({
@@ -162,9 +154,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
-        <WebVitals />
-        <Providers><PageTransition>{children}</PageTransition></Providers>
+        <Providers>{children}</Providers>
         <ToastContainer />
+        <MarketWidget />
       </body>
     </html>
   )
