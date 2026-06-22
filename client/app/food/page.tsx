@@ -19,7 +19,8 @@ export default async function FoodPage() {
       }))
     )
     return <FoodClient regions={regionData} />
-  } catch {
-    return <FoodClient regions={[]} error />
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e)
+    return <FoodClient regions={[]} error errorMessage={msg} />
   }
 }
