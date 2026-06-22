@@ -65,7 +65,7 @@ export default function MarketWidget() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label="시장 시세"
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full bg-neutral-900 border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-neutral-100 flex items-center justify-center shadow-lg shadow-black/40 transition-all duration-200"
+        className="fixed bottom-6 right-20 z-50 w-12 h-12 rounded-full bg-neutral-900 border border-neutral-700 hover:border-neutral-500 text-neutral-300 hover:text-neutral-100 flex items-center justify-center shadow-lg shadow-black/40 transition-all duration-200"
       >
         {open ? <FiX size={18} /> : <FiTrendingUp size={18} />}
       </button>
@@ -78,7 +78,7 @@ export default function MarketWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-22 right-6 z-50 w-[360px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl shadow-black/60 overflow-hidden"
+            className="fixed bottom-22 right-20 z-50 w-[360px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl shadow-black/60 overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
