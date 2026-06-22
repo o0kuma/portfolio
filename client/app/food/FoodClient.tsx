@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
 
@@ -72,7 +72,36 @@ export default function FoodClient({
   errorMessage?: string
 }) {
   const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [visitedOnly, setVisitedOnly] = useState(false)
+
   const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
+
+  const categories = useMemo(() => {
+    if (!current) return []
+    const cats = current.items
+      .map((item) => item.category)
+      .filter((c): c is string => Boolean(c))
+    return Array.from(new Set(cats))
+  }, [current])
+
+  const filteredItems = useMemo(() => {
+    if (!current) return []
+    return current.items.filter((item) => {
+      const matchSearch = search.trim() === '' || item.name.toLowerCase().includes(search.toLowerCase())
+      const matchCategory = activeCategory === null || item.category === activeCategory
+      const matchVisited = !visitedOnly || item.checked
+      return matchSearch && matchCategory && matchVisited
+    })
+  }, [current, search, activeCategory, visitedOnly])
+
+  function handleRegionChange(id: string) {
+    setActiveRegion(id)
+    setSearch('')
+    setActiveCategory(null)
+    setVisitedOnly(false)
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -118,7 +147,7 @@ export default function FoodClient({
                     <button
                       key={region.id}
                       type="button"
-                      onClick={() => setActiveRegion(region.id)}
+                      onClick={() => handleRegionChange(region.id)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150 flex items-center justify-between gap-2 ${
                         isActive
                           ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
@@ -160,13 +189,74 @@ export default function FoodClient({
                       </span>
                     </div>
 
+                    {/* Search input */}
+                    <div className="mb-4">
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="식당 이름 검색..."
+                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Category filter pills + visited toggle */}
+                    {categories.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 mb-6">
+                        <button
+                          type="button"
+                          onClick={() => setActiveCategory(null)}
+                          className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                            activeCategory === null
+                              ? 'bg-neutral-200 text-neutral-900 border-neutral-200'
+                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                          }`}
+                        >
+                          전체
+                        </button>
+                        {categories.map((cat) => {
+                          const isActive = activeCategory === cat
+                          const colorCls = CATEGORY_COLOR[cat] ?? 'text-neutral-400 border-neutral-700'
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setActiveCategory(isActive ? null : cat)}
+                              className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                isActive
+                                  ? `${colorCls} opacity-100`
+                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          )
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setVisitedOnly((v) => !v)}
+                          className={`ml-auto text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                            visitedOnly
+                              ? 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10'
+                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                          }`}
+                        >
+                          방문만 보기
+                        </button>
+                      </div>
+                    )}
+
                     {current.items.length === 0 ? (
                       <p className="text-neutral-600 font-mono text-sm py-10 text-center">
                         아직 등록된 맛집이 없어요.
                       </p>
+                    ) : filteredItems.length === 0 ? (
+                      <p className="text-neutral-600 font-mono text-sm py-10 text-center">
+                        조건에 맞는 식당이 없어요.
+                      </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {current.items.map((item, i) => (
+                        {filteredItems.map((item, i) => (
                           <RestaurantCard key={item.id} item={item} index={i} />
                         ))}
                       </div>
