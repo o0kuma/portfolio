@@ -16,7 +16,6 @@ export default function FoodClient({
   errorMessage?: string
 }) {
   const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
-
   const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
 
   return (
@@ -41,16 +40,12 @@ export default function FoodClient({
         {error && (
           <div className="py-20 text-center space-y-2">
             <div className="text-neutral-500 font-mono text-sm">노션 데이터를 불러오지 못했습니다.</div>
-            {errorMessage && (
-              <div className="text-red-400 font-mono text-xs">{errorMessage}</div>
-            )}
+            {errorMessage && <div className="text-red-400 font-mono text-xs">{errorMessage}</div>}
           </div>
         )}
 
         {!error && regions.length === 0 && (
-          <div className="text-neutral-500 font-mono text-sm py-20 text-center">
-            등록된 맛집이 없습니다.
-          </div>
+          <div className="text-neutral-500 font-mono text-sm py-20 text-center">등록된 맛집이 없습니다.</div>
         )}
 
         {!error && regions.length > 0 && (
@@ -71,9 +66,7 @@ export default function FoodClient({
                   >
                     <span className="text-base">{region.emoji || '📍'}</span>
                     <span className="leading-tight">{region.title}</span>
-                    <span className="ml-auto text-[10px] text-neutral-600">
-                      {region.items.length}
-                    </span>
+                    <span className="ml-auto text-[10px] text-neutral-600">{region.items.length}</span>
                   </button>
                 ))}
               </div>
@@ -102,26 +95,29 @@ export default function FoodClient({
                           key={item.id}
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.25, delay: i * 0.04 }}
-                          className={`rounded-xl border px-5 py-4 flex items-center gap-3 transition-colors ${
-                            item.checked
-                              ? 'border-neutral-800 bg-neutral-900/40'
-                              : 'border-neutral-800 bg-neutral-900 hover:border-neutral-700'
-                          }`}
+                          transition={{ duration: 0.25, delay: i * 0.03 }}
+                          className="rounded-xl border border-neutral-800 bg-neutral-900 hover:border-neutral-700 px-5 py-4 transition-colors"
                         >
-                          <span className="text-xl shrink-0">{item.emoji}</span>
-                          <span
-                            className={`font-medium text-sm leading-tight ${
-                              item.checked ? 'line-through text-neutral-600' : 'text-neutral-200'
-                            }`}
-                          >
-                            {item.name}
-                          </span>
-                          {item.checked && (
-                            <span className="ml-auto text-[10px] font-mono text-cyan-500 border border-cyan-500/30 px-1.5 py-0.5 rounded shrink-0">
-                              방문
-                            </span>
-                          )}
+                          <div className="flex items-start gap-3">
+                            <span className="text-xl shrink-0 mt-0.5">{item.emoji}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium text-sm text-neutral-200">{item.name}</span>
+                                {item.checked && (
+                                  <span className="text-[10px] font-mono text-cyan-500 border border-cyan-500/30 px-1.5 py-0.5 rounded shrink-0">방문</span>
+                                )}
+                              </div>
+                              {item.category && (
+                                <span className="text-[11px] text-neutral-500 font-mono">{item.category}</span>
+                              )}
+                              {item.menu && (
+                                <p className="text-xs text-neutral-500 mt-1 truncate">{item.menu}</p>
+                              )}
+                              {item.address && (
+                                <p className="text-[11px] text-neutral-600 mt-0.5 truncate">{item.address}</p>
+                              )}
+                            </div>
+                          </div>
                         </motion.div>
                       ))}
                     </div>
