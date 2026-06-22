@@ -9,11 +9,17 @@ export default function MarketTickerBar() {
     const container = containerRef.current
     if (!container) return
 
+    container.innerHTML = ''
+
+    const wrapper = document.createElement('div')
+    wrapper.className = 'tradingview-widget-container__widget'
+
     const script = document.createElement('script')
+    script.type = 'text/javascript'
     script.src =
       'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js'
     script.async = true
-    script.innerHTML = JSON.stringify({
+    script.textContent = JSON.stringify({
       symbols: [
         { proName: 'BITSTAMP:BTCUSD', title: 'BTC' },
         { proName: 'BITSTAMP:ETHUSD', title: 'ETH' },
@@ -27,16 +33,18 @@ export default function MarketTickerBar() {
       locale: 'en',
     })
 
+    container.appendChild(wrapper)
     container.appendChild(script)
 
     return () => {
-      if (container.contains(script)) container.removeChild(script)
+      container.innerHTML = ''
     }
   }, [])
 
   return (
-    <div className="tradingview-widget-container h-8 w-full overflow-hidden bg-transparent">
-      <div ref={containerRef} className="tradingview-widget-container__widget h-full w-full" />
-    </div>
+    <div
+      ref={containerRef}
+      className="tradingview-widget-container h-10 w-full overflow-hidden"
+    />
   )
 }
