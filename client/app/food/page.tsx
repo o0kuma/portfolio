@@ -1,5 +1,5 @@
 export const runtime = 'nodejs'
-export const revalidate = 3600 // 1시간 캐시
+export const revalidate = 3600
 
 import { getRestaurantRegions, getRestaurantItems } from '@/lib/notion'
 import FoodClient from './FoodClient'
@@ -15,7 +15,7 @@ export default async function FoodPage() {
     const regionData = await Promise.all(
       regions.map(async (region) => ({
         ...region,
-        items: await getRestaurantItems(region.id),
+        items: await getRestaurantItems(region),
       }))
     )
     return <FoodClient regions={regionData} />
