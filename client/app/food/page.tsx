@@ -1,0 +1,25 @@
+export const runtime = 'nodejs'
+export const revalidate = 3600 // 1시간 캐시
+
+import { getRestaurantRegions, getRestaurantItems } from '@/lib/notion'
+import FoodClient from './FoodClient'
+
+export const metadata = {
+  title: '맛집 리스트',
+  description: '오승일의 맛집 리스트',
+}
+
+export default async function FoodPage() {
+  try {
+    const regions = await getRestaurantRegions()
+    const regionData = await Promise.all(
+      regions.map(async (region) => ({
+        ...region,
+        items: await getRestaurantItems(region.id),
+      }))
+    )
+    return <FoodClient regions={regionData} />
+  } catch {
+    return <FoodClient regions={[]} error />
+  }
+}

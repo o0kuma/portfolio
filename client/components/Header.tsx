@@ -83,6 +83,7 @@ export default function Header() {
     { label: t.nav.posts, kind: 'section', id: 'posts' },
     { label: t.nav.contact, kind: 'section', id: 'contact' },
     { label: t.nav.tetris, kind: 'path', href: '/tetris' },
+    { label: t.nav.food, kind: 'path', href: '/food' },
   ]
 
   return (
