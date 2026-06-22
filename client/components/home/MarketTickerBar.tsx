@@ -24,7 +24,7 @@ export default function MarketTickerBar() {
         { proName: 'BITSTAMP:BTCUSD', title: 'BTC' },
         { proName: 'BITSTAMP:ETHUSD', title: 'ETH' },
         { proName: 'BITSTAMP:XRPUSD', title: 'XRP' },
-        { description: 'KOSPI', proName: 'KRX:KOSPI' },
+        { description: 'KOSPI', proName: 'INDEX:KOSPI' },
         { description: 'USD/KRW', proName: 'FX_IDC:USDKRW' },
       ],
       colorTheme: 'dark',
