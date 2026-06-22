@@ -29,8 +29,6 @@ export default function ShareCard({ wave, kills, bestWave, isDaily }: Props) {
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
 
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`
-
   return (
     <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
       <button
