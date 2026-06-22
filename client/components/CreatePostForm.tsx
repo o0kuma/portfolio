@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiSave, FiTag } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
@@ -8,6 +8,7 @@ import { adminAuthHeaders } from '@/lib/admin-token'
 import { useLanguage } from '@/lib/LanguageContext'
 
 const API_BASE_URL = getApiBaseUrl()
+const DRAFT_KEY = 'post-draft-anonymous'
 
 interface EditPost {
   _id: string
@@ -17,6 +18,7 @@ interface EditPost {
   category: string
   tags: string[]
   featured: boolean
+  series?: string
 }
 
 interface CreatePostFormProps {
@@ -36,11 +38,14 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
     author: '',
     category: 'tech',
     tags: [] as string[],
-    featured: false
+    featured: false,
+    series: '',
   })
   const [tagInput, setTagInput] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [autosaveStatus, setAutosaveStatus] = useState<'idle' | 'saved'>('idle')
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (editPost) {
@@ -50,14 +55,65 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
         author: editPost.author,
         category: editPost.category,
         tags: editPost.tags,
-        featured: editPost.featured
+        featured: editPost.featured,
+        series: editPost.series ?? '',
       })
     } else {
-      setFormData({ title: '', content: '', author: '', category: 'tech', tags: [], featured: false })
+      const blank = { title: '', content: '', author: '', category: 'tech', tags: [] as string[], featured: false, series: '' }
+      setFormData(blank)
+      // Check for saved draft only in create mode when modal opens
+      if (isOpen) {
+        try {
+          const saved = localStorage.getItem(DRAFT_KEY)
+          if (saved) {
+            const draft = JSON.parse(saved)
+            if (draft && (draft.title || draft.content)) {
+              if (confirm('저장된 임시글이 있습니다. 복원하시겠습니까?')) {
+                setFormData((prev) => ({ ...prev, ...draft }))
+              } else {
+                localStorage.removeItem(DRAFT_KEY)
+              }
+            }
+          }
+        } catch {
+          // ignore localStorage errors
+        }
+      }
     }
     setTagInput('')
     setError('')
+    setAutosaveStatus('idle')
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPost, isOpen])
+
+  // Debounced autosave to localStorage (create mode only)
+  useEffect(() => {
+    if (isEditMode || !isOpen) return
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
+    autosaveTimer.current = setTimeout(() => {
+      try {
+        if (formData.title || formData.content) {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({
+            title: formData.title,
+            content: formData.content,
+            author: formData.author,
+            category: formData.category,
+            tags: formData.tags,
+            featured: formData.featured,
+            series: formData.series,
+          }))
+          setAutosaveStatus('saved')
+          setTimeout(() => setAutosaveStatus('idle'), 2000)
+        }
+      } catch {
+        // ignore
+      }
+    }, 2000)
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.title, formData.content, formData.author, formData.category, formData.tags, formData.featured, formData.series])
 
   const categories = [
     { id: 'tech', name: 'Tech' },
@@ -97,13 +153,16 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
 
       if (response.ok) {
         if (!isEditMode) {
+          // Clear draft on successful submit
+          try { localStorage.removeItem(DRAFT_KEY) } catch { /* ignore */ }
           setFormData({
             title: '',
             content: '',
             author: '',
             category: 'tech',
             tags: [],
-            featured: false
+            featured: false,
+            series: '',
           })
           setTagInput('')
         }
@@ -163,12 +222,17 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
               {isEditMode ? t.createPostForm.titleEdit : t.createPostForm.titleNew}
             </h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            >
-              <FiX className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
+            <div className="flex items-center gap-3">
+              {!isEditMode && autosaveStatus === 'saved' && (
+                <span className="text-xs text-green-600 dark:text-green-400 font-mono">임시저장됨</span>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <FiX className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
@@ -222,6 +286,19 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  시리즈 <span className="text-gray-400 font-normal">(선택)</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.series}
+                  onChange={(e) => setFormData({ ...formData, series: e.target.value })}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="예: React 심화 가이드"
+                />
               </div>
 
               <div>
