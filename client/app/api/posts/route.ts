@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { dbQuery } from '@/lib/neon-server'
+import { isAdminAuthorized } from '@/lib/adminAuth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -98,11 +99,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const adminToken = process.env.ADMIN_API_TOKEN
-    const auth = request.headers.get('authorization') ?? ''
-    const provided = auth.startsWith('Bearer ') ? auth.slice(7).trim() : ''
-
-    if (!adminToken || provided !== adminToken) {
+    if (!(await isAdminAuthorized(request))) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 

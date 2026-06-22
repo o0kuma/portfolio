@@ -12,7 +12,7 @@ export async function cleanupOldCronPosts(): Promise<number> {
        RETURNING id`,
     )
 
-    // Step 2: prune so only the most recent 100 cron posts remain
+    // Step 2: prune non-featured cron posts beyond the 100 most recent
     const byCount = await dbQuery<{ id: string }>(
       `DELETE FROM posts
        WHERE id IN (
