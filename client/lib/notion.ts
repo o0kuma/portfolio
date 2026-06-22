@@ -51,27 +51,37 @@ export async function getRestaurantItems(pageId: string): Promise<RestaurantItem
 
   for (const block of res.results) {
     const b = block as BlockObjectResponse
+
+    let text = ''
+    let checked = false
+
     if (b.type === 'to_do') {
-      const td = (b as any).to_do
-      const text = td.rich_text.map((t: any) => t.plain_text).join('')
-      const emoji = extractEmoji(text)
-      items.push({
-        id: b.id,
-        name: stripEmoji(text),
-        emoji: emoji || '🍽️',
-        checked: td.checked,
-      })
+      text = (b as any).to_do.rich_text.map((t: any) => t.plain_text).join('')
+      checked = (b as any).to_do.checked
     } else if (b.type === 'bulleted_list_item') {
-      const li = (b as any).bulleted_list_item
-      const text = li.rich_text.map((t: any) => t.plain_text).join('')
-      const emoji = extractEmoji(text)
-      items.push({
-        id: b.id,
-        name: stripEmoji(text),
-        emoji: emoji || '🍽️',
-        checked: false,
-      })
+      text = (b as any).bulleted_list_item.rich_text.map((t: any) => t.plain_text).join('')
+    } else if (b.type === 'numbered_list_item') {
+      text = (b as any).numbered_list_item.rich_text.map((t: any) => t.plain_text).join('')
+    } else if (b.type === 'paragraph') {
+      text = (b as any).paragraph.rich_text.map((t: any) => t.plain_text).join('')
+    } else if (b.type === 'heading_1') {
+      text = (b as any).heading_1.rich_text.map((t: any) => t.plain_text).join('')
+    } else if (b.type === 'heading_2') {
+      text = (b as any).heading_2.rich_text.map((t: any) => t.plain_text).join('')
+    } else if (b.type === 'heading_3') {
+      text = (b as any).heading_3.rich_text.map((t: any) => t.plain_text).join('')
     }
+
+    text = text.trim()
+    if (!text) continue
+
+    const emoji = extractEmoji(text)
+    items.push({
+      id: b.id,
+      name: stripEmoji(text),
+      emoji: emoji || '🍽️',
+      checked,
+    })
   }
 
   return items
