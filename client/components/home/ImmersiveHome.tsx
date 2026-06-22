@@ -10,6 +10,7 @@ import HomePostsSection from '@/components/home/HomePostsSection'
 import MarketTickerBar from '@/components/home/MarketTickerBar'
 import RecentActivity from '@/components/home/RecentActivity'
 import VisitorCounter from '@/components/home/VisitorCounter'
+import PushNotificationButton from '@/components/PushNotificationButton'
 import { useLanguage } from '@/lib/LanguageContext'
 import { PORTFOLIO_PUBLIC } from '@/lib/site'
 import {
@@ -105,6 +106,7 @@ function ImmersiveHomeInner() {
         <footer className="pointer-events-none flex flex-col items-center gap-3 pb-10 md:pb-12">
           <div className="pointer-events-auto">
             <VisitorCounter />
+            <PushNotificationButton />
           </div>
           <a
             href="#posts-feed"
