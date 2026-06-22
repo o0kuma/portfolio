@@ -9,6 +9,7 @@ export const translations = {
       posts: 'Posts',
       contact: 'Contact',
       tetris: 'Tetris',
+      food: '맛집',
       langToggle: 'EN',
     },
     hero: {
@@ -513,6 +514,7 @@ export const translations = {
       posts: 'Posts',
       contact: 'Contact',
       tetris: 'Tetris',
+      food: 'Food',
       langToggle: 'KO',
     },
     hero: {

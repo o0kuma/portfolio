@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.105.0",
+    "@notionhq/client": "^5.22.0",
     "@react-three/drei": "^9.114.6",
     "@react-three/fiber": "^8.17.10",
     "@tailwindcss/typography": "^0.5.10",
