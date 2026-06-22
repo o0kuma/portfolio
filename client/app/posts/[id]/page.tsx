@@ -84,6 +84,7 @@ export default function PostDetailPage() {
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
+  const [seriesPosts, setSeriesPosts] = useState<RelatedPost[]>([])
 
   const fetchPost = async () => {
     try {
@@ -145,9 +146,31 @@ export default function PostDetailPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId])
 
+  const fetchSeriesPosts = async (currentPost: Post) => {
+    if (!currentPost.series) return
+    try {
+      const params = new URLSearchParams({ series: currentPost.series, limit: '20' })
+      const response = await fetch(`${API_BASE_URL}/api/posts?${params}`)
+      if (!response.ok) return
+      const data = await response.json()
+      const allPosts = Array.isArray(data.posts) ? (data.posts as Record<string, unknown>[]) : []
+      const others = allPosts
+        .filter((p) => String(p.id ?? p._id ?? '') !== currentPost._id)
+        .map((p) => ({
+          _id: String(p.id ?? p._id ?? ''),
+          title: String(p.title ?? ''),
+          createdAt: String(p.created_at ?? p.createdAt ?? ''),
+        }))
+      setSeriesPosts(others)
+    } catch {
+      // ignore
+    }
+  }
+
   useEffect(() => {
     if (post) {
       fetchRelatedPosts(post)
+      fetchSeriesPosts(post)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [post?._id])
@@ -427,6 +450,39 @@ export default function PostDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Series posts */}
+            {post.series && seriesPosts.length > 0 && (
+              <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em]">
+                    이 시리즈의 다른 글
+                  </h3>
+                  <span className="text-xs font-mono text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
+                    {post.series}
+                  </span>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {seriesPosts.map((sp) => (
+                    <Link
+                      key={sp._id}
+                      href={`/posts/${sp._id}`}
+                      className="block rounded-lg border border-neutral-800 p-4 hover:border-cyan-800 transition-colors group"
+                    >
+                      <h4 className="font-semibold text-neutral-200 group-hover:text-white line-clamp-2 mb-2 text-sm transition-colors">
+                        {sp.title}
+                      </h4>
+                      <p className="text-xs font-mono text-neutral-700 mb-3">
+                        {formatDateShort(sp.createdAt)}
+                      </p>
+                      <span className="text-xs font-mono text-cyan-400 hover:text-cyan-300">
+                        읽기 &rarr;
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Related posts */}
             {relatedPosts.length > 0 && (

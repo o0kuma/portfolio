@@ -45,6 +45,7 @@ export type PostDetailComment = {
 export type PostDetail = Omit<HomePost, 'comments'> & {
   comments: PostDetailComment[]
   updatedAt: string
+  series?: string
 }
 
 /** Single post + comment rows from GET /api/posts/:id */
@@ -64,5 +65,6 @@ export function normalizePostDetail(row: Record<string, unknown>): PostDetail {
     ...base,
     comments,
     updatedAt: iso(row.updated_at ?? row.updatedAt),
+    series: row.series ? String(row.series) : undefined,
   }
 }

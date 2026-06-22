@@ -16,6 +16,7 @@ const ALLOWED_POST_COLUMNS = new Set([
   'featured',
   'cover_image_url',
   'status',
+  'series',
 ])
 
 export async function GET(_request: NextRequest, { params }: Ctx) {

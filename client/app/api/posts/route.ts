@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get('search') ?? ''
     const q = searchParams.get('q')?.trim() ?? ''
     const tag = searchParams.get('tag')?.trim() ?? ''
+    const series = searchParams.get('series')?.trim() ?? ''
     const offset = (page - 1) * limit
 
     const where: string[] = []
@@ -35,6 +36,10 @@ export async function GET(request: NextRequest) {
     if (tag) {
       values.push(tag)
       where.push(`$${values.length} = ANY(tags)`)
+    }
+    if (series) {
+      values.push(series)
+      where.push(`series = $${values.length}`)
     }
 
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : ''
@@ -111,9 +116,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: '제목, 내용, 작성자는 필수입니다.' }, { status: 400 })
     }
 
+    // Ensure series column exists (safe to run multiple times)
+    await dbQuery(`ALTER TABLE posts ADD COLUMN IF NOT EXISTS series TEXT`).catch(() => {})
+
+    const series = typeof body.series === 'string' ? body.series.trim() : null
+
     const result = await dbQuery(
-      `INSERT INTO posts (title, content, author, category, tags, likes, views, featured, cover_image_url, status)
-       VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9, $10) RETURNING *`,
+      `INSERT INTO posts (title, content, author, category, tags, likes, views, featured, cover_image_url, status, series)
+       VALUES ($1, $2, $3, $4, $5::text[], $6, $7, $8, $9, $10, $11) RETURNING *`,
       [
         body.title,
         body.content,
@@ -125,6 +135,7 @@ export async function POST(request: NextRequest) {
         body.featured ?? false,
         body.cover_image_url ?? null,
         body.status ?? 'published',
+        series || null,
       ],
     )
     revalidateTag('posts')
