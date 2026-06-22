@@ -9,9 +9,11 @@ type RegionWithItems = RestaurantPage & { items: RestaurantItem[] }
 export default function FoodClient({
   regions,
   error,
+  errorMessage,
 }: {
   regions: RegionWithItems[]
   error?: boolean
+  errorMessage?: string
 }) {
   const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
 
@@ -37,8 +39,11 @@ export default function FoodClient({
 
       <div className="container-custom py-12">
         {error && (
-          <div className="text-neutral-500 font-mono text-sm py-20 text-center">
-            노션 데이터를 불러오지 못했습니다.
+          <div className="py-20 text-center space-y-2">
+            <div className="text-neutral-500 font-mono text-sm">노션 데이터를 불러오지 못했습니다.</div>
+            {errorMessage && (
+              <div className="text-red-400 font-mono text-xs">{errorMessage}</div>
+            )}
           </div>
         )}
 
