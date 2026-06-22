@@ -1,0 +1,183 @@
+'use client'
+
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
+
+type RegionWithItems = RestaurantPage & { items: RestaurantItem[] }
+
+const CATEGORY_COLOR: Record<string, string> = {
+  '한식': 'text-orange-400 border-orange-400/30 bg-orange-400/5',
+  '일식': 'text-blue-400 border-blue-400/30 bg-blue-400/5',
+  '양식': 'text-purple-400 border-purple-400/30 bg-purple-400/5',
+  '중식': 'text-red-400 border-red-400/30 bg-red-400/5',
+  '라멘': 'text-yellow-400 border-yellow-400/30 bg-yellow-400/5',
+  '베트남 음식': 'text-green-400 border-green-400/30 bg-green-400/5',
+  '이탈리안': 'text-purple-400 border-purple-400/30 bg-purple-400/5',
+  '돈까스': 'text-amber-400 border-amber-400/30 bg-amber-400/5',
+  '샐러드': 'text-emerald-400 border-emerald-400/30 bg-emerald-400/5',
+}
+
+function CategoryBadge({ category }: { category: string }) {
+  const cls = CATEGORY_COLOR[category] ?? 'text-neutral-400 border-neutral-700 bg-neutral-800/50'
+  return (
+    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${cls} shrink-0`}>
+      {category}
+    </span>
+  )
+}
+
+function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.2, delay: index * 0.025 }}
+      className="group rounded-xl border border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80 transition-all duration-200 p-4"
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h3 className="font-semibold text-neutral-100 text-sm leading-snug">{item.name}</h3>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {item.checked && (
+            <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 bg-cyan-400/5 px-1.5 py-0.5 rounded">
+              방문
+            </span>
+          )}
+          {item.category && <CategoryBadge category={item.category} />}
+        </div>
+      </div>
+
+      {item.menu && (
+        <p className="text-xs text-neutral-400 leading-relaxed mb-2 line-clamp-2">
+          {item.menu}
+        </p>
+      )}
+
+      {item.address && (
+        <p className="text-[11px] text-neutral-600 truncate mt-auto">
+          📍 {item.address}
+        </p>
+      )}
+    </motion.div>
+  )
+}
+
+export default function FoodClient({
+  regions,
+  error,
+  errorMessage,
+}: {
+  regions: RegionWithItems[]
+  error?: boolean
+  errorMessage?: string
+}) {
+  const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
+  const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
+
+  return (
+    <div className="min-h-screen bg-neutral-950 text-neutral-50">
+      {/* Header */}
+      <div className="border-b border-neutral-800 py-12">
+        <div className="container-custom">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-px bg-neutral-700" />
+            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">Food</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black text-neutral-50">
+            맛집 리스트
+            <span className="block text-neutral-500 text-xl md:text-2xl font-medium mt-2">
+              Restaurant List
+            </span>
+          </h1>
+        </div>
+      </div>
+
+      <div className="container-custom py-10">
+        {error && (
+          <div className="py-20 text-center space-y-2">
+            <p className="text-neutral-500 font-mono text-sm">노션 데이터를 불러오지 못했습니다.</p>
+            {errorMessage && <p className="text-red-400 font-mono text-xs">{errorMessage}</p>}
+          </div>
+        )}
+
+        {!error && regions.length === 0 && (
+          <p className="text-neutral-500 font-mono text-sm py-20 text-center">등록된 맛집이 없습니다.</p>
+        )}
+
+        {!error && regions.length > 0 && (
+          <div className="flex flex-col md:flex-row gap-8">
+            {/* Sidebar */}
+            <aside className="md:w-52 shrink-0">
+              <div className="sticky top-24 space-y-0.5">
+                <p className="text-[10px] font-mono text-neutral-600 tracking-widest uppercase px-3 pb-2">
+                  지역
+                </p>
+                {regions.map((region) => {
+                  const isActive = activeRegion === region.id
+                  return (
+                    <button
+                      key={region.id}
+                      type="button"
+                      onClick={() => setActiveRegion(region.id)}
+                      className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150 flex items-center justify-between gap-2 ${
+                        isActive
+                          ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
+                          : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/60 border border-transparent'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2 truncate">
+                        {region.emoji && <span>{region.emoji}</span>}
+                        <span className="truncate">{region.title}</span>
+                      </span>
+                      <span className={`text-[10px] font-mono shrink-0 tabular-nums ${isActive ? 'text-neutral-400' : 'text-neutral-700'}`}>
+                        {region.items.length}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </aside>
+
+            {/* Main content */}
+            <main className="flex-1 min-w-0">
+              <AnimatePresence mode="wait">
+                {current && (
+                  <motion.div
+                    key={current.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {/* Region header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-lg font-bold text-neutral-200 flex items-center gap-2">
+                        {current.emoji && <span>{current.emoji}</span>}
+                        <span>{current.title}</span>
+                      </h2>
+                      <span className="text-xs font-mono text-neutral-600">
+                        총 {current.items.length}곳
+                      </span>
+                    </div>
+
+                    {current.items.length === 0 ? (
+                      <p className="text-neutral-600 font-mono text-sm py-10 text-center">
+                        아직 등록된 맛집이 없어요.
+                      </p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {current.items.map((item, i) => (
+                          <RestaurantCard key={item.id} item={item} index={i} />
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </main>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { FiArrowDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
+import MarketWidget from '@/components/MarketWidget'
 import HomePostsSection from '@/components/home/HomePostsSection'
 import { useLanguage } from '@/lib/LanguageContext'
 import { PORTFOLIO_PUBLIC } from '@/lib/site'
@@ -59,6 +60,9 @@ function ImmersiveHomeInner() {
             <Link href="/games" className="transition-colors hover:text-white">
               {t.home.navGames}
             </Link>
+            <Link href="/food" className="transition-colors hover:text-white">
+              {t.home.navFood}
+            </Link>
           </nav>
         </header>
 
@@ -106,6 +110,7 @@ function ImmersiveHomeInner() {
         <HomePostsSection />
         <BlogFooter />
       </div>
+      <MarketWidget />
     </div>
   )
 }

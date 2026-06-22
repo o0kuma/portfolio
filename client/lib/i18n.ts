@@ -9,6 +9,7 @@ export const translations = {
       posts: 'Posts',
       contact: 'Contact',
       tetris: 'Tetris',
+      food: '맛집',
       langToggle: 'EN',
     },
     hero: {
@@ -101,6 +102,7 @@ export const translations = {
       navPosts: '글',
       navPortfolio: '포트폴리오',
       navGames: '게임',
+      navFood: '맛집',
       navTetris: '테트리스',
       navSurvive: '서바이브',
       scrollCta: '최근 글 보기',
@@ -513,6 +515,7 @@ export const translations = {
       posts: 'Posts',
       contact: 'Contact',
       tetris: 'Tetris',
+      food: 'Food',
       langToggle: 'KO',
     },
     hero: {
@@ -605,6 +608,7 @@ export const translations = {
       navPosts: 'Posts',
       navPortfolio: 'Portfolio',
       navGames: 'Games',
+      navFood: 'Food',
       navTetris: 'Tetris',
       navSurvive: 'Survive',
       scrollCta: 'Recent posts',
