@@ -10,6 +10,7 @@ import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLead
 import TowerDefensePlayerName from '@/components/tower-defense/TowerDefensePlayerName'
 import AchievementToast from '@/components/tower-defense/AchievementToast'
 import AchievementPanel from '@/components/tower-defense/AchievementPanel'
+import AchievementBadge from '@/components/games/AchievementBadge'
 import ShareCard from '@/components/tower-defense/ShareCard'
 import TowerDefenseTutorial, { shouldShowTutorial } from '@/components/tower-defense/TowerDefenseTutorial'
 import TowerDefenseStats from '@/components/tower-defense/TowerDefenseStats'
@@ -217,7 +218,7 @@ export default function TowerDefensePageClient() {
           )}
 
           {status === 'gameover' && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-slate-950/85 px-6 text-center">
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 overflow-y-auto bg-slate-950/85 px-6 py-6 text-center">
               <h2 className="font-display text-3xl font-bold text-white">{p.gameOver}</h2>
               {challengeDay && (
                 <p className="text-xs font-semibold text-cyan-300">{p.dailyChallenge}</p>
@@ -244,6 +245,9 @@ export default function TowerDefensePageClient() {
                 bestWave={hud.bestWave}
                 isDaily={!!challengeDay}
               />
+              <div className="w-full max-w-xs">
+                <AchievementBadge unlocked={unlocked} />
+              </div>
             </div>
           )}
         </div>

@@ -10,9 +10,10 @@ import TetrisTouchPad from '@/components/tetris/TetrisTouchPad'
 import { useTetrisGame } from '@/hooks/useTetrisGame'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import Link from 'next/link'
 import type { GameSnapshot } from '@/lib/tetris/types'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { FiArrowLeft } from 'react-icons/fi'
 
 function TetrisGameOverOverlay({
@@ -26,16 +27,17 @@ function TetrisGameOverOverlay({
   t: ReturnType<typeof useLanguage>['t']
   onReset: () => void
 }) {
-  const [copied, setCopied] = useState(false)
+  const { locale } = useLanguage()
 
-  const handleShare = useCallback(() => {
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://portfolio.dev/tetris'
-    const text = `🧱 Tetris | Level ${snapshot.stage} | Lines ${snapshot.lines} | Score ${snapshot.score}\nCan you beat me? ${url}`
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
-  }, [snapshot.stage, snapshot.lines, snapshot.score])
+  const handleShare = useCallback(async () => {
+    const text = `테트리스 ${snapshot.score.toLocaleString()}점 달성! kuuuma.com/tetris`
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('복사됨!')
+    } catch {
+      toast.error('복사 실패')
+    }
+  }, [snapshot.score])
 
   return (
     <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3 rounded-lg bg-slate-900/65 backdrop-blur-[2px]">
@@ -57,9 +59,9 @@ function TetrisGameOverOverlay({
       <button
         type="button"
         onClick={handleShare}
-        className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+        className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
       >
-        {copied ? 'Copied!' : 'Share Result'}
+        {locale === 'ko' ? '결과 공유' : 'Share Result'}
       </button>
     </div>
   )

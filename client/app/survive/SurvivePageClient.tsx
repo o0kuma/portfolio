@@ -9,22 +9,22 @@ import SurviveLevelUp from '@/components/survive/SurviveLevelUp'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import { useSurviveGame } from '@/hooks/useSurviveGame'
 import { formatTime } from '@/lib/survive/storage'
+import { toast } from '@/lib/toast'
 import { useCallback, useState } from 'react'
 
 export default function SurvivePageClient() {
   const { engineRef, hud, choices, actions } = useSurviveGame()
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
-  const [shareCopied, setShareCopied] = useState(false)
-
-  const handleSurviveShare = useCallback(() => {
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://portfolio.dev/survive'
-    const text = `🎮 Survive | Wave ${hud.level} | Score ${hud.kills}\nCan you beat me? ${url}`
-    navigator.clipboard.writeText(text).then(() => {
-      setShareCopied(true)
-      setTimeout(() => setShareCopied(false), 2000)
-    })
-  }, [hud.level, hud.kills])
+  const handleSurviveShare = useCallback(async () => {
+    const text = `서바이브 ${formatTime(hud.timeSec)} 생존! kuuuma.com/survive`
+    try {
+      await navigator.clipboard.writeText(text)
+      toast.success('복사됨!')
+    } catch {
+      toast.error('복사 실패')
+    }
+  }, [hud.timeSec])
 
   return (
     <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
@@ -124,9 +124,9 @@ export default function SurvivePageClient() {
               <button
                 type="button"
                 onClick={handleSurviveShare}
-                className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                className="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20"
               >
-                {shareCopied ? 'Copied!' : 'Share Result'}
+                결과 공유
               </button>
             </div>
           )}
