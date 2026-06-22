@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { FiArrowDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
+import MarketWidget from '@/components/MarketWidget'
 import HomePostsSection from '@/components/home/HomePostsSection'
 import { useLanguage } from '@/lib/LanguageContext'
 import { PORTFOLIO_PUBLIC } from '@/lib/site'
@@ -109,6 +110,7 @@ function ImmersiveHomeInner() {
         <HomePostsSection />
         <BlogFooter />
       </div>
+      <MarketWidget />
     </div>
   )
 }

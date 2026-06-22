@@ -3,7 +3,6 @@ import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
-import MarketWidget from '@/components/MarketWidget'
 import {
   getSiteUrl,
   SITE_NAME,
@@ -156,7 +155,6 @@ export default function RootLayout({
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <ToastContainer />
-        <MarketWidget />
       </body>
     </html>
   )
