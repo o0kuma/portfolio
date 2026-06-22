@@ -1,21 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { createAdminSessionToken } from '@/lib/admin-session'
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+function getAdminPassword(): string | null {
+  const configured = process.env.ADMIN_PASSWORD?.trim()
+  if (configured) return configured
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    return null
+  }
+  return 'admin'
+}
 
 export async function POST(req: NextRequest) {
-  if (!ADMIN_PASSWORD) {
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json({ error: 'Admin login is not configured' }, { status: 503 })
-    }
-    return NextResponse.json(
-      { error: 'Set ADMIN_PASSWORD in server/.env for local admin login' },
-      { status: 503 },
-    )
+  const adminPassword = getAdminPassword()
+  if (!adminPassword) {
+    return NextResponse.json({ error: 'Admin login is not configured' }, { status: 503 })
   }
 
   const { password } = (await req.json()) as { password: string }
-  if (password !== ADMIN_PASSWORD) {
+  if (password !== adminPassword) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

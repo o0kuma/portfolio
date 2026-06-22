@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server'
 import * as fs from 'fs'
 import * as path from 'path'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
-import { checkAnonymousChatQuota, recordAnonymousUsage } from '@/lib/ai-chat-quota'
+import { reserveAnonymousAiQuota, addAnonymousAiTokens } from '@/lib/ai-chat-quota'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     const quotaJson = (body: unknown, init?: ResponseInit) =>
       applyAnonymousQuotaCookie(NextResponse.json(body, init), quotaIdentity)
 
-    const quota = await checkAnonymousChatQuota(quotaIdentity.sessionId)
+    const quota = await reserveAnonymousAiQuota(quotaIdentity.sessionId, 'translate')
     if (!quota.ok) {
       return quotaJson(
         {
@@ -138,22 +138,11 @@ export async function POST(request: Request) {
       translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
     }
 
-    const usageRecorded = await recordAnonymousUsage(
+    await addAnonymousAiTokens(
       quotaIdentity.sessionId,
       'translate',
-      1,
       estimateTokensUsed(translatedText),
-    )
-    if (!usageRecorded) {
-      return quotaJson(
-        {
-          success: false,
-          error: '사용량을 기록할 수 없어 AI 응답을 완료할 수 없습니다.',
-          errorCode: 'USAGE_RECORD_UNAVAILABLE',
-        },
-        { status: 503 },
-      )
-    }
+    ).catch(() => {})
 
     return quotaJson({
       success: true,

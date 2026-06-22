@@ -40,6 +40,11 @@ import { isStripeConfigured } from '@/lib/stripe-config'
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
 const STORAGE_KEY = 'ai_chat_history'
+const SESSION_STORAGE_KEY = 'ai_chat_session_id'
+
+function createSessionId(): string {
+  return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+}
 
 const PRESETS = [
   { label: '코드 리뷰', labelEn: 'Code Review', prompt: 'Please review this code and suggest improvements:\n\n' },
@@ -89,13 +94,17 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     }
   }, [messages])
 
-  // 세션 ID 생성 및 대화 히스토리 로드
+  // 세션 ID 복원/생성 및 대화 히스토리 로드
   useEffect(() => {
     if (isOpen && !sessionId) {
-      const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-      setSessionId(newSessionId)
-      loadConversationHistory(newSessionId)
-      checkSubscription(newSessionId)
+      let persistedSessionId = localStorage.getItem(SESSION_STORAGE_KEY)
+      if (!persistedSessionId) {
+        persistedSessionId = createSessionId()
+        localStorage.setItem(SESSION_STORAGE_KEY, persistedSessionId)
+      }
+      setSessionId(persistedSessionId)
+      loadConversationHistory(persistedSessionId)
+      checkSubscription(persistedSessionId)
     }
   }, [isOpen, sessionId])
 
@@ -117,36 +126,34 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     try {
       setIsLoadingHistory(true)
 
-      // Try localStorage first
+      const response = await fetch(`/api/ai/conversation/${sessionId}`)
+      const data = await response.json()
+
+      if (data.success && data.messages && data.messages.length > 0) {
+        setMessages(data.messages)
+        return
+      }
+
+      // DB에 기록이 없을 때만 localStorage 캐시 사용
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         try {
           const parsed = JSON.parse(stored)
           if (Array.isArray(parsed) && parsed.length > 0) {
             setMessages(parsed)
-            setIsLoadingHistory(false)
             return
           }
         } catch {}
       }
 
-      const response = await fetch(`/api/ai/conversation/${sessionId}`)
-      const data = await response.json()
-
-      if (data.success && data.messages) {
-        setMessages(data.messages)
-      } else {
-        // 기본 환영 메시지
-        setMessages([{
-          id: 'welcome',
-          content: '안녕하세요! 저는 AI 어시스턴트입니다. 메시지 작성, 번역, 톤 조절 등 다양한 기능을 도와드릴 수 있어요. 무엇을 도와드릴까요?',
-          isUser: false,
-          timestamp: new Date()
-        }])
-      }
+      setMessages([{
+        id: 'welcome',
+        content: '안녕하세요! 저는 AI 어시스턴트입니다. 메시지 작성, 번역, 톤 조절 등 다양한 기능을 도와드릴 수 있어요. 무엇을 도와드릴까요?',
+        isUser: false,
+        timestamp: new Date()
+      }])
     } catch (error) {
       console.error('대화 히스토리 로드 오류:', error)
-      // 기본 환영 메시지
       setMessages([{
         id: 'welcome',
         content: '안녕하세요! 저는 AI 어시스턴트입니다. 메시지 작성, 번역, 톤 조절 등 다양한 기능을 도와드릴 수 있어요. 무엇을 도와드릴까요?',
@@ -475,7 +482,13 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               </button>
             )}
             <button
-              onClick={() => { setMessages([]); localStorage.removeItem(STORAGE_KEY) }}
+              onClick={() => {
+                const newSessionId = createSessionId()
+                setMessages([])
+                setSessionId(newSessionId)
+                localStorage.removeItem(STORAGE_KEY)
+                localStorage.setItem(SESSION_STORAGE_KEY, newSessionId)
+              }}
               className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors rounded"
               title="대화 지우기"
             >
