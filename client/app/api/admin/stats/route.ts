@@ -11,13 +11,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const [posts, projects, contacts, pending] = await Promise.all([
+    const [posts, projects, contacts, pending, postsThisWeek, visitors] = await Promise.all([
       dbQuery<{ count: number }>('SELECT COUNT(*)::int AS count FROM posts'),
       dbQuery<{ count: number }>('SELECT COUNT(*)::int AS count FROM projects'),
       dbQuery<{ count: number }>('SELECT COUNT(*)::int AS count FROM contacts'),
       dbQuery<{ count: number }>(
         `SELECT COUNT(*)::int AS count FROM contacts WHERE status = 'unread' OR status = 'pending'`,
       ),
+      dbQuery<{ count: number }>(
+        `SELECT COUNT(*)::int AS count FROM posts WHERE created_at >= NOW() - INTERVAL '7 days'`,
+      ),
+      dbQuery<{ count: string }>('SELECT COUNT(*) AS count FROM visitor_count'),
     ])
 
     return NextResponse.json({
@@ -27,6 +31,8 @@ export async function GET(request: NextRequest) {
         totalProjects: projects.rows[0]?.count ?? 0,
         totalContacts: contacts.rows[0]?.count ?? 0,
         pendingContacts: pending.rows[0]?.count ?? 0,
+        postsThisWeek: postsThisWeek.rows[0]?.count ?? 0,
+        totalVisitors: Number(visitors.rows[0]?.count ?? 0),
       },
     })
   } catch (error: unknown) {

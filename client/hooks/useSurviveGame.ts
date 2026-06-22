@@ -20,6 +20,9 @@ function emptyHud(bestTimeSec: number): SurviveHudSnapshot {
     timeSec: 0,
     kills: 0,
     bestTimeSec,
+    bossHp: 0,
+    bossMaxHp: 0,
+    bossAnnounceMs: 0,
   }
 }
 

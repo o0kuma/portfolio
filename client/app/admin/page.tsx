@@ -10,6 +10,9 @@ import {
   FiCpu,
   FiArrowRight,
   FiLogOut,
+  FiUsers,
+  FiCalendar,
+  FiExternalLink,
 } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 
@@ -18,6 +21,8 @@ interface SiteStats {
   totalProjects: number
   totalContacts: number
   pendingContacts: number
+  postsThisWeek: number
+  totalVisitors: number
 }
 
 interface StatCardProps {
@@ -185,12 +190,18 @@ export default function AdminDashboardPage() {
               {error}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <StatCard
                 label={t.adminDashboard.statPosts}
                 value={stats?.totalPosts ?? 0}
                 icon={<FiFileText className="w-8 h-8" />}
                 color="text-blue-500"
+              />
+              <StatCard
+                label={t.adminDashboard.statPostsThisWeek}
+                value={stats?.postsThisWeek ?? 0}
+                icon={<FiCalendar className="w-8 h-8" />}
+                color="text-cyan-500"
               />
               <StatCard
                 label={t.adminDashboard.statProjects}
@@ -209,6 +220,12 @@ export default function AdminDashboardPage() {
                 value={stats?.pendingContacts ?? 0}
                 icon={<FiAlertCircle className="w-8 h-8" />}
                 color="text-orange-500"
+              />
+              <StatCard
+                label={t.adminDashboard.statVisitors}
+                value={stats?.totalVisitors ?? 0}
+                icon={<FiUsers className="w-8 h-8" />}
+                color="text-pink-500"
               />
             </div>
           )}
@@ -232,8 +249,8 @@ export default function AdminDashboardPage() {
           </div>
         </section>
 
-        {/* Quick Links */}
-        <section>
+        {/* Quick Links — Admin */}
+        <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
             {t.adminDashboard.quickLinksTitle}
           </h2>
@@ -262,6 +279,32 @@ export default function AdminDashboardPage() {
               </div>
               <FiArrowRight className="w-5 h-5 text-gray-400 group-hover:text-yellow-500 transition" />
             </Link>
+          </div>
+        </section>
+
+        {/* Site Quick Links */}
+        <section>
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            {t.adminDashboard.siteLinksTitle}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { href: '/posts', label: t.adminDashboard.linkSitePosts, color: 'text-blue-400' },
+              { href: '/food', label: t.adminDashboard.linkSiteFood, color: 'text-orange-400' },
+              { href: '/games', label: t.adminDashboard.linkSiteGames, color: 'text-green-400' },
+              { href: '/portfolio', label: t.adminDashboard.linkSitePortfolio, color: 'text-purple-400' },
+            ].map(({ href, label, color }) => (
+              <Link
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="card rounded-xl p-4 flex items-center justify-between hover:ring-2 hover:ring-gray-400 transition group"
+              >
+                <span className={`font-medium text-sm ${color}`}>{label}</span>
+                <FiExternalLink className="w-4 h-4 text-gray-500 group-hover:text-gray-300 transition" />
+              </Link>
+            ))}
           </div>
         </section>
       </div>

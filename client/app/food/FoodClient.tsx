@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
 
@@ -27,7 +27,30 @@ function CategoryBadge({ category }: { category: string }) {
   )
 }
 
+function MapPinIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  )
+}
+
+function ExternalLinkIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+      <polyline points="15 3 21 3 21 9" />
+      <line x1="10" y1="14" x2="21" y2="3" />
+    </svg>
+  )
+}
+
 function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }) {
+  const mapUrl = item.address
+    ? `https://map.naver.com/v5/search/${encodeURIComponent(item.name + ' ' + item.address)}`
+    : `https://map.naver.com/v5/search/${encodeURIComponent(item.name)}`
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -44,6 +67,16 @@ function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }
             </span>
           )}
           {item.category && <CategoryBadge category={item.category} />}
+          <a
+            href={mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="네이버 지도에서 보기"
+            className="flex items-center justify-center text-neutral-600 hover:text-emerald-400 transition-colors duration-150 p-0.5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <MapPinIcon />
+          </a>
         </div>
       </div>
 
@@ -72,7 +105,40 @@ export default function FoodClient({
   errorMessage?: string
 }) {
   const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
+  const [search, setSearch] = useState('')
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [visitedOnly, setVisitedOnly] = useState(false)
+
   const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
+
+  const categories = useMemo(() => {
+    if (!current) return []
+    const cats = current.items
+      .map((item) => item.category)
+      .filter((c): c is string => Boolean(c))
+    return Array.from(new Set(cats))
+  }, [current])
+
+  const filteredItems = useMemo(() => {
+    if (!current) return []
+    return current.items.filter((item) => {
+      const matchSearch = search.trim() === '' || item.name.toLowerCase().includes(search.toLowerCase())
+      const matchCategory = activeCategory === null || item.category === activeCategory
+      const matchVisited = !visitedOnly || item.checked
+      return matchSearch && matchCategory && matchVisited
+    })
+  }, [current, search, activeCategory, visitedOnly])
+
+  function handleRegionChange(id: string) {
+    setActiveRegion(id)
+    setSearch('')
+    setActiveCategory(null)
+    setVisitedOnly(false)
+  }
+
+  const regionMapUrl = current
+    ? `https://map.naver.com/v5/search/${encodeURIComponent(current.title)}`
+    : ''
 
   return (
     <div className="min-h-screen bg-neutral-950 text-neutral-50">
@@ -118,7 +184,7 @@ export default function FoodClient({
                     <button
                       key={region.id}
                       type="button"
-                      onClick={() => setActiveRegion(region.id)}
+                      onClick={() => handleRegionChange(region.id)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150 flex items-center justify-between gap-2 ${
                         isActive
                           ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
@@ -155,18 +221,91 @@ export default function FoodClient({
                         {current.emoji && <span>{current.emoji}</span>}
                         <span>{current.title}</span>
                       </h2>
-                      <span className="text-xs font-mono text-neutral-600">
-                        총 {current.items.length}곳
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-neutral-600">
+                          총 {current.items.length}곳
+                        </span>
+                        <a
+                          href={regionMapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
+                        >
+                          <MapPinIcon />
+                          <span>전체 지도 보기</span>
+                          <ExternalLinkIcon />
+                        </a>
+                      </div>
                     </div>
+
+                    {/* Search input */}
+                    <div className="mb-4">
+                      <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="식당 이름 검색..."
+                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
+                      />
+                    </div>
+
+                    {/* Category filter pills + visited toggle */}
+                    {categories.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 mb-6">
+                        <button
+                          type="button"
+                          onClick={() => setActiveCategory(null)}
+                          className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                            activeCategory === null
+                              ? 'bg-neutral-200 text-neutral-900 border-neutral-200'
+                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                          }`}
+                        >
+                          전체
+                        </button>
+                        {categories.map((cat) => {
+                          const isActive = activeCategory === cat
+                          const colorCls = CATEGORY_COLOR[cat] ?? 'text-neutral-400 border-neutral-700'
+                          return (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setActiveCategory(isActive ? null : cat)}
+                              className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                isActive
+                                  ? `${colorCls} opacity-100`
+                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          )
+                        })}
+                        <button
+                          type="button"
+                          onClick={() => setVisitedOnly((v) => !v)}
+                          className={`ml-auto text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                            visitedOnly
+                              ? 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10'
+                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                          }`}
+                        >
+                          방문만 보기
+                        </button>
+                      </div>
+                    )}
 
                     {current.items.length === 0 ? (
                       <p className="text-neutral-600 font-mono text-sm py-10 text-center">
                         아직 등록된 맛집이 없어요.
                       </p>
+                    ) : filteredItems.length === 0 ? (
+                      <p className="text-neutral-600 font-mono text-sm py-10 text-center">
+                        조건에 맞는 식당이 없어요.
+                      </p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {current.items.map((item, i) => (
+                        {filteredItems.map((item, i) => (
                           <RestaurantCard key={item.id} item={item} index={i} />
                         ))}
                       </div>
