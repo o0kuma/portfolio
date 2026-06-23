@@ -5,6 +5,7 @@ import { FiArrowLeft } from 'react-icons/fi'
 import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLeaderboard'
+import TypingLeaderboard from '@/components/typing/TypingLeaderboard'
 import { useLanguage } from '@/lib/LanguageContext'
 
 type GameCardProps = {
@@ -138,6 +139,10 @@ export default function GamesPageClient() {
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.towerDefenseEmoji}</p>
             <TowerDefenseLeaderboard />
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold text-slate-300">⌨️ 타이핑 게임</p>
+            <TypingLeaderboard />
           </div>
         </div>
       </main>

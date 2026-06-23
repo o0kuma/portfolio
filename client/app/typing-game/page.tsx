@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
-import { checkTypingAchievements } from '@/lib/achievements'
+import { checkAchievements } from '@/lib/achievements'
 import AchievementToast from '@/components/AchievementToast'
 import type { Achievement } from '@/lib/achievements'
 
@@ -71,7 +71,7 @@ export default function TypingGamePage() {
     try {
       const res = await fetch('/api/typing-game/scores')
       const data = await res.json()
-      setScores(data.scores ?? [])
+      setScores(Array.isArray(data) ? data : (data.scores ?? []))
     } catch {
       // ignore
     }
@@ -106,7 +106,7 @@ export default function TypingGamePage() {
       stopTimer()
       const finalWpm = startTime ? Math.round((typed.length / 5) / ((Date.now() - startTime) / 1000 / 60)) : 0
       const finalAcc = typed.length > 0 ? Math.round(correctChars / typed.length * 100) : 100
-      const earned = checkTypingAchievements(finalWpm, finalAcc)
+      const earned = checkAchievements('typing', { wpm: finalWpm, accuracy: finalAcc })
       setNewAchievements(earned)
       setGameState('result')
     }
