@@ -245,9 +245,35 @@ export default function FoodClient({
 
         {!error && regions.length > 0 && (
           <div className="flex flex-col md:flex-row gap-8">
-            {/* Sidebar */}
+            {/* Sidebar — vertical on md+, horizontal scrollable pills on mobile */}
             <aside className="md:w-52 shrink-0">
-              <div className="sticky top-24 space-y-0.5">
+              {/* Mobile: horizontal scrollable pill bar */}
+              <div className="flex overflow-x-auto gap-2 pb-2 md:hidden scrollbar-none">
+                {regions.map((region) => {
+                  const isActive = activeRegion === region.id
+                  return (
+                    <button
+                      key={region.id}
+                      type="button"
+                      onClick={() => handleRegionChange(region.id)}
+                      className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-all duration-150 ${
+                        isActive
+                          ? 'bg-neutral-800 text-neutral-100 border-neutral-700'
+                          : 'text-neutral-500 border-neutral-800 hover:text-neutral-200 hover:bg-neutral-900/60'
+                      }`}
+                    >
+                      {region.emoji && <span>{region.emoji}</span>}
+                      <span>{region.title}</span>
+                      <span className={`text-[10px] font-mono tabular-nums ${isActive ? 'text-neutral-400' : 'text-neutral-700'}`}>
+                        {region.items.length}
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Desktop: vertical sidebar */}
+              <div className="hidden md:block sticky top-24 space-y-0.5">
                 <p className="text-[10px] font-mono text-neutral-600 tracking-widest uppercase px-3 pb-2">
                   지역
                 </p>

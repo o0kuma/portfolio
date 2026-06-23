@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const path = require('path')
 const fs = require('fs')
+const { withSentryConfig } = require('@sentry/nextjs')
 
 // 상위 디렉토리(server)의 .env 파일에서 환경 변수 로드
 // 프로덕션 빌드에서는 파일 시스템 접근을 시도하지 않음 (환경 변수는 플랫폼에서 직접 설정)
@@ -93,4 +94,4 @@ const nextConfig = {
   },
 }
 
-module.exports = nextConfig
+module.exports = withSentryConfig(nextConfig, { silent: true, org: '', project: '' })
