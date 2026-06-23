@@ -73,6 +73,7 @@ export async function GET(request: NextRequest) {
         totalPages: Math.ceil(total / limit),
         currentPage: page,
         total,
+        hasMore: page * limit < total,
       })
     }
 
@@ -93,6 +94,7 @@ export async function GET(request: NextRequest) {
       totalPages: Math.ceil(total / limit),
       currentPage: page,
       total,
+      hasMore: page * limit < total,
     })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
