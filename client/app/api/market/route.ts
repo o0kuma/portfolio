@@ -10,6 +10,8 @@ const SYMBOLS = [
   { yahoo: '005930.KS', label: '삼성전자' },
   { yahoo: 'GC=F', label: 'GOLD' },
   { yahoo: '^TNX', label: 'US 10Y' },
+  { yahoo: '^GSPC', label: 'S&P500' },
+  { yahoo: '^IXIC', label: 'NASDAQ' },
 ]
 
 async function fetchSymbol(yahoo: string, label: string) {

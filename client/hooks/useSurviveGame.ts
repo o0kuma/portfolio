@@ -30,6 +30,7 @@ export function useSurviveGame() {
   const engineRef = useRef<SurviveEngine | null>(null)
   const [hud, setHud] = useState<SurviveHudSnapshot>(() => emptyHud(0))
   const [choices, setChoices] = useState<Upgrade[]>([])
+  const [bossChoices, setBossChoices] = useState<Upgrade[]>([])
 
   const keysRef = useRef<Set<string>>(new Set())
   const joystickRef = useRef<Vec>({ x: 0, y: 0 })
@@ -39,6 +40,8 @@ export function useSurviveGame() {
   const persistedRef = useRef(false)
   // Tracks whether we still need to roll upgrade choices for the current level-up.
   const choicesEmptyRef = useRef(true)
+  // Tracks whether we still need to roll boss upgrade choices.
+  const bossChoicesEmptyRef = useRef(true)
 
   // Load best score once mounted.
   useEffect(() => {
@@ -83,6 +86,13 @@ export function useSurviveGame() {
         syncHud()
       }
 
+      if (e.status === 'bossupgrade' && bossChoicesEmptyRef.current) {
+        const rolled = rollUpgrades(e, e.takenUpgrades, 3)
+        bossChoicesEmptyRef.current = false
+        setBossChoices(rolled)
+        syncHud()
+      }
+
       if (e.status === 'gameover' && !persistedRef.current) {
         persistedRef.current = true
         maybePersistBest({ timeSec: e.timeSec, level: e.player.level, kills: e.kills })
@@ -121,7 +131,9 @@ export function useSurviveGame() {
     engineRef.current = engine
     persistedRef.current = false
     choicesEmptyRef.current = true
+    bossChoicesEmptyRef.current = true
     setChoices([])
+    setBossChoices([])
     joystickRef.current = { x: 0, y: 0 }
     keysRef.current.clear()
     syncHud()
@@ -148,6 +160,18 @@ export function useSurviveGame() {
       e.applyUpgrade(u)
       choicesEmptyRef.current = true
       setChoices([])
+      syncHud()
+    },
+    [syncHud]
+  )
+
+  const chooseBossUpgrade = useCallback(
+    (u: Upgrade) => {
+      const e = engineRef.current
+      if (!e || e.status !== 'bossupgrade') return
+      e.applyUpgrade(u)
+      bossChoicesEmptyRef.current = true
+      setBossChoices([])
       syncHud()
     },
     [syncHud]
@@ -193,6 +217,7 @@ export function useSurviveGame() {
     engineRef,
     hud,
     choices,
-    actions: { start, restart, togglePause, chooseUpgrade, setJoystick },
+    bossChoices,
+    actions: { start, restart, togglePause, chooseUpgrade, chooseBossUpgrade, setJoystick },
   }
 }
