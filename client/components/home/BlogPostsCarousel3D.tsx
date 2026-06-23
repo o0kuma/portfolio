@@ -225,7 +225,7 @@ export default function BlogPostsCarousel3D({
                 >
                   <div
                     className={
-                      i === activeIndex ? 'pointer-events-auto' : 'pointer-events-none'
+                      i === activeIndex ? 'pointer-events-auto relative z-10' : 'pointer-events-none'
                     }
                   >
                     <GlassPostCard
