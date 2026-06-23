@@ -34,9 +34,20 @@ interface TotalRow {
 }
 
 export async function GET(request: NextRequest) {
-  void request
   if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
+  }
+
+  const { searchParams } = new URL(request.url)
+  const period = searchParams.get('period') ?? 'all'
+
+  let periodFilter = ''
+  if (period === 'today') {
+    periodFilter = `AND visited_at >= NOW()::date`
+  } else if (period === 'week') {
+    periodFilter = `AND visited_at >= date_trunc('week', NOW())`
+  } else if (period === 'month') {
+    periodFilter = `AND visited_at >= date_trunc('month', NOW())`
   }
 
   try {
@@ -44,7 +55,7 @@ export async function GET(request: NextRequest) {
       dbQuery<CountryRow>(
         `SELECT country, country_code, COUNT(*) as count
          FROM visitor_count
-         WHERE country IS NOT NULL
+         WHERE country IS NOT NULL ${periodFilter}
          GROUP BY country, country_code
          ORDER BY count DESC
          LIMIT 20`,
@@ -52,18 +63,18 @@ export async function GET(request: NextRequest) {
       dbQuery<RecentVisitorRow>(
         `SELECT session_id, country, country_code, city, lat, lng, visited_at
          FROM visitor_count
-         WHERE visited_at IS NOT NULL
+         WHERE visited_at IS NOT NULL ${periodFilter}
          ORDER BY visited_at DESC
          LIMIT 20`,
       ),
       dbQuery<MapPointRow>(
         `SELECT lat, lng, city, country, COUNT(*) as count
          FROM visitor_count
-         WHERE lat IS NOT NULL AND lng IS NOT NULL
+         WHERE lat IS NOT NULL AND lng IS NOT NULL ${periodFilter}
          GROUP BY lat, lng, city, country
          LIMIT 500`,
       ),
-      dbQuery<TotalRow>(`SELECT COUNT(*) as count FROM visitor_count`),
+      dbQuery<TotalRow>(`SELECT COUNT(*) as count FROM visitor_count WHERE TRUE ${periodFilter}`),
     ])
 
     const countries =
