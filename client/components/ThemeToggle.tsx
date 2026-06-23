@@ -25,8 +25,14 @@ export default function ThemeToggle() {
     if (newDark) {
       document.documentElement.classList.add('dark')
       localStorage.setItem('theme', 'dark')
+      // Restore color-theme data-theme if previously set
+      const colorTheme = localStorage.getItem('color-theme')
+      if (colorTheme && colorTheme !== 'dark' && colorTheme !== 'light-mode') {
+        document.documentElement.setAttribute('data-theme', colorTheme)
+      }
     } else {
       document.documentElement.classList.remove('dark')
+      document.documentElement.removeAttribute('data-theme')
       localStorage.setItem('theme', 'light')
     }
     setTimeout(() => setIsAnimating(false), 600)

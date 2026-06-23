@@ -16,8 +16,8 @@ import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
 import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
-import { savePostOffline, removeOfflinePost, isPostSavedOffline } from '@/lib/offlineStorage'
 import { FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi'
+import { savePostOffline, removeOfflinePost, isPostSavedOffline } from '@/lib/offlineStorage'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -83,7 +83,7 @@ export default function PostDetailPage() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
-  const [isSaved, setIsSaved] = useState(false)
+  const [isSavedOffline, setIsSavedOffline] = useState(false)
 
   const fetchPost = async () => {
     try {
@@ -141,7 +141,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     if (postId) {
       fetchPost()
-      isPostSavedOffline(postId).then(setIsSaved)
+      isPostSavedOffline(postId).then(setIsSavedOffline).catch(() => {})
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId])
@@ -213,6 +213,25 @@ export default function PostDetailPage() {
     } catch (error) {
       console.error('Error deleting post:', error)
       toast.error(t.postDetail.deleteError)
+    }
+  }
+
+  const handleOfflineSave = async () => {
+    if (!post) return
+    if (isSavedOffline) {
+      await removeOfflinePost(post._id)
+      setIsSavedOffline(false)
+      toast.success('오프라인 저장이 해제되었습니다')
+    } else {
+      await savePostOffline({
+        id: post._id,
+        title: post.title,
+        content: post.content,
+        author: post.author,
+        createdAt: post.createdAt,
+      })
+      setIsSavedOffline(true)
+      toast.success('오프라인에서 읽을 수 있습니다')
     }
   }
 
@@ -321,6 +340,13 @@ export default function PostDetailPage() {
             </Link>
             <div className="flex items-center space-x-1">
               <button
+                onClick={handleOfflineSave}
+                className="p-2 text-neutral-500 hover:text-neutral-300 transition-colors"
+                title={isSavedOffline ? '저장됨' : '오프라인 저장'}
+              >
+                {isSavedOffline ? '✓ 저장됨' : '📥 오프라인 저장'}
+              </button>
+              <button
                 onClick={() => setShowEditForm(true)}
                 className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
                 title="수정"
@@ -365,27 +391,11 @@ export default function PostDetailPage() {
                 <PostShareBar title={post.title} />
                 <BookmarkButton postId={post._id} />
                 <button
-                  onClick={async () => {
-                    if (isSaved) {
-                      await removeOfflinePost(postId)
-                      setIsSaved(false)
-                      toast.success('삭제됨')
-                    } else {
-                      await savePostOffline({
-                        id: postId,
-                        title: post.title,
-                        content: post.content,
-                        author: post.author,
-                        createdAt: post.createdAt,
-                      })
-                      setIsSaved(true)
-                      toast.success('오프라인에서 읽을 수 있습니다')
-                    }
-                  }}
+                  onClick={handleOfflineSave}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 text-xs font-mono transition-colors"
                   title="오프라인 저장"
                 >
-                  {isSaved ? '✓ 저장됨' : '📥 저장'}
+                  {isSavedOffline ? '✓ 저장됨' : '📥 저장'}
                 </button>
               </div>
 
