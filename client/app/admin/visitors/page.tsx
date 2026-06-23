@@ -1,0 +1,205 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import dynamic from 'next/dynamic'
+import { FiGlobe, FiUsers, FiMapPin, FiCalendar } from 'react-icons/fi'
+
+const VisitorMap = dynamic(() => import('@/components/admin/VisitorMap'), { ssr: false })
+
+interface CountryStat {
+  country: string
+  country_code: string
+  count: number
+}
+
+interface RecentVisitor {
+  session_id: string
+  country: string | null
+  country_code: string | null
+  city: string | null
+  lat: number | null
+  lng: number | null
+  visited_at: string | null
+}
+
+interface MapPoint {
+  lat: number
+  lng: number
+  city: string | null
+  country: string | null
+  count: number
+}
+
+interface VisitorData {
+  countries: CountryStat[]
+  recentVisitors: RecentVisitor[]
+  mapPoints: MapPoint[]
+  total: number
+}
+
+function countryFlag(code: string): string {
+  return code
+    .toUpperCase()
+    .replace(/./g, (c) => String.fromCodePoint(c.charCodeAt(0) + 127397))
+}
+
+function relativeTime(dateStr: string | null): string {
+  if (!dateStr) return '알 수 없음'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return '방금 전'
+  if (mins < 60) return `${mins}분 전`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours}시간 전`
+  const days = Math.floor(hours / 24)
+  return `${days}일 전`
+}
+
+export default function AdminVisitorsPage() {
+  const router = useRouter()
+  const [data, setData] = useState<VisitorData | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/visitors')
+      .then((res) => {
+        if (res.status === 401) {
+          router.push('/admin/login')
+          return null
+        }
+        return res.json()
+      })
+      .then((json) => {
+        if (json) setData(json)
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false))
+  }, [router])
+
+  // Derive today count and city count from data
+  const todayCount = data?.recentVisitors.filter((v) => {
+    if (!v.visited_at) return false
+    const d = new Date(v.visited_at)
+    const now = new Date()
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    )
+  }).length ?? 0
+
+  const citySet = new Set(
+    (data?.mapPoints ?? []).map((p) => p.city).filter(Boolean),
+  )
+  const countryCount = data?.countries.length ?? 0
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-950">
+        <p className="text-neutral-400">로딩 중...</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-neutral-950 p-6 text-white">
+      <h1 className="mb-6 text-2xl font-bold text-white">방문자 현황</h1>
+
+      {/* 상단 통계 카드 */}
+      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <StatCard
+          icon={<FiUsers className="h-5 w-5" />}
+          label="총 방문자"
+          value={data?.total ?? 0}
+          color="text-blue-400"
+        />
+        <StatCard
+          icon={<FiCalendar className="h-5 w-5" />}
+          label="오늘"
+          value={todayCount}
+          color="text-green-400"
+        />
+        <StatCard
+          icon={<FiGlobe className="h-5 w-5" />}
+          label="국가 수"
+          value={countryCount}
+          color="text-purple-400"
+        />
+        <StatCard
+          icon={<FiMapPin className="h-5 w-5" />}
+          label="도시 수"
+          value={citySet.size}
+          color="text-orange-400"
+        />
+      </div>
+
+      {/* 세계 지도 */}
+      <div className="mb-6 rounded-xl border border-neutral-800 p-4">
+        <h2 className="mb-3 text-sm font-semibold text-neutral-400">방문자 위치</h2>
+        <VisitorMap mapPoints={data?.mapPoints ?? []} />
+      </div>
+
+      {/* 하단: 국가별 순위 + 최근 방문자 */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* 국가별 순위 */}
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-neutral-400">국가별 방문자</h2>
+          {(data?.countries.length ?? 0) === 0 ? (
+            <p className="text-sm text-neutral-500">데이터 없음</p>
+          ) : (
+            <ul className="space-y-2">
+              {data?.countries.map((c) => (
+                <li key={c.country_code} className="flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-sm">
+                    <span className="text-base">{countryFlag(c.country_code)}</span>
+                    <span className="text-neutral-200">{c.country}</span>
+                  </span>
+                  <span className="text-sm font-semibold text-neutral-300">{c.count.toLocaleString()}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* 최근 방문자 */}
+        <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+          <h2 className="mb-3 text-sm font-semibold text-neutral-400">최근 방문자</h2>
+          {(data?.recentVisitors.length ?? 0) === 0 ? (
+            <p className="text-sm text-neutral-500">데이터 없음</p>
+          ) : (
+            <ul className="space-y-2">
+              {data?.recentVisitors.map((v) => (
+                <li key={v.session_id} className="flex items-center justify-between">
+                  <span className="text-sm text-neutral-200">
+                    {[v.city, v.country].filter(Boolean).join(' · ') || '알 수 없음'}
+                  </span>
+                  <span className="text-xs text-neutral-500">{relativeTime(v.visited_at)}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+interface StatCardProps {
+  icon: React.ReactNode
+  label: string
+  value: number
+  color: string
+}
+
+function StatCard({ icon, label, value, color }: StatCardProps) {
+  return (
+    <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-neutral-400">{label}</p>
+        <span className={color}>{icon}</span>
+      </div>
+      <p className="mt-1 text-2xl font-bold text-white">{value.toLocaleString()}</p>
+    </div>
+  )
+}

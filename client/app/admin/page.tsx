@@ -320,6 +320,16 @@ export default function AdminDashboardPage() {
               </div>
               <FiArrowRight className="w-5 h-5 text-gray-400 group-hover:text-yellow-500 transition" />
             </Link>
+            <Link
+              href="/admin/visitors"
+              className="card rounded-xl p-5 flex items-center justify-between hover:ring-2 hover:ring-pink-400 transition group"
+            >
+              <div className="flex items-center gap-3">
+                <FiUsers className="w-6 h-6 text-pink-500" />
+                <span className="font-medium text-gray-900 dark:text-white">방문자 현황</span>
+              </div>
+              <FiArrowRight className="w-5 h-5 text-gray-400 group-hover:text-pink-500 transition" />
+            </Link>
           </div>
         </section>
 
