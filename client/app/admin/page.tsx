@@ -16,6 +16,12 @@ import {
 } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 
+interface GameStats {
+  tetrisBestScore: number
+  surviveBestWave: number
+  towerBestWave: number
+}
+
 interface SiteStats {
   totalPosts: number
   totalProjects: number
@@ -23,6 +29,8 @@ interface SiteStats {
   pendingContacts: number
   postsThisWeek: number
   totalVisitors: number
+  totalRestaurants: number
+  gameStats: GameStats
 }
 
 interface StatCardProps {
@@ -190,7 +198,7 @@ export default function AdminDashboardPage() {
               {error}
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
               <StatCard
                 label={t.adminDashboard.statPosts}
                 value={stats?.totalPosts ?? 0}
@@ -227,6 +235,12 @@ export default function AdminDashboardPage() {
                 icon={<FiUsers className="w-8 h-8" />}
                 color="text-pink-500"
               />
+              <StatCard
+                label="맛집 등록수"
+                value={stats?.totalRestaurants ?? 0}
+                icon={<span className="text-3xl leading-none">🍽️</span>}
+                color="text-orange-400"
+              />
             </div>
           )}
         </section>
@@ -245,6 +259,33 @@ export default function AdminDashboardPage() {
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 {t.adminDashboard.aiUsageNote} (오늘: {aiStats?.requestsToday ?? '–'})
               </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Game Stats */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            게임 전적
+          </h2>
+          <div className="card rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-3xl">🎮</span>
+              <span className="font-semibold text-gray-900 dark:text-white text-lg">게임 전적</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">테트리스 최고점</p>
+                <p className="text-2xl font-bold text-blue-500">{stats?.gameStats?.tetrisBestScore ?? 0}</p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">서바이브 최고 레벨</p>
+                <p className="text-2xl font-bold text-green-500">{stats?.gameStats?.surviveBestWave ?? 0}</p>
+              </div>
+              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">타워 디펜스 최고 웨이브</p>
+                <p className="text-2xl font-bold text-purple-500">{stats?.gameStats?.towerBestWave ?? 0}</p>
+              </div>
             </div>
           </div>
         </section>
