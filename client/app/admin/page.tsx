@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   FiFileText,
@@ -59,6 +59,51 @@ interface TopPost {
   title: string
   views: number
   likes: number
+  newsletter_sent?: boolean
+}
+
+function NewsletterSendButton({ postId, sent }: { postId: number; sent: boolean }) {
+  const [loading, setLoading] = React.useState(false)
+  const [done, setDone] = React.useState(sent)
+
+  const handleSend = async () => {
+    if (!confirm('이 글의 뉴스레터를 구독자에게 발송하시겠습니까?')) return
+    setLoading(true)
+    try {
+      const res = await fetch('/api/admin/newsletter/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId }),
+        credentials: 'include',
+      })
+      const data = await res.json()
+      if (data.success) {
+        setDone(true)
+        alert(`발송 완료: ${data.sent}명`)
+      } else {
+        alert('발송 실패: ' + (data.error ?? ''))
+      }
+    } catch {
+      alert('발송 중 오류가 발생했습니다.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (done) {
+    return <span className="text-xs text-green-500 font-mono">발송됨</span>
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleSend}
+      disabled={loading}
+      className="text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors disabled:opacity-50"
+    >
+      {loading ? '발송중...' : '뉴스레터 발송'}
+    </button>
+  )
 }
 
 export default function AdminDashboardPage() {
@@ -331,10 +376,36 @@ export default function AdminDashboardPage() {
                       <FiFileText className="h-3.5 w-3.5" />
                       {post.views.toLocaleString()}
                     </span>
+                    <NewsletterSendButton postId={post.id} sent={post.newsletter_sent ?? false} />
                   </li>
                 ))}
               </ol>
             )}
+          </div>
+        </section>
+
+        {/* Newsletter Section */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            뉴스레터
+          </h2>
+          <div className="card rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                최근 24시간 내 발행된 글을 구독자에게 자동 발송합니다.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                const res = await fetch('/api/cron/newsletter')
+                const data = await res.json()
+                alert(data.message ?? JSON.stringify(data))
+              }}
+              className="flex-shrink-0 bg-cyan-700 hover:bg-cyan-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+            >
+              지금 발송 실행
+            </button>
           </div>
         </section>
 

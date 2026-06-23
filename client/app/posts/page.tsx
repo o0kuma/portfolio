@@ -342,6 +342,12 @@ export default function PostsPage() {
               {category.name}
             </button>
           ))}
+          <Link
+            href="/posts/series"
+            className="text-xs font-mono px-3 py-1.5 rounded-lg border border-neutral-700 text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            📚 시리즈
+          </Link>
         </div>
 
         {searchQuery && (

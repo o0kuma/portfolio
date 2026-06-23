@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
@@ -232,6 +232,54 @@ function SkillCard({ cat, locale, index }: CardProps) {
   )
 }
 
+const skillBars = [
+  { name: 'React / Next.js', level: 90, color: 'bg-blue-500' },
+  { name: 'TypeScript', level: 85, color: 'bg-blue-400' },
+  { name: 'TailwindCSS', level: 88, color: 'bg-cyan-500' },
+  { name: 'Node.js', level: 70, color: 'bg-green-500' },
+  { name: 'PostgreSQL', level: 65, color: 'bg-green-400' },
+  { name: 'Git / GitHub', level: 85, color: 'bg-purple-500' },
+]
+
+function SkillBarItem({ skill, index }: { skill: typeof skillBars[number]; index: number }) {
+  const barRef = useRef<HTMLDivElement>(null)
+  const [animated, setAnimated] = useState(false)
+
+  useEffect(() => {
+    const el = barRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setAnimated(true)
+            observer.unobserve(el)
+          }
+        })
+      },
+      { threshold: 0.2 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
+  return (
+    <div ref={barRef} className="flex items-center gap-4">
+      <span className="w-36 shrink-0 text-sm text-neutral-300 font-mono">{skill.name}</span>
+      <div className="flex-1 h-2 rounded-full bg-neutral-800 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${skill.color} transition-all duration-700`}
+          style={{
+            width: animated ? `${skill.level}%` : '0%',
+            transitionDelay: `${index * 80}ms`,
+          }}
+        />
+      </div>
+      <span className="w-10 text-right text-xs font-mono text-neutral-500 shrink-0">{skill.level}%</span>
+    </div>
+  )
+}
+
 export default function Skills() {
   const { t, locale } = useLanguage()
 
@@ -292,6 +340,24 @@ export default function Skills() {
           </p>
           <div className="flex justify-center">
             <SkillRadar />
+          </div>
+        </motion.div>
+
+        {/* Skill progress bars */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={portfolioViewport}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mt-16 pt-12 border-t border-neutral-800"
+        >
+          <p className="text-xs font-mono text-neutral-600 tracking-[0.2em] uppercase mb-8 text-center">
+            — Core Proficiency
+          </p>
+          <div className="max-w-xl mx-auto space-y-5">
+            {skillBars.map((skill, i) => (
+              <SkillBarItem key={skill.name} skill={skill} index={i} />
+            ))}
           </div>
         </motion.div>
 

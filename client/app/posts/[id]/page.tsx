@@ -16,6 +16,7 @@ import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
 import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
+import { FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -78,6 +79,9 @@ export default function PostDetailPage() {
   const [showEditForm, setShowEditForm] = useState(false)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [seriesPosts, setSeriesPosts] = useState<RelatedPost[]>([])
+  const [summaryOpen, setSummaryOpen] = useState(false)
+  const [summaryLoading, setSummaryLoading] = useState(false)
+  const [summary, setSummary] = useState<string | null>(null)
 
   const fetchPost = async () => {
     try {
@@ -278,6 +282,25 @@ export default function PostDetailPage() {
     )
   }
 
+  const handleToggleSummary = async () => {
+    if (summaryOpen) {
+      setSummaryOpen(false)
+      return
+    }
+    setSummaryOpen(true)
+    if (summary !== null) return
+    setSummaryLoading(true)
+    try {
+      const res = await fetch(`/api/posts/${postId}/summary`)
+      const data = await res.json() as { summary?: string; message?: string }
+      setSummary(data.summary ?? data.message ?? '요약을 불러올 수 없습니다.')
+    } catch {
+      setSummary('요약을 불러오는 중 오류가 발생했습니다.')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }
+
   const readingTime = calcReadingTime(post.content)
   const tocItems = parseHeadings(post.content)
 
@@ -382,6 +405,35 @@ export default function PostDetailPage() {
                     {tag}
                   </Link>
                 ))}
+              </div>
+
+              {/* AI Summary Panel */}
+              <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/5 overflow-hidden">
+                <button
+                  onClick={handleToggleSummary}
+                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-mono text-amber-400 hover:text-amber-300 transition-colors"
+                >
+                  <span className="flex items-center gap-2">
+                    <FiZap size={14} />
+                    ✨ AI 요약 보기
+                  </span>
+                  {summaryOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
+                </button>
+                {summaryOpen && (
+                  <div className="px-4 pb-4">
+                    {summaryLoading ? (
+                      <div className="flex items-center gap-2 text-amber-500/60 text-sm font-mono py-2">
+                        <div className="w-4 h-4 border-2 border-amber-500/40 border-t-amber-400 rounded-full animate-spin" />
+                        요약 생성 중...
+                      </div>
+                    ) : (
+                      <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">{summary}</p>
+                    )}
+                    <div className="flex justify-end mt-2">
+                      <span className="text-[10px] text-amber-600/50 font-mono">powered by Claude</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="text-neutral-300 leading-relaxed prose prose-invert prose-neutral max-w-none">
