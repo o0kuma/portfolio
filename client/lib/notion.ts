@@ -72,21 +72,47 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
 
   return res.results.map((page: any) => {
     const props = page.properties
+    const entries = Object.entries(props) as [string, any][]
 
-    // find title property
-    const titleProp = Object.values(props).find((p: any) => p.type === 'title') as any
+    // title — always one per database
+    const titleProp = entries.find(([, p]) => p.type === 'title')?.[1]
     const name = titleProp?.title?.map((t: any) => t.plain_text).join('') ?? ''
 
-    const category = getSelect(props['카테고리'] ?? props['Category'])
-    const location = getSelect(props['위치'] ?? props['Location'])
-    const menu = getRichText(props['추천 메뉴'] ?? props['Menu'] ?? props['추천메뉴'])
-    const address = getRichText(props['주소'] ?? props['Address'])
+    // checkbox — 방문/visited/checked
+    const checkboxKeys = ['방문', '방문여부', 'visited', 'Visited', '체크', 'checked', 'Done']
+    const checkboxProp =
+      entries.find(([k, p]) => p.type === 'checkbox' && checkboxKeys.includes(k))?.[1]
+      ?? entries.find(([, p]) => p.type === 'checkbox')?.[1]
+    const checked = checkboxProp?.checkbox ?? false
+
+    // select — 카테고리
+    const categoryKeys = ['카테고리', 'Category', '종류', 'type', 'Type']
+    const categoryProp =
+      entries.find(([k, p]) => (p.type === 'select' || p.type === 'multi_select') && categoryKeys.includes(k))?.[1]
+      ?? entries.find(([, p]) => p.type === 'select' || p.type === 'multi_select')?.[1]
+    const category = getSelect(categoryProp)
+
+    // rich_text — 주소
+    const addressKeys = ['주소', 'Address', '위치', 'Location']
+    const addressProp = entries.find(([k, p]) => p.type === 'rich_text' && addressKeys.includes(k))?.[1]
+    const address = getRichText(addressProp)
+
+    // rich_text — 추천 메뉴 (주소 외 나머지 rich_text)
+    const menuKeys = ['추천 메뉴', '추천메뉴', 'Menu', '메뉴', '특이사항', '메모', 'Note']
+    const menuProp = entries.find(([k, p]) => p.type === 'rich_text' && menuKeys.includes(k))?.[1]
+      ?? entries.find(([k, p]) => p.type === 'rich_text' && !addressKeys.includes(k))?.[1]
+    const menu = getRichText(menuProp)
+
+    // location (select that isn't category)
+    const locationKeys = ['위치', 'Location', '지역', 'Area']
+    const locationProp = entries.find(([k, p]) => (p.type === 'select') && locationKeys.includes(k))?.[1]
+    const location = getSelect(locationProp)
 
     return {
       id: page.id,
       name: name.trim(),
       emoji: extractEmoji(name),
-      checked: false,
+      checked,
       category,
       location,
       menu,
