@@ -23,6 +23,7 @@ export type RestaurantItem = {
   address?: string
   menu?: string
   imageUrl?: string
+  imageUrls?: string[]
 }
 
 export async function getRestaurantRegions(): Promise<RestaurantPage[]> {
@@ -117,6 +118,15 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
       filesProp?.files?.[0]?.external?.url ?? filesProp?.files?.[0]?.file?.url
     const imageUrl: string | undefined = coverUrl ?? filesUrl
 
+    // collect all images for carousel
+    const allImages: string[] = []
+    if (coverUrl) allImages.push(coverUrl)
+    for (const f of filesProp?.files ?? []) {
+      const url: string | undefined = f.external?.url ?? f.file?.url
+      if (url) allImages.push(url)
+    }
+    const imageUrls: string[] = Array.from(new Set(allImages))
+
     return {
       id: page.id,
       name: name.trim(),
@@ -127,6 +137,7 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
       menu,
       address,
       ...(imageUrl ? { imageUrl } : {}),
+      imageUrls,
     }
   })
 }
