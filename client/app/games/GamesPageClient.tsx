@@ -66,7 +66,15 @@ export default function GamesPageClient() {
 
       <main className="mx-auto max-w-5xl px-4 pt-10">
         <div className="mb-10">
-          <h1 className="mb-2 font-display text-4xl font-bold">{t.games.heading}</h1>
+          <div className="mb-2 flex items-center justify-between gap-4">
+            <h1 className="font-display text-4xl font-bold">{t.games.heading}</h1>
+            <Link
+              href="/games/stats"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
+            >
+              전적 보기
+            </Link>
+          </div>
           <p className="text-slate-400">{t.games.subtitle}</p>
         </div>
 
