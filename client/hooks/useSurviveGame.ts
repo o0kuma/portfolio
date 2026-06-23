@@ -82,14 +82,22 @@ export function useSurviveGame() {
       if (e.status === 'levelup' && choicesEmptyRef.current) {
         const rolled = rollUpgrades(e, e.takenUpgrades, 3)
         choicesEmptyRef.current = false
-        setChoices(rolled)
+        if (rolled.length === 0) {
+          e.status = 'playing'
+        } else {
+          setChoices(rolled)
+        }
         syncHud()
       }
 
       if (e.status === 'bossupgrade' && bossChoicesEmptyRef.current) {
         const rolled = rollUpgrades(e, e.takenUpgrades, 3)
         bossChoicesEmptyRef.current = false
-        setBossChoices(rolled)
+        if (rolled.length === 0) {
+          e.status = 'playing'
+        } else {
+          setBossChoices(rolled)
+        }
         syncHud()
       }
 
