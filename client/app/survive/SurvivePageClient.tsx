@@ -6,6 +6,7 @@ import SurviveCanvas from '@/components/survive/SurviveCanvas'
 import SurviveHud from '@/components/survive/SurviveHud'
 import SurviveJoystick from '@/components/survive/SurviveJoystick'
 import SurviveLevelUp from '@/components/survive/SurviveLevelUp'
+import SurviveBossUpgrade from '@/components/survive/SurviveBossUpgrade'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import { useSurviveGame } from '@/hooks/useSurviveGame'
 import { formatTime } from '@/lib/survive/storage'
@@ -13,7 +14,7 @@ import { toast } from '@/lib/toast'
 import { useCallback, useState } from 'react'
 
 export default function SurvivePageClient() {
-  const { engineRef, hud, choices, actions } = useSurviveGame()
+  const { engineRef, hud, choices, bossChoices, actions } = useSurviveGame()
   const status = hud.status
   const [lbRefreshKey, setLbRefreshKey] = useState(0)
   const handleSurviveShare = useCallback(async () => {
@@ -61,7 +62,7 @@ export default function SurvivePageClient() {
         >
           <SurviveCanvas engineRef={engineRef} status={status} />
 
-          {(status === 'playing' || status === 'paused' || status === 'levelup') && (
+          {(status === 'playing' || status === 'paused' || status === 'levelup' || status === 'bossupgrade') && (
             <SurviveHud hud={hud} />
           )}
 
@@ -69,6 +70,10 @@ export default function SurvivePageClient() {
 
           {status === 'levelup' && (
             <SurviveLevelUp choices={choices} onChoose={actions.chooseUpgrade} />
+          )}
+
+          {status === 'bossupgrade' && (
+            <SurviveBossUpgrade choices={bossChoices} onChoose={actions.chooseBossUpgrade} />
           )}
 
           {/* Boss announcement overlay */}

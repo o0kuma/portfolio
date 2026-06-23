@@ -67,7 +67,7 @@ export interface WeaponStats {
   blastLevel: number
 }
 
-export type GameStatus = 'ready' | 'playing' | 'paused' | 'levelup' | 'gameover'
+export type GameStatus = 'ready' | 'playing' | 'paused' | 'levelup' | 'bossupgrade' | 'gameover'
 
 /** Lightweight snapshot pushed to React for the HUD. */
 export interface SurviveHudSnapshot {

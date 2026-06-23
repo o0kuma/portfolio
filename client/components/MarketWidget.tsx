@@ -13,6 +13,9 @@ const TICKERS = [
   { id: 'usdkrw',  label: 'USD/KRW',   symbol: 'FX_IDC:USDKRW',   type: 'fx' },
   { id: 'kospi',   label: 'KOSPI',     symbol: 'KRX:KOSPI',        type: 'index' },
   { id: 'samsung', label: '삼성전자',  symbol: 'KRX:005930',       type: 'stock' },
+  { id: 'qqq',     label: '나스닥100', symbol: 'NASDAQ:QQQ',       type: 'index' },
+  { id: 'spx',     label: 'S&P500',    symbol: 'SP:SPX',           type: 'index' },
+  { id: 'ixic',    label: 'NASDAQ',    symbol: 'NASDAQ:IXIC',      type: 'index' },
 ]
 
 type DateRange = '1D' | '1W' | '1M' | '3M'

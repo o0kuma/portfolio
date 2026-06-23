@@ -147,7 +147,7 @@ export class SurviveEngine implements Upgradable {
   applyUpgrade(u: Upgrade): void {
     u.apply(this)
     this.taken[u.id] = (this.taken[u.id] ?? 0) + 1
-    if (this.status === 'levelup') this.status = 'playing'
+    if (this.status === 'levelup' || this.status === 'bossupgrade') this.status = 'playing'
   }
 
   /** Advance the simulation by dtMs (clamped to avoid tunnelling on tab refocus). */
@@ -432,6 +432,8 @@ export class SurviveEngine implements Upgradable {
         })
       }
       this.floats.push({ x: e.x, y: e.y - 30, text: '👑 BOSS DOWN', lifeMs: 2000, color: '#fbbf24' })
+      // Trigger special boss upgrade selection.
+      this.status = 'bossupgrade'
     } else {
       const value = e.kind === 'tank' ? 5 : e.kind === 'fast' ? 2 : 1
       this.gems.push({ x: e.x, y: e.y, value })
