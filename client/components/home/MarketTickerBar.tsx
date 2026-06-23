@@ -99,7 +99,7 @@ export default function MarketTickerBar() {
                 return (
                   <span
                     key={idx}
-                    className="inline-flex items-center gap-2 px-6 text-sm"
+                    className="inline-flex items-center gap-2 px-5 text-xs"
                   >
                     <span className="text-white/70 font-medium">
                       {item.symbol}
