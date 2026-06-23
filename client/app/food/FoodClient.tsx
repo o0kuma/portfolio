@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
 
@@ -102,12 +103,24 @@ function RestaurantCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.025 }}
       onClick={() => onSelect(item)}
-      className={`group rounded-xl border transition-all duration-200 p-4 cursor-pointer ${
+      className={`group rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden ${
         selected
           ? 'border-emerald-500/50 bg-emerald-950/30 ring-1 ring-emerald-500/20'
           : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80'
       }`}
     >
+      {item.imageUrl && (
+        <div className="relative h-32 w-full">
+          <Image
+            src={item.imageUrl}
+            alt={item.name}
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        </div>
+      )}
+      <div className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="font-semibold text-neutral-100 text-sm leading-snug">{item.name}</h3>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -138,6 +151,7 @@ function RestaurantCard({
           📍 {item.address}
         </p>
       )}
+      </div>
     </motion.div>
   )
 }

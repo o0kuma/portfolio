@@ -22,6 +22,7 @@ export type RestaurantItem = {
   location?: string
   address?: string
   menu?: string
+  imageUrl?: string
 }
 
 export async function getRestaurantRegions(): Promise<RestaurantPage[]> {
@@ -108,6 +109,14 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
     const locationProp = entries.find(([k, p]) => (p.type === 'select') && locationKeys.includes(k))?.[1]
     const location = getSelect(locationProp)
 
+    // image — cover image or Files & media property
+    const coverUrl: string | undefined =
+      page.cover?.external?.url ?? page.cover?.file?.url
+    const filesProp = entries.find(([, p]) => p.type === 'files')?.[1]
+    const filesUrl: string | undefined =
+      filesProp?.files?.[0]?.external?.url ?? filesProp?.files?.[0]?.file?.url
+    const imageUrl: string | undefined = coverUrl ?? filesUrl
+
     return {
       id: page.id,
       name: name.trim(),
@@ -117,6 +126,7 @@ async function getItemsFromDatabase(databaseId: string): Promise<RestaurantItem[
       location,
       menu,
       address,
+      ...(imageUrl ? { imageUrl } : {}),
     }
   })
 }
