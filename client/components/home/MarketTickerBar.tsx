@@ -22,12 +22,10 @@ export default function MarketTickerBar() {
     script.textContent = JSON.stringify({
       symbols: [
         { proName: 'BITSTAMP:BTCUSD', title: 'BTC' },
+        { proName: 'BITSTAMP:ETHUSD', title: 'ETH' },
         { proName: 'BITSTAMP:XRPUSD', title: 'XRP' },
-        { description: 'USD/KRW', proName: 'FX_IDC:USDKRW' },
-        { description: '삼성전자', proName: 'KRX:005930' },
-        { description: 'US 10Y', proName: 'TVC:US10Y' },
-        { description: 'KR 10Y', proName: 'TVC:KR10Y' },
         { description: 'GOLD', proName: 'TVC:GOLD' },
+        { description: 'USD/KRW', proName: 'FX_IDC:USDKRW' },
       ],
       colorTheme: 'dark',
       isTransparent: true,
