@@ -18,6 +18,8 @@ const CATEGORY_COLOR: Record<string, string> = {
   '샐러드': 'text-emerald-400 border-emerald-400/30 bg-emerald-400/5',
 }
 
+const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
+
 function CategoryBadge({ category }: { category: string }) {
   const cls = CATEGORY_COLOR[category] ?? 'text-neutral-400 border-neutral-700 bg-neutral-800/50'
   return (
@@ -27,9 +29,9 @@ function CategoryBadge({ category }: { category: string }) {
   )
 }
 
-function MapPinIcon() {
+function MapPinIcon({ size = 13 }: { size?: number }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
       <circle cx="12" cy="10" r="3" />
     </svg>
@@ -46,17 +48,65 @@ function ExternalLinkIcon() {
   )
 }
 
-function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }) {
-  const mapUrl = item.address
-    ? `https://map.naver.com/v5/search/${encodeURIComponent(item.name + ' ' + item.address)}`
-    : `https://map.naver.com/v5/search/${encodeURIComponent(item.name)}`
+function XIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  )
+}
 
+function GoogleMapEmbed({ item }: { item: RestaurantItem }) {
+  const query = item.address
+    ? `${item.name} ${item.address}`
+    : item.name
+
+  if (!MAPS_KEY) {
+    return (
+      <div className="flex items-center justify-center h-full text-neutral-600 font-mono text-xs">
+        NEXT_PUBLIC_GOOGLE_MAPS_KEY 미설정
+      </div>
+    )
+  }
+
+  const src = `https://www.google.com/maps/embed/v1/search?key=${MAPS_KEY}&q=${encodeURIComponent(query)}&language=ko`
+
+  return (
+    <iframe
+      src={src}
+      width="100%"
+      height="100%"
+      style={{ border: 0 }}
+      allowFullScreen
+      loading="lazy"
+      referrerPolicy="no-referrer-when-downgrade"
+      className="rounded-xl"
+    />
+  )
+}
+
+function RestaurantCard({
+  item,
+  index,
+  selected,
+  onSelect,
+}: {
+  item: RestaurantItem
+  index: number
+  selected: boolean
+  onSelect: (item: RestaurantItem) => void
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.025 }}
-      className="group rounded-xl border border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80 transition-all duration-200 p-4"
+      onClick={() => onSelect(item)}
+      className={`group rounded-xl border transition-all duration-200 p-4 cursor-pointer ${
+        selected
+          ? 'border-emerald-500/50 bg-emerald-950/30 ring-1 ring-emerald-500/20'
+          : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80'
+      }`}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="font-semibold text-neutral-100 text-sm leading-snug">{item.name}</h3>
@@ -67,16 +117,13 @@ function RestaurantCard({ item, index }: { item: RestaurantItem; index: number }
             </span>
           )}
           {item.category && <CategoryBadge category={item.category} />}
-          <a
-            href={mapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="네이버 지도에서 보기"
-            className="flex items-center justify-center text-neutral-600 hover:text-emerald-400 transition-colors duration-150 p-0.5"
-            onClick={(e) => e.stopPropagation()}
+          <span
+            className={`flex items-center justify-center transition-colors duration-150 p-0.5 ${
+              selected ? 'text-emerald-400' : 'text-neutral-600 group-hover:text-emerald-400'
+            }`}
           >
             <MapPinIcon />
-          </a>
+          </span>
         </div>
       </div>
 
@@ -108,6 +155,7 @@ export default function FoodClient({
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [visitedOnly, setVisitedOnly] = useState(false)
+  const [selectedItem, setSelectedItem] = useState<RestaurantItem | null>(null)
 
   const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
 
@@ -134,10 +182,21 @@ export default function FoodClient({
     setSearch('')
     setActiveCategory(null)
     setVisitedOnly(false)
+    setSelectedItem(null)
   }
 
+  function handleSelectItem(item: RestaurantItem) {
+    setSelectedItem((prev) => (prev?.id === item.id ? null : item))
+  }
+
+  const googleMapsUrl = selectedItem
+    ? `https://www.google.com/maps/search/${encodeURIComponent(
+        selectedItem.address ? `${selectedItem.name} ${selectedItem.address}` : selectedItem.name
+      )}`
+    : ''
+
   const regionMapUrl = current
-    ? `https://map.naver.com/v5/search/${encodeURIComponent(current.title)}`
+    ? `https://www.google.com/maps/search/${encodeURIComponent(current.title + ' 맛집')}`
     : ''
 
   return (
@@ -238,6 +297,52 @@ export default function FoodClient({
                       </div>
                     </div>
 
+                    {/* Google Map embed panel */}
+                    <AnimatePresence>
+                      {selectedItem && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 360 }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3, ease: 'easeInOut' }}
+                          className="mb-5 overflow-hidden rounded-xl border border-emerald-500/30 bg-neutral-900"
+                        >
+                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">
+                            <div className="flex items-center gap-2 text-sm text-neutral-300">
+                              <MapPinIcon size={14} />
+                              <span className="font-semibold">{selectedItem.name}</span>
+                              {selectedItem.address && (
+                                <span className="text-neutral-600 text-xs truncate max-w-[200px]">
+                                  {selectedItem.address}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={googleMapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors"
+                              >
+                                구글맵에서 열기
+                                <ExternalLinkIcon />
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedItem(null)}
+                                className="text-neutral-600 hover:text-neutral-300 transition-colors p-0.5"
+                              >
+                                <XIcon />
+                              </button>
+                            </div>
+                          </div>
+                          <div className="h-[312px]">
+                            <GoogleMapEmbed item={selectedItem} />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                     {/* Search input */}
                     <div className="mb-4">
                       <input
@@ -306,7 +411,13 @@ export default function FoodClient({
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                         {filteredItems.map((item, i) => (
-                          <RestaurantCard key={item.id} item={item} index={i} />
+                          <RestaurantCard
+                            key={item.id}
+                            item={item}
+                            index={i}
+                            selected={selectedItem?.id === item.id}
+                            onSelect={handleSelectItem}
+                          />
                         ))}
                       </div>
                     )}
