@@ -126,7 +126,7 @@ export default function MarketWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.97 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed bottom-[5.5rem] right-[4.5rem] z-50 w-[360px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl shadow-black/60 overflow-hidden"
+            className="fixed bottom-[5.5rem] right-[4.5rem] z-50 w-[calc(100vw-2rem)] md:w-[360px] rounded-2xl border border-neutral-800 bg-neutral-950 shadow-2xl shadow-black/60 overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
