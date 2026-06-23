@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
@@ -86,6 +87,52 @@ function GoogleMapEmbed({ item }: { item: RestaurantItem }) {
   )
 }
 
+function ImageCarousel({ images, name }: { images: string[]; name: string }) {
+  const [idx, setIdx] = useState(0)
+  if (images.length === 0) return null
+  if (images.length === 1) {
+    return (
+      <div className="relative h-32 w-full">
+        <Image src={images[0]} alt={name} fill unoptimized className="object-cover" />
+      </div>
+    )
+  }
+  return (
+    <div className="relative h-32 w-full overflow-hidden group/carousel">
+      <Image src={images[idx]} alt={`${name} ${idx + 1}`} fill unoptimized className="object-cover" />
+      {/* Arrow buttons */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setIdx((i) => (i - 1 + images.length) % images.length) }}
+        className="absolute left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/carousel:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+        aria-label="이전"
+      >
+        ←
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setIdx((i) => (i + 1) % images.length) }}
+        className="absolute right-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/carousel:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+        aria-label="다음"
+      >
+        →
+      </button>
+      {/* Dots */}
+      <div className="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1 z-10">
+        {images.map((_, i) => (
+          <button
+            key={i}
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setIdx(i) }}
+            className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? 'bg-white' : 'bg-white/40'}`}
+            aria-label={`이미지 ${i + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function RestaurantCard({
   item,
   index,
@@ -109,16 +156,8 @@ function RestaurantCard({
           : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80'
       }`}
     >
-      {item.imageUrl && (
-        <div className="relative h-32 w-full">
-          <Image
-            src={item.imageUrl}
-            alt={item.name}
-            fill
-            unoptimized
-            className="object-cover"
-          />
-        </div>
+      {(item.imageUrls && item.imageUrls.length > 0) && (
+        <ImageCarousel images={item.imageUrls} name={item.name} />
       )}
       <div className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">

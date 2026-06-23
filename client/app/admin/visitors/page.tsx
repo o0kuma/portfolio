@@ -56,13 +56,24 @@ function relativeTime(dateStr: string | null): string {
   return `${days}일 전`
 }
 
+type Period = 'today' | 'week' | 'month' | 'all'
+
+const periodLabels: { value: Period; label: string }[] = [
+  { value: 'today', label: '오늘' },
+  { value: 'week', label: '이번주' },
+  { value: 'month', label: '이번달' },
+  { value: 'all', label: '전체' },
+]
+
 export default function AdminVisitorsPage() {
   const router = useRouter()
   const [data, setData] = useState<VisitorData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState<Period>('all')
 
   useEffect(() => {
-    fetch('/api/admin/visitors')
+    setLoading(true)
+    fetch(`/api/admin/visitors?period=${period}`)
       .then((res) => {
         if (res.status === 401) {
           router.push('/admin/login')
@@ -75,7 +86,7 @@ export default function AdminVisitorsPage() {
       })
       .catch(console.error)
       .finally(() => setLoading(false))
-  }, [router])
+  }, [router, period])
 
   // Derive today count and city count from data
   const todayCount = data?.recentVisitors.filter((v) => {
@@ -104,7 +115,25 @@ export default function AdminVisitorsPage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 p-6 text-white">
-      <h1 className="mb-6 text-2xl font-bold text-white">방문자 현황</h1>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-white">방문자 현황</h1>
+        {/* Period filter tabs */}
+        <div className="flex gap-1 rounded-lg bg-neutral-900 p-1">
+          {periodLabels.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setPeriod(value)}
+              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+                period === value
+                  ? 'bg-neutral-800 text-white'
+                  : 'text-neutral-400 hover:text-neutral-200'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* 상단 통계 카드 */}
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">

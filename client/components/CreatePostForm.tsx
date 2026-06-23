@@ -373,6 +373,40 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
                   {t.createPostForm.featured}
                 </label>
               </div>
+
+              {/* OG Preview */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  공유 미리보기 (OG Card)
+                </label>
+                <div className="w-full max-w-[600px] rounded-xl border-2 border-gray-200 dark:border-neutral-700 overflow-hidden bg-white dark:bg-neutral-900 shadow-sm">
+                  {/* OG Image placeholder */}
+                  <div className="w-full h-[160px] bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-neutral-800 dark:to-neutral-900 flex items-center justify-center px-6">
+                    {formData.title ? (
+                      <p className="text-white text-lg font-bold text-center leading-snug line-clamp-3">
+                        {formData.title}
+                      </p>
+                    ) : (
+                      <p className="text-white/40 text-sm font-mono">제목을 입력하면 미리보기가 표시됩니다</p>
+                    )}
+                  </div>
+                  {/* OG meta */}
+                  <div className="px-4 py-3 border-t border-gray-100 dark:border-neutral-800">
+                    <p className="text-xs text-gray-500 dark:text-neutral-500 uppercase tracking-wide font-mono mb-1">kuuuma.com</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-neutral-100 line-clamp-1">
+                      {formData.title || '제목 없음'}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-neutral-500 line-clamp-2 mt-0.5">
+                      {formData.content
+                        ? formData.content.replace(/^#+\s*/gm, '').split('\n').find((l) => l.trim()) ?? '내용 없음'
+                        : '포스트 내용이 여기에 표시됩니다.'}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 dark:text-neutral-600 mt-1.5">
+                  소셜 공유 시 표시되는 카드 미리보기입니다.
+                </p>
+              </div>
             </div>
           </form>
 
