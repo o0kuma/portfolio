@@ -74,6 +74,12 @@ export default function GamesPageClient() {
             >
               전적 보기
             </Link>
+            <Link
+              href="/achievements"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition hover:border-amber-600 hover:text-amber-300"
+            >
+              🏆 업적
+            </Link>
           </div>
           <p className="text-slate-400">{t.games.subtitle}</p>
         </div>
@@ -105,6 +111,15 @@ export default function GamesPageClient() {
             color="bg-amber-900/60"
             description={t.games.towerDefenseDesc}
             tags={t.games.towerDefenseTags}
+            playLabel={t.games.play}
+          />
+          <GameCard
+            href="/typing-game"
+            title="타이핑 게임"
+            emoji="⌨️"
+            color="bg-green-900/60"
+            description="코드 스니펫을 타이핑하여 WPM과 정확도를 측정하세요"
+            tags={['타이핑', 'WPM', '코드']}
             playLabel={t.games.play}
           />
         </div>
