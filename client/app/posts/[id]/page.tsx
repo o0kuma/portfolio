@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useOptimistic } from 'react'
-import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiSend, FiClock } from 'react-icons/fi'
+import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiClock } from 'react-icons/fi'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import AdBanner from '@/components/AdBanner'
@@ -20,11 +20,6 @@ import BookmarkButton from '@/components/blog/BookmarkButton'
 const API_BASE_URL = getApiBaseUrl()
 
 type Post = PostDetail
-
-interface Comment {
-  author: string
-  content: string
-}
 
 interface TocItem {
   level: number
@@ -80,8 +75,6 @@ export default function PostDetailPage() {
     post?.likes ?? 0,
     (current: number) => current + 1,
   )
-  const [newComment, setNewComment] = useState<Comment>({ author: '', content: '' })
-  const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [showEditForm, setShowEditForm] = useState(false)
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([])
   const [seriesPosts, setSeriesPosts] = useState<RelatedPost[]>([])
@@ -192,39 +185,6 @@ export default function PostDetailPage() {
       console.error('Error liking post:', error)
     } finally {
       setIsLiking(false)
-    }
-  }
-
-  const handleSubmitComment = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!newComment.author.trim() || !newComment.content.trim()) {
-      toast.warning(t.postDetail.commentRequired)
-      return
-    }
-
-    try {
-      setIsSubmittingComment(true)
-      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/comments`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newComment)
-      })
-
-      if (response.ok) {
-        setNewComment({ author: '', content: '' })
-        fetchPost()
-      } else {
-        const data = await response.json()
-        toast.error(t.postDetail.commentFailed + data.message)
-      }
-    } catch (error) {
-      console.error('Error submitting comment:', error)
-      toast.error(t.postDetail.commentError)
-    } finally {
-      setIsSubmittingComment(false)
     }
   }
 
@@ -514,70 +474,6 @@ export default function PostDetailPage() {
 
             <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8">
               <CommentSection postId={postId} />
-
-              <div className="mt-12 pt-8 border-t border-neutral-800">
-              <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-6">
-                {interpolate(t.postDetail.comments, { n: post.comments.length })}
-              </h3>
-
-              <form onSubmit={handleSubmitComment} className="mb-8">
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <input
-                    type="text"
-                    placeholder={t.postDetail.commentAuthorPlaceholder}
-                    value={newComment.author}
-                    onChange={(e) => setNewComment({ ...newComment, author: e.target.value })}
-                    className="bg-neutral-900 border border-neutral-800 text-neutral-200 placeholder-neutral-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-neutral-600"
-                    required
-                  />
-                  <div className="flex">
-                    <textarea
-                      placeholder={t.postDetail.commentPlaceholder}
-                      value={newComment.content}
-                      onChange={(e) => setNewComment({ ...newComment, content: e.target.value })}
-                      className="bg-neutral-900 border border-neutral-800 text-neutral-200 placeholder-neutral-700 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:border-neutral-600 flex-1 mr-2"
-                      rows={3}
-                      required
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmittingComment}
-                      className="bg-neutral-800 border border-neutral-700 text-neutral-300 hover:bg-neutral-700 px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      <FiSend size={18} />
-                    </button>
-                  </div>
-                </div>
-              </form>
-
-              <div className="space-y-4">
-                {post.comments.length > 0 ? (
-                  post.comments.map((comment) => (
-                    <div
-                      key={comment._id}
-                      className="border-l-2 border-neutral-700 pl-4 py-2"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="font-mono text-sm text-neutral-300">
-                          {comment.author}
-                        </span>
-                        <span className="text-xs font-mono text-neutral-700">
-                          {formatDate(comment.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-neutral-400 text-sm">
-                        {comment.content}
-                      </p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-neutral-700 font-mono text-sm">
-                    <FiMessageSquare size={40} className="mx-auto mb-4 opacity-30" />
-                    <p>{t.postDetail.noComments}</p>
-                  </div>
-                )}
-              </div>
-              </div>
             </div>
           </div>
 
