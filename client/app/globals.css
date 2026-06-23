@@ -224,3 +224,25 @@ html:not(.dark) .portfolio-page .text-primary-600 { color: #c06a4d !important; }
 html:not(.dark) .portfolio-page .border-primary-500 { border-color: #c06a4d !important; }
 html:not(.dark) .portfolio-page .bg-primary-600 { background-color: #c06a4d !important; }
 html:not(.dark) .portfolio-page .bg-primary-600:hover { background-color: #a2543c !important; }
+
+[data-theme="terminal"] {
+  --theme-bg: #0a0f0a;
+  --theme-text: #4ade80;
+  --theme-accent: #22c55e;
+  --theme-surface: #0d1a0d;
+  --theme-border: #166534;
+}
+[data-theme="ocean"] {
+  --theme-bg: #020818;
+  --theme-text: #93c5fd;
+  --theme-accent: #3b82f6;
+  --theme-surface: #030d24;
+  --theme-border: #1e3a8a;
+}
+[data-theme="sunset"] {
+  --theme-bg: #0f0a08;
+  --theme-text: #fdba74;
+  --theme-accent: #f97316;
+  --theme-surface: #1c0f08;
+  --theme-border: #9a3412;
+}

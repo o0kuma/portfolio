@@ -16,6 +16,7 @@ import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
 import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
+import { savePostOffline, removeOfflinePost, isPostSavedOffline } from '@/lib/offlineStorage'
 import { FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi'
 
 const API_BASE_URL = getApiBaseUrl()
@@ -82,6 +83,7 @@ export default function PostDetailPage() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
+  const [isSaved, setIsSaved] = useState(false)
 
   const fetchPost = async () => {
     try {
@@ -139,6 +141,7 @@ export default function PostDetailPage() {
   useEffect(() => {
     if (postId) {
       fetchPost()
+      isPostSavedOffline(postId).then(setIsSaved)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId])
@@ -361,6 +364,29 @@ export default function PostDetailPage() {
               <div className="flex items-center gap-3 mb-4">
                 <PostShareBar title={post.title} />
                 <BookmarkButton postId={post._id} />
+                <button
+                  onClick={async () => {
+                    if (isSaved) {
+                      await removeOfflinePost(postId)
+                      setIsSaved(false)
+                      toast.success('삭제됨')
+                    } else {
+                      await savePostOffline({
+                        id: postId,
+                        title: post.title,
+                        content: post.content,
+                        author: post.author,
+                        createdAt: post.createdAt,
+                      })
+                      setIsSaved(true)
+                      toast.success('오프라인에서 읽을 수 있습니다')
+                    }
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 text-xs font-mono transition-colors"
+                  title="오프라인 저장"
+                >
+                  {isSaved ? '✓ 저장됨' : '📥 저장'}
+                </button>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-600 mb-6">

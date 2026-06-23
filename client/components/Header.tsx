@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
 import ThemeToggle from './ThemeToggle'
+import ThemePicker from './ThemePicker'
 import SearchBar from './SearchBar'
 import SearchModal from './SearchModal'
 import AdminPanel from './AdminPanel'
@@ -169,6 +170,7 @@ export default function Header() {
               </button>
 
               <ThemeToggle />
+              <ThemePicker />
 
               <button
                 type="button"

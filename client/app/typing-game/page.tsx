@@ -1,179 +1,168 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
+import { checkTypingAchievements } from '@/lib/achievements'
 import AchievementToast from '@/components/AchievementToast'
-import { checkAchievements, type Achievement } from '@/lib/achievements'
+import type { Achievement } from '@/lib/achievements'
 
-const SNIPPETS = [
-  { id: 1, text: `const add = (a, b) => a + b;` },
-  { id: 2, text: `function greet(name) {\n  return \`Hello, \${name}!\`;\n}` },
-  { id: 3, text: `const arr = [1, 2, 3];\nconst doubled = arr.map(x => x * 2);` },
-  { id: 4, text: `async function fetchData(url) {\n  const res = await fetch(url);\n  return res.json();\n}` },
-  { id: 5, text: `const obj = { a: 1, b: 2 };\nconst { a, b } = obj;` },
-  { id: 6, text: `type Point = { x: number; y: number };` },
-  { id: 7, text: `const sum = (arr: number[]) =>\n  arr.reduce((acc, n) => acc + n, 0);` },
-  { id: 8, text: `interface User {\n  id: number;\n  name: string;\n}` },
-  { id: 9, text: `const clamp = (n: number, min: number, max: number) =>\n  Math.max(min, Math.min(max, n));` },
-  { id: 10, text: `const sleep = (ms: number) =>\n  new Promise(resolve => setTimeout(resolve, ms));` },
+const snippets = [
+  { id: 1, code: `const greet = (name: string) => \`Hello, \${name}!\`` },
+  { id: 2, code: `const sum = (a: number, b: number): number => a + b` },
+  { id: 3, code: `const arr = [1,2,3].map(x => x * 2)` },
+  { id: 4, code: `async function fetchData(url: string) {\n  const res = await fetch(url)\n  return res.json()\n}` },
+  { id: 5, code: `const [count, setCount] = useState(0)` },
+  { id: 6, code: `type User = { id: number; name: string; email: string }` },
+  { id: 7, code: `const filtered = items.filter(item => item.active)` },
+  { id: 8, code: `export default function App() {\n  return <div>Hello World</div>\n}` },
 ]
 
-type Phase = 'idle' | 'countdown' | 'playing' | 'result'
+type GameState = 'idle' | 'countdown' | 'playing' | 'result'
 
-type Score = { player_name: string; wpm: number; accuracy: number; created_at: string }
+type Score = {
+  player_name: string
+  wpm: number
+  accuracy: number
+  created_at: string
+}
 
-function pickSnippet() {
-  return SNIPPETS[Math.floor(Math.random() * SNIPPETS.length)]
+function pickRandom() {
+  return snippets[Math.floor(Math.random() * snippets.length)]
 }
 
 export default function TypingGamePage() {
-  const [phase, setPhase] = useState<Phase>('idle')
-  const [countdown, setCountdown] = useState(3)
-  const [snippet, setSnippet] = useState(SNIPPETS[0])
+  const [gameState, setGameState] = useState<GameState>('idle')
+  const [snippet, setSnippet] = useState(snippets[0])
   const [typed, setTyped] = useState('')
+  const [countdown, setCountdown] = useState(3)
   const [startTime, setStartTime] = useState<number | null>(null)
   const [elapsed, setElapsed] = useState(0)
-  const [wpm, setWpm] = useState(0)
-  const [accuracy, setAccuracy] = useState(100)
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
-
-  // Leaderboard
+  const [playerName, setPlayerName] = useState('')
   const [scores, setScores] = useState<Score[]>([])
-  const [showLeaderboard, setShowLeaderboard] = useState(false)
-  const [nameInput, setNameInput] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const target = snippet.text
+  // Computed stats
+  const correctChars = typed.split('').filter((c, i) => c === snippet.code[i]).length
+  const totalTyped = typed.length
+  const wpm = startTime && elapsed > 0 ? Math.round((totalTyped / 5) / (elapsed / 60)) : 0
+  const accuracy = totalTyped > 0 ? Math.round((correctChars / totalTyped) * 100) : 100
 
-  function computeStats(typedStr: string, elapsedMs: number) {
-    const words = typedStr.trim().split(/\s+/).filter(Boolean).length
-    const mins = elapsedMs / 60000
-    const w = mins > 0 ? Math.round(words / mins) : 0
-
-    let correct = 0
-    for (let i = 0; i < typedStr.length; i++) {
-      if (typedStr[i] === target[i]) correct++
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
     }
-    const acc = typedStr.length > 0 ? Math.round((correct / typedStr.length) * 100) : 100
-    return { wpm: w, accuracy: acc }
-  }
-
-  const startCountdown = useCallback(() => {
-    setPhase('countdown')
-    setCountdown(3)
-    setTyped('')
-    setStartTime(null)
-    setElapsed(0)
-    setWpm(0)
-    setAccuracy(100)
-    setSubmitted(false)
-    setShowLeaderboard(false)
-    const s = pickSnippet()
-    setSnippet(s)
-
-    let c = 3
-    const iv = setInterval(() => {
-      c--
-      if (c <= 0) {
-        clearInterval(iv)
-        setPhase('playing')
-        setTimeout(() => textareaRef.current?.focus(), 50)
-      } else {
-        setCountdown(c)
-      }
-    }, 1000)
   }, [])
 
-  // Timer tick during playing
-  useEffect(() => {
-    if (phase !== 'playing') {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      return
-    }
-    intervalRef.current = setInterval(() => {
-      if (startTime) {
-        const e = Date.now() - startTime
-        setElapsed(e)
-        setWpm(() => {
-          const { wpm: w } = computeStats(typed, e)
-          return w
-        })
-      }
-    }, 200)
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, startTime, typed])
+  const startTimer = useCallback((start: number) => {
+    stopTimer()
+    timerRef.current = setInterval(() => {
+      setElapsed((Date.now() - start) / 1000)
+    }, 100)
+  }, [stopTimer])
 
-  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    if (phase !== 'playing') return
-    const val = e.target.value
-
-    // Start timer on first keystroke
-    if (!startTime && val.length > 0) {
-      setStartTime(Date.now())
-    }
-
-    // Clamp to target length
-    if (val.length > target.length) return
-    setTyped(val)
-
-    const now = startTime ? Date.now() - startTime : 0
-    const stats = computeStats(val, now)
-    setAccuracy(stats.accuracy)
-    setWpm(stats.wpm)
-
-    if (val.length === target.length) {
-      // Done
-      const finalElapsed = startTime ? Date.now() - startTime : 0
-      const finalStats = computeStats(val, finalElapsed)
-      setElapsed(finalElapsed)
-      setWpm(finalStats.wpm)
-      setAccuracy(finalStats.accuracy)
-      setPhase('result')
-
-      // Check achievements
-      const earned = checkAchievements('typing', { wpm: finalStats.wpm, accuracy: finalStats.accuracy })
-      if (earned.length > 0) setNewAchievements(earned)
-    }
-  }
-
-  async function fetchScores() {
+  // Fetch leaderboard
+  const fetchScores = useCallback(async () => {
     try {
       const res = await fetch('/api/typing-game/scores')
       const data = await res.json()
-      setScores(data)
-    } catch {}
+      setScores(data.scores ?? [])
+    } catch {
+      // ignore
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchScores()
+  }, [fetchScores])
+
+  // Countdown logic
+  useEffect(() => {
+    if (gameState !== 'countdown') return
+    setCountdown(3)
+    const interval = setInterval(() => {
+      setCountdown(c => {
+        if (c <= 1) {
+          clearInterval(interval)
+          setGameState('playing')
+          setTimeout(() => inputRef.current?.focus(), 50)
+          return 0
+        }
+        return c - 1
+      })
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [gameState])
+
+  // Detect completion
+  useEffect(() => {
+    if (gameState !== 'playing') return
+    if (typed.length >= snippet.code.length && typed === snippet.code) {
+      stopTimer()
+      const finalWpm = startTime ? Math.round((typed.length / 5) / ((Date.now() - startTime) / 1000 / 60)) : 0
+      const finalAcc = typed.length > 0 ? Math.round(correctChars / typed.length * 100) : 100
+      const earned = checkTypingAchievements(finalWpm, finalAcc)
+      setNewAchievements(earned)
+      setGameState('result')
+    }
+  }, [typed, snippet, gameState, stopTimer, startTime, correctChars])
+
+  useEffect(() => {
+    return () => stopTimer()
+  }, [stopTimer])
+
+  function handleStart() {
+    setSnippet(pickRandom())
+    setTyped('')
+    setElapsed(0)
+    setStartTime(null)
+    setSaveStatus('idle')
+    setNewAchievements([])
+    setGameState('countdown')
+    stopTimer()
   }
 
-  async function submitScore(name: string) {
+  function handleInput(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    if (gameState !== 'playing') return
+    const val = e.target.value
+    if (!startTime && val.length > 0) {
+      const now = Date.now()
+      setStartTime(now)
+      startTimer(now)
+    }
+    // Prevent typing beyond snippet length
+    if (val.length <= snippet.code.length) {
+      setTyped(val)
+    }
+  }
+
+  async function handleSave() {
+    if (!playerName.trim() || saveStatus !== 'idle') return
+    setSaveStatus('saving')
+    const finalWpm = startTime && elapsed > 0 ? Math.round((typed.length / 5) / (elapsed / 60)) : wpm
     try {
       await fetch('/api/typing-game/scores', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ player_name: name, wpm, accuracy, snippet_id: snippet.id }),
+        body: JSON.stringify({ player_name: playerName.trim(), wpm: finalWpm, accuracy }),
       })
-    } catch {}
+      setSaveStatus('saved')
+      fetchScores()
+    } catch {
+      setSaveStatus('idle')
+    }
   }
 
-  function handleNameSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    const name = nameInput.trim() || 'Anonymous'
-    submitScore(name)
-    fetchScores()
-    setShowLeaderboard(true)
-    setSubmitted(true)
-  }
-
-  const chars = target.split('')
+  const finalWpm = startTime && elapsed > 0 ? Math.round((typed.length / 5) / (elapsed / 60)) : wpm
+  const finalAcc = totalTyped > 0 ? Math.round(correctChars / totalTyped * 100) : 100
 
   return (
-    <div className="min-h-screen bg-neutral-950 font-mono text-white">
-      <AchievementToast achievements={newAchievements} onDone={() => setNewAchievements([])} />
-
+    <div className="min-h-screen bg-neutral-950 text-white">
       <header className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link
@@ -181,145 +170,188 @@ export default function TypingGamePage() {
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            게임으로
+            게임 목록
           </Link>
           <span className="text-sm font-semibold">타이핑 게임</span>
         </div>
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pt-14">
-        {/* Stats bar */}
-        <div className="mb-8 flex gap-8">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{wpm}</p>
-            <p className="text-xs text-neutral-500">WPM</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{accuracy}%</p>
-            <p className="text-xs text-neutral-500">정확도</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-white">{(elapsed / 1000).toFixed(1)}s</p>
-            <p className="text-xs text-neutral-500">시간</p>
-          </div>
-        </div>
-
-        {/* Idle */}
-        {phase === 'idle' && (
-          <div className="text-center">
-            <p className="mb-8 text-neutral-400">코드를 얼마나 빠르게 타이핑할 수 있나요?</p>
+      <main className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-16">
+        {/* IDLE */}
+        {gameState === 'idle' && (
+          <div className="flex flex-col items-center gap-6 text-center">
+            <div className="text-6xl">⌨️</div>
+            <h1 className="text-3xl font-bold">타이핑 게임</h1>
+            <p className="text-neutral-400">코드 스니펫을 얼마나 빠르고 정확하게 타이핑할 수 있을까요?</p>
             <button
-              onClick={startCountdown}
-              className="rounded-lg bg-neutral-800 px-8 py-3 text-sm font-semibold transition hover:bg-neutral-700"
+              onClick={handleStart}
+              className="rounded-xl bg-neutral-100 px-8 py-3 text-sm font-bold text-neutral-950 transition hover:bg-white"
             >
               시작하기
             </button>
           </div>
         )}
 
-        {/* Countdown */}
-        {phase === 'countdown' && (
-          <div className="text-center">
-            <p className="text-8xl font-bold text-amber-400">{countdown}</p>
+        {/* COUNTDOWN */}
+        {gameState === 'countdown' && (
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-neutral-400 text-sm">준비하세요...</p>
+            <div className="text-8xl font-bold text-white tabular-nums">{countdown}</div>
           </div>
         )}
 
-        {/* Playing */}
-        {(phase === 'playing' || phase === 'result') && (
-          <div>
-            {/* Snippet display */}
-            <div className="mb-6 rounded-xl border border-neutral-800 bg-neutral-900 p-6 text-lg leading-relaxed tracking-wide">
-              {chars.map((ch, i) => {
-                let color = 'text-neutral-600'
-                if (i < typed.length) {
-                  color = typed[i] === ch ? 'text-white' : 'text-red-400'
-                }
-                if (ch === '\n') {
+        {/* PLAYING */}
+        {gameState === 'playing' && (
+          <div className="w-full">
+            {/* Code display */}
+            <div className="mb-6 rounded-xl border border-neutral-800 bg-neutral-900 p-5">
+              <pre className="whitespace-pre-wrap break-all font-mono text-sm leading-relaxed">
+                {snippet.code.split('').map((char, i) => {
+                  let cls = 'text-neutral-600'
+                  if (i < typed.length) {
+                    cls = typed[i] === char ? 'text-white' : 'bg-red-600/70 text-white'
+                  }
                   return (
-                    <span key={i}>
-                      <span className={color}>↵</span>
-                      <br />
+                    <span key={i} className={cls}>
+                      {char === '\n' ? (
+                        <>
+                          {typed[i] !== undefined && typed[i] !== '\n' ? '↵' : '↵'}
+                          {'\n'}
+                        </>
+                      ) : char}
                     </span>
                   )
-                }
-                return (
-                  <span key={i} className={color}>
-                    {ch}
-                  </span>
-                )
-              })}
+                })}
+              </pre>
             </div>
 
-            {phase === 'playing' && (
-              <textarea
-                ref={textareaRef}
-                value={typed}
-                onChange={handleInput}
-                rows={4}
-                className="w-full rounded-xl border border-neutral-700 bg-neutral-900 p-4 text-sm leading-relaxed text-white outline-none focus:border-neutral-500"
-                placeholder="여기에 타이핑하세요..."
-                spellCheck={false}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-              />
-            )}
+            {/* Hidden textarea for input */}
+            <textarea
+              ref={inputRef}
+              value={typed}
+              onChange={handleInput}
+              className="h-0 w-0 opacity-0 absolute"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+            />
 
-            {/* Result card */}
-            {phase === 'result' && (
-              <div className="rounded-xl border border-neutral-700 bg-neutral-900 p-8 text-center">
-                <p className="mb-2 text-lg text-neutral-400">결과</p>
-                <p className="mb-1 text-5xl font-bold text-white">{wpm} WPM</p>
-                <p className="mb-6 text-2xl text-neutral-400">{accuracy}% 정확도</p>
+            {/* Click to focus hint */}
+            <button
+              onClick={() => inputRef.current?.focus()}
+              className="mb-6 w-full rounded-lg border border-dashed border-neutral-700 py-2 text-center text-xs text-neutral-500 hover:border-neutral-500"
+            >
+              클릭하여 타이핑 시작
+            </button>
 
-                {!submitted ? (
-                  <form onSubmit={handleNameSubmit} className="mb-6">
-                    <p className="mb-3 text-sm text-neutral-400">리더보드에 이름을 등록하세요</p>
-                    <div className="flex gap-2 justify-center">
-                      <input
-                        value={nameInput}
-                        onChange={(e) => setNameInput(e.target.value)}
-                        maxLength={20}
-                        placeholder="닉네임"
-                        className="rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm text-white outline-none focus:border-neutral-500"
-                      />
-                      <button
-                        type="submit"
-                        className="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold transition hover:bg-amber-500"
-                      >
-                        등록
-                      </button>
-                    </div>
-                  </form>
-                ) : null}
-
-                {showLeaderboard && (
-                  <div className="mb-6 text-left">
-                    <p className="mb-3 text-sm font-semibold text-neutral-300">🏆 TOP 10</p>
-                    <div className="space-y-1">
-                      {scores.map((s, i) => (
-                        <div key={i} className="flex items-center gap-3 rounded-lg bg-neutral-800 px-3 py-2 text-sm">
-                          <span className="w-5 text-center text-neutral-500">{i + 1}</span>
-                          <span className="flex-1 text-white">{s.player_name}</span>
-                          <span className="text-amber-400 font-semibold">{s.wpm} WPM</span>
-                          <span className="text-neutral-500">{s.accuracy}%</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={startCountdown}
-                  className="rounded-lg bg-neutral-700 px-8 py-3 text-sm font-semibold transition hover:bg-neutral-600"
-                >
-                  다시하기
-                </button>
+            {/* Stats bar */}
+            <div className="flex gap-3">
+              <div className="flex-1 rounded-lg bg-neutral-800 p-3 text-center">
+                <p className="text-xs text-neutral-400">WPM</p>
+                <p className="text-xl font-bold tabular-nums">{wpm}</p>
               </div>
-            )}
+              <div className="flex-1 rounded-lg bg-neutral-800 p-3 text-center">
+                <p className="text-xs text-neutral-400">정확도</p>
+                <p className="text-xl font-bold tabular-nums">{accuracy}%</p>
+              </div>
+              <div className="flex-1 rounded-lg bg-neutral-800 p-3 text-center">
+                <p className="text-xs text-neutral-400">시간</p>
+                <p className="text-xl font-bold tabular-nums">{elapsed.toFixed(1)}s</p>
+              </div>
+            </div>
           </div>
         )}
+
+        {/* RESULT */}
+        {gameState === 'result' && (
+          <div className="w-full">
+            <div className="mb-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-8 text-center">
+              <div className="mb-4 text-5xl">🎉</div>
+              <h2 className="mb-6 text-2xl font-bold">완료!</h2>
+              <div className="mb-6 flex justify-center gap-4">
+                <div className="rounded-lg bg-neutral-800 px-6 py-3">
+                  <p className="text-xs text-neutral-400">WPM</p>
+                  <p className="text-3xl font-bold tabular-nums">{finalWpm}</p>
+                </div>
+                <div className="rounded-lg bg-neutral-800 px-6 py-3">
+                  <p className="text-xs text-neutral-400">정확도</p>
+                  <p className="text-3xl font-bold tabular-nums">{finalAcc}%</p>
+                </div>
+                <div className="rounded-lg bg-neutral-800 px-6 py-3">
+                  <p className="text-xs text-neutral-400">시간</p>
+                  <p className="text-3xl font-bold tabular-nums">{elapsed.toFixed(1)}s</p>
+                </div>
+              </div>
+
+              {/* Save score */}
+              <div className="mb-4 flex gap-2">
+                <input
+                  type="text"
+                  value={playerName}
+                  onChange={e => setPlayerName(e.target.value)}
+                  placeholder="이름 입력"
+                  maxLength={50}
+                  className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
+                />
+                <button
+                  onClick={handleSave}
+                  disabled={saveStatus !== 'idle' || !playerName.trim()}
+                  className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-400 disabled:opacity-50"
+                >
+                  {saveStatus === 'saved' ? '저장됨' : saveStatus === 'saving' ? '저장 중...' : '저장'}
+                </button>
+              </div>
+
+              <button
+                onClick={handleStart}
+                className="rounded-xl bg-neutral-100 px-8 py-3 text-sm font-bold text-neutral-950 transition hover:bg-white"
+              >
+                다시하기
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Leaderboard */}
+        <div className="mt-14 w-full">
+          <h2 className="mb-4 text-lg font-bold">리더보드 Top 10</h2>
+          {scores.length === 0 ? (
+            <p className="text-sm text-neutral-500">아직 기록이 없습니다.</p>
+          ) : (
+            <div className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-neutral-800 text-neutral-400 text-xs">
+                    <th className="px-4 py-2 text-left">#</th>
+                    <th className="px-4 py-2 text-left">이름</th>
+                    <th className="px-4 py-2 text-right">WPM</th>
+                    <th className="px-4 py-2 text-right">정확도</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scores.map((s, i) => (
+                    <tr key={i} className="border-b border-neutral-800/50 last:border-0">
+                      <td className="px-4 py-2 text-neutral-500">{i + 1}</td>
+                      <td className="px-4 py-2 font-medium">{s.player_name}</td>
+                      <td className="px-4 py-2 text-right font-bold tabular-nums">{s.wpm}</td>
+                      <td className="px-4 py-2 text-right text-neutral-400 tabular-nums">{s.accuracy}%</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </main>
+
+      {/* Achievement toast */}
+      {newAchievements.length > 0 && (
+        <AchievementToast
+          achievements={newAchievements}
+          onDone={() => setNewAchievements([])}
+        />
+      )}
     </div>
   )
 }
