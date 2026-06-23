@@ -1,66 +1,88 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 
-// Simple in-memory IP rate limit: max 3 posts per hour per IP
-const ipPostLog = new Map<string, number[]>()
-const RATE_LIMIT_MAX = 3
+// Simple in-memory rate limiter: IP -> array of timestamps
+const rateLimitMap = new Map<string, number[]>()
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000 // 1 hour
+const RATE_LIMIT_MAX = 3
 
-function isRateLimited(ip: string): boolean {
+function checkRateLimit(ip: string): boolean {
   const now = Date.now()
   const windowStart = now - RATE_LIMIT_WINDOW_MS
-  const timestamps = (ipPostLog.get(ip) ?? []).filter((t) => t > windowStart)
-  if (timestamps.length >= RATE_LIMIT_MAX) return true
+  const timestamps = (rateLimitMap.get(ip) ?? []).filter((t) => t > windowStart)
+  if (timestamps.length >= RATE_LIMIT_MAX) return false
   timestamps.push(now)
-  ipPostLog.set(ip, timestamps)
-  return false
+  rateLimitMap.set(ip, timestamps)
+  return true
+}
+
+async function ensureTable() {
+  await dbQuery(`
+    CREATE TABLE IF NOT EXISTS guestbook (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(50) NOT NULL,
+      message VARCHAR(200) NOT NULL,
+      emoji VARCHAR(10) DEFAULT '👋',
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
 }
 
 export async function GET() {
-  await dbQuery(`CREATE TABLE IF NOT EXISTS guestbook (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
-    message VARCHAR(200) NOT NULL,
-    emoji VARCHAR(10) DEFAULT '👋',
-    created_at TIMESTAMPTZ DEFAULT NOW()
-  )`)
-  const r = await dbQuery('SELECT * FROM guestbook ORDER BY created_at DESC LIMIT 50')
-  return NextResponse.json({ entries: r.rows })
+  try {
+    await ensureTable()
+    const result = await dbQuery(
+      `SELECT id, name, message, emoji, created_at FROM guestbook ORDER BY created_at DESC LIMIT 50`
+    )
+    return NextResponse.json({ entries: result.rows })
+  } catch (err) {
+    console.error('Guestbook GET error:', err)
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
+  }
 }
 
-export async function POST(req: NextRequest) {
-  const ip =
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-    req.headers.get('x-real-ip') ??
-    'unknown'
-
-  if (isRateLimited(ip)) {
-    return NextResponse.json({ error: '너무 많은 요청입니다. 잠시 후 다시 시도해주세요.' }, { status: 429 })
-  }
-
-  let body: { name?: string; message?: string; emoji?: string }
+export async function POST(request: NextRequest) {
   try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: '잘못된 요청입니다.' }, { status: 400 })
-  }
+    // Get IP
+    const forwarded = request.headers.get('x-forwarded-for')
+    const ip = forwarded ? forwarded.split(',')[0].trim() : 'unknown'
 
-  const name = (body.name ?? '').trim()
-  const message = (body.message ?? '').trim()
-  const emoji = (body.emoji ?? '👋').trim()
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { error: '1시간에 최대 3개의 메시지만 남길 수 있습니다.' },
+        { status: 429 }
+      )
+    }
 
-  if (!name || name.length > 50) {
-    return NextResponse.json({ error: '이름은 1~50자여야 합니다.' }, { status: 400 })
-  }
-  if (!message || message.length > 200) {
-    return NextResponse.json({ error: '메시지는 1~200자여야 합니다.' }, { status: 400 })
-  }
+    const body = await request.json()
+    const name: string = (body?.name ?? '').trim()
+    const message: string = (body?.message ?? '').trim()
+    const emoji: string = body?.emoji ?? '👋'
 
-  const r = await dbQuery(
-    'INSERT INTO guestbook (name, message, emoji) VALUES ($1, $2, $3) RETURNING *',
-    [name, message, emoji]
-  )
-  return NextResponse.json({ entry: r.rows[0] }, { status: 201 })
+    const ALLOWED_EMOJIS = ['👋', '🎉', '😊', '🔥', '💻', '✨', '🚀', '❤️']
+
+    if (name.length < 2 || name.length > 30) {
+      return NextResponse.json({ error: '이름은 2~30자 사이여야 합니다.' }, { status: 400 })
+    }
+    if (message.length < 5 || message.length > 200) {
+      return NextResponse.json({ error: '메시지는 5~200자 사이여야 합니다.' }, { status: 400 })
+    }
+    if (!ALLOWED_EMOJIS.includes(emoji)) {
+      return NextResponse.json({ error: '유효하지 않은 이모지입니다.' }, { status: 400 })
+    }
+
+    await ensureTable()
+    const result = await dbQuery(
+      `INSERT INTO guestbook (name, message, emoji) VALUES ($1, $2, $3) RETURNING id, name, message, emoji, created_at`,
+      [name, message, emoji]
+    )
+
+    return NextResponse.json({ entry: result.rows[0] }, { status: 201 })
+  } catch (err) {
+    console.error('Guestbook POST error:', err)
+    return NextResponse.json({ error: '서버 오류가 발생했습니다.' }, { status: 500 })
+  }
 }
