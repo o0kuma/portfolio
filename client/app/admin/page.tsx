@@ -54,10 +54,18 @@ function StatCard({ label, value, icon, color }: StatCardProps) {
   )
 }
 
+interface TopPost {
+  id: number
+  title: string
+  views: number
+  likes: number
+}
+
 export default function AdminDashboardPage() {
   const { t } = useLanguage()
   const [stats, setStats] = useState<SiteStats | null>(null)
   const [aiStats, setAiStats] = useState<{ totalRequests: number; requestsToday: number } | null>(null)
+  const [topPosts, setTopPosts] = useState<TopPost[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -78,6 +86,16 @@ export default function AdminDashboardPage() {
     } catch {}
   }
 
+  const fetchTopPosts = async () => {
+    try {
+      const res = await fetch('/api/admin/top-posts', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.posts) setTopPosts(data.posts)
+      }
+    } catch {}
+  }
+
   const fetchStats = async () => {
     try {
       setIsLoading(true)
@@ -91,6 +109,7 @@ export default function AdminDashboardPage() {
       if (!data.success) throw new Error(data.error || t.adminDashboard.errorLoad)
       setIsLoggedIn(true)
       setStats(data.stats as SiteStats)
+      fetchTopPosts()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t.adminDashboard.errorLoad)
     } finally {
@@ -287,6 +306,35 @@ export default function AdminDashboardPage() {
                 <p className="text-2xl font-bold text-purple-500">{stats?.gameStats?.towerBestWave ?? 0}</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Top Posts */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            인기 글 TOP 5
+          </h2>
+          <div className="card rounded-xl p-6">
+            {topPosts.length === 0 ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400">데이터 없음</p>
+            ) : (
+              <ol className="space-y-3">
+                {topPosts.map((post, idx) => (
+                  <li key={post.id} className="flex items-center gap-4">
+                    <span className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full bg-neutral-800 text-sm font-bold text-neutral-300">
+                      {idx + 1}
+                    </span>
+                    <span className="flex-1 truncate text-sm text-gray-800 dark:text-gray-100">
+                      {post.title}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs text-blue-400">
+                      <FiFileText className="h-3.5 w-3.5" />
+                      {post.views.toLocaleString()}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            )}
           </div>
         </section>
 
