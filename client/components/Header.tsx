@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
+import SearchModal from './SearchModal'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
 import { useLanguage } from '@/lib/LanguageContext'
@@ -19,10 +20,23 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
   const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
 
   useEffect(() => {
     setShowAdmin(hasAdminAccess())
+  }, [])
+
+  // Cmd+K / Ctrl+K global shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setIsSearchModalOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
   }, [])
 
   useEffect(() => {
@@ -124,10 +138,10 @@ export default function Header() {
 
               <button
                 type="button"
-                onClick={() => setIsSearchOpen(!isSearchOpen)}
+                onClick={() => setIsSearchModalOpen(true)}
                 className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
-                aria-expanded={isSearchOpen}
                 aria-label={t.header.search}
+                title="Search (⌘K)"
               >
                 <FiSearch size={20} />
               </button>
@@ -214,6 +228,8 @@ export default function Header() {
           </div>
         </div>
       </header>
+
+      <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
 
       <AdminPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />
 
