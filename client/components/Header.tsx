@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiMenu, FiX, FiSun, FiMoon, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
+import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
+import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
 import AdminPanel from './AdminPanel'
 import AIMessenger from './AIMessenger'
@@ -14,7 +15,6 @@ export default function Header() {
   const router = useRouter()
   const { t, toggleLocale } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [isDarkMode, setIsDarkMode] = useState(true)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
@@ -33,30 +33,6 @@ export default function Header() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    const light = savedTheme === 'light'
-    setIsDarkMode(!light)
-    if (light) {
-      document.documentElement.classList.remove('dark')
-    } else {
-      document.documentElement.classList.add('dark')
-    }
-  }, [])
-
-  const toggleDarkMode = () => {
-    const newDarkMode = !isDarkMode
-    setIsDarkMode(newDarkMode)
-
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-      localStorage.setItem('theme', 'light')
-    }
-  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -176,14 +152,7 @@ export default function Header() {
                 {t.nav.langToggle}
               </button>
 
-              <button
-                type="button"
-                onClick={toggleDarkMode}
-                className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
-                aria-label={isDarkMode ? t.header.lightMode : t.header.darkMode}
-              >
-                {isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}
-              </button>
+              <ThemeToggle />
 
               <button
                 type="button"
