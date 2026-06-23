@@ -13,19 +13,12 @@ function getAdminPassword(): string | null {
 export async function POST(req: NextRequest) {
   const adminPassword = getAdminPassword()
   if (!adminPassword) {
-    return NextResponse.json({ error: 'Admin login is not configured — ADMIN_PASSWORD missing' }, { status: 503 })
+    return NextResponse.json({ error: 'Admin login is not configured' }, { status: 503 })
   }
 
   const { password } = (await req.json()) as { password: string }
   if (password !== adminPassword) {
-    return NextResponse.json({
-      error: 'Unauthorized',
-      debug: {
-        passwordLength: password?.length,
-        expectedLength: adminPassword.length,
-        envSet: !!process.env.ADMIN_PASSWORD,
-      }
-    }, { status: 401 })
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const token = await createAdminSessionToken()
