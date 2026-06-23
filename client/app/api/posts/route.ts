@@ -45,26 +45,25 @@ export async function GET(request: NextRequest) {
 
     const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : ''
 
-    // Full-text search with tsvector when ?q= is provided
+    // ILIKE search when ?q= is provided
     if (q) {
-      values.push(q)
+      values.push(`%${q}%`)
       const qIdx = values.length
-      const tsCondition = `to_tsvector('english', coalesce(title,'') || ' ' || coalesce(content,'')) @@ plainto_tsquery('english', $${qIdx})`
-      const tsWhere = where.length
-        ? `WHERE ${where.join(' AND ')} AND ${tsCondition}`
-        : `WHERE ${tsCondition}`
+      const qCondition = `(title ILIKE $${qIdx} OR content ILIKE $${qIdx}) AND status = 'published'`
+      const qWhere = where.length
+        ? `WHERE ${where.join(' AND ')} AND ${qCondition}`
+        : `WHERE ${qCondition}`
 
       const countResult = await dbQuery<{ total: number }>(
-        `SELECT COUNT(*)::int AS total FROM posts ${tsWhere}`,
+        `SELECT COUNT(*)::int AS total FROM posts ${qWhere}`,
         values,
       )
       const total: number = countResult.rows[0]?.total ?? 0
 
       values.push(limit, offset)
       const postsResult = await dbQuery(
-        `SELECT *, ts_rank(to_tsvector('english', coalesce(title,'') || ' ' || coalesce(content,'')), plainto_tsquery('english', $${qIdx})) AS rank
-         FROM posts ${tsWhere}
-         ORDER BY rank DESC, created_at DESC
+        `SELECT * FROM posts ${qWhere}
+         ORDER BY created_at DESC
          LIMIT $${values.length - 1} OFFSET $${values.length}`,
         values,
       )
