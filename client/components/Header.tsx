@@ -78,6 +78,7 @@ export default function Header() {
     { label: '이력서', kind: 'path', href: '/resume' },
     { label: '방명록', kind: 'path', href: '/guestbook' },
     { label: '📥 오프라인', kind: 'path', href: '/offline-posts' },
+    { label: 'TERMINAL', kind: 'path', href: '/terminal' },
   ]
 
   return (

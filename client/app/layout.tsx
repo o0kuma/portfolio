@@ -4,6 +4,7 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
 import KuumaCompanion from '@/components/KuumaCompanion'
+import LiveCursors from '@/components/LiveCursors'
 import {
   getSiteUrl,
   SITE_NAME,
@@ -157,6 +158,7 @@ export default function RootLayout({
         <Providers>{children}</Providers>
         <ToastContainer />
         <KuumaCompanion />
+        <LiveCursors />
       </body>
     </html>
   )

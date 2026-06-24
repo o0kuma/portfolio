@@ -2,9 +2,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import SkillRadar from '@/components/portfolio/SkillRadar'
+
+const SkillSphere = dynamic(() => import('./SkillSphere'), { ssr: false })
 
 type Skill = { name: string; level: number }  // level 0-100
 
@@ -319,6 +322,20 @@ export default function Skills() {
           <motion.p variants={staggerItem} className="text-neutral-600 text-base max-w-md font-mono">
             {t.skills.subtext}
           </motion.p>
+        </motion.div>
+
+        {/* 3D Skill Tag Cloud Sphere */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={portfolioViewport}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-16"
+        >
+          <p className="text-xs font-mono text-neutral-600 tracking-[0.2em] uppercase mb-4 text-center">
+            — Skill Cloud
+          </p>
+          <SkillSphere />
         </motion.div>
 
         {/* Skill categories */}

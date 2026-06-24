@@ -50,6 +50,8 @@ const sectionMessages: Record<string, string[]> = {
 
 const chips = ['어떤 프로젝트가 있나요?', '연락 방법은?', '어떤 기술 써요?']
 
+type Emotion = 'idle' | 'happy' | 'thinking' | 'surprised' | 'error'
+
 export default function KuumaCompanion() {
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const targetPos = useRef({ x: -100, y: -100 })
@@ -62,15 +64,31 @@ export default function KuumaCompanion() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentSection, setCurrentSection] = useState('home')
+  const [emotion, setEmotion] = useState<Emotion>('idle')
+  const [ttsEnabled, setTtsEnabled] = useState(false)
 
   const lastMoveRef = useRef(Date.now())
   const idleTimerRef = useRef<ReturnType<typeof setTimeout>>()
   const sectionTimerRef = useRef<ReturnType<typeof setInterval>>()
   const bubbleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const emotionTimerRef = useRef<ReturnType<typeof setTimeout>>()
+
+  function speak(text: string) {
+    if (!ttsEnabled || typeof window === 'undefined') return
+    window.speechSynthesis.cancel()
+    const utter = new SpeechSynthesisUtterance(text)
+    utter.lang = 'ko-KR'
+    utter.rate = 1.1
+    utter.pitch = 1.1
+    window.speechSynthesis.speak(utter)
+  }
 
   const showBubble = useCallback((text: string) => {
     setBubble(text)
+    setEmotion('surprised')
+    if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
+    emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 2000)
     if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current)
     bubbleTimeoutRef.current = setTimeout(() => setBubble(null), 5000)
   }, [])
@@ -164,10 +182,14 @@ export default function KuumaCompanion() {
     const randomMsg = () => msgs[Math.floor(Math.random() * msgs.length)]
 
     const initialTimer = setTimeout(() => {
-      showBubble(randomMsg() + '  (J키로 대화하기)')
+      const bubbleText = randomMsg() + '  (J키로 대화하기)'
+      showBubble(bubbleText)
+      speak(bubbleText)
       sectionTimerRef.current = setInterval(
         () => {
-          showBubble(randomMsg())
+          const msg = randomMsg()
+          showBubble(msg)
+          speak(msg)
         },
         45000 + Math.random() * 15000
       )
@@ -177,6 +199,7 @@ export default function KuumaCompanion() {
       clearTimeout(initialTimer)
       if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSection, showBubble])
 
   // Keyboard shortcut: J key toggles chat
@@ -196,6 +219,30 @@ export default function KuumaCompanion() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
+  const emotionDotColor: Record<Emotion, string> = {
+    idle: 'bg-cyan-400',
+    happy: 'bg-amber-400',
+    thinking: 'bg-violet-400',
+    surprised: 'bg-orange-400',
+    error: 'bg-red-400',
+  }
+
+  const emotionRingColor: Record<Emotion, string> = {
+    idle: 'border-cyan-400/40',
+    happy: 'border-amber-400/40',
+    thinking: 'border-violet-400/40',
+    surprised: 'border-orange-400/40',
+    error: 'border-red-400/40',
+  }
+
+  const emotionClass: Record<Emotion, string> = {
+    idle: 'kuuma-breathe',
+    happy: 'kuuma-emotion-happy',
+    thinking: 'kuuma-emotion-thinking',
+    surprised: 'kuuma-emotion-surprised',
+    error: 'kuuma-emotion-error',
+  }
+
   const sendMessage = useCallback(
     async (text?: string) => {
       const content = text || input
@@ -204,7 +251,9 @@ export default function KuumaCompanion() {
       const userMsg = { role: 'user', content }
       setMessages((prev) => [...prev].slice(-4).concat(userMsg))
       setInput('')
+      setEmotion('happy')
       setLoading(true)
+      setEmotion('thinking')
 
       try {
         const res = await fetch('/api/kuuma/chat', {
@@ -218,13 +267,20 @@ export default function KuumaCompanion() {
         const data = await res.json()
         const reply = data.reply || '죄송해요, 응답을 받지 못했어요.'
         setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
+        speak(reply)
+        if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
+        emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 1000)
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', content: '연결에 문제가 생겼어요. 다시 시도해주세요.' }])
+        setEmotion('error')
+        if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
+        emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 3000)
       } finally {
         setLoading(false)
       }
     },
-    [input, loading, messages]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [input, loading, messages, ttsEnabled]
   )
 
   return (
@@ -245,6 +301,34 @@ export default function KuumaCompanion() {
         .kuuma-spin { animation: kuuma-spin 10s linear infinite; }
         .kuuma-pulse-core { animation: kuuma-pulse 2s ease-in-out infinite; }
         .kuuma-breathe { animation: kuuma-breathe 3s ease-in-out infinite; }
+        .kuuma-emotion-happy {
+          animation: kuuma-breathe-happy 1s ease-in-out infinite;
+        }
+        .kuuma-emotion-thinking {
+          animation: kuuma-breathe-thinking 2s ease-in-out infinite;
+        }
+        .kuuma-emotion-surprised {
+          animation: kuuma-flash 0.5s ease-out;
+        }
+        .kuuma-emotion-error {
+          animation: kuuma-breathe-error 0.8s ease-in-out infinite;
+        }
+        @keyframes kuuma-breathe-happy {
+          0%,100% { box-shadow: 0 0 12px rgb(251 191 36), 0 0 30px rgb(251 191 36 / 0.6); }
+          50% { box-shadow: 0 0 24px rgb(251 191 36), 0 0 50px rgb(251 191 36 / 0.9); }
+        }
+        @keyframes kuuma-breathe-thinking {
+          0%,100% { box-shadow: 0 0 8px rgb(167 139 250), 0 0 20px rgb(167 139 250 / 0.5); }
+          50% { box-shadow: 0 0 20px rgb(167 139 250), 0 0 40px rgb(167 139 250 / 0.8); }
+        }
+        @keyframes kuuma-flash {
+          0% { box-shadow: 0 0 30px rgb(251 146 60), 0 0 60px rgb(251 146 60 / 0.8); }
+          100% { box-shadow: 0 0 8px rgb(34 211 238), 0 0 20px rgb(34 211 238 / 0.5); }
+        }
+        @keyframes kuuma-breathe-error {
+          0%,100% { box-shadow: 0 0 8px rgb(239 68 68), 0 0 20px rgb(239 68 68 / 0.5); }
+          50% { box-shadow: 0 0 20px rgb(239 68 68), 0 0 40px rgb(239 68 68 / 0.8); }
+        }
       `}</style>
 
       {/* Speech bubble — separate fixed element to avoid width constraints */}
@@ -287,12 +371,12 @@ export default function KuumaCompanion() {
       >
         {/* Character rings — purely visual, no pointer events */}
         <div className="relative w-12 h-12 flex items-center justify-center">
-          <div className="absolute inset-0 rounded-full border border-cyan-400/40 kuuma-spin" />
+          <div className={`absolute inset-0 rounded-full border ${emotionRingColor[emotion]} kuuma-spin`} />
           <div
             className="absolute inset-1.5 rounded-full border border-cyan-400/60 bg-cyan-950/80 backdrop-blur-sm"
             style={{ boxShadow: '0 0 12px rgb(34 211 238 / 0.5), inset 0 0 8px rgb(34 211 238 / 0.2)' }}
           />
-          <div className="w-3 h-3 rounded-full bg-cyan-400 kuuma-pulse-core relative z-10 kuuma-breathe" />
+          <div className={`w-3 h-3 rounded-full ${emotionDotColor[emotion]} kuuma-pulse-core relative z-10 ${emotionClass[emotion]}`} />
           {[0, 90, 180, 270].map((deg) => (
             <div
               key={deg}
@@ -347,12 +431,21 @@ export default function KuumaCompanion() {
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
             <span className="text-cyan-400 text-xs tracking-widest">쿠마</span>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
-            >
-              ✕
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setTtsEnabled(o => !o)}
+                className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
+                title="음성 on/off"
+              >
+                {ttsEnabled ? '🔊' : '🔇'}
+              </button>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
+              >
+                ✕
+              </button>
+            </div>
           </div>
 
           {/* Messages */}
