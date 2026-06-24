@@ -22,7 +22,7 @@ export function isPortfolioPublic(): boolean {
  */
 export const PORTFOLIO_PUBLIC = false
 
-export const SITE_NAME = 'kuuuma.com'
+export const SITE_NAME = 'kuuuma'
 export const SITE_AUTHOR = '오승일'
 export const SITE_GITHUB = 'https://github.com/oikikomori'
 export const SITE_EMAIL = 'c8c8c81828@gmail.com'

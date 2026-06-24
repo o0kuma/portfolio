@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: '블로그',
+  title: 'Blog',
   description: '개발, 기술, 일상에 대한 글을 씁니다.',
   openGraph: {
-    title: '블로그',
+    title: 'Blog',
     description: '개발, 기술, 일상에 대한 글을 씁니다.',
   },
 }

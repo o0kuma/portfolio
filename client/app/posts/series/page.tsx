@@ -29,7 +29,7 @@ function formatDate(dateString: string) {
 }
 
 export const metadata = {
-  title: '시리즈 | 블로그',
+  title: 'Series',
   description: '연재 시리즈 목록',
 }
 

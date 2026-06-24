@@ -4,7 +4,7 @@ import { FiArrowLeft } from 'react-icons/fi'
 import type { GamesStatsResponse } from '@/app/api/games/stats/route'
 
 export const metadata: Metadata = {
-  title: '게임 전적',
+  title: 'Stats',
   description: '테트리스, 서바이브, 타워 디펜스 전체 누적 전적 통계.',
 }
 

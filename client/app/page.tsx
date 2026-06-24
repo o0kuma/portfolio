@@ -5,12 +5,11 @@ import { SITE_NAME, getSiteUrl, OG_IMAGE_PATH } from '@/lib/site'
 const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
-  title: `${SITE_NAME} — Blog`,
-  description:
-    '기술, 경제, 여행 등 다양한 주제의 글과 인사이트를 공유하는 kuuuma.com 블로그.',
+  title: 'kuuuma',
+  description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
   alternates: { canonical: '/' },
   openGraph: {
-    title: `${SITE_NAME} — Blog`,
+    title: 'kuuuma',
     description: '기술·경제·여행 등 다양한 주제의 블로그',
     type: 'website',
     url: siteUrl,
@@ -18,8 +17,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} — Blog`,
-    description: '기술·경제·여행 등 다양한 주제의 블로그',
+    title: 'kuuuma',
+    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
     images: [OG_IMAGE_PATH],
   },
 }

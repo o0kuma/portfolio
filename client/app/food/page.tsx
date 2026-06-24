@@ -5,7 +5,7 @@ import { getRestaurantRegions, getRestaurantItems } from '@/lib/notion'
 import FoodClient from './FoodClient'
 
 export const metadata = {
-  title: '맛집 리스트',
+  title: 'Food',
   description: '오승일의 맛집 리스트',
 }
 
