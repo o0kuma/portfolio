@@ -398,9 +398,12 @@ export default function AdminDashboardPage() {
             <button
               type="button"
               onClick={async () => {
-                const res = await fetch('/api/cron/newsletter')
+                const res = await fetch('/api/admin/newsletter/run', {
+                  method: 'POST',
+                  credentials: 'include',
+                })
                 const data = await res.json()
-                alert(data.message ?? JSON.stringify(data))
+                alert(data.message ?? data.error ?? JSON.stringify(data))
               }}
               className="flex-shrink-0 bg-cyan-700 hover:bg-cyan-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
             >

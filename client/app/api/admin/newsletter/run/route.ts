@@ -2,21 +2,13 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { isAdminAuthorized } from '@/lib/adminAuth'
 import { runNewsletterCron } from '@/lib/newsletter-send'
 
-export async function GET(request: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET?.trim()
-  if (!cronSecret && (process.env.NODE_ENV === 'production' || process.env.VERCEL)) {
-    console.error('CRON_SECRET is required for /api/cron/newsletter in deployed environments.')
-    return NextResponse.json({ error: 'Cron endpoint is not configured' }, { status: 503 })
-  }
-
-  if (cronSecret) {
-    const authHeader = request.headers.get('authorization')
-    const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim()
-    if (providedSecret !== cronSecret) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+/** Admin-authenticated manual trigger for the newsletter cron job. */
+export async function POST(request: NextRequest) {
+  if (!(await isAdminAuthorized(request))) {
+    return NextResponse.json({ error: '인증이 필요합니다.' }, { status: 401 })
   }
 
   try {
@@ -51,7 +43,7 @@ export async function GET(request: NextRequest) {
       failed: result.failed,
     })
   } catch (error) {
-    console.error('Newsletter cron error:', error)
+    console.error('Admin newsletter run error:', error)
     return NextResponse.json(
       { success: false, error: '뉴스레터 발송 중 오류가 발생했습니다.' },
       { status: 500 },
