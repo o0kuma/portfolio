@@ -236,6 +236,34 @@ export default function KuumaCompanion() {
         .kuuma-breathe { animation: kuuma-breathe 3s ease-in-out infinite; }
       `}</style>
 
+      {/* Speech bubble — separate fixed element to avoid width constraints */}
+      {bubble && !isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            left: pos.x,
+            top: pos.y - 52,
+            zIndex: 9998,
+            transform: 'translateX(-50%)',
+            pointerEvents: 'none',
+          }}
+        >
+          <div
+            className="bg-black/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono px-3 py-1.5 rounded-sm"
+            style={{
+              boxShadow: '0 0 10px rgb(34 211 238 / 0.2)',
+              whiteSpace: 'nowrap',
+              maxWidth: '260px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {bubble}
+            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-cyan-500/50 rotate-45" />
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           position: 'fixed',
@@ -246,16 +274,6 @@ export default function KuumaCompanion() {
           transform: 'translate(-50%, -50%)',
         }}
       >
-        {/* Speech bubble */}
-        {bubble && !isOpen && (
-          <div
-            className="absolute bottom-14 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono px-3 py-1.5 rounded-sm"
-            style={{ boxShadow: '0 0 10px rgb(34 211 238 / 0.2)', maxWidth: '220px', whiteSpace: 'normal' }}
-          >
-            {bubble}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-cyan-500/50 rotate-45" />
-          </div>
-        )}
 
         {/* Character rings */}
         <button
