@@ -274,29 +274,14 @@ export default function KuumaCompanion() {
           transform: 'translate(-50%, -50%)',
         }}
       >
-
-        {/* Character rings */}
-        <button
-          onDoubleClick={() => setIsOpen((o) => !o)}
-          onClick={() => { if (!isOpen) showBubble('더블클릭하면 대화할 수 있어요! 👾') }}
-          className="relative w-12 h-12 flex items-center justify-center"
-          style={{ pointerEvents: 'auto', outline: 'none' }}
-          aria-label="Toggle 쿠마 chat"
-        >
-          {/* Spinning outer ring */}
-          <div
-            className="absolute inset-0 rounded-full border border-cyan-400/40 kuuma-spin"
-          />
-          {/* Inner glow ring */}
+        {/* Character rings — purely visual, no pointer events */}
+        <div className="relative w-12 h-12 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border border-cyan-400/40 kuuma-spin" />
           <div
             className="absolute inset-1.5 rounded-full border border-cyan-400/60 bg-cyan-950/80 backdrop-blur-sm"
             style={{ boxShadow: '0 0 12px rgb(34 211 238 / 0.5), inset 0 0 8px rgb(34 211 238 / 0.2)' }}
           />
-          {/* Core */}
-          <div
-            className="w-3 h-3 rounded-full bg-cyan-400 kuuma-pulse-core relative z-10 kuuma-breathe"
-          />
-          {/* Tick marks at 4 positions */}
+          <div className="w-3 h-3 rounded-full bg-cyan-400 kuuma-pulse-core relative z-10 kuuma-breathe" />
           {[0, 90, 180, 270].map((deg) => (
             <div
               key={deg}
@@ -304,10 +289,38 @@ export default function KuumaCompanion() {
               style={{ transform: `rotate(${deg}deg) translateX(22px)` }}
             />
           ))}
-        </button>
-
-        {/* Character rings only — no chat panel here */}
+        </div>
       </div>
+
+      {/* Fixed chat toggle button — bottom-right, always accessible */}
+      <button
+        onDoubleClick={() => setIsOpen((o) => !o)}
+        onClick={() => { if (!isOpen) showBubble('더블클릭으로 대화할 수 있어요! 👾') }}
+        style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 10001,
+          pointerEvents: 'auto',
+          outline: 'none',
+          background: 'transparent',
+          border: 'none',
+          cursor: 'pointer',
+          width: '36px',
+          height: '36px',
+          display: isOpen ? 'none' : 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+        aria-label="쿠마 채팅 열기"
+      >
+        <div
+          className="w-8 h-8 rounded-full border border-cyan-500/60 bg-cyan-950/80 flex items-center justify-center"
+          style={{ boxShadow: '0 0 10px rgb(34 211 238 / 0.4)' }}
+        >
+          <div className="w-2 h-2 rounded-full bg-cyan-400 kuuma-pulse-core" />
+        </div>
+      </button>
 
       {/* Chat panel — fixed bottom-right, independent of cursor position */}
       {isOpen && (
