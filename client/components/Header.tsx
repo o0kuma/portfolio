@@ -3,13 +3,12 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
+import { FiMenu, FiX, FiSearch, FiSettings } from 'react-icons/fi'
 import ThemeToggle from './ThemeToggle'
 import ThemePicker from './ThemePicker'
 import SearchBar from './SearchBar'
 import SearchModal from './SearchModal'
 import AdminPanel from './AdminPanel'
-import AIMessenger from './AIMessenger'
 import { useLanguage } from '@/lib/LanguageContext'
 import { hasAdminAccess } from '@/lib/admin-access'
 
@@ -20,7 +19,6 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false)
-  const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
 
@@ -128,19 +126,7 @@ export default function Header() {
             </nav>
 
             <div className="flex items-center space-x-4">
-              <button
-                type="button"
-                onClick={() => setIsAIMessengerOpen(!isAIMessengerOpen)}
-                className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors relative rounded-lg"
-                title={t.header.aiAssistant}
-              >
-                <FiMessageSquare size={20} />
-                {!isAIMessengerOpen && (
-                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" aria-hidden />
-                )}
-              </button>
-
-              <button
+<button
                 type="button"
                 onClick={() => setIsSearchModalOpen(true)}
                 className="p-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg"
@@ -238,12 +224,6 @@ export default function Header() {
       <SearchModal isOpen={isSearchModalOpen} onClose={() => setIsSearchModalOpen(false)} />
 
       <AdminPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />
-
-      <AIMessenger
-        isOpen={isAIMessengerOpen}
-        onClose={() => setIsAIMessengerOpen(false)}
-        context="portfolio"
-      />
     </>
   )
 }
