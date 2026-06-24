@@ -207,17 +207,16 @@ export default function KuumaCompanion() {
       setLoading(true)
 
       try {
-        const res = await fetch('/api/ai/chat', {
+        const res = await fetch('/api/kuuma/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             message: content,
-            sessionId: 'kuuma',
-            conversationHistory: messages.slice(-6),
+            history: messages.slice(-8).map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
           }),
         })
         const data = await res.json()
-        const reply = data.message || data.content || data.reply || '죄송해요, 응답을 받지 못했어요.'
+        const reply = data.reply || '죄송해요, 응답을 받지 못했어요.'
         setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
       } catch {
         setMessages((prev) => [...prev, { role: 'assistant', content: '연결에 문제가 생겼어요. 다시 시도해주세요.' }])
