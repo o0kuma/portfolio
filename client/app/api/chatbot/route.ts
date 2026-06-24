@@ -4,7 +4,12 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+let client: Anthropic | null = null
+function getClient(): Anthropic {
+  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured')
+  if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  return client
+}
 
 const SYSTEM_PROMPT = `You are a helpful assistant for a Korean frontend developer's portfolio site.
 Answer questions about the developer in Korean. Be friendly and concise.
@@ -69,7 +74,7 @@ export async function POST(request: NextRequest) {
     // Keep only last 10 messages
     const recentMessages = messages.slice(-10)
 
-    const msg = await client.messages.create({
+    const msg = await getClient().messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 500,
       system: SYSTEM_PROMPT,
@@ -82,6 +87,9 @@ export async function POST(request: NextRequest) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
     console.error('[/api/chatbot POST]', msg)
+    if (msg.includes('ANTHROPIC_API_KEY')) {
+      return NextResponse.json({ reply: '현재 AI 기능이 설정되지 않았습니다. 문의는 Contact 페이지를 이용해주세요.' }, { status: 200 })
+    }
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }
