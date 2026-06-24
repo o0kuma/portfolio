@@ -3,10 +3,11 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
+import { generatePostSummary } from '@/lib/post-summary'
 
 type Ctx = { params: { id: string } }
 
-export async function GET(request: NextRequest, { params }: Ctx) {
+export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
     const { id } = params
 
@@ -34,25 +35,7 @@ export async function GET(request: NextRequest, { params }: Ctx) {
     }
 
     const content = postResult.rows[0].content as string
-    const prompt = `다음 블로그 포스트를 한국어로 3줄로 요약해주세요. 불릿 포인트(•)로 작성하세요:\n\n${content.slice(0, 3000)}`
-
-    // 기존 AI 채팅 API 재사용
-    const baseUrl = request.nextUrl.origin
-    const aiRes = await fetch(`${baseUrl}/api/ai/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: prompt,
-        sessionId: `summary-${id}`,
-        conversationHistory: [],
-      }),
-    })
-
-    let summary = ''
-    if (aiRes.ok) {
-      const data = await aiRes.json() as { response?: string; message?: string }
-      summary = data.response ?? data.message ?? ''
-    }
+    const summary = await generatePostSummary(content)
 
     if (!summary) {
       return NextResponse.json({ message: 'AI 요약을 생성할 수 없습니다.' }, { status: 503 })
