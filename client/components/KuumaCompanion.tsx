@@ -164,7 +164,7 @@ export default function KuumaCompanion() {
     const randomMsg = () => msgs[Math.floor(Math.random() * msgs.length)]
 
     const initialTimer = setTimeout(() => {
-      showBubble(randomMsg())
+      showBubble(randomMsg() + '  (J키로 대화하기)')
       sectionTimerRef.current = setInterval(
         () => {
           showBubble(randomMsg())
@@ -178,6 +178,18 @@ export default function KuumaCompanion() {
       if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
     }
   }, [currentSection, showBubble])
+
+  // Keyboard shortcut: J key toggles chat
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'j' && e.key !== 'J') return
+      const tag = (e.target as HTMLElement).tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement).isContentEditable) return
+      setIsOpen((o) => !o)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   // Auto scroll messages
   useEffect(() => {
@@ -294,8 +306,7 @@ export default function KuumaCompanion() {
 
       {/* Fixed chat toggle button — bottom-right, always accessible */}
       <button
-        onDoubleClick={() => setIsOpen((o) => !o)}
-        onClick={() => { if (!isOpen) showBubble('더블클릭으로 대화할 수 있어요! 👾') }}
+        onClick={() => setIsOpen((o) => !o)}
         style={{
           position: 'fixed',
           bottom: '24px',
