@@ -270,7 +270,7 @@ export default function KuumaCompanion() {
           left: pos.x,
           top: pos.y,
           zIndex: 9999,
-          pointerEvents: 'auto',
+          pointerEvents: 'none',
           transform: 'translate(-50%, -50%)',
         }}
       >
@@ -279,6 +279,7 @@ export default function KuumaCompanion() {
         <button
           onClick={() => setIsOpen((o) => !o)}
           className="relative w-12 h-12 flex items-center justify-center"
+          style={{ pointerEvents: 'auto' }}
           aria-label="Toggle 쿠마 chat"
           style={{ outline: 'none' }}
         >
@@ -309,7 +310,7 @@ export default function KuumaCompanion() {
         {isOpen && (
           <div
             className="absolute bottom-16 left-1/2 -translate-x-1/2 w-72 bg-black/95 border border-cyan-500/30 rounded-sm font-mono"
-            style={{ boxShadow: '0 0 30px rgb(34 211 238 / 0.15)' }}
+            style={{ boxShadow: '0 0 30px rgb(34 211 238 / 0.15)', pointerEvents: 'auto' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
