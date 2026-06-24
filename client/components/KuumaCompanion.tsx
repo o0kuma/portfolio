@@ -306,82 +306,78 @@ export default function KuumaCompanion() {
           ))}
         </button>
 
-        {/* Chat panel */}
-        {isOpen && (
-          <div
-            className="absolute bottom-16 left-1/2 -translate-x-1/2 w-72 bg-black/95 border border-cyan-500/30 rounded-sm font-mono"
-            style={{ boxShadow: '0 0 30px rgb(34 211 238 / 0.15)', pointerEvents: 'auto' }}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
-              <span className="text-cyan-400 text-xs tracking-widest">쿠마</span>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="h-40 overflow-y-auto p-3 space-y-2">
-              {messages.length === 0 && (
-                <div className="text-cyan-700 text-xs text-center mt-8">무엇이든 물어보세요</div>
-              )}
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`text-xs ${m.role === 'user' ? 'text-right text-neutral-300' : 'text-left text-cyan-300'}`}
-                >
-                  <span
-                    className={`inline-block px-2 py-1 ${
-                      m.role === 'user'
-                        ? 'bg-neutral-800'
-                        : 'bg-cyan-950/50 border border-cyan-500/20'
-                    } rounded-sm`}
-                  >
-                    {m.content}
-                  </span>
-                </div>
-              ))}
-              {loading && (
-                <div className="text-cyan-500 text-xs animate-pulse">처리 중...</div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick chips */}
-            <div className="px-3 pb-2 flex flex-wrap gap-1">
-              {chips.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => sendMessage(c)}
-                  className="text-xs border border-cyan-500/30 text-cyan-500 hover:bg-cyan-950/50 px-2 py-0.5 rounded-sm transition-colors"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="flex border-t border-cyan-500/20">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="질문하기..."
-                className="flex-1 bg-transparent text-xs text-cyan-300 placeholder-cyan-800 px-3 py-2 outline-none"
-              />
-              <button
-                onClick={() => sendMessage()}
-                className="px-3 text-cyan-500 hover:text-cyan-300 text-xs transition-colors"
-              >
-                ▶
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Character rings only — no chat panel here */}
       </div>
+
+      {/* Chat panel — fixed bottom-right, independent of cursor position */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 10000,
+            pointerEvents: 'auto',
+          }}
+          className="w-72 bg-black/95 border border-cyan-500/30 rounded-sm font-mono"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
+            <span className="text-cyan-400 text-xs tracking-widest">쿠마</span>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Messages */}
+          <div className="h-48 overflow-y-auto p-3 space-y-2">
+            {messages.length === 0 && (
+              <div className="text-cyan-700 text-xs text-center mt-10">무엇이든 물어보세요</div>
+            )}
+            {messages.map((m, i) => (
+              <div
+                key={i}
+                className={`text-xs ${m.role === 'user' ? 'text-right text-neutral-300' : 'text-left text-cyan-300'}`}
+              >
+                <span
+                  className={`inline-block px-2 py-1 max-w-[220px] text-left ${
+                    m.role === 'user'
+                      ? 'bg-neutral-800'
+                      : 'bg-cyan-950/50 border border-cyan-500/20'
+                  } rounded-sm`}
+                  style={{ wordBreak: 'break-word' }}
+                >
+                  {m.content}
+                </span>
+              </div>
+            ))}
+            {loading && (
+              <div className="text-cyan-500 text-xs animate-pulse">생각 중...</div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="flex border-t border-cyan-500/20">
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
+              placeholder="쿠마에게 물어보세요..."
+              className="flex-1 bg-transparent text-xs text-cyan-300 placeholder-cyan-800 px-3 py-2 outline-none"
+            />
+            <button
+              onClick={() => sendMessage()}
+              className="px-3 text-cyan-500 hover:text-cyan-300 text-xs transition-colors"
+            >
+              ▶
+            </button>
+          </div>
+        </div>
+      )}
     </>
   )
 }
