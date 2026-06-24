@@ -75,7 +75,6 @@ export default function Header() {
     { label: t.nav.contact, kind: 'section', id: 'contact' },
     { label: t.nav.tetris, kind: 'path', href: '/tetris' },
     { label: t.nav.food, kind: 'path', href: '/food' },
-    { label: '이력서', kind: 'path', href: '/resume' },
     { label: '방명록', kind: 'path', href: '/guestbook' },
     { label: '📥 오프라인', kind: 'path', href: '/offline-posts' },
     { label: 'TERMINAL', kind: 'path', href: '/terminal' },
