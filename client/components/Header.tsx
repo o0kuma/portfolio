@@ -71,10 +71,6 @@ export default function Header() {
     { label: t.nav.projects, kind: 'section', id: 'projects' },
     { label: t.nav.posts, kind: 'section', id: 'posts' },
     { label: t.nav.contact, kind: 'section', id: 'contact' },
-    { label: t.nav.tetris, kind: 'path', href: '/tetris' },
-    { label: t.nav.food, kind: 'path', href: '/food' },
-    { label: '방명록', kind: 'path', href: '/guestbook' },
-    { label: '📥 오프라인', kind: 'path', href: '/offline-posts' },
     { label: 'TERMINAL', kind: 'path', href: '/terminal' },
   ]
 
