@@ -1,368 +1,487 @@
 'use client'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-const sectionMessages: Record<string, string[]> = {
-  home: [
-    '안녕하세요! 포트폴리오를 둘러보고 계신가요? 🤖',
-    '궁금한 점이 있으시면 언제든 물어보세요.',
-    '저는 쿠마입니다. 무엇을 도와드릴까요?',
-  ],
-  about: [
-    '개발자에 대해 더 알고 싶으신가요?',
-    '직접 연락해보시는 건 어떨까요?',
-    '개발자 소개 섹션을 보고 계시네요!',
-  ],
-  skills: [
-    'React와 Next.js가 주력 스택이에요.',
-    '풀스택 개발 경험이 있답니다.',
-    '다양한 기술 스택을 다루고 있어요.',
-  ],
-  projects: [
-    '이 프로젝트들은 직접 만든 것들이에요.',
-    '데모가 궁금하시면 클릭해보세요!',
-    '어떤 프로젝트가 가장 흥미로우세요?',
-  ],
-  posts: [
-    '기술 블로그를 운영 중이에요.',
-    '어떤 주제가 궁금하신가요?',
-    '새로운 글이 자주 업데이트돼요!',
-  ],
-  games: [
-    '게임도 직접 개발했어요!',
-    '테트리스, 서바이브, 타워 디펜스가 있어요.',
-    '한번 플레이해보시겠어요?',
-  ],
-  food: [
-    '맛집 리스트를 Notion으로 관리해요.',
-    '추천 맛집이 필요하세요?',
-    '맛있는 곳들만 골라놨어요!',
-  ],
-  contact: [
-    '프로젝트 협업을 원하시나요?',
-    '이메일로 연락주시면 답장드릴게요!',
-    '언제든지 연락해 주세요!',
-  ],
-  admin: [
-    '관리자 페이지에 오셨군요.',
-    '무엇을 관리하시려고요?',
-  ],
+interface Message {
+  id: string
+  content: string
+  isUser: boolean
 }
 
-const chips = ['어떤 프로젝트가 있나요?', '연락 방법은?', '어떤 기술 써요?']
+interface JarvisCompanionProps {
+  currentSection?: string
+}
 
-export default function JarvisCompanion() {
-  const [pos, setPos] = useState({ x: -100, y: -100 })
-  const targetPos = useRef({ x: -100, y: -100 })
-  const currentPos = useRef({ x: -100, y: -100 })
-  const rafRef = useRef<number>()
+const JARVIS_SYSTEM_CONTEXT = `You are JARVIS, an AI companion embedded in a Korean frontend developer's portfolio website. You follow the user's cursor as they browse. You are witty, concise, and helpful — think Iron Man's JARVIS but friendlier and more casual. The portfolio belongs to 승짱(Okuma), a frontend developer specializing in React, Next.js, and modern web technologies. You are aware of the portfolio sections: About, Projects, Skills, Contact. Answer anything freely in Korean. Keep responses short and punchy — max 2-3 sentences unless more detail is genuinely needed. Occasionally add a touch of dry wit.`
 
-  const [bubble, setBubble] = useState<string | null>(null)
+const PROACTIVE_MESSAGES: Record<string, string> = {
+  hero: '안녕하세요! 저는 JARVIS입니다. 궁금한 점이 있으시면 편하게 물어보세요. 🤖',
+  about: '개발자에 대해 더 알고 싶으신가요? 질문해 주세요!',
+  projects: '프로젝트들이 마음에 드셨나요? 기술 스택이나 구현 방법에 대해 물어보실 수 있어요.',
+  skills: '기술 스택에 관심이 있으시군요! 더 자세히 알고 싶은 기술이 있으신가요?',
+  contact: '연락을 고려하고 계신가요? 도움이 필요하시면 말씀해 주세요!',
+}
+
+export default function JarvisCompanion({ currentSection = 'hero' }: JarvisCompanionProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<{ role: string; content: string }[]>([])
-  const [input, setInput] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [currentSection, setCurrentSection] = useState('home')
+  const [messages, setMessages] = useState<Message[]>([])
+  const [inputValue, setInputValue] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+  const [sessionId] = useState(() => `jarvis-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [lastSection, setLastSection] = useState(currentSection)
 
-  const lastMoveRef = useRef(Date.now())
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const sectionTimerRef = useRef<ReturnType<typeof setInterval>>()
-  const bubbleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
+  const companionRef = useRef<HTMLDivElement>(null)
 
-  const showBubble = useCallback((text: string) => {
-    setBubble(text)
-    if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current)
-    bubbleTimeoutRef.current = setTimeout(() => setBubble(null), 5000)
-  }, [])
-
-  // Smooth mouse follow with lerp
+  // Follow cursor with smooth lag
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      targetPos.current = { x: e.clientX + 20, y: e.clientY - 20 }
-      lastMoveRef.current = Date.now()
+    let animationId: number
+    let targetX = window.innerWidth - 100
+    let targetY = window.innerHeight - 100
+    let currentX = targetX
+    let currentY = targetY
+
+    setPosition({ x: targetX, y: targetY })
+
+    const handleMouseMove = (e: MouseEvent) => {
+      targetX = Math.min(Math.max(e.clientX + 20, 60), window.innerWidth - 60)
+      targetY = Math.min(Math.max(e.clientY + 20, 60), window.innerHeight - 120)
     }
-    window.addEventListener('mousemove', onMove)
 
     const animate = () => {
-      const lerp = 0.08
-      currentPos.current.x += (targetPos.current.x - currentPos.current.x) * lerp
-      currentPos.current.y += (targetPos.current.y - currentPos.current.y) * lerp
-      setPos({ x: currentPos.current.x, y: currentPos.current.y })
-      rafRef.current = requestAnimationFrame(animate)
+      currentX += (targetX - currentX) * 0.08
+      currentY += (targetY - currentY) * 0.08
+      setPosition({ x: currentX, y: currentY })
+      animationId = requestAnimationFrame(animate)
     }
-    rafRef.current = requestAnimationFrame(animate)
+
+    window.addEventListener('mousemove', handleMouseMove)
+    animationId = requestAnimationFrame(animate)
 
     return () => {
-      window.removeEventListener('mousemove', onMove)
-      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      window.removeEventListener('mousemove', handleMouseMove)
+      cancelAnimationFrame(animationId)
     }
   }, [])
 
-  // Idle wander behavior
+  // Proactive message on section change
   useEffect(() => {
-    const checkIdle = setInterval(() => {
-      if (Date.now() - lastMoveRef.current > 10000) {
-        const x = Math.random() * (window.innerWidth - 100) + 50
-        const y = Math.random() * (window.innerHeight - 100) + 50
-        targetPos.current = { x, y }
+    if (currentSection !== lastSection) {
+      setLastSection(currentSection)
+      const proactive = PROACTIVE_MESSAGES[currentSection]
+      if (proactive && messages.length === 0) {
+        setMessages([{
+          id: Date.now().toString(),
+          content: proactive,
+          isUser: false,
+        }])
       }
-    }, 5000)
-    return () => clearInterval(checkIdle)
+    }
+  }, [currentSection, lastSection, messages.length])
+
+  // Initial greeting
+  useEffect(() => {
+    const greeting = PROACTIVE_MESSAGES[currentSection] || PROACTIVE_MESSAGES.hero
+    setMessages([{
+      id: 'init',
+      content: greeting,
+      isUser: false,
+    }])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Section detection
+  // Auto-scroll
   useEffect(() => {
-    const detectSection = () => {
-      const path = window.location.pathname
-      if (path.startsWith('/posts')) return 'posts'
-      if (path.startsWith('/food')) return 'food'
-      if (path.startsWith('/games')) return 'games'
-      if (path.startsWith('/admin')) return 'admin'
-      return null
+    if (isOpen) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
+  }, [messages, isTyping, isOpen])
 
-    const pathSection = detectSection()
-    if (pathSection) {
-      setCurrentSection(pathSection)
-      return
-    }
-
-    const sectionIds = ['about', 'skills', 'projects', 'contact']
-    const observers: IntersectionObserver[] = []
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id)
-      if (!el) return
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setCurrentSection(id)
-          }
-        },
-        { threshold: 0.4 }
-      )
-      observer.observe(el)
-      observers.push(observer)
-    })
-
-    // Fallback: if no section is intersecting, default to home
-    const homeCheck = setTimeout(() => {
-      setCurrentSection((prev) => prev)
-    }, 500)
-
-    return () => {
-      observers.forEach((o) => o.disconnect())
-      clearTimeout(homeCheck)
-    }
-  }, [])
-
-  // Proactive messages on section change
+  // Focus input when opened
   useEffect(() => {
-    if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
-
-    const msgs = sectionMessages[currentSection] || sectionMessages.home
-    const randomMsg = () => msgs[Math.floor(Math.random() * msgs.length)]
-
-    const initialTimer = setTimeout(() => {
-      showBubble(randomMsg())
-      sectionTimerRef.current = setInterval(
-        () => {
-          showBubble(randomMsg())
-        },
-        45000 + Math.random() * 15000
-      )
-    }, 5000)
-
-    return () => {
-      clearTimeout(initialTimer)
-      if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 100)
     }
-  }, [currentSection, showBubble])
+  }, [isOpen])
 
-  // Auto scroll messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+  const sendMessage = useCallback(async () => {
+    const text = inputValue.trim()
+    if (!text || isTyping) return
 
-  const sendMessage = useCallback(
-    async (text?: string) => {
-      const content = text || input
-      if (!content.trim() || loading) return
+    const userMsg: Message = {
+      id: `user-${Date.now()}`,
+      content: text,
+      isUser: true,
+    }
 
-      const userMsg = { role: 'user', content }
-      setMessages((prev) => [...prev].slice(-4).concat(userMsg))
-      setInput('')
-      setLoading(true)
+    setMessages(prev => [...prev.slice(-9), userMsg])
+    setInputValue('')
+    setIsTyping(true)
 
-      try {
-        const res = await fetch('/api/ai/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: content,
-            sessionId: 'kuuma',
-            conversationHistory: messages.slice(-6),
-          }),
-        })
-        const data = await res.json()
-        const reply = data.message || data.content || data.reply || '죄송해요, 응답을 받지 못했어요.'
-        setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
-      } catch {
-        setMessages((prev) => [...prev, { role: 'assistant', content: '연결에 문제가 생겼어요. 다시 시도해주세요.' }])
-      } finally {
-        setLoading(false)
+    try {
+      const response = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          sessionId,
+          tone: '친근하게',
+          context: 'portfolio',
+          systemOverride: JARVIS_SYSTEM_CONTEXT,
+        }),
+      })
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}))
+        throw new Error(errData.error || `HTTP ${response.status}`)
       }
-    },
-    [input, loading, messages]
-  )
+
+      const aiMsgId = `ai-${Date.now()}`
+      setMessages(prev => [...prev, { id: aiMsgId, content: '', isUser: false }])
+      setIsTyping(false)
+
+      const reader = response.body?.getReader()
+      const decoder = new TextDecoder()
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          const chunk = decoder.decode(value, { stream: true })
+          setMessages(prev =>
+            prev.map(m =>
+              m.id === aiMsgId ? { ...m, content: m.content + chunk } : m
+            )
+          )
+        }
+      }
+    } catch (err) {
+      setIsTyping(false)
+      const errMsg = err instanceof Error ? err.message : '오류가 발생했습니다.'
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `err-${Date.now()}`,
+          content: `죄송합니다, 오류가 발생했습니다: ${errMsg}`,
+          isUser: false,
+        },
+      ])
+    }
+  }, [inputValue, isTyping, sessionId])
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
 
   return (
-    <>
-      <style>{`
-        @keyframes kuuma-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes kuuma-pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(0.85); }
-        }
-        @keyframes kuuma-breathe {
-          0%, 100% { box-shadow: 0 0 8px rgb(34 211 238), 0 0 20px rgb(34 211 238 / 0.5); }
-          50% { box-shadow: 0 0 16px rgb(34 211 238), 0 0 40px rgb(34 211 238 / 0.8); }
-        }
-        .kuuma-spin { animation: kuuma-spin 10s linear infinite; }
-        .kuuma-pulse-core { animation: kuuma-pulse 2s ease-in-out infinite; }
-        .kuuma-breathe { animation: kuuma-breathe 3s ease-in-out infinite; }
-      `}</style>
-
-      <div
-        style={{
-          position: 'fixed',
-          left: pos.x,
-          top: pos.y,
-          zIndex: 9999,
-          pointerEvents: 'auto',
-          transform: 'translate(-50%, -50%)',
-        }}
-      >
-        {/* Speech bubble */}
-        {bubble && !isOpen && (
-          <div
-            className="absolute bottom-14 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono px-3 py-1.5 rounded-sm"
-            style={{ boxShadow: '0 0 10px rgb(34 211 238 / 0.2)', maxWidth: '220px', whiteSpace: 'normal' }}
-          >
-            {bubble}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-cyan-500/50 rotate-45" />
-          </div>
-        )}
-
-        {/* Character rings */}
-        <button
-          onClick={() => setIsOpen((o) => !o)}
-          className="relative w-12 h-12 flex items-center justify-center"
-          aria-label="Toggle 쿠마 chat"
-          style={{ outline: 'none' }}
+    <div
+      ref={companionRef}
+      style={{
+        position: 'fixed',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        transform: 'translate(-50%, -50%)',
+        zIndex: 9999,
+        pointerEvents: 'none',
+      }}
+    >
+      {/* Chat panel */}
+      {isOpen && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '60px',
+            right: '-20px',
+            width: '300px',
+            background: 'rgba(10, 15, 30, 0.95)',
+            border: '1px solid rgba(0, 212, 255, 0.3)',
+            borderRadius: '12px',
+            boxShadow: '0 0 20px rgba(0, 212, 255, 0.15), 0 8px 32px rgba(0,0,0,0.5)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            pointerEvents: 'all',
+            backdropFilter: 'blur(12px)',
+          }}
         >
-          {/* Spinning outer ring */}
+          {/* Header */}
           <div
-            className="absolute inset-0 rounded-full border border-cyan-400/40 kuuma-spin"
-          />
-          {/* Inner glow ring */}
-          <div
-            className="absolute inset-1.5 rounded-full border border-cyan-400/60 bg-cyan-950/80 backdrop-blur-sm"
-            style={{ boxShadow: '0 0 12px rgb(34 211 238 / 0.5), inset 0 0 8px rgb(34 211 238 / 0.2)' }}
-          />
-          {/* Core */}
-          <div
-            className="w-3 h-3 rounded-full bg-cyan-400 kuuma-pulse-core relative z-10 kuuma-breathe"
-          />
-          {/* Tick marks at 4 positions */}
-          {[0, 90, 180, 270].map((deg) => (
-            <div
-              key={deg}
-              className="absolute w-1 h-1 bg-cyan-400/80 rounded-full"
-              style={{ transform: `rotate(${deg}deg) translateX(22px)` }}
-            />
-          ))}
-        </button>
-
-        {/* Chat panel */}
-        {isOpen && (
-          <div
-            className="absolute bottom-16 left-1/2 -translate-x-1/2 w-72 bg-black/95 border border-cyan-500/30 rounded-sm font-mono"
-            style={{ boxShadow: '0 0 30px rgb(34 211 238 / 0.15)' }}
+            style={{
+              padding: '10px 14px',
+              borderBottom: '1px solid rgba(0, 212, 255, 0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'rgba(0, 212, 255, 0.05)',
+            }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
-              <span className="text-cyan-400 text-xs tracking-widest">쿠마</span>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="h-40 overflow-y-auto p-3 space-y-2">
-              {messages.length === 0 && (
-                <div className="text-cyan-700 text-xs text-center mt-8">무엇이든 물어보세요</div>
-              )}
-              {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`text-xs ${m.role === 'user' ? 'text-right text-neutral-300' : 'text-left text-cyan-300'}`}
-                >
-                  <span
-                    className={`inline-block px-2 py-1 ${
-                      m.role === 'user'
-                        ? 'bg-neutral-800'
-                        : 'bg-cyan-950/50 border border-cyan-500/20'
-                    } rounded-sm`}
-                  >
-                    {m.content}
-                  </span>
-                </div>
-              ))}
-              {loading && (
-                <div className="text-cyan-500 text-xs animate-pulse">처리 중...</div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Quick chips */}
-            <div className="px-3 pb-2 flex flex-wrap gap-1">
-              {chips.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => sendMessage(c)}
-                  className="text-xs border border-cyan-500/30 text-cyan-500 hover:bg-cyan-950/50 px-2 py-0.5 rounded-sm transition-colors"
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-
-            {/* Input */}
-            <div className="flex border-t border-cyan-500/20">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                placeholder="질문하기..."
-                className="flex-1 bg-transparent text-xs text-cyan-300 placeholder-cyan-800 px-3 py-2 outline-none"
-              />
-              <button
-                onClick={() => sendMessage()}
-                className="px-3 text-cyan-500 hover:text-cyan-300 text-xs transition-colors"
-              >
-                ▶
-              </button>
-            </div>
+            <div
+              style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: '#00d4ff',
+                boxShadow: '0 0 6px #00d4ff',
+                animation: 'pulse 2s infinite',
+              }}
+            />
+            <span style={{ color: '#00d4ff', fontSize: '13px', fontWeight: 600, letterSpacing: '0.05em' }}>
+              JARVIS
+            </span>
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                marginLeft: 'auto',
+                background: 'none',
+                border: 'none',
+                color: 'rgba(255,255,255,0.4)',
+                cursor: 'pointer',
+                fontSize: '16px',
+                lineHeight: 1,
+                padding: '2px 4px',
+              }}
+              aria-label="닫기"
+            >
+              ×
+            </button>
           </div>
+
+          {/* Messages */}
+          <div
+            style={{
+              maxHeight: '200px',
+              overflowY: 'auto',
+              padding: '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'rgba(0,212,255,0.3) transparent',
+            }}
+          >
+            {messages.map(msg => (
+              <div
+                key={msg.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: msg.isUser ? 'flex-end' : 'flex-start',
+                }}
+              >
+                <div
+                  style={{
+                    maxWidth: '85%',
+                    padding: '7px 10px',
+                    borderRadius: msg.isUser ? '12px 12px 2px 12px' : '12px 12px 12px 2px',
+                    background: msg.isUser
+                      ? 'rgba(0, 212, 255, 0.25)'
+                      : 'rgba(255, 255, 255, 0.07)',
+                    border: msg.isUser
+                      ? '1px solid rgba(0, 212, 255, 0.4)'
+                      : '1px solid rgba(255,255,255,0.1)',
+                    color: msg.isUser ? '#e0f8ff' : 'rgba(255,255,255,0.85)',
+                    fontSize: '12px',
+                    lineHeight: '1.5',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                  }}
+                >
+                  {msg.content || (
+                    <span style={{ opacity: 0.5 }}>▋</span>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Typing indicator */}
+            {isTyping && (
+              <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                <div
+                  style={{
+                    padding: '8px 12px',
+                    borderRadius: '12px 12px 12px 2px',
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    gap: '4px',
+                    alignItems: 'center',
+                  }}
+                >
+                  {[0, 1, 2].map(i => (
+                    <span
+                      key={i}
+                      style={{
+                        width: '5px',
+                        height: '5px',
+                        borderRadius: '50%',
+                        background: '#00d4ff',
+                        display: 'inline-block',
+                        animation: `typingDot 1.2s ${i * 0.2}s infinite ease-in-out`,
+                        opacity: 0.6,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div
+            style={{
+              padding: '10px',
+              borderTop: '1px solid rgba(0, 212, 255, 0.15)',
+              display: 'flex',
+              gap: '6px',
+              alignItems: 'flex-end',
+              background: 'rgba(0,0,0,0.2)',
+            }}
+          >
+            <textarea
+              ref={inputRef}
+              value={inputValue}
+              onChange={e => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="JARVIS에게 물어보세요..."
+              rows={1}
+              disabled={isTyping}
+              style={{
+                flex: 1,
+                background: 'rgba(255,255,255,0.05)',
+                border: '1px solid rgba(0, 212, 255, 0.2)',
+                borderRadius: '8px',
+                color: 'rgba(255,255,255,0.9)',
+                fontSize: '12px',
+                padding: '7px 10px',
+                resize: 'none',
+                outline: 'none',
+                fontFamily: 'inherit',
+                lineHeight: '1.4',
+                maxHeight: '80px',
+                overflowY: 'auto',
+                opacity: isTyping ? 0.5 : 1,
+              }}
+              onInput={e => {
+                const el = e.currentTarget
+                el.style.height = 'auto'
+                el.style.height = `${Math.min(el.scrollHeight, 80)}px`
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={isTyping || !inputValue.trim()}
+              style={{
+                background: inputValue.trim() && !isTyping
+                  ? 'rgba(0, 212, 255, 0.8)'
+                  : 'rgba(0, 212, 255, 0.2)',
+                border: 'none',
+                borderRadius: '8px',
+                color: inputValue.trim() && !isTyping ? '#000' : 'rgba(255,255,255,0.3)',
+                cursor: inputValue.trim() && !isTyping ? 'pointer' : 'not-allowed',
+                fontSize: '14px',
+                padding: '7px 10px',
+                transition: 'all 0.2s',
+                flexShrink: 0,
+                lineHeight: 1,
+              }}
+              aria-label="전송"
+            >
+              ↑
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* JARVIS orb button */}
+      <button
+        onClick={() => setIsOpen(o => !o)}
+        style={{
+          width: '44px',
+          height: '44px',
+          borderRadius: '50%',
+          background: isOpen
+            ? 'rgba(0, 212, 255, 0.9)'
+            : 'rgba(10, 15, 30, 0.85)',
+          border: `2px solid ${isOpen ? '#00d4ff' : 'rgba(0,212,255,0.5)'}`,
+          boxShadow: isOpen
+            ? '0 0 20px rgba(0,212,255,0.6), 0 0 40px rgba(0,212,255,0.2)'
+            : '0 0 10px rgba(0,212,255,0.3)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          pointerEvents: 'all',
+          transition: 'all 0.3s ease',
+          backdropFilter: 'blur(8px)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+        aria-label={isOpen ? 'JARVIS 닫기' : 'JARVIS 열기'}
+      >
+        {/* Arc reactor icon */}
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle
+            cx="12" cy="12" r="4"
+            fill={isOpen ? 'rgba(0,30,60,0.9)' : '#00d4ff'}
+            stroke={isOpen ? 'rgba(0,30,60,0.5)' : '#00d4ff'}
+            strokeWidth="0.5"
+          />
+          <circle
+            cx="12" cy="12" r="8"
+            fill="none"
+            stroke={isOpen ? 'rgba(0,30,60,0.7)' : 'rgba(0,212,255,0.7)'}
+            strokeWidth="1"
+            strokeDasharray="3 2"
+          />
+          <circle
+            cx="12" cy="12" r="11"
+            fill="none"
+            stroke={isOpen ? 'rgba(0,30,60,0.4)' : 'rgba(0,212,255,0.3)'}
+            strokeWidth="0.5"
+          />
+        </svg>
+
+        {/* Pulse rings when closed */}
+        {!isOpen && (
+          <>
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              border: '2px solid rgba(0,212,255,0.4)',
+              animation: 'orbPulse 2s infinite ease-out',
+            }} />
+            <span style={{
+              position: 'absolute',
+              inset: 0,
+              borderRadius: '50%',
+              border: '2px solid rgba(0,212,255,0.2)',
+              animation: 'orbPulse 2s 0.6s infinite ease-out',
+            }} />
+          </>
         )}
-      </div>
-    </>
+      </button>
+
+      <style>{`
+        @keyframes orbPulse {
+          0% { transform: scale(1); opacity: 1; }
+          100% { transform: scale(1.8); opacity: 0; }
+        }
+        @keyframes typingDot {
+          0%, 80%, 100% { transform: scale(0.8); opacity: 0.4; }
+          40% { transform: scale(1.2); opacity: 1; }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+    </div>
   )
 }
