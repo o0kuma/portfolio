@@ -277,11 +277,11 @@ export default function KuumaCompanion() {
 
         {/* Character rings */}
         <button
-          onClick={() => setIsOpen((o) => !o)}
+          onDoubleClick={() => setIsOpen((o) => !o)}
+          onClick={() => { if (!isOpen) showBubble('더블클릭하면 대화할 수 있어요! 👾') }}
           className="relative w-12 h-12 flex items-center justify-center"
-          style={{ pointerEvents: 'auto' }}
+          style={{ pointerEvents: 'auto', outline: 'none' }}
           aria-label="Toggle 쿠마 chat"
-          style={{ outline: 'none' }}
         >
           {/* Spinning outer ring */}
           <div
