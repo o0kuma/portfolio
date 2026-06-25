@@ -4,6 +4,9 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
 import ChatbotWidget from '@/components/ChatbotWidget'
+import dynamic from 'next/dynamic'
+
+const LiveCursors = dynamic(() => import('@/components/LiveCursors'), { ssr: false })
 import {
   getSiteUrl,
   SITE_NAME,
@@ -157,6 +160,7 @@ export default function RootLayout({
         <Providers>{children}</Providers>
         <ToastContainer />
         <ChatbotWidget />
+        <LiveCursors />
       </body>
     </html>
   )

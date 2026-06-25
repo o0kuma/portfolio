@@ -5,11 +5,8 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { FiArrowDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
-import MarketWidget from '@/components/MarketWidget'
 import HomePostsSection from '@/components/home/HomePostsSection'
-import MarketTickerBar from '@/components/home/MarketTickerBar'
 import RecentActivity from '@/components/home/RecentActivity'
-import VisitorCounter from '@/components/home/VisitorCounter'
 import PushNotificationButton from '@/components/PushNotificationButton'
 import { useLanguage } from '@/lib/LanguageContext'
 import { PORTFOLIO_PUBLIC } from '@/lib/site'
@@ -24,6 +21,11 @@ const HomeScene = dynamic(() => import('./HomeScene'), {
   loading: () => (
     <div className="h-full w-full animate-pulse bg-[#030014]" aria-hidden />
   ),
+})
+
+const VisitorGlobe = dynamic(() => import('./VisitorGlobe'), {
+  ssr: false,
+  loading: () => <div className="w-[180px] h-[180px] md:w-[200px] md:h-[200px]" />,
 })
 
 /**
@@ -45,11 +47,6 @@ function ImmersiveHomeInner() {
 
       {/* Hero: full viewport; pointer-events only where needed */}
       <section className="relative z-10 flex min-h-[100dvh] flex-col pointer-events-none">
-        {/* Market ticker bar */}
-        <div className="pointer-events-auto w-full">
-          <MarketTickerBar />
-        </div>
-
         <header className="flex items-center justify-between px-5 py-5 md:px-12 md:py-8 pointer-events-auto">
           <Link
             href="/"
@@ -104,8 +101,8 @@ function ImmersiveHomeInner() {
         </main>
 
         <footer className="pointer-events-none flex flex-col items-center gap-3 pb-10 md:pb-12">
-          <div className="pointer-events-auto">
-            <VisitorCounter />
+          <div className="pointer-events-auto flex flex-col items-center gap-2">
+            <VisitorGlobe />
             <PushNotificationButton />
           </div>
           <a
@@ -124,7 +121,6 @@ function ImmersiveHomeInner() {
         <HomePostsSection />
         <BlogFooter />
       </div>
-      <MarketWidget />
     </div>
   )
 }
