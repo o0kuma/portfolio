@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
 
+type ViewMode = 'list' | 'map'
+
 type RegionWithItems = RestaurantPage & { items: RestaurantItem[] }
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -209,6 +211,7 @@ export default function FoodClient({
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
   const [visitedOnly, setVisitedOnly] = useState(false)
   const [selectedItem, setSelectedItem] = useState<RestaurantItem | null>(null)
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
 
   const current = regions.find((r) => r.id === activeRegion) ?? regions[0]
 
@@ -238,13 +241,15 @@ export default function FoodClient({
     setSelectedItem(null)
   }
 
+  const mapItem = viewMode === 'map' ? (selectedItem ?? filteredItems[0] ?? null) : selectedItem
+
   function handleSelectItem(item: RestaurantItem) {
     setSelectedItem((prev) => (prev?.id === item.id ? null : item))
   }
 
-  const googleMapsUrl = selectedItem
+  const googleMapsUrl = mapItem
     ? `https://www.google.com/maps/search/${encodeURIComponent(
-        selectedItem.address ? `${selectedItem.name} ${selectedItem.address}` : selectedItem.name
+        mapItem.address ? `${mapItem.name} ${mapItem.address}` : mapItem.name
       )}`
     : ''
 
@@ -363,142 +368,247 @@ export default function FoodClient({
                         <span className="text-xs font-mono text-neutral-600">
                           총 {current.items.length}곳
                         </span>
+                        {/* View mode toggle */}
+                        <div className="flex items-center border border-neutral-700 rounded-full overflow-hidden">
+                          <button
+                            type="button"
+                            onClick={() => setViewMode('list')}
+                            className={`text-[11px] font-mono px-3 py-1 transition-all duration-150 ${
+                              viewMode === 'list'
+                                ? 'bg-neutral-700 text-neutral-100'
+                                : 'text-neutral-500 hover:text-neutral-300'
+                            }`}
+                          >
+                            리스트
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setViewMode('map'); setSelectedItem(null) }}
+                            className={`text-[11px] font-mono px-3 py-1 transition-all duration-150 flex items-center gap-1 ${
+                              viewMode === 'map'
+                                ? 'bg-neutral-700 text-neutral-100'
+                                : 'text-neutral-500 hover:text-neutral-300'
+                            }`}
+                          >
+                            <MapPinIcon size={10} />
+                            지도
+                          </button>
+                        </div>
                         <a
                           href={regionMapUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
+                          className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
                         >
                           <MapPinIcon />
-                          <span>전체 지도 보기</span>
+                          <span>전체 지도</span>
                           <ExternalLinkIcon />
                         </a>
                       </div>
                     </div>
 
-                    {/* Google Map embed panel */}
-                    <AnimatePresence>
-                      {selectedItem && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 360 }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.3, ease: 'easeInOut' }}
-                          className="mb-5 overflow-hidden rounded-xl border border-emerald-500/30 bg-neutral-900"
-                        >
-                          <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">
-                            <div className="flex items-center gap-2 text-sm text-neutral-300">
-                              <MapPinIcon size={14} />
-                              <span className="font-semibold">{selectedItem.name}</span>
-                              {selectedItem.address && (
-                                <span className="text-neutral-600 text-xs truncate max-w-[200px]">
-                                  {selectedItem.address}
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <a
-                                href={googleMapsUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors"
-                              >
-                                구글맵에서 열기
-                                <ExternalLinkIcon />
-                              </a>
+                    {/* ── MAP VIEW ─────────────────────────────────── */}
+                    {viewMode === 'map' && (
+                      <div className="flex gap-4" style={{ height: 'calc(100vh - 260px)', minHeight: 480 }}>
+                        {/* Restaurant list (left) */}
+                        <div className="w-64 shrink-0 overflow-y-auto flex flex-col gap-1.5 pr-1 scrollbar-none">
+                          {filteredItems.length === 0 ? (
+                            <p className="text-neutral-600 font-mono text-xs py-6 text-center">
+                              식당이 없습니다
+                            </p>
+                          ) : filteredItems.map((item) => {
+                            const isActive = mapItem?.id === item.id
+                            return (
                               <button
+                                key={item.id}
                                 type="button"
-                                onClick={() => setSelectedItem(null)}
-                                className="text-neutral-600 hover:text-neutral-300 transition-colors p-0.5"
+                                onClick={() => setSelectedItem(item)}
+                                className={`text-left px-3 py-2.5 rounded-lg border transition-all duration-150 w-full ${
+                                  isActive
+                                    ? 'border-emerald-500/50 bg-emerald-950/40 text-neutral-100'
+                                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200'
+                                }`}
                               >
-                                <XIcon />
+                                <div className="flex items-center gap-1.5 mb-0.5">
+                                  {isActive && <MapPinIcon size={11} />}
+                                  <span className="text-xs font-semibold truncate">{item.name}</span>
+                                </div>
+                                {item.category && (
+                                  <span className="text-[10px] font-mono text-neutral-600">{item.category}</span>
+                                )}
+                                {item.address && (
+                                  <p className="text-[10px] text-neutral-700 truncate mt-0.5">{item.address}</p>
+                                )}
                               </button>
+                            )
+                          })}
+                        </div>
+
+                        {/* Map (right) */}
+                        <div className="flex-1 min-w-0 rounded-xl border border-neutral-800 overflow-hidden bg-neutral-900 flex flex-col">
+                          {mapItem ? (
+                            <>
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800 shrink-0">
+                                <div className="flex items-center gap-2 text-sm text-neutral-300 min-w-0">
+                                  <MapPinIcon size={13} />
+                                  <span className="font-semibold truncate">{mapItem.name}</span>
+                                  {mapItem.address && (
+                                    <span className="text-neutral-600 text-xs truncate hidden sm:block">
+                                      {mapItem.address}
+                                    </span>
+                                  )}
+                                </div>
+                                <a
+                                  href={googleMapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors shrink-0"
+                                >
+                                  구글맵에서 열기
+                                  <ExternalLinkIcon />
+                                </a>
+                              </div>
+                              <div className="flex-1">
+                                <GoogleMapEmbed item={mapItem} />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center text-neutral-700 font-mono text-sm">
+                              식당을 선택하세요
                             </div>
-                          </div>
-                          <div className="h-[312px]">
-                            <GoogleMapEmbed item={selectedItem} />
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Search input */}
-                    <div className="mb-4">
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="식당 이름 검색..."
-                        className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
-                      />
-                    </div>
-
-                    {/* Category filter pills + visited toggle */}
-                    {categories.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-2 mb-6">
-                        <button
-                          type="button"
-                          onClick={() => setActiveCategory(null)}
-                          className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
-                            activeCategory === null
-                              ? 'bg-neutral-200 text-neutral-900 border-neutral-200'
-                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
-                          }`}
-                        >
-                          전체
-                        </button>
-                        {categories.map((cat) => {
-                          const isActive = activeCategory === cat
-                          const colorCls = CATEGORY_COLOR[cat] ?? 'text-neutral-400 border-neutral-700'
-                          return (
-                            <button
-                              key={cat}
-                              type="button"
-                              onClick={() => setActiveCategory(isActive ? null : cat)}
-                              className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
-                                isActive
-                                  ? `${colorCls} opacity-100`
-                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
-                              }`}
-                            >
-                              {cat}
-                            </button>
-                          )
-                        })}
-                        <button
-                          type="button"
-                          onClick={() => setVisitedOnly((v) => !v)}
-                          className={`ml-auto text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
-                            visitedOnly
-                              ? 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10'
-                              : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
-                          }`}
-                        >
-                          방문만 보기
-                        </button>
+                          )}
+                        </div>
                       </div>
                     )}
 
-                    {current.items.length === 0 ? (
-                      <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                        아직 등록된 맛집이 없어요.
-                      </p>
-                    ) : filteredItems.length === 0 ? (
-                      <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                        조건에 맞는 식당이 없어요.
-                      </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {filteredItems.map((item, i) => (
-                          <RestaurantCard
-                            key={item.id}
-                            item={item}
-                            index={i}
-                            selected={selectedItem?.id === item.id}
-                            onSelect={handleSelectItem}
+                    {/* ── LIST VIEW ────────────────────────────────── */}
+                    {viewMode === 'list' && (
+                      <>
+                        {/* Google Map embed panel (list mode — click to show) */}
+                        <AnimatePresence>
+                          {selectedItem && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 360 }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              className="mb-5 overflow-hidden rounded-xl border border-emerald-500/30 bg-neutral-900"
+                            >
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">
+                                <div className="flex items-center gap-2 text-sm text-neutral-300">
+                                  <MapPinIcon size={14} />
+                                  <span className="font-semibold">{selectedItem.name}</span>
+                                  {selectedItem.address && (
+                                    <span className="text-neutral-600 text-xs truncate max-w-[200px]">
+                                      {selectedItem.address}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <a
+                                    href={googleMapsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors"
+                                  >
+                                    구글맵에서 열기
+                                    <ExternalLinkIcon />
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={() => setSelectedItem(null)}
+                                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-0.5"
+                                  >
+                                    <XIcon />
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="h-[312px]">
+                                <GoogleMapEmbed item={selectedItem} />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+
+                        {/* Search input */}
+                        <div className="mb-4">
+                          <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="식당 이름 검색..."
+                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
                           />
-                        ))}
-                      </div>
+                        </div>
+
+                        {/* Category filter pills + visited toggle */}
+                        {categories.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-2 mb-6">
+                            <button
+                              type="button"
+                              onClick={() => setActiveCategory(null)}
+                              className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                activeCategory === null
+                                  ? 'bg-neutral-200 text-neutral-900 border-neutral-200'
+                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                              }`}
+                            >
+                              전체
+                            </button>
+                            {categories.map((cat) => {
+                              const isActive = activeCategory === cat
+                              const colorCls = CATEGORY_COLOR[cat] ?? 'text-neutral-400 border-neutral-700'
+                              return (
+                                <button
+                                  key={cat}
+                                  type="button"
+                                  onClick={() => setActiveCategory(isActive ? null : cat)}
+                                  className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                    isActive
+                                      ? `${colorCls} opacity-100`
+                                      : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                                  }`}
+                                >
+                                  {cat}
+                                </button>
+                              )
+                            })}
+                            <button
+                              type="button"
+                              onClick={() => setVisitedOnly((v) => !v)}
+                              className={`ml-auto text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                visitedOnly
+                                  ? 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10'
+                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                              }`}
+                            >
+                              방문만 보기
+                            </button>
+                          </div>
+                        )}
+
+                        {current.items.length === 0 ? (
+                          <p className="text-neutral-600 font-mono text-sm py-10 text-center">
+                            아직 등록된 맛집이 없어요.
+                          </p>
+                        ) : filteredItems.length === 0 ? (
+                          <p className="text-neutral-600 font-mono text-sm py-10 text-center">
+                            조건에 맞는 식당이 없어요.
+                          </p>
+                        ) : (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {filteredItems.map((item, i) => (
+                              <RestaurantCard
+                                key={item.id}
+                                item={item}
+                                index={i}
+                                selected={selectedItem?.id === item.id}
+                                onSelect={handleSelectItem}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </>
                     )}
                   </motion.div>
                 )}

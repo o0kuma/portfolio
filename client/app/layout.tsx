@@ -3,9 +3,10 @@ import { Inter, Fraunces } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
-import KuumaCompanion from '@/components/KuumaCompanion'
-import LofiPlayer from '@/components/LofiPlayer'
-import LiveCursors from '@/components/LiveCursors'
+import ChatbotWidget from '@/components/ChatbotWidget'
+import dynamic from 'next/dynamic'
+
+const LiveCursors = dynamic(() => import('@/components/LiveCursors'), { ssr: false })
 import {
   getSiteUrl,
   SITE_NAME,
@@ -158,9 +159,8 @@ export default function RootLayout({
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <ToastContainer />
-        <KuumaCompanion />
+        <ChatbotWidget />
         <LiveCursors />
-        <LofiPlayer />
       </body>
     </html>
   )
