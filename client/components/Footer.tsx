@@ -22,6 +22,12 @@ export default function Footer() {
 
           <div className="flex items-center gap-5 order-1 sm:order-2">
             <a
+              href="/gallery"
+              className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono"
+            >
+              갤러리
+            </a>
+            <a
               href="/guestbook"
               className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono"
             >
