@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiSearch, FiX } from 'react-icons/fi'
+import { FiSearch, FiX, FiFileText, FiLayout, FiZap } from 'react-icons/fi'
 import { getCategoryLabel } from '@/lib/post-categories'
 
 interface SearchPost {
@@ -14,15 +14,34 @@ interface SearchPost {
   createdAt?: string
 }
 
+interface StaticItem {
+  title: string
+  url: string
+  type: 'page' | 'game'
+  desc: string
+}
+
 interface SearchModalProps {
   isOpen: boolean
   onClose: () => void
 }
 
+const STATIC_PAGES: StaticItem[] = [
+  { title: '3D 갤러리', url: '/gallery', type: 'page', desc: '프로젝트 3D 갤러리' },
+  { title: '방명록', url: '/guestbook', type: 'page', desc: '방문자 방명록' },
+  { title: '푸드맵', url: '/food', type: 'page', desc: '맛집 지도' },
+  { title: '코드 스니펫', url: '/snippets', type: 'page', desc: '코드 스니펫 모음' },
+  { title: 'Tower Defense', url: '/tower-defense', type: 'game', desc: '전략 타워 디펜스 게임' },
+  { title: 'Survive', url: '/survive', type: 'game', desc: '탑다운 슈터 게임' },
+  { title: 'Typing Game', url: '/typing-game', type: 'game', desc: '타이핑 속도 측정' },
+  { title: 'Tetris', url: '/tetris', type: 'game', desc: '클래식 테트리스' },
+]
+
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const router = useRouter()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<SearchPost[]>([])
+  const [posts, setPosts] = useState<SearchPost[]>([])
+  const [staticResults, setStaticResults] = useState<StaticItem[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -33,7 +52,8 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setTimeout(() => inputRef.current?.focus(), 50)
     } else {
       setQuery('')
-      setResults([])
+      setPosts([])
+      setStaticResults([])
     }
   }, [isOpen])
 
@@ -48,17 +68,33 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   }, [isOpen, onClose])
 
   const search = useCallback(async (q: string) => {
-    if (!q.trim()) {
-      setResults([])
+    const trimmed = q.trim()
+    if (!trimmed) {
+      setPosts([])
+      setStaticResults([])
       return
     }
+
+    // Filter static pages/games (2글자 이상)
+    if (trimmed.length >= 2) {
+      const lower = trimmed.toLowerCase()
+      const filtered = STATIC_PAGES.filter(
+        (item) =>
+          item.title.toLowerCase().includes(lower) ||
+          item.desc.toLowerCase().includes(lower),
+      )
+      setStaticResults(filtered)
+    } else {
+      setStaticResults([])
+    }
+
     setIsLoading(true)
     try {
       const res = await fetch(`/api/posts?q=${encodeURIComponent(q)}&limit=10`)
       const data = await res.json()
-      setResults(Array.isArray(data.posts) ? data.posts : [])
+      setPosts(Array.isArray(data.posts) ? data.posts : [])
     } catch {
-      setResults([])
+      setPosts([])
     } finally {
       setIsLoading(false)
     }
@@ -71,9 +107,14 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     debounceRef.current = setTimeout(() => search(val), 300)
   }
 
-  const handleSelect = (post: SearchPost) => {
+  const handleSelectPost = (post: SearchPost) => {
     const id = post._id ?? post.id
     router.push(`/posts/${id}`)
+    onClose()
+  }
+
+  const handleSelectStatic = (item: StaticItem) => {
+    router.push(item.url)
     onClose()
   }
 
@@ -85,6 +126,10 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       day: 'numeric',
     })
   }
+
+  const hasResults = posts.length > 0 || staticResults.length > 0
+  const staticPages = staticResults.filter((i) => i.type === 'page')
+  const staticGames = staticResults.filter((i) => i.type === 'game')
 
   if (!isOpen) return null
 
@@ -108,7 +153,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
           {query && (
             <button
               type="button"
-              onClick={() => { setQuery(''); setResults([]) }}
+              onClick={() => { setQuery(''); setPosts([]); setStaticResults([]) }}
               className="text-neutral-600 hover:text-neutral-400 transition-colors"
             >
               <FiX size={18} />
@@ -138,45 +183,120 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             </div>
           )}
 
-          {query.trim() && !isLoading && results.length === 0 && (
+          {query.trim() && !isLoading && !hasResults && (
             <div className="py-12 text-center text-neutral-600 font-mono text-sm">
               검색 결과가 없습니다
             </div>
           )}
 
-          {!isLoading && results.length > 0 && (
-            <ul>
-              {results.map((post) => {
-                const id = post._id ?? post.id
-                const date = post.createdAt ?? post.created_at
-                return (
-                  <li key={id}>
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(post)}
-                      className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-neutral-900 transition-colors text-left group"
-                    >
-                      <FiSearch size={14} className="text-neutral-700 group-hover:text-cyan-400 shrink-0 transition-colors" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
-                          {post.title}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider">
-                          {getCategoryLabel(post.category, 'ko')}
-                        </span>
-                        {date && (
-                          <span className="text-[11px] font-mono text-neutral-600">
-                            {formatDate(date)}
+          {!isLoading && hasResults && (
+            <div>
+              {/* 포스트 섹션 */}
+              {posts.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
+                    <FiFileText size={12} className="text-neutral-600" />
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">포스트</span>
+                  </div>
+                  <ul>
+                    {posts.map((post) => {
+                      const id = post._id ?? post.id
+                      const date = post.createdAt ?? post.created_at
+                      return (
+                        <li key={id}>
+                          <button
+                            type="button"
+                            onClick={() => handleSelectPost(post)}
+                            className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-neutral-900 transition-colors text-left group"
+                          >
+                            <FiSearch size={14} className="text-neutral-700 group-hover:text-cyan-400 shrink-0 transition-colors" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
+                                {post.title}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider">
+                                {getCategoryLabel(post.category, 'ko')}
+                              </span>
+                              {date && (
+                                <span className="text-[11px] font-mono text-neutral-600">
+                                  {formatDate(date)}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )}
+
+              {/* 페이지 섹션 */}
+              {staticPages.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
+                    <FiLayout size={12} className="text-neutral-600" />
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">페이지</span>
+                  </div>
+                  <ul>
+                    {staticPages.map((item) => (
+                      <li key={item.url}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectStatic(item)}
+                          className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-neutral-900 transition-colors text-left group"
+                        >
+                          <FiLayout size={14} className="text-neutral-700 group-hover:text-violet-400 shrink-0 transition-colors" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
+                              {item.title}
+                            </p>
+                            <p className="text-neutral-600 text-xs font-mono truncate">{item.desc}</p>
+                          </div>
+                          <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
+                            page
                           </span>
-                        )}
-                      </div>
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+
+              {/* 게임 섹션 */}
+              {staticGames.length > 0 && (
+                <section>
+                  <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
+                    <FiZap size={12} className="text-neutral-600" />
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">게임</span>
+                  </div>
+                  <ul>
+                    {staticGames.map((item) => (
+                      <li key={item.url}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelectStatic(item)}
+                          className="w-full flex items-center gap-4 px-5 py-3.5 hover:bg-neutral-900 transition-colors text-left group"
+                        >
+                          <FiZap size={14} className="text-neutral-700 group-hover:text-yellow-400 shrink-0 transition-colors" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
+                              {item.title}
+                            </p>
+                            <p className="text-neutral-600 text-xs font-mono truncate">{item.desc}</p>
+                          </div>
+                          <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
+                            game
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
           )}
         </div>
       </div>

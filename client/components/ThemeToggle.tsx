@@ -1,40 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
+import { useTheme } from '@/lib/ThemeContext'
 
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(true)
+  const { theme, toggle: toggleTheme } = useTheme()
+  const isDark = theme === 'dark'
   const [isAnimating, setIsAnimating] = useState(false)
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
-    const light = savedTheme === 'light'
-    setIsDark(!light)
-    if (light) {
-      document.documentElement.classList.remove('dark')
-    } else {
-      document.documentElement.classList.add('dark')
-    }
-  }, [])
 
   const toggle = () => {
     if (isAnimating) return
     setIsAnimating(true)
-    const newDark = !isDark
-    setIsDark(newDark)
-    if (newDark) {
-      document.documentElement.classList.add('dark')
-      localStorage.setItem('theme', 'dark')
-      // Restore color-theme data-theme if previously set
-      const colorTheme = localStorage.getItem('color-theme')
-      if (colorTheme && colorTheme !== 'dark' && colorTheme !== 'light-mode') {
-        document.documentElement.setAttribute('data-theme', colorTheme)
-      }
-    } else {
-      document.documentElement.classList.remove('dark')
-      document.documentElement.removeAttribute('data-theme')
-      localStorage.setItem('theme', 'light')
-    }
+    toggleTheme()
     setTimeout(() => setIsAnimating(false), 600)
   }
 

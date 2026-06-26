@@ -153,9 +153,17 @@
 }
 .light .bg-neutral-950 { background-color: #ffffff; }
 .light .bg-neutral-900 { background-color: #f5f5f5; }
+.light .bg-neutral-800 { background-color: #e5e5e5; }
+.light .bg-neutral-700 { background-color: #d4d4d4; }
 .light .text-neutral-50 { color: #171717; }
+.light .text-neutral-100 { color: #171717; }
+.light .text-neutral-200 { color: #262626; }
+.light .text-neutral-300 { color: #404040; }
 .light .text-neutral-400 { color: #525252; }
+.light .text-neutral-500 { color: #737373; }
 .light .border-neutral-800 { border-color: #e5e5e5; }
+.light .border-neutral-700 { border-color: #d4d4d4; }
+.light .border-neutral-600 { border-color: #a3a3a3; }
 
 /* ── Terminal theme overrides ──────────────────────────── */
 [data-theme="terminal"] body { background-color: #0a0f0a; color: #4ade80; }
@@ -228,6 +236,45 @@
 [data-theme="sunset"] a { color: #fb923c; }
 [data-theme="sunset"] ::selection { background: #7c2d12; color: #ffedd5; }
 [data-theme="sunset"] ::-webkit-scrollbar-thumb { background: #7c2d12; }
+
+/* ── Print / PDF optimisation ──────────────────────────────────────────────── */
+@media print {
+  header,
+  footer,
+  nav,
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  * {
+    background: transparent !important;
+    color: #000000 !important;
+    border-color: #cccccc !important;
+    box-shadow: none !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.7em;
+    color: #555555;
+  }
+
+  /* Keep layout readable */
+  .bg-neutral-900,
+  .bg-neutral-950 {
+    background: #ffffff !important;
+  }
+
+  /* Avoid page breaks inside cards */
+  .rounded-xl {
+    page-break-inside: avoid;
+  }
+}
 
 /* Legacy name — hero title gradients may reference `gradient` */
 @keyframes gradient {
