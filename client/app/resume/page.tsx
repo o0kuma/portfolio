@@ -202,11 +202,11 @@ export default function ResumePage() {
             <p className="text-indigo-400 font-mono text-sm mb-1">Frontend Developer · Web Publisher</p>
             <p className="text-neutral-600 text-xs font-mono mb-5">개발경력 6년 9개월 · 1990년생</p>
             <div className="flex flex-wrap items-center gap-4">
-              <a href="mailto:ehfcn91@naver.com" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
-                <FiMail size={14} /> ehfcn91@naver.com
+              <a href="mailto:c8c8c81828@gmail.com" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
+                <FiMail size={14} /> c8c8c81828@gmail.com
               </a>
-              <a href="tel:01066771577" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
-                <FiPhone size={14} /> 010-6677-1577
+              <a href="tel:+8205066791577" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
+                <FiPhone size={14} /> 050-6679-1577
               </a>
               <a href="https://github.com/oikikomori" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
                 <FiGithub size={14} /> oikikomori
