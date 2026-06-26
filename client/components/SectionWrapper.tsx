@@ -1,7 +1,9 @@
 'use client'
 
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { portfolioViewport } from '@/lib/portfolioMotion'
+import { useSectionHeatmap } from '@/hooks/useSectionHeatmap'
 
 interface Props {
   children: React.ReactNode
@@ -17,8 +19,14 @@ interface Props {
  * A full-width divider line draws across at the top of each section.
  */
 export default function SectionWrapper({ children, className = '', id, fadeOnly = false }: Props) {
+  // useSectionHeatmap returns a ref; we only wire it up when `id` is provided
+  const heatmapRef = useSectionHeatmap(id ?? '')
+  // Dummy ref for the case where id is absent (heatmapRef still works but won't observe)
+  const noopRef = useRef<HTMLElement | null>(null)
+
   return (
     <motion.section
+      ref={(id ? heatmapRef : noopRef) as React.Ref<HTMLElement>}
       id={id}
       initial="hidden"
       whileInView="visible"

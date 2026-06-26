@@ -34,6 +34,12 @@ export default function Footer() {
               방명록
             </a>
             <a
+              href="/snippets"
+              className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono"
+            >
+              스니펫
+            </a>
+            <a
               href="https://github.com/oikikomori/"
               target="_blank"
               rel="noopener noreferrer"
