@@ -69,6 +69,9 @@ function ImmersiveHomeInner() {
             <Link href="/food" className="transition-colors hover:text-white">
               {t.home.navFood}
             </Link>
+            <Link href="/rpg" className="transition-colors hover:text-white">
+              RPG
+            </Link>
             <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
               방명록
             </Link>
