@@ -74,7 +74,7 @@ export default function AIInterviewer() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4">
+    <div className="max-w-3xl mx-auto w-full px-4 py-24">
       {/* Header */}
       <div className="mb-10 text-center">
         <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-mono tracking-widest uppercase">
