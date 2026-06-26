@@ -79,7 +79,7 @@ export default function AIInterviewer() {
       <div className="mb-10 text-center">
         <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-mono tracking-widest uppercase">
           <FiZap size={11} />
-          powered by Claude
+          powered by Gemini
         </div>
         <h2 className="text-2xl font-bold text-neutral-100 mb-2">AI 인터뷰어</h2>
         <p className="text-sm text-neutral-500">채용 담당자를 위한 AI 어시스턴트 — 궁금한 점을 바로 물어보세요</p>

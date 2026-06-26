@@ -2,9 +2,6 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 const SYSTEM_PROMPT = `You are an AI interviewer assistant for Seungil Oh's portfolio.
 Seungil is a full-stack developer specializing in Next.js, React, Three.js, TypeScript, and game development.
@@ -27,6 +24,10 @@ function checkRateLimit(ip: string): boolean {
   return true
 }
 
+interface GeminiResponse {
+  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip =
@@ -45,14 +46,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'Invalid request' }, { status: 400 })
     }
 
-    const msg = await client.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 400,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: question }],
-    })
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ message: 'API 키가 설정되지 않았습니다.' }, { status: 500 })
+    }
 
-    const reply = msg.content[0].type === 'text' ? msg.content[0].text : '응답을 생성하지 못했습니다.'
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: question }] }],
+          generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
+        }),
+      }
+    )
+
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error('[/api/ai-interviewer] Gemini error:', res.status, errBody)
+      return NextResponse.json({ message: `API 오류 (${res.status})` }, { status: 502 })
+    }
+
+    const data = await res.json() as GeminiResponse
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '응답을 생성하지 못했습니다.'
     return NextResponse.json({ reply })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
