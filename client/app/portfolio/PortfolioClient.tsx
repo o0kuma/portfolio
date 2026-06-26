@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import Header from '../../components/Header'
 import Hero from '../../components/Hero'
 import About from '../../components/About'
@@ -11,6 +12,8 @@ import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollP
 import StatsCounter from '../../components/portfolio/StatsCounter'
 import CareerTimeline from '../../components/portfolio/CareerTimeline'
 import SectionWrapper from '../../components/SectionWrapper'
+
+const AIInterviewer = dynamic(() => import('../../components/AIInterviewer'), { ssr: false })
 
 export default function PortfolioClient() {
   return (
@@ -34,6 +37,10 @@ export default function PortfolioClient() {
 
       <SectionWrapper id="projects" fadeOnly className="relative border-b border-neutral-800 bg-neutral-950">
         <Projects />
+      </SectionWrapper>
+
+      <SectionWrapper id="ai-interviewer" className="relative border-b border-neutral-800 bg-neutral-950">
+        <AIInterviewer />
       </SectionWrapper>
 
       <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">
