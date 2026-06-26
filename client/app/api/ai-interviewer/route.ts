@@ -92,8 +92,9 @@ export async function POST(request: NextRequest) {
     })
 
     if (!res.ok) {
-      console.error('[/api/ai-interviewer] Gemini API error:', res.status)
-      return NextResponse.json({ message: '외부 API 오류가 발생했습니다.' }, { status: 502 })
+      const errBody = await res.text()
+      console.error('[/api/ai-interviewer] Gemini API error:', res.status, errBody)
+      return NextResponse.json({ message: `Gemini API 오류 (${res.status}): ${errBody.slice(0, 200)}` }, { status: 502 })
     }
 
     const data = await res.json() as GeminiResponse
