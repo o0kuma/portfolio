@@ -229,6 +229,45 @@
 [data-theme="sunset"] ::selection { background: #7c2d12; color: #ffedd5; }
 [data-theme="sunset"] ::-webkit-scrollbar-thumb { background: #7c2d12; }
 
+/* ── Print / PDF optimisation ──────────────────────────────────────────────── */
+@media print {
+  header,
+  footer,
+  nav,
+  .print-hide {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  * {
+    background: transparent !important;
+    color: #000000 !important;
+    border-color: #cccccc !important;
+    box-shadow: none !important;
+  }
+
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.7em;
+    color: #555555;
+  }
+
+  /* Keep layout readable */
+  .bg-neutral-900,
+  .bg-neutral-950 {
+    background: #ffffff !important;
+  }
+
+  /* Avoid page breaks inside cards */
+  .rounded-xl {
+    page-break-inside: avoid;
+  }
+}
+
 /* Legacy name — hero title gradients may reference `gradient` */
 @keyframes gradient {
   0%,

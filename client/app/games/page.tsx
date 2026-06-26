@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Games | kuuuma',
     description: '테트리스 · 서바이브 · 타워 디펜스 미니 게임 허브',
+    images: [{ url: '/api/og?title=Game+Hub&sub=브라우저+미니+게임&category=dev' }],
   },
 }
 
