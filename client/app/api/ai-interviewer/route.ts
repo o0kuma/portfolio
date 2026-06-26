@@ -25,7 +25,7 @@ function checkRateLimit(ip: string): boolean {
 }
 
 interface GeminiResponse {
-  candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
+  choices?: Array<{ message?: { content?: string } }>
 }
 
 export async function POST(request: NextRequest) {
@@ -52,14 +52,21 @@ export async function POST(request: NextRequest) {
     }
 
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
         body: JSON.stringify({
-          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          contents: [{ role: 'user', parts: [{ text: question }] }],
-          generationConfig: { maxOutputTokens: 400, temperature: 0.7 },
+          model: 'gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: question },
+          ],
+          max_tokens: 400,
+          temperature: 0.7,
         }),
       }
     )
@@ -71,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await res.json() as GeminiResponse
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '응답을 생성하지 못했습니다.'
+    const reply = data.choices?.[0]?.message?.content ?? '응답을 생성하지 못했습니다.'
     return NextResponse.json({ reply })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
