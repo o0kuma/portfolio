@@ -21,10 +21,18 @@ export default function Footer() {
           </p>
 
           <div className="flex items-center gap-5 order-1 sm:order-2">
-            <a href="/tetris" className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono">Tetris</a>
-            <a href="/food" className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono">Food</a>
-            <a href="/guestbook" className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono">방명록</a>
-            <a href="/offline-posts" className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono">오프라인</a>
+            <a
+              href="/gallery"
+              className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono"
+            >
+              갤러리
+            </a>
+            <a
+              href="/guestbook"
+              className="text-neutral-500 hover:text-neutral-200 transition-colors text-xs font-mono"
+            >
+              방명록
+            </a>
             <a
               href="https://github.com/oikikomori/"
               target="_blank"
