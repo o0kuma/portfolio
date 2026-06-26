@@ -54,7 +54,7 @@ function ImmersiveHomeInner() {
           >
             {t.home.brand}
           </Link>
-          <nav className="flex items-center gap-5 text-[11px] font-semibold uppercase tracking-[0.28em] text-white/55 md:gap-10 md:text-xs">
+          <nav className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55 md:gap-7 md:text-xs">
             <a href="#posts-feed" className="transition-colors hover:text-white">
               {t.home.navPosts}
             </a>
@@ -63,11 +63,23 @@ function ImmersiveHomeInner() {
                 {t.home.navPortfolio}
               </Link>
             )}
+            <Link href="/gallery" className="transition-colors hover:text-white">
+              갤러리
+            </Link>
             <Link href="/games" className="transition-colors hover:text-white">
               {t.home.navGames}
             </Link>
+            <Link href="/snippets" className="hidden sm:block transition-colors hover:text-white">
+              스니펫
+            </Link>
             <Link href="/food" className="transition-colors hover:text-white">
               {t.home.navFood}
+            </Link>
+            <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
+              방명록
+            </Link>
+            <Link href="/bookmarks" className="hidden lg:block transition-colors hover:text-white">
+              북마크
             </Link>
           </nav>
         </header>
