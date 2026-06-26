@@ -110,6 +110,66 @@ export default function About() {
                 </span>
               ))}
             </motion.div>
+
+            {/* 현재 관심사 */}
+            <motion.div variants={staggerItem} className="mt-12">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="overflow-hidden w-5 h-px">
+                  <motion.span
+                    variants={lineReveal}
+                    className="block w-full h-full bg-neutral-700"
+                    style={{ originX: 0 }}
+                  />
+                </div>
+                <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
+                  현재 관심사
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {['Three.js WebGL', 'AI 통합', '게임 개발', '성능 최적화', '풀스택'].map((tag) => (
+                  <span
+                    key={tag}
+                    className="px-3 py-1 rounded-full text-xs font-mono bg-neutral-800 text-neutral-400 border border-neutral-700 hover:bg-indigo-900/40 hover:border-indigo-600 hover:text-indigo-300 transition-colors cursor-default"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* 사용 중인 도구 */}
+            <motion.div variants={staggerItem} className="mt-10">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="overflow-hidden w-5 h-px">
+                  <motion.span
+                    variants={lineReveal}
+                    className="block w-full h-full bg-neutral-700"
+                    style={{ originX: 0 }}
+                  />
+                </div>
+                <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
+                  사용 중인 도구
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { name: 'VS Code', icon: '⌨️' },
+                  { name: 'Cursor', icon: '✦' },
+                  { name: 'Figma', icon: '◈' },
+                  { name: 'Vercel', icon: '▲' },
+                  { name: 'Neon DB', icon: '⬡' },
+                  { name: 'GitHub', icon: '◯' },
+                ].map((tool) => (
+                  <span
+                    key={tool.name}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-mono bg-neutral-900 text-neutral-400 border border-neutral-800 hover:border-neutral-600 hover:text-neutral-200 transition-colors cursor-default"
+                  >
+                    <span aria-hidden="true" className="text-neutral-500">{tool.icon}</span>
+                    {tool.name}
+                  </span>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
 
           <motion.div

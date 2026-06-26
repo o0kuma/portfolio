@@ -22,13 +22,13 @@ export async function generateMetadata(): Promise<Metadata> {
       description: `${SITE_AUTHOR}의 프론트엔드·풀스택 포트폴리오`,
       type: 'website',
       url: `${siteUrl}/portfolio`,
-      images: [{ url: OG_IMAGE_PATH, width: 1200, height: 630, alt: `${SITE_NAME} Portfolio` }],
+      images: [{ url: '/api/og?title=Portfolio&sub=풀스택+개발자+오승일&category=dev', width: 1200, height: 630, alt: `${SITE_NAME} Portfolio` }],
     },
     twitter: {
       card: 'summary_large_image',
       title: `Portfolio — ${SITE_AUTHOR}`,
       description: `${SITE_AUTHOR}의 프론트엔드·풀스택 포트폴리오`,
-      images: [OG_IMAGE_PATH],
+      images: ['/api/og?title=Portfolio&sub=풀스택+개발자+오승일&category=dev'],
     },
   }
 }

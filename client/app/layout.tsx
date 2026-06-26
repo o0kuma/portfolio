@@ -101,7 +101,7 @@ export default function RootLayout({
   const fontVars = `${inter.variable} ${fraunces.variable}`
 
   return (
-    <html lang="ko" className={`scroll-smooth dark ${fontVars}`} suppressHydrationWarning>
+    <html lang="ko" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -136,10 +136,13 @@ export default function RootLayout({
               (function() {
                 try {
                   var stored = localStorage.getItem('theme');
-                  if (stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  var isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                  if (isDark) {
                     document.documentElement.classList.add('dark');
+                    document.documentElement.classList.remove('light');
                   } else {
                     document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
                   }
                 } catch (e) {
                   document.documentElement.classList.add('dark');
