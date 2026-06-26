@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
+import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare, FiChevronDown } from 'react-icons/fi'
 import ThemeToggle from './ThemeToggle'
 import ThemePicker from './ThemePicker'
 import SearchBar from './SearchBar'
@@ -23,6 +23,18 @@ export default function Header() {
   const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setIsMoreOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   useEffect(() => {
     setShowAdmin(hasAdminAccess())
@@ -71,13 +83,19 @@ export default function Header() {
     { label: t.nav.about, kind: 'section', id: 'about' },
     { label: t.nav.skills, kind: 'section', id: 'skills' },
     { label: t.nav.projects, kind: 'section', id: 'projects' },
-    { label: t.nav.posts, kind: 'section', id: 'posts' },
     { label: t.nav.contact, kind: 'section', id: 'contact' },
-    { label: t.nav.tetris, kind: 'path', href: '/tetris' },
-    { label: t.nav.food, kind: 'path', href: '/food' },
-    { label: '이력서', kind: 'path', href: '/resume' },
+    { label: '갤러리', kind: 'path', href: '/gallery' },
+    { label: '게임', kind: 'path', href: '/games' },
+    { label: '스니펫', kind: 'path', href: '/snippets' },
+    { label: '맛집', kind: 'path', href: '/food' },
     { label: '방명록', kind: 'path', href: '/guestbook' },
-    { label: '📥 오프라인', kind: 'path', href: '/offline-posts' },
+    { label: '이력서', kind: 'path', href: '/resume' },
+  ]
+
+  const moreItems: Array<{ label: string; href: string }> = [
+    { label: '북마크', href: '/bookmarks' },
+    { label: '블로그', href: '/posts' },
+    { label: '오프라인', href: '/offline-posts' },
   ]
 
   return (
@@ -102,7 +120,7 @@ export default function Header() {
               Portfolio
             </button>
 
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="hidden md:flex items-center space-x-6">
               {navItems.map((item) =>
                 item.kind === 'section' ? (
                   <button
@@ -125,6 +143,31 @@ export default function Header() {
                   </Link>
                 )
               )}
+
+              {/* More dropdown */}
+              <div ref={moreRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsMoreOpen((v) => !v)}
+                  className="flex items-center gap-1 text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide"
+                >
+                  더보기 <FiChevronDown size={13} className={`transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                </button>
+                {isMoreOpen && (
+                  <div className="absolute top-full mt-2 right-0 w-32 rounded-xl border border-neutral-800 bg-neutral-950/95 backdrop-blur-md py-1 z-50 shadow-xl">
+                    {moreItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsMoreOpen(false)}
+                        className="block px-4 py-2 text-sm text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50 transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -230,6 +273,16 @@ export default function Header() {
                   </Link>
                 )
               )}
+              {moreItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className="text-left text-neutral-400 hover:text-neutral-50 transition-colors font-medium py-2 text-sm"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
         </div>
