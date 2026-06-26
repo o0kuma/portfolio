@@ -89,7 +89,6 @@ export default function Header() {
     { label: '스니펫', kind: 'path', href: '/snippets' },
     { label: '맛집', kind: 'path', href: '/food' },
     { label: '방명록', kind: 'path', href: '/guestbook' },
-    { label: '이력서', kind: 'path', href: '/resume' },
   ]
 
   const moreItems: Array<{ label: string; href: string }> = [
