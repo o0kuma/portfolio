@@ -1,6 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import Header from '../../components/Header'
 import Hero from '../../components/Hero'
 import About from '../../components/About'
@@ -46,6 +47,16 @@ export default function PortfolioClient() {
       <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">
         <Contact />
       </SectionWrapper>
+
+      {/* 이력서 링크 */}
+      <div className="flex justify-center py-8 border-b border-neutral-800 bg-neutral-950">
+        <Link
+          href="/resume"
+          className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-200 border border-neutral-800 hover:border-neutral-600 px-5 py-2.5 rounded-full text-sm font-mono tracking-wide transition-all"
+        >
+          📄 이력서 보기
+        </Link>
+      </div>
 
       <Footer />
     </main>
