@@ -485,7 +485,10 @@ export class SurviveEngine implements Upgradable {
       p.xp -= p.xpToNext
       p.level += 1
       p.xpToNext = xpForLevel(p.level)
-      this.status = 'levelup'
+      // Boss reward screen takes priority; level-up is already applied above.
+      if (this.status !== 'bossupgrade') {
+        this.status = 'levelup'
+      }
     }
   }
 
