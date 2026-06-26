@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { portfolioViewport } from '@/lib/portfolioMotion'
+import { useSectionHeatmap } from '@/hooks/useSectionHeatmap'
 
 interface Props {
   children: React.ReactNode
@@ -17,8 +18,11 @@ interface Props {
  * A full-width divider line draws across at the top of each section.
  */
 export default function SectionWrapper({ children, className = '', id, fadeOnly = false }: Props) {
+  const heatmapRef = useSectionHeatmap(id ?? '')
+
   return (
     <motion.section
+      ref={id ? (heatmapRef as React.Ref<HTMLElement>) : undefined}
       id={id}
       initial="hidden"
       whileInView="visible"
