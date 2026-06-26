@@ -2,17 +2,16 @@
 
 import { useRef, useState, useCallback, useEffect, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { Text, Sparkles } from '@react-three/drei'
+import { Html, Sparkles } from '@react-three/drei'
 import * as THREE from 'three'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import type { Project } from '@/app/gallery/GalleryClient'
 
-// ── Constants ─────────────────────────────────────────────────────────────────
 const FRAME_Z_STEP = 14
 const CORRIDOR_W = 16
 const CORRIDOR_H = 7
-const FRAME_X = 5.2   // distance from center to frame
+const FRAME_X = 5.2
 
 const CATEGORY_COLORS: Record<string, string> = {
   web: '#4f46e5',
@@ -22,14 +21,13 @@ const CATEGORY_COLORS: Record<string, string> = {
   tool: '#7c3aed',
 }
 
-// ── Station (camera stop for each project) ───────────────────────────────────
 interface Station {
   project: Project
   index: number
   side: 'left' | 'right'
-  framePos: THREE.Vector3      // where the frame sits
-  cameraPos: THREE.Vector3     // where camera moves to
-  lookAt: THREE.Vector3        // what camera looks at
+  framePos: THREE.Vector3
+  cameraPos: THREE.Vector3
+  lookAt: THREE.Vector3
 }
 
 function buildStations(projects: Project[]): Station[] {
@@ -37,18 +35,15 @@ function buildStations(projects: Project[]): Station[] {
     const z = -i * FRAME_Z_STEP
     const side: 'left' | 'right' = i % 2 === 0 ? 'left' : 'right'
     const fx = side === 'left' ? -FRAME_X : FRAME_X
-
     return {
       project, index: i, side,
       framePos: new THREE.Vector3(fx, 2.6, z),
-      // Camera sits in the corridor, shifted toward the active frame
       cameraPos: new THREE.Vector3(fx * 0.18, 1.75, z + 6),
-      lookAt:    new THREE.Vector3(fx, 2.6, z),
+      lookAt: new THREE.Vector3(fx, 2.6, z),
     }
   })
 }
 
-// ── Smooth camera ─────────────────────────────────────────────────────────────
 function CameraRig({ pos, look }: { pos: THREE.Vector3; look: THREE.Vector3 }) {
   const { camera } = useThree()
   const lookCur = useRef(look.clone())
@@ -60,7 +55,6 @@ function CameraRig({ pos, look }: { pos: THREE.Vector3; look: THREE.Vector3 }) {
   return null
 }
 
-// ── Corridor room ─────────────────────────────────────────────────────────────
 function Room({ length }: { length: number }) {
   const L = length + 24
   const dark = new THREE.MeshStandardMaterial({ color: '#0d0d0d', roughness: 0.95, metalness: 0.05 })
@@ -69,37 +63,28 @@ function Room({ length }: { length: number }) {
 
   return (
     <group>
-      {/* Floor */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -length / 2]} material={dark}>
         <planeGeometry args={[CORRIDOR_W, L]} />
       </mesh>
-      {/* Ceiling */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, CORRIDOR_H, -length / 2]} material={ceil}>
         <planeGeometry args={[CORRIDOR_W, L]} />
       </mesh>
-      {/* Left wall */}
       <mesh rotation={[0, Math.PI / 2, 0]} position={[-CORRIDOR_W / 2, CORRIDOR_H / 2, -length / 2]} material={wall}>
         <planeGeometry args={[L, CORRIDOR_H]} />
       </mesh>
-      {/* Right wall */}
       <mesh rotation={[0, -Math.PI / 2, 0]} position={[CORRIDOR_W / 2, CORRIDOR_H / 2, -length / 2]} material={wall}>
         <planeGeometry args={[L, CORRIDOR_H]} />
       </mesh>
-      {/* Back wall (entrance side) */}
       <mesh position={[0, CORRIDOR_H / 2, 8]} material={wall}>
         <planeGeometry args={[CORRIDOR_W, CORRIDOR_H]} />
       </mesh>
-      {/* Far end wall */}
       <mesh rotation={[0, Math.PI, 0]} position={[0, CORRIDOR_H / 2, -length - 8]} material={wall}>
         <planeGeometry args={[CORRIDOR_W, CORRIDOR_H]} />
       </mesh>
-
-      {/* Ceiling light strip */}
       <mesh position={[0, CORRIDOR_H - 0.02, -length / 2]}>
         <planeGeometry args={[0.5, L]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.05} />
       </mesh>
-      {/* Floor guide lines */}
       {[-1, 1].map((sx) => (
         <mesh key={sx} rotation={[-Math.PI / 2, 0, 0]} position={[sx * 0.7, 0.005, -length / 2]}>
           <planeGeometry args={[0.04, L]} />
@@ -110,19 +95,12 @@ function Room({ length }: { length: number }) {
   )
 }
 
-// ── Frame on the wall ─────────────────────────────────────────────────────────
 function ProjectFrame({
   station, isActive, onClick,
 }: { station: Station; isActive: boolean; onClick: () => void }) {
   const outerRef = useRef<THREE.Mesh>(null)
   const frameColor = CATEGORY_COLORS[station.project.category] ?? '#4f46e5'
-
-  // Frames face INWARD toward the corridor center:
-  //   left-wall frame  → faces +X  → rotY = -π/2
-  //   right-wall frame → faces -X  → rotY = +π/2
   const rotY = station.side === 'left' ? -Math.PI / 2 : Math.PI / 2
-
-  // Light offset: above and slightly toward corridor center
   const lightX = station.side === 'left' ? 1.5 : -1.5
 
   useFrame(() => {
@@ -131,12 +109,8 @@ function ProjectFrame({
     outerRef.current.scale.lerp(new THREE.Vector3(t, t, t), 0.07)
   })
 
-  const short = station.project.description.slice(0, 72) +
-    (station.project.description.length > 72 ? '...' : '')
-
   return (
     <group position={station.framePos.toArray()}>
-      {/* Point light illuminating the frame */}
       <pointLight
         position={[lightX, 2.8, 0.3]}
         intensity={isActive ? 5 : 1.8}
@@ -147,7 +121,7 @@ function ProjectFrame({
 
       <group rotation={[0, rotY, 0]}>
         {/* Frame border */}
-        <mesh ref={outerRef} position={[0, 0, 0]}>
+        <mesh ref={outerRef}>
           <planeGeometry args={[3.6, 2.55]} />
           <meshStandardMaterial
             color={isActive ? frameColor : '#1e1e1e'}
@@ -158,7 +132,7 @@ function ProjectFrame({
           />
         </mesh>
 
-        {/* Canvas surface */}
+        {/* Canvas surface — clickable */}
         <mesh onClick={onClick} position={[0, 0, 0.015]}>
           <planeGeometry args={[3.18, 2.18]} />
           <meshStandardMaterial
@@ -169,78 +143,62 @@ function ProjectFrame({
           />
         </mesh>
 
-        {/* Category */}
-        <Text
-          position={[0, 0.88, 0.03]}
-          fontSize={0.1}
-          color={frameColor}
-          anchorX="center" anchorY="middle"
-          letterSpacing={0.15}
+        {/* HTML label inside frame (avoids troika Text) */}
+        <Html
+          position={[0, 0, 0.04]}
+          center
+          style={{ pointerEvents: isActive ? 'auto' : 'none', width: 220 }}
+          occlude={false}
         >
-          {station.project.category.toUpperCase()}
-        </Text>
-
-        {/* Title */}
-        <Text
-          position={[0, 0.52, 0.03]}
-          fontSize={0.205}
-          color={isActive ? '#f0f0f0' : '#888888'}
-          anchorX="center" anchorY="middle"
-          maxWidth={2.8}
-        >
-          {station.project.title}
-        </Text>
-
-        {/* Description */}
-        <Text
-          position={[0, 0.1, 0.03]}
-          fontSize={0.098}
-          color={isActive ? '#999999' : '#444444'}
-          anchorX="center" anchorY="middle"
-          maxWidth={2.8}
-          lineHeight={1.45}
-        >
-          {short}
-        </Text>
-
-        {/* Tech tags */}
-        {station.project.technologies.slice(0, 4).map((tech, ti) => (
-          <Text
-            key={tech}
-            position={[-1.15 + ti * 0.72, -0.68, 0.03]}
-            fontSize={0.088}
-            color={isActive ? frameColor : '#383838'}
-            anchorX="center" anchorY="middle"
+          <div
+            onClick={onClick}
+            style={{
+              textAlign: 'center',
+              color: isActive ? '#f0f0f0' : '#555',
+              fontFamily: 'ui-monospace, monospace',
+              cursor: isActive ? 'pointer' : 'default',
+              userSelect: 'none',
+            }}
           >
-            {tech}
-          </Text>
-        ))}
-
-        {/* Index */}
-        <Text
-          position={[1.42, -0.93, 0.03]}
-          fontSize={0.13}
-          color={isActive ? '#ffffff30' : '#2a2a2a'}
-          anchorX="right" anchorY="middle"
-        >
-          {String(station.index + 1).padStart(2, '0')}
-        </Text>
-
-        {isActive && (
-          <Text
-            position={[0, -0.93, 0.03]}
-            fontSize={0.085}
-            color="#ffffff50"
-            anchorX="center" anchorY="middle"
-            letterSpacing={0.1}
-          >
-            CLICK TO OPEN
-          </Text>
-        )}
+            <div style={{
+              fontSize: 9, letterSpacing: '0.18em', textTransform: 'uppercase',
+              color: isActive ? frameColor : '#333', marginBottom: 4,
+            }}>
+              {station.project.category}
+            </div>
+            <div style={{ fontSize: 13, fontWeight: 700, lineHeight: 1.3, marginBottom: 6 }}>
+              {station.project.title}
+            </div>
+            <div style={{
+              fontSize: 9, color: isActive ? '#888' : '#333',
+              lineHeight: 1.5, marginBottom: 8,
+              overflow: 'hidden', display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            }}>
+              {station.project.description}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, justifyContent: 'center', marginBottom: 6 }}>
+              {station.project.technologies.slice(0, 4).map((tech) => (
+                <span key={tech} style={{
+                  fontSize: 8, padding: '1px 5px',
+                  border: `1px solid ${isActive ? frameColor + '55' : '#2a2a2a'}`,
+                  borderRadius: 3, color: isActive ? frameColor : '#333',
+                }}>
+                  {tech}
+                </span>
+              ))}
+            </div>
+            {isActive && (
+              <div style={{ fontSize: 8, color: '#ffffff40', letterSpacing: '0.12em' }}>
+                CLICK TO OPEN
+              </div>
+            )}
+          </div>
+        </Html>
       </group>
 
-      {/* Wall glow behind frame */}
-      <mesh position={[0, 0, 0]} rotation={[0, rotY, 0]}>
+      {/* Wall glow */}
+      <mesh rotation={[0, rotY, 0]}>
         <planeGeometry args={[4.8, 3.8]} />
         <meshBasicMaterial
           color={frameColor}
@@ -254,23 +212,6 @@ function ProjectFrame({
   )
 }
 
-// ── Floor number ──────────────────────────────────────────────────────────────
-function FloorMark({ z, n }: { z: number; n: number }) {
-  return (
-    <Text
-      position={[0, 0.008, z]}
-      rotation={[-Math.PI / 2, 0, 0]}
-      fontSize={0.2}
-      color="#1e1e1e"
-      anchorX="center" anchorY="middle"
-      letterSpacing={0.06}
-    >
-      {String(n).padStart(2, '0')}
-    </Text>
-  )
-}
-
-// ── Full 3D scene ─────────────────────────────────────────────────────────────
 function Scene({
   stations, activeIndex, onFrameClick,
 }: { stations: Station[]; activeIndex: number; onFrameClick: (i: number) => void }) {
@@ -286,13 +227,10 @@ function Scene({
     <>
       <color attach="background" args={['#050505']} />
       <fog attach="fog" args={['#050505', 12, 60]} />
-
       <ambientLight intensity={0.06} />
       <pointLight position={[0, 6, 6]} intensity={0.5} color="#d0d8ff" distance={18} />
-
       <CameraRig pos={target.pos} look={target.look} />
       <Room length={corridorLen} />
-
       <Sparkles
         count={60}
         scale={[CORRIDOR_W - 2, CORRIDOR_H - 1, corridorLen]}
@@ -302,7 +240,6 @@ function Scene({
         opacity={0.1}
         color="#c8b89a"
       />
-
       {stations.map((st, i) => (
         <ProjectFrame
           key={st.project.id}
@@ -311,15 +248,10 @@ function Scene({
           onClick={() => onFrameClick(i)}
         />
       ))}
-
-      {stations.map((_, i) => (
-        <FloorMark key={i} z={-i * FRAME_Z_STEP} n={i + 1} />
-      ))}
     </>
   )
 }
 
-// ── Project detail overlay ────────────────────────────────────────────────────
 function ProjectDetail({ project, onClose }: { project: Project; onClose: () => void }) {
   const color = CATEGORY_COLORS[project.category] ?? '#4f46e5'
   return (
@@ -356,9 +288,7 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
               ✕
             </button>
           </div>
-
           <p className="text-neutral-400 text-sm leading-relaxed mb-5">{project.description}</p>
-
           <div className="flex flex-wrap gap-1.5 mb-6">
             {project.technologies.map((t) => (
               <span key={t} className="text-[11px] font-mono px-2 py-0.5 rounded border"
@@ -367,7 +297,6 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
               </span>
             ))}
           </div>
-
           <div className="flex gap-2.5">
             {project.live_url && (
               <a href={project.live_url}
@@ -391,7 +320,6 @@ function ProjectDetail({ project, onClose }: { project: Project; onClose: () => 
   )
 }
 
-// ── Root ──────────────────────────────────────────────────────────────────────
 export default function ProjectGallery({ projects }: { projects: Project[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [detail, setDetail] = useState<Project | null>(null)
@@ -402,11 +330,10 @@ export default function ProjectGallery({ projects }: { projects: Project[] }) {
   const prev = useCallback(() => setActiveIndex((i) => Math.max(0, i - 1)), [])
   const next = useCallback(() => setActiveIndex((i) => Math.min(stations.length - 1, i + 1)), [stations.length])
 
-  // ✅ Fixed: useEffect (not useState)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (detail) { if (e.key === 'Escape') setDetail(null); return }
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp'   || e.key === 'w' || e.key === 'W') prev()
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') prev()
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') next()
     }
     window.addEventListener('keydown', handler)
@@ -445,7 +372,7 @@ export default function ProjectGallery({ projects }: { projects: Project[] }) {
         </Link>
       </div>
 
-      {/* Active project name */}
+      {/* Active project info */}
       <div className="absolute bottom-24 left-0 right-0 flex flex-col items-center gap-1 z-10 pointer-events-none">
         <AnimatePresence mode="wait">
           <motion.div
@@ -471,7 +398,6 @@ export default function ProjectGallery({ projects }: { projects: Project[] }) {
           className="w-10 h-10 rounded-full border border-neutral-700 text-neutral-400 hover:border-neutral-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all flex items-center justify-center">
           ←
         </button>
-
         <div className="flex items-center gap-1.5">
           {stations.map((st, i) => (
             <button key={i} onClick={() => setActiveIndex(i)}
@@ -485,14 +411,12 @@ export default function ProjectGallery({ projects }: { projects: Project[] }) {
             />
           ))}
         </div>
-
         <button onClick={next} disabled={activeIndex === stations.length - 1}
           className="w-10 h-10 rounded-full border border-neutral-700 text-neutral-400 hover:border-neutral-400 hover:text-white disabled:opacity-20 disabled:cursor-not-allowed transition-all flex items-center justify-center">
           →
         </button>
       </div>
 
-      {/* Open detail button */}
       <div className="absolute bottom-8 right-6 z-10">
         <button onClick={() => setDetail(active?.project ?? null)}
           className="text-[11px] font-mono tracking-widest uppercase text-neutral-600 hover:text-neutral-300 border border-neutral-800 hover:border-neutral-600 px-4 py-2 rounded-full transition-all">
@@ -500,7 +424,6 @@ export default function ProjectGallery({ projects }: { projects: Project[] }) {
         </button>
       </div>
 
-      {/* Hint */}
       <div className="absolute top-16 right-5 z-10">
         <p className="text-neutral-800 font-mono text-[9px] tracking-widest">← → 탐색 &nbsp; CLICK 열기</p>
       </div>
