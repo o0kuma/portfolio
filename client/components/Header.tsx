@@ -84,9 +84,7 @@ export default function Header() {
     { label: t.nav.skills, kind: 'section', id: 'skills' },
     { label: t.nav.projects, kind: 'section', id: 'projects' },
     { label: t.nav.contact, kind: 'section', id: 'contact' },
-    { label: '갤러리', kind: 'path', href: '/gallery' },
     { label: '게임', kind: 'path', href: '/games' },
-    { label: '스니펫', kind: 'path', href: '/snippets' },
     { label: '맛집', kind: 'path', href: '/food' },
     { label: '방명록', kind: 'path', href: '/guestbook' },
   ]

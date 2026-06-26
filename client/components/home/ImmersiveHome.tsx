@@ -63,14 +63,8 @@ function ImmersiveHomeInner() {
                 {t.home.navPortfolio}
               </Link>
             )}
-            <Link href="/gallery" className="transition-colors hover:text-white">
-              갤러리
-            </Link>
             <Link href="/games" className="transition-colors hover:text-white">
               {t.home.navGames}
-            </Link>
-            <Link href="/snippets" className="hidden sm:block transition-colors hover:text-white">
-              스니펫
             </Link>
             <Link href="/food" className="transition-colors hover:text-white">
               {t.home.navFood}

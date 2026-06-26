@@ -27,10 +27,8 @@ interface SearchModalProps {
 }
 
 const STATIC_PAGES: StaticItem[] = [
-  { title: '3D 갤러리', url: '/gallery', type: 'page', desc: '프로젝트 3D 갤러리' },
   { title: '방명록', url: '/guestbook', type: 'page', desc: '방문자 방명록' },
   { title: '푸드맵', url: '/food', type: 'page', desc: '맛집 지도' },
-  { title: '코드 스니펫', url: '/snippets', type: 'page', desc: '코드 스니펫 모음' },
   { title: 'Tower Defense', url: '/tower-defense', type: 'game', desc: '전략 타워 디펜스 게임' },
   { title: 'Survive', url: '/survive', type: 'game', desc: '탑다운 슈터 게임' },
   { title: 'Typing Game', url: '/typing-game', type: 'game', desc: '타이핑 속도 측정' },
