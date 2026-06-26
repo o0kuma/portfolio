@@ -1,39 +1,31 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FiSend } from 'react-icons/fi'
+import { FiSend, FiZap } from 'react-icons/fi'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const PRESET_QUESTIONS = [
-  '이 개발자의 강점은?',
-  '어떤 프로젝트를 했나요?',
-  '팀 협업 스타일은?',
+  { label: '이 개발자의 강점은?', emoji: '💡' },
+  { label: '어떤 프로젝트를 했나요?', emoji: '🚀' },
+  { label: '팀 협업 스타일은?', emoji: '🤝' },
 ]
 
-function useTypingEffect(text: string, speed = 20) {
+function useTypingEffect(text: string, speed = 18) {
   const [displayed, setDisplayed] = useState('')
-  const [done, setDone] = useState(false)
 
   useEffect(() => {
-    if (!text) {
-      setDisplayed('')
-      setDone(false)
-      return
-    }
+    if (!text) { setDisplayed(''); return }
     setDisplayed('')
-    setDone(false)
     let i = 0
     const id = setInterval(() => {
       i++
       setDisplayed(text.slice(0, i))
-      if (i >= text.length) {
-        clearInterval(id)
-        setDone(true)
-      }
+      if (i >= text.length) clearInterval(id)
     }, speed)
     return () => clearInterval(id)
   }, [text, speed])
 
-  return { displayed, done }
+  return displayed
 }
 
 export default function AIInterviewer() {
@@ -41,8 +33,9 @@ export default function AIInterviewer() {
   const [answer, setAnswer] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [activePreset, setActivePreset] = useState<string | null>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { displayed } = useTypingEffect(answer)
+  const displayed = useTypingEffect(answer)
 
   const askQuestion = async (q: string) => {
     const text = q.trim()
@@ -58,14 +51,9 @@ export default function AIInterviewer() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question: text }),
       })
-
       const data = await res.json() as { reply?: string; message?: string }
-
-      if (res.ok && data.reply) {
-        setAnswer(data.reply)
-      } else {
-        setError(data.message ?? '오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
-      }
+      if (res.ok && data.reply) setAnswer(data.reply)
+      else setError(data.message ?? '오류가 발생했습니다.')
     } catch {
       setError('네트워크 오류가 발생했습니다.')
     } finally {
@@ -76,86 +64,110 @@ export default function AIInterviewer() {
   const handleSubmit = () => {
     askQuestion(question)
     setQuestion('')
+    setActivePreset(null)
   }
 
   const handlePreset = (q: string) => {
+    setActivePreset(q)
     setQuestion(q)
     askQuestion(q)
   }
 
   return (
-    <div className="max-w-2xl mx-auto w-full px-4">
+    <div className="max-w-3xl mx-auto w-full px-4">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-indigo-400 text-xl">🤖</span>
-          <h2 className="text-xl font-bold text-neutral-100">AI 인터뷰어</h2>
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-mono tracking-widest uppercase">
+          <FiZap size={11} />
+          powered by Gemini
         </div>
-        <p className="text-sm text-neutral-400">채용 담당자를 위한 AI 어시스턴트</p>
+        <h2 className="text-2xl font-bold text-neutral-100 mb-2">AI 인터뷰어</h2>
+        <p className="text-sm text-neutral-500">채용 담당자를 위한 AI 어시스턴트 — 궁금한 점을 바로 물어보세요</p>
       </div>
 
-      {/* Card */}
-      <div className="rounded-2xl border border-neutral-700 bg-neutral-900 overflow-hidden shadow-2xl">
-        {/* Preset buttons */}
-        <div className="px-5 pt-5 pb-3 flex flex-wrap gap-2">
-          {PRESET_QUESTIONS.map((q) => (
-            <button
-              key={q}
-              onClick={() => handlePreset(q)}
-              disabled={isLoading}
-              className="text-xs px-3 py-1.5 rounded-full border border-indigo-500/50 text-indigo-300 hover:bg-indigo-500/20 hover:border-indigo-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {q}
-            </button>
-          ))}
-        </div>
+      {/* Preset chips */}
+      <div className="flex flex-wrap justify-center gap-3 mb-8">
+        {PRESET_QUESTIONS.map(({ label, emoji }) => (
+          <button
+            key={label}
+            onClick={() => handlePreset(label)}
+            disabled={isLoading}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm border transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed
+              ${activePreset === label
+                ? 'border-indigo-500 bg-indigo-500/20 text-indigo-300'
+                : 'border-neutral-700 bg-neutral-900 text-neutral-400 hover:border-indigo-500/60 hover:text-indigo-300 hover:bg-indigo-500/10'
+              }`}
+          >
+            <span>{emoji}</span>
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
 
-        {/* Answer area */}
-        <div className="mx-5 mb-4 min-h-[80px] rounded-xl bg-neutral-800/60 border border-neutral-700/50 px-4 py-3">
-          {isLoading ? (
-            <div className="flex items-center gap-1 h-full pt-1">
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-              <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '300ms' }} />
-            </div>
-          ) : error ? (
-            <p className="text-sm text-red-400">{error}</p>
-          ) : displayed ? (
-            <p className="text-sm text-neutral-200 leading-relaxed whitespace-pre-wrap">{displayed}</p>
-          ) : (
-            <p className="text-sm text-neutral-500 italic">질문을 선택하거나 직접 입력해보세요.</p>
-          )}
-        </div>
+      {/* Answer card */}
+      <AnimatePresence mode="wait">
+        {(isLoading || answer || error) && (
+          <motion.div
+            key={isLoading ? 'loading' : answer ? 'answer' : 'error'}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.25 }}
+            className="mb-6 rounded-2xl border border-neutral-800 bg-neutral-900/80 backdrop-blur-sm p-6"
+          >
+            {isLoading ? (
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1">
+                  {[0, 150, 300].map((delay) => (
+                    <span
+                      key={delay}
+                      className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce"
+                      style={{ animationDelay: `${delay}ms` }}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-neutral-500">AI가 답변을 생성하고 있습니다...</span>
+              </div>
+            ) : error ? (
+              <p className="text-sm text-red-400">{error}</p>
+            ) : (
+              <p className="text-sm text-neutral-200 leading-7 whitespace-pre-wrap">{displayed}</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Input area */}
-        <div className="px-5 pb-5">
-          <div className="flex gap-2 items-end">
-            <textarea
-              ref={textareaRef}
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSubmit()
-                }
-              }}
-              placeholder="질문을 직접 입력하세요... (Enter로 전송)"
-              rows={2}
-              disabled={isLoading}
-              className="flex-1 resize-none rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-100 text-sm placeholder-neutral-500 px-3 py-2.5 outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-colors disabled:opacity-50"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={isLoading || !question.trim()}
-              className="p-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl transition-colors flex-shrink-0"
-              aria-label="전송"
-            >
-              <FiSend size={16} />
-            </button>
-          </div>
-          <p className="text-[10px] text-neutral-600 text-right mt-2">powered by Gemini</p>
+      {/* Input row */}
+      <div className="flex gap-3 items-end">
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={question}
+            onChange={(e) => {
+              setQuestion(e.target.value)
+              setActivePreset(null)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                handleSubmit()
+              }
+            }}
+            placeholder="질문을 직접 입력하세요..."
+            rows={1}
+            disabled={isLoading}
+            className="w-full resize-none rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-100 text-sm placeholder-neutral-600 px-5 py-3.5 outline-none focus:border-indigo-500/60 focus:ring-1 focus:ring-indigo-500/30 transition-all duration-200 disabled:opacity-50"
+          />
+          <span className="absolute right-4 bottom-3 text-[10px] text-neutral-700 font-mono select-none">Enter ↵</span>
         </div>
+        <button
+          onClick={handleSubmit}
+          disabled={isLoading || !question.trim()}
+          className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all duration-200 hover:scale-105 active:scale-95"
+          aria-label="전송"
+        >
+          <FiSend size={16} />
+        </button>
       </div>
     </div>
   )
