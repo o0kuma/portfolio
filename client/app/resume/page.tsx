@@ -208,7 +208,7 @@ export default function ResumePage() {
             <p className="text-neutral-600 text-[10px] font-mono tracking-[0.25em] uppercase mb-3">Resume</p>
             <h1 className="text-4xl font-black text-neutral-50 mb-1">오승일</h1>
             <p className="text-indigo-400 font-mono text-sm mb-1">Frontend Developer · Web Publisher</p>
-            <p className="text-neutral-600 text-xs font-mono mb-5">개발경력 6년 9개월 · 1990년생</p>
+            <p className="text-neutral-600 text-xs font-mono mb-5">개발경력 7년+ · 1990년생</p>
             <div className="flex flex-wrap items-center gap-4">
               <a href="mailto:c8c8c81828@gmail.com" className="inline-flex items-center gap-1.5 text-neutral-400 hover:text-neutral-100 text-sm transition-colors">
                 <FiMail size={14} /> c8c8c81828@gmail.com
