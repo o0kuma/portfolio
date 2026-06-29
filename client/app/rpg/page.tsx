@@ -28,7 +28,7 @@ const BUILDINGS: Bld[] = [
       '[ 오승일 / Seungil Oh ]',
       '',
       '프론트엔드 개발자 · 웹퍼블리셔',
-      '개발경력 6년 9개월 · 1990년생',
+      '개발경력 7년+ · 1990년생',
       '',
       '퍼블리싱은 누구보다 자신 있습니다.',
       'HTML/CSS · React · Next.js · Svelte',
@@ -114,7 +114,7 @@ const BUILDINGS: Bld[] = [
       '  · 반응형 웹 개발',
       '',
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
-      '  총 경력: 약 6년 9개월',
+      '  총 경력: 약 7년+',
     ],
   },
   {
@@ -373,6 +373,23 @@ export default function RPGPage() {
     return null
   }, [])
 
+  // Touch controls — feed synthetic keys into the game loop's key set
+  const pressDir = useCallback((key: string) => {
+    stateRef.current.keys.add(key)
+  }, [])
+  const releaseDir = useCallback((key: string) => {
+    stateRef.current.keys.delete(key)
+  }, [])
+  const touchAction = useCallback(() => {
+    const s = stateRef.current
+    if (dialogRef.current) {
+      setDialog(null)
+    } else if (s.nearId) {
+      const bld = BUILDINGS.find((b) => b.id === s.nearId)
+      if (bld) setDialog({ bld })
+    }
+  }, [])
+
   useEffect(() => {
     if (!started) return
     const canvas = canvasRef.current
@@ -580,6 +597,44 @@ export default function RPGPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Mobile touch controls (hidden on md+) */}
+      {!dialog && (
+        <div className="md:hidden">
+          {/* D-pad */}
+          <div className="absolute bottom-8 left-6 z-20 select-none touch-none">
+            <div className="relative w-36 h-36">
+              {([
+                { key: 'ArrowUp', cls: 'top-0 left-1/2 -translate-x-1/2', label: '▲' },
+                { key: 'ArrowDown', cls: 'bottom-0 left-1/2 -translate-x-1/2', label: '▼' },
+                { key: 'ArrowLeft', cls: 'left-0 top-1/2 -translate-y-1/2', label: '◀' },
+                { key: 'ArrowRight', cls: 'right-0 top-1/2 -translate-y-1/2', label: '▶' },
+              ] as const).map((d) => (
+                <button
+                  key={d.key}
+                  onPointerDown={(e) => { e.preventDefault(); pressDir(d.key) }}
+                  onPointerUp={(e) => { e.preventDefault(); releaseDir(d.key) }}
+                  onPointerLeave={() => releaseDir(d.key)}
+                  onPointerCancel={() => releaseDir(d.key)}
+                  className={`absolute ${d.cls} w-12 h-12 flex items-center justify-center rounded-xl bg-black/45 border border-green-700/60 text-green-300 text-lg active:bg-green-700/60 backdrop-blur-sm`}
+                  aria-label={d.key}
+                >
+                  {d.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Action button */}
+          <button
+            onPointerDown={(e) => { e.preventDefault(); touchAction() }}
+            className="absolute bottom-12 right-8 z-20 w-20 h-20 rounded-full bg-green-600/80 border-2 border-green-300/60 text-white font-black text-xl active:bg-green-500 backdrop-blur-sm select-none touch-none"
+            aria-label="입장 / 닫기"
+          >
+            E
+          </button>
         </div>
       )}
     </div>
