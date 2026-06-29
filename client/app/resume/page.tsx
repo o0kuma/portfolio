@@ -14,8 +14,16 @@ const SKILLS = [
 
 const WORK = [
   {
-    dateRange: '2020.05 ~ 재직 중',
-    duration: '5년 6개월',
+    dateRange: '2025.12.15 ~ 재직 중',
+    duration: '',
+    title: '프론트엔드 개발',
+    organization: '퀀텀에이아이 (Quantum AI)',
+    stack: ['React', 'Next.js', 'TypeScript'],
+    description: '프론트엔드 개발자로 재직 중입니다.',
+  },
+  {
+    dateRange: '2020.05 ~ 2025.12.05',
+    duration: '5년 7개월',
     title: '웹팀 / 대리',
     organization: '(주)소프트위즈',
     stack: ['HTML5', 'CSS3', 'JavaScript', 'Svelte', 'GitHub', 'MySQL'],
@@ -271,7 +279,7 @@ export default function ResumePage() {
                   <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-xs font-mono text-neutral-500">{w.dateRange}</span>
-                      <span className="text-[10px] font-mono text-neutral-700">· {w.duration}</span>
+                      {w.duration && <span className="text-[10px] font-mono text-neutral-700">· {w.duration}</span>}
                     </div>
                     <h3 className="text-neutral-100 font-semibold text-base">{w.organization}</h3>
                     <p className="text-indigo-400 text-sm font-mono mb-3">{w.title}</p>
