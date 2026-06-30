@@ -72,6 +72,9 @@ function ImmersiveHomeInner() {
             <Link href="/rpg" className="transition-colors hover:text-white">
               RPG
             </Link>
+            <Link href="/lotto" className="hidden sm:block transition-colors hover:text-white">
+              로또
+            </Link>
             <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
               방명록
             </Link>

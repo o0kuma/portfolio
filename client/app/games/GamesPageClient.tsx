@@ -7,6 +7,7 @@ import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLeaderboard'
 import TypingLeaderboard from '@/components/typing/TypingLeaderboard'
+import LottoLeaderboard from '@/components/lotto/LottoLeaderboard'
 import { useLanguage } from '@/lib/LanguageContext'
 
 type GameInfo = {
@@ -71,10 +72,22 @@ const GAMES: GameInfo[] = [
     glowColor: 'group-hover:shadow-blue-500/20',
     accentColor: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
   },
+  {
+    href: '/lotto',
+    title: '로또 6/45',
+    description: '번호를 고르고 추첨에 도전! 역대 실제 회차와 비교하거나 1등 나올 때까지 무한 자동 구매.',
+    genre: '운/시뮬',
+    difficulty: 1,
+    techStack: ['Next.js', 'API'],
+    emoji: '🎰',
+    gradient: 'from-amber-600/30 via-yellow-700/20 to-slate-900',
+    glowColor: 'group-hover:shadow-amber-500/20',
+    accentColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+  },
 ]
 
 const STATS = [
-  { label: '4개 게임', icon: '🎮' },
+  { label: '5개 게임', icon: '🎮' },
   { label: '브라우저 기반', icon: '🌐' },
   { label: '무료 플레이', icon: '🆓' },
 ]
@@ -235,6 +248,10 @@ export default function GamesPageClient() {
           <div>
             <p className="mb-3 text-sm font-semibold text-slate-300">⌨️ 타이핑 게임</p>
             <TypingLeaderboard />
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-semibold text-slate-300">🎰 로또 6/45</p>
+            <LottoLeaderboard />
           </div>
         </div>
       </main>
