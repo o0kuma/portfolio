@@ -14,6 +14,19 @@ function isPrivateIp(ip: string): boolean {
   return false
 }
 
+// IPs to exclude from visitor counting (e.g. own home/office network).
+// Set EXCLUDED_IPS as a comma-separated list in the environment.
+function isExcludedIp(ip: string | null): boolean {
+  if (!ip) return false
+  const raw = process.env.EXCLUDED_IPS
+  if (!raw) return false
+  return raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .includes(ip)
+}
+
 interface IpApiResponse {
   status: string
   country: string
@@ -33,6 +46,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: 'session_id가 필요합니다.' }, { status: 400 })
     }
 
+    // Extract IP early so we can skip excluded networks before any DB work
+    const ip: string | null =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      request.headers.get('x-real-ip') ??
+      null
+
+    // Own/office network — acknowledge but do not count
+    if (isExcludedIp(ip)) {
+      return NextResponse.json({ ok: true, excluded: true })
+    }
+
     // Ensure columns exist
     await dbQuery(`ALTER TABLE visitor_count ADD COLUMN IF NOT EXISTS ip TEXT`)
     await dbQuery(`ALTER TABLE visitor_count ADD COLUMN IF NOT EXISTS country TEXT`)
@@ -43,12 +67,6 @@ export async function POST(request: NextRequest) {
     await dbQuery(
       `ALTER TABLE visitor_count ADD COLUMN IF NOT EXISTS visited_at TIMESTAMPTZ DEFAULT NOW()`,
     )
-
-    // Extract IP
-    const ip: string | null =
-      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      request.headers.get('x-real-ip') ??
-      null
 
     let country: string | null = null
     let countryCode: string | null = null
