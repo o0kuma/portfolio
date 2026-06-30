@@ -19,6 +19,26 @@ function getOrCreateSessionId(): string {
   return id
 }
 
+const EXCLUDE_KEY = 'visitor_exclude'
+
+// Self-exclude this browser from visitor counting.
+// Visit the site with ?notrack=1 to enable, ?notrack=0 to disable.
+// The flag persists in localStorage so this device is never counted.
+function resolveExcluded(): boolean {
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const notrack = params.get('notrack')
+    if (notrack === '1' || notrack === 'true') {
+      localStorage.setItem(EXCLUDE_KEY, '1')
+    } else if (notrack === '0' || notrack === 'false') {
+      localStorage.removeItem(EXCLUDE_KEY)
+    }
+    return localStorage.getItem(EXCLUDE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
 export function useVisitorCount(): UseVisitorCountResult {
   const [count, setCount] = useState(0)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -49,8 +69,12 @@ export function useVisitorCount(): UseVisitorCountResult {
       }
     }
 
-    // Register once, then fetch cumulative count
-    register().then(() => fetchCount())
+    // Register once (unless this browser is self-excluded), then fetch count
+    if (resolveExcluded()) {
+      fetchCount()
+    } else {
+      register().then(() => fetchCount())
+    }
 
     // Poll periodically so the displayed number stays reasonably fresh
     pollRef.current = setInterval(fetchCount, POLL_INTERVAL_MS)
