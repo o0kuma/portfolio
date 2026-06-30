@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/generate-posts",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/lotto-sync",
+      "schedule": "0 16 * * 6"
     }
   ]
 }
