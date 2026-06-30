@@ -4,8 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { AnimatePresence, motion } from 'framer-motion'
-import LottoBall from '@/components/lotto/LottoBall'
+import LottoBall, { ballColor } from '@/components/lotto/LottoBall'
 import LottoLeaderboard from '@/components/lotto/LottoLeaderboard'
+import { recommend, STRATEGY_INFO, type Strategy, type RecommendStats } from '@/lib/lotto/recommend'
 
 type Mode = 'sim' | 'history' | 'auto'
 
@@ -87,6 +88,11 @@ export default function LottoPageClient() {
   const [autoStats, setAutoStats] = useState<{ tickets: number; best: number; spent: number; counts: Record<number, number> } | null>(null)
   const autoStopRef = useRef(false)
 
+  // 통계(빈도) — 있으면 핫/콜드 추천 활성화
+  const [stats, setStats] = useState<(RecommendStats & { counts?: { n: number; count: number }[]; latestDraw?: number; totalDraws?: number }) | null>(null)
+  const [statsAvailable, setStatsAvailable] = useState(false)
+  const [lastStrategy, setLastStrategy] = useState<Strategy | null>(null)
+
   const sessionId = useMemo(() => (typeof window !== 'undefined' ? getSessionId() : ''), [])
 
   useEffect(() => {
@@ -95,6 +101,26 @@ export default function LottoPageClient() {
       if (saved) setPlayerName(saved)
     } catch {}
   }, [])
+
+  useEffect(() => {
+    fetch('/api/lotto/stats')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d?.available) {
+          setStats({ hot: d.hot, cold: d.cold, counts: d.counts, latestDraw: d.latestDraw, totalDraws: d.totalDraws })
+          setStatsAvailable(true)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  const applyRecommendation = (strategy: Strategy) => {
+    if (drawing || autoRunning) return
+    const combo = recommend(strategy, statsAvailable ? stats : null)
+    setPicked(combo)
+    setLastStrategy(strategy)
+    setResult(null)
+  }
 
   const toggleNumber = (n: number) => {
     if (drawing) return
@@ -246,6 +272,69 @@ export default function LottoPageClient() {
           {mode === 'history' && '실제 역대 당첨 회차(무작위)와 비교합니다. "그때 샀다면?"'}
           {mode === 'auto' && '1등이 나올 때까지 자동으로 구매를 반복합니다. (브라우저 계산, 랭킹 미반영)'}
         </p>
+
+        {/* 추천 번호 패널 */}
+        <div className="mb-5 rounded-2xl border border-amber-700/40 bg-amber-950/10 p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <span className="text-sm font-semibold text-amber-300">📊 추천 번호</span>
+            {statsAvailable && stats?.totalDraws ? (
+              <span className="text-[11px] text-slate-500">역대 {stats.totalDraws}회차 통계 기반</span>
+            ) : (
+              <span className="text-[11px] text-slate-500">통계적 밸런스 기반</span>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(['balanced', 'hot', 'cold', 'mix'] as Strategy[]).map((s) => {
+              const info = STRATEGY_INFO[s]
+              const needsStats = s !== 'balanced'
+              const disabled = drawing || autoRunning
+              return (
+                <button
+                  key={s}
+                  onClick={() => applyRecommendation(s)}
+                  disabled={disabled}
+                  title={needsStats && !statsAvailable ? `${info.desc} (통계 미적재 시 밸런스로 대체)` : info.desc}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40 ${
+                    lastStrategy === s
+                      ? 'border-amber-500 bg-amber-500/20 text-amber-300'
+                      : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-amber-600/60'
+                  }`}
+                >
+                  {info.emoji} {info.label}
+                </button>
+              )
+            })}
+          </div>
+          {lastStrategy && (
+            <p className="mt-2.5 text-[11px] text-slate-500">
+              {STRATEGY_INFO[lastStrategy].emoji} {STRATEGY_INFO[lastStrategy].desc}
+              {lastStrategy !== 'balanced' && !statsAvailable && ' — 통계 미적재로 밸런스 적용됨'}
+            </p>
+          )}
+          {/* 빈도 미니 차트 */}
+          {statsAvailable && stats?.counts && (
+            <div className="mt-4">
+              <p className="mb-1.5 text-[11px] font-semibold text-slate-400">번호별 출현 빈도</p>
+              <div className="flex items-end gap-[2px]" style={{ height: 48 }}>
+                {(() => {
+                  const max = Math.max(...stats.counts.map((c) => c.count), 1)
+                  return stats.counts.map((c) => (
+                    <div
+                      key={c.n}
+                      title={`${c.n}번: ${c.count}회`}
+                      className="flex-1 rounded-sm"
+                      style={{ height: `${Math.max(8, (c.count / max) * 100)}%`, backgroundColor: ballColor(c.n), opacity: 0.75 }}
+                    />
+                  ))
+                })()}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                <span className="text-slate-500">🔥 핫: <span className="text-orange-300">{stats.hot.slice(0, 5).join(', ')}</span></span>
+                <span className="text-slate-500">❄️ 콜드: <span className="text-sky-300">{stats.cold.slice(0, 5).join(', ')}</span></span>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* 번호 선택판 */}
         <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
