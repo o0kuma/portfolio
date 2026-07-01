@@ -84,10 +84,22 @@ const GAMES: GameInfo[] = [
     glowColor: 'group-hover:shadow-amber-500/20',
     accentColor: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
   },
+  {
+    href: '/arcade',
+    title: '포켓 아케이드',
+    description: '한 손으로 즐기는 초단타 미니게임 모음. 코인을 모으고 최고 기록에 도전하세요.',
+    genre: '아케이드',
+    difficulty: 2,
+    techStack: ['Canvas', 'PWA'],
+    emoji: '🕹️',
+    gradient: 'from-fuchsia-600/30 via-purple-700/20 to-slate-900',
+    glowColor: 'group-hover:shadow-fuchsia-500/20',
+    accentColor: 'bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30',
+  },
 ]
 
 const STATS = [
-  { label: '5개 게임', icon: '🎮' },
+  { label: '6개 게임', icon: '🎮' },
   { label: '브라우저 기반', icon: '🌐' },
   { label: '무료 플레이', icon: '🆓' },
 ]

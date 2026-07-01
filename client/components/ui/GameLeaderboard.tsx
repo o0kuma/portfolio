@@ -49,7 +49,8 @@ export default function GameLeaderboard({
     try {
       const qs = new URLSearchParams({ limit: '10' })
       if (day) qs.set('day', day)
-      const res = await fetch(`${apiPath}?${qs.toString()}`, { cache: 'no-store' })
+      const separator = apiPath.includes('?') ? '&' : '?'
+      const res = await fetch(`${apiPath}${separator}${qs.toString()}`, { cache: 'no-store' })
       if (!res.ok) {
         const data = (await res.json().catch(() => ({}))) as { message?: string }
         setError(data.message ?? res.statusText)
