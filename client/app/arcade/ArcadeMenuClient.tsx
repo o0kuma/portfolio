@@ -6,10 +6,12 @@ import { FiArrowLeft } from 'react-icons/fi'
 import { motion } from 'framer-motion'
 import { ARCADE_GAMES } from '@/lib/arcade/registry'
 import { getCoins, getBestScore } from '@/lib/arcade/coins'
+import { useIsStandalone } from '@/lib/arcade/useStandalone'
 
 export default function ArcadeMenuClient() {
   const [coins, setCoins] = useState(0)
   const [bests, setBests] = useState<Record<string, number>>({})
+  const standalone = useIsStandalone()
 
   useEffect(() => {
     setCoins(getCoins())
@@ -22,10 +24,12 @@ export default function ArcadeMenuClient() {
     <div className="min-h-screen bg-[#0a0a12] pb-20 text-white">
       <header className="sticky top-0 z-30 border-b border-purple-900/40 bg-[#0a0a12]/90 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
-            <FiArrowLeft className="h-4 w-4" /> 메인
-          </Link>
-          <span className="ml-1 text-sm font-bold text-white">🕹️ 포켓 아케이드</span>
+          {!standalone && (
+            <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
+              <FiArrowLeft className="h-4 w-4" /> 메인
+            </Link>
+          )}
+          <span className={`text-sm font-bold text-white ${standalone ? '' : 'ml-1'}`}>🕹️ 포켓 아케이드</span>
           <div className="ml-auto flex items-center gap-1.5 rounded-full border border-amber-600/40 bg-amber-950/30 px-3 py-1 text-xs font-bold text-amber-300">
             🪙 {coins.toLocaleString()}
           </div>
