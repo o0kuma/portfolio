@@ -8,6 +8,8 @@ export interface ArcadeInput {
   dx: number
 }
 
+export type SoundEvent = 'tap' | 'tick' | 'success' | 'perfect' | 'fail' | null
+
 export interface MiniGame<TState = unknown> {
   id: string
   title: string
@@ -21,6 +23,8 @@ export interface MiniGame<TState = unknown> {
   score(state: TState): number
   // 점수 → 코인 환산 (기본 10점당 1코인)
   toCoins?(score: number): number
+  // 이전/이후 상태를 비교해 재생할 사운드·햅틱 이벤트를 반환 (선택)
+  soundEvent?(prev: TState, next: TState): SoundEvent
 }
 
 export function defaultToCoins(score: number): number {

@@ -2,15 +2,20 @@
 
 import { useEffect, useRef } from 'react'
 import type { MiniGame, ArcadeInput } from '@/lib/arcade/engine'
+import { sfx, vibrate } from '@/lib/arcade/sound'
+
+const COUNTDOWN_MS = 2200 // "3, 2, 1" 표시 시간
 
 export default function GameCanvas<TState>({
   game,
   onGameOver,
   resetKey,
+  paused = false,
 }: {
   game: MiniGame<TState>
   onGameOver: (score: number) => void
   resetKey: number
+  paused?: boolean
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -18,10 +23,17 @@ export default function GameCanvas<TState>({
   const inputRef = useRef<ArcadeInput>({ tapped: false, dx: 0 })
   const rafRef = useRef(0)
   const overFiredRef = useRef(false)
+  const countdownRef = useRef(COUNTDOWN_MS)
+  const pausedRef = useRef(paused)
+
+  useEffect(() => {
+    pausedRef.current = paused
+  }, [paused])
 
   useEffect(() => {
     stateRef.current = game.init()
     overFiredRef.current = false
+    countdownRef.current = COUNTDOWN_MS
   }, [game, resetKey])
 
   useEffect(() => {
@@ -43,7 +55,7 @@ export default function GameCanvas<TState>({
 
     const handleDown = (clientX: number) => {
       lastX = clientX
-      inputRef.current.tapped = true
+      if (countdownRef.current <= 0) inputRef.current.tapped = true
     }
     const handleMove = (clientX: number) => {
       if (lastX == null) return
@@ -70,18 +82,60 @@ export default function GameCanvas<TState>({
       const dt = Math.min(48, now - last)
       last = now
 
+      const W = canvas.width
+      const H = canvas.height
+
+      if (pausedRef.current) {
+        game.render(ctx, stateRef.current, W, H)
+        ctx.fillStyle = 'rgba(0,0,0,0.55)'
+        ctx.fillRect(0, 0, W, H)
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 24px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.fillText('일시정지', W / 2, H / 2)
+        rafRef.current = requestAnimationFrame(loop)
+        return
+      }
+
+      if (countdownRef.current > 0 && !overFiredRef.current) {
+        countdownRef.current = Math.max(0, countdownRef.current - dt)
+        game.render(ctx, stateRef.current, W, H)
+        ctx.fillStyle = 'rgba(0,0,0,0.45)'
+        ctx.fillRect(0, 0, W, H)
+        const label = countdownRef.current > COUNTDOWN_MS * (2 / 3)
+          ? '3' : countdownRef.current > COUNTDOWN_MS * (1 / 3)
+          ? '2' : countdownRef.current > 40 ? '1' : 'GO!'
+        ctx.fillStyle = '#fbbf24'
+        ctx.font = 'bold 56px sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(label, W / 2, H / 2)
+        ctx.textBaseline = 'alphabetic'
+        rafRef.current = requestAnimationFrame(loop)
+        return
+      }
+
       if (!overFiredRef.current) {
-        stateRef.current = game.update(stateRef.current, inputRef.current, dt)
+        const prev = stateRef.current
+        const next = game.update(prev, inputRef.current, dt)
+        stateRef.current = next
         inputRef.current.tapped = false
         inputRef.current.dx = 0
 
-        const W = canvas.width
-        const H = canvas.height
-        game.render(ctx, stateRef.current, W, H)
+        const evt = game.soundEvent?.(prev, next)
+        if (evt) {
+          if (evt === 'perfect') { sfx.perfect(); vibrate(25) }
+          else if (evt === 'success') { sfx.success(); vibrate(12) }
+          else if (evt === 'fail') { sfx.fail(); vibrate(60) }
+          else if (evt === 'tick') sfx.tick()
+          else if (evt === 'tap') sfx.tap()
+        }
 
-        if (game.isOver(stateRef.current)) {
+        game.render(ctx, next, W, H)
+
+        if (game.isOver(next)) {
           overFiredRef.current = true
-          onGameOver(game.score(stateRef.current))
+          onGameOver(game.score(next))
         }
       }
       rafRef.current = requestAnimationFrame(loop)
