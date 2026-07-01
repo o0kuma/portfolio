@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { FiArrowLeft, FiRotateCcw } from 'react-icons/fi'
+import { FiArrowLeft, FiRotateCcw, FiPause, FiPlay } from 'react-icons/fi'
 import { AnimatePresence, motion } from 'framer-motion'
 import GameCanvas from '@/components/arcade/GameCanvas'
 import ArcadeLeaderboard from '@/components/arcade/ArcadeLeaderboard'
@@ -31,6 +31,7 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
   const [playerName, setPlayerName] = useState('')
   const [leaderboardKey, setLeaderboardKey] = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  const [paused, setPaused] = useState(false)
 
   useEffect(() => {
     try {
@@ -75,6 +76,7 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
 
   const retry = () => {
     setResult(null)
+    setPaused(false)
     setResetKey((k) => k + 1)
   }
 
@@ -85,9 +87,16 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
           <FiArrowLeft className="h-4 w-4" /> 목록
         </Link>
         <span className="text-sm font-bold">{game.emoji} {game.title}</span>
-        <button onClick={retry} className="ml-auto text-slate-400 hover:text-white" aria-label="재시작">
-          <FiRotateCcw className="h-4 w-4" />
-        </button>
+        <div className="ml-auto flex items-center gap-3">
+          {!result && (
+            <button onClick={() => setPaused((p) => !p)} className="text-slate-400 hover:text-white" aria-label="일시정지">
+              {paused ? <FiPlay className="h-4 w-4" /> : <FiPause className="h-4 w-4" />}
+            </button>
+          )}
+          <button onClick={retry} className="text-slate-400 hover:text-white" aria-label="재시작">
+            <FiRotateCcw className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       <p className="border-b border-slate-800/60 bg-slate-900/40 px-4 py-2 text-center text-xs text-slate-400">
@@ -95,7 +104,7 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
       </p>
 
       <div className="relative flex-1">
-        <GameCanvas game={game} onGameOver={handleGameOver} resetKey={resetKey} />
+        <GameCanvas game={game} onGameOver={handleGameOver} resetKey={resetKey} paused={paused} />
 
         <AnimatePresence>
           {result && (

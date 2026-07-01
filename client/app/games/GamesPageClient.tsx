@@ -99,7 +99,7 @@ const GAMES: GameInfo[] = [
 ]
 
 const STATS = [
-  { label: '6개 게임', icon: '🎮' },
+  { label: '9개 게임', icon: '🎮' },
   { label: '브라우저 기반', icon: '🌐' },
   { label: '무료 플레이', icon: '🆓' },
 ]

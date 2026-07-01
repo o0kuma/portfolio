@@ -118,4 +118,12 @@ export const tapTiming: MiniGame<State> = {
   },
   isOver: (s) => s.over,
   score: (s) => s.totalScore,
+  soundEvent: (prev, next) => {
+    if (next.lastHit && next.lastHit !== prev.lastHit) {
+      if (next.lastHit === 'perfect') return 'perfect'
+      if (next.lastHit === 'good') return 'success'
+      return 'fail'
+    }
+    return null
+  },
 }

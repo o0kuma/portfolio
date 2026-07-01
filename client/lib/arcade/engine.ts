@@ -4,9 +4,14 @@
 export interface ArcadeInput {
   // 탭/클릭 시 true로 1프레임 유지 (edge-triggered는 게임 쪽에서 처리)
   tapped: boolean
+  // 탭 위치 (캔버스 기준 0~1 정규화), tapped=true인 프레임에서만 유효
+  tapX: number
+  tapY: number
   // 좌우 스와이프 방향 (닷지류 게임용), 없으면 0
   dx: number
 }
+
+export type SoundEvent = 'tap' | 'tick' | 'success' | 'perfect' | 'fail' | null
 
 export interface MiniGame<TState = unknown> {
   id: string
@@ -21,6 +26,8 @@ export interface MiniGame<TState = unknown> {
   score(state: TState): number
   // 점수 → 코인 환산 (기본 10점당 1코인)
   toCoins?(score: number): number
+  // 이전/이후 상태를 비교해 재생할 사운드·햅틱 이벤트를 반환 (선택)
+  soundEvent?(prev: TState, next: TState): SoundEvent
 }
 
 export function defaultToCoins(score: number): number {

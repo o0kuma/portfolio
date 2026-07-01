@@ -120,4 +120,12 @@ export const reaction: MiniGame<State> = {
     return Math.max(0, Math.round(300 - avg))
   },
   toCoins: (score) => Math.max(0, Math.floor(score / 15)),
+  soundEvent: (prev, next) => {
+    if (next.phase === 'go' && prev.phase !== 'go') return 'tick'
+    if (next.phase === 'fail' && prev.phase !== 'fail') return 'fail'
+    if (prev.phase === 'go' && (next.phase === 'ready' || next.phase === 'result') && next.reactionMs != null) {
+      return next.reactionMs < 250 ? 'perfect' : 'success'
+    }
+    return null
+  },
 }

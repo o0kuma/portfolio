@@ -93,4 +93,10 @@ export const dodge: MiniGame<State> = {
   },
   isOver: (s) => s.over,
   score: (s) => Math.floor(s.survived / 100), // 0.1초당 1점
+  soundEvent: (prev, next) => {
+    if (next.over && !prev.over) return 'fail'
+    // 500ms마다 짧은 틱으로 생존 리듬감 부여
+    if (Math.floor(next.elapsed / 500) > Math.floor(prev.elapsed / 500)) return 'tick'
+    return null
+  },
 }
