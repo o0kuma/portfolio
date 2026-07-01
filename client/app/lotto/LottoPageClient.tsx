@@ -6,7 +6,7 @@ import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { AnimatePresence, motion } from 'framer-motion'
 import LottoBall, { ballColor } from '@/components/lotto/LottoBall'
 import LottoLeaderboard from '@/components/lotto/LottoLeaderboard'
-import { recommend, STRATEGY_INFO, type Strategy, type RecommendStats } from '@/lib/lotto/recommend'
+import { recommend, analyze, STRATEGY_INFO, type Strategy, type RecommendStats } from '@/lib/lotto/recommend'
 
 type Mode = 'sim' | 'history' | 'auto'
 
@@ -147,6 +147,64 @@ export default function LottoPageClient() {
     setResult(null)
     setError(null)
   }
+
+  // 선택한 번호를 로또 용지 스타일 이미지로 저장
+  const saveTicketImage = useCallback(() => {
+    if (picked.length !== 6) return
+    const W = 600, H = 280
+    const canvas = document.createElement('canvas')
+    canvas.width = W
+    canvas.height = H
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    // 배경
+    const grad = ctx.createLinearGradient(0, 0, W, H)
+    grad.addColorStop(0, '#0f172a')
+    grad.addColorStop(1, '#1e1b4b')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, W, H)
+
+    ctx.fillStyle = '#fbbf24'
+    ctx.font = 'bold 28px sans-serif'
+    ctx.textAlign = 'left'
+    ctx.fillText('🎰 LOTTO 6/45', 32, 56)
+
+    ctx.fillStyle = '#94a3b8'
+    ctx.font = '14px sans-serif'
+    ctx.fillText(lastStrategy ? `${STRATEGY_INFO[lastStrategy].emoji} ${STRATEGY_INFO[lastStrategy].label}` : '내 행운의 번호', 32, 82)
+
+    // 번호 공
+    const colorOf = (n: number) =>
+      n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aaaaaa' : '#b0d840'
+    const r = 36
+    const gap = (W - 64 - r * 2 * 6) / 5
+    picked.forEach((n, i) => {
+      const cx = 32 + r + i * (r * 2 + gap)
+      const cy = 160
+      ctx.beginPath()
+      ctx.arc(cx, cy, r, 0, Math.PI * 2)
+      ctx.fillStyle = colorOf(n)
+      ctx.fill()
+      ctx.fillStyle = '#000'
+      ctx.font = 'bold 26px sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(String(n), cx, cy)
+    })
+
+    ctx.fillStyle = '#64748b'
+    ctx.font = '13px sans-serif'
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'alphabetic'
+    ctx.fillText('kuuuma.com · 로또 번호 추천', W / 2, H - 28)
+
+    const url = canvas.toDataURL('image/png')
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `lotto-${picked.join('-')}.png`
+    a.click()
+  }, [picked, lastStrategy])
 
   const drawnSet = useMemo(() => new Set(result?.drawn ?? []), [result])
 
@@ -364,6 +422,50 @@ export default function LottoPageClient() {
             })}
           </div>
         </div>
+
+        {/* 조합 분석 카드 */}
+        {picked.length === 6 && (
+          <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-900/40 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-300">🔍 내 조합 분석</span>
+              <button
+                onClick={saveTicketImage}
+                disabled={drawing || autoRunning}
+                className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:border-amber-600/60 disabled:opacity-50"
+              >
+                🖼️ 이미지 저장
+              </button>
+            </div>
+            {(() => {
+              const a = analyze(picked)
+              const items = [
+                { label: '홀:짝', value: `${a.odd}:${6 - a.odd}`, ok: a.odd >= 2 && a.odd <= 4 },
+                { label: '고:저', value: `${6 - a.low}:${a.low}`, ok: a.low >= 2 && a.low <= 4 },
+                { label: '합계', value: `${a.sum}`, ok: a.sum >= 100 && a.sum <= 175 },
+                { label: '연속수', value: a.maxConsecutive <= 1 ? '없음' : `${a.maxConsecutive}연속`, ok: a.maxConsecutive <= 2 },
+                { label: '끝수종류', value: `${a.distinctLastDigits}종`, ok: a.distinctLastDigits >= 4 },
+              ]
+              return (
+                <>
+                  <div className="grid grid-cols-5 gap-2 text-center">
+                    {items.map((it) => (
+                      <div key={it.label} className={`rounded-lg border py-2 ${it.ok ? 'border-emerald-700/40 bg-emerald-950/20' : 'border-amber-700/40 bg-amber-950/20'}`}>
+                        <p className="text-[10px] text-slate-500">{it.label}</p>
+                        <p className={`text-sm font-bold ${it.ok ? 'text-emerald-300' : 'text-amber-300'}`}>{it.value}</p>
+                        <p className="text-[10px]">{it.ok ? '✓' : '!'}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-2.5 text-center text-[11px] text-slate-500">
+                    {a.passed
+                      ? '✅ 역대 1등 조합들이 가진 통계적 균형을 모두 만족합니다.'
+                      : '⚠️ 일부 항목이 통계적 평균에서 벗어나 있습니다. (재미로만 참고)'}
+                  </p>
+                </>
+              )
+            })()}
+          </div>
+        )}
 
         {/* 이름 + 추첨 버튼 */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
