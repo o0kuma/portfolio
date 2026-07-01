@@ -20,7 +20,7 @@ export default function GameCanvas<TState>({
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef<TState>(game.init())
-  const inputRef = useRef<ArcadeInput>({ tapped: false, dx: 0 })
+  const inputRef = useRef<ArcadeInput>({ tapped: false, tapX: 0, tapY: 0, dx: 0 })
   const rafRef = useRef(0)
   const overFiredRef = useRef(false)
   const countdownRef = useRef(COUNTDOWN_MS)
@@ -53,9 +53,14 @@ export default function GameCanvas<TState>({
 
     let lastX: number | null = null
 
-    const handleDown = (clientX: number) => {
+    const handleDown = (clientX: number, clientY: number) => {
       lastX = clientX
-      if (countdownRef.current <= 0) inputRef.current.tapped = true
+      if (countdownRef.current <= 0) {
+        const rect = canvas.getBoundingClientRect()
+        inputRef.current.tapped = true
+        inputRef.current.tapX = (clientX - rect.left) / rect.width
+        inputRef.current.tapY = (clientY - rect.top) / rect.height
+      }
     }
     const handleMove = (clientX: number) => {
       if (lastX == null) return
@@ -68,7 +73,7 @@ export default function GameCanvas<TState>({
       lastX = null
     }
 
-    const onPointerDown = (e: PointerEvent) => handleDown(e.clientX)
+    const onPointerDown = (e: PointerEvent) => handleDown(e.clientX, e.clientY)
     const onPointerMove = (e: PointerEvent) => handleMove(e.clientX)
     const onPointerUp = () => handleUp()
 

@@ -4,6 +4,9 @@
 export interface ArcadeInput {
   // 탭/클릭 시 true로 1프레임 유지 (edge-triggered는 게임 쪽에서 처리)
   tapped: boolean
+  // 탭 위치 (캔버스 기준 0~1 정규화), tapped=true인 프레임에서만 유효
+  tapX: number
+  tapY: number
   // 좌우 스와이프 방향 (닷지류 게임용), 없으면 0
   dx: number
 }
