@@ -13,7 +13,7 @@ interface State {
   over: boolean
 }
 
-const TOTAL_ROUNDS = 5
+const TOTAL_ROUNDS = 8
 const ZONE_CENTER = 0.5
 const PERFECT_RANGE = 0.045
 const GOOD_RANGE = 0.12
@@ -60,7 +60,9 @@ export const tapTiming: MiniGame<State> = {
       if (s.round >= s.totalRounds) {
         s = { ...s, over: true }
       } else {
-        s = { ...s, round: s.round + 1, pos: 0, dir: 1, speed: s.speed + 0.00025 }
+        // 초반엔 완만하게, 후반엔 가파르게 가속 (곡선형 난이도)
+        const increment = 0.00012 + s.round * 0.00008
+        s = { ...s, round: s.round + 1, pos: 0, dir: 1, speed: s.speed + increment }
       }
       return s
     }

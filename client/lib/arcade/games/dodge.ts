@@ -1,6 +1,6 @@
 import type { MiniGame } from '../engine'
 
-interface Block { x: number; y: number; w: number }
+interface Block { x: number; y: number; w: number; counted?: boolean }
 
 interface State {
   playerX: number // 0~1
@@ -10,11 +10,29 @@ interface State {
   spawnEvery: number
   elapsed: number
   survived: number // ms 생존시간(=점수 기반)
+  dodged: number // 지나쳐 보낸 블록 수 (콤보 표시용)
   over: boolean
 }
 
 const PLAYER_W = 0.12
 const PLAYER_Y_RATIO = 0.85
+const MIN_GAP = PLAYER_W * 1.8 // 항상 이만큼의 통로는 보장
+
+function spawnRow(): Block[] {
+  // 15% 확률로 두 개의 블록을 동시에 스폰하되, 사이에 항상 지나갈 틈을 보장
+  if (Math.random() < 0.15) {
+    const gapX = Math.random() * (1 - MIN_GAP)
+    const leftW = gapX
+    const rightW = 1 - (gapX + MIN_GAP)
+    const blocks: Block[] = []
+    if (leftW > 0.06) blocks.push({ x: 0, y: -0.05, w: leftW })
+    if (rightW > 0.06) blocks.push({ x: gapX + MIN_GAP, y: -0.05, w: rightW })
+    if (blocks.length > 0) return blocks
+  }
+  const w = 0.1 + Math.random() * 0.12
+  const x = Math.random() * (1 - w)
+  return [{ x, y: -0.05, w }]
+}
 
 export const dodge: MiniGame<State> = {
   id: 'dodge',
@@ -31,6 +49,7 @@ export const dodge: MiniGame<State> = {
       spawnEvery: 900,
       elapsed: 0,
       survived: 0,
+      dodged: 0,
       over: false,
     }
   },
@@ -38,22 +57,30 @@ export const dodge: MiniGame<State> = {
     if (state.over) return state
     let s = { ...state, elapsed: state.elapsed + dt, survived: state.survived + dt }
 
-    // 입력: dx로 좌/우 이동 (탭도 좌우 절반 판정은 GameCanvas에서 dx로 넘김)
+    // 입력: dx로 좌/우 이동 (드래그 감도는 GameCanvas에서 조절)
     let playerX = s.playerX + input.dx
     playerX = Math.max(PLAYER_W / 2, Math.min(1 - PLAYER_W / 2, playerX))
 
     // 난이도 상승
     const speed = s.speed + s.elapsed * 0.000000045
-    const spawnEvery = Math.max(340, 900 - s.elapsed * 0.045)
+    const spawnEvery = Math.max(380, 900 - s.elapsed * 0.04)
 
     let spawnTimer = s.spawnTimer + dt
     let blocks = s.blocks.map((b) => ({ ...b, y: b.y + speed * dt }))
     if (spawnTimer >= spawnEvery) {
       spawnTimer = 0
-      const w = 0.1 + Math.random() * 0.12
-      const x = Math.random() * (1 - w)
-      blocks.push({ x, y: -0.05, w })
+      blocks.push(...spawnRow())
     }
+
+    // 통과한 블록 카운트 (플레이어 라인을 완전히 지나친 순간 1회)
+    let dodged = s.dodged
+    blocks = blocks.map((b) => {
+      if (!b.counted && b.y > PLAYER_Y_RATIO + 0.06) {
+        dodged++
+        return { ...b, counted: true }
+      }
+      return b
+    })
     blocks = blocks.filter((b) => b.y < 1.1)
 
     // 충돌 판정
@@ -65,12 +92,12 @@ export const dodge: MiniGame<State> = {
         const bx0 = b.x
         const bx1 = b.x + b.w
         if (px0 < bx1 && px1 > bx0) {
-          return { ...s, playerX, blocks, speed, spawnTimer, spawnEvery, over: true }
+          return { ...s, playerX, blocks, speed, spawnTimer, spawnEvery, dodged, over: true }
         }
       }
     }
 
-    return { ...s, playerX, blocks, speed, spawnTimer, spawnEvery }
+    return { ...s, playerX, blocks, speed, spawnTimer, spawnEvery, dodged }
   },
   render(ctx, state, W, H) {
     ctx.fillStyle = '#1c1017'
@@ -90,6 +117,12 @@ export const dodge: MiniGame<State> = {
     ctx.font = 'bold 20px sans-serif'
     ctx.textAlign = 'center'
     ctx.fillText(`생존 ${(state.survived / 1000).toFixed(1)}s`, W / 2, H * 0.12)
+
+    if (state.dodged > 0) {
+      ctx.fillStyle = '#fbbf24'
+      ctx.font = 'bold 14px sans-serif'
+      ctx.fillText(`회피 ${state.dodged}`, W / 2, H * 0.18)
+    }
   },
   isOver: (s) => s.over,
   score: (s) => Math.floor(s.survived / 100), // 0.1초당 1점

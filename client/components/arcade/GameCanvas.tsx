@@ -73,7 +73,7 @@ export default function GameCanvas<TState>({
       if (lastX == null) return
       const rect = canvas.getBoundingClientRect()
       const dx = (clientX - lastX) / rect.width
-      inputRef.current.dx += dx * 2.2
+      inputRef.current.dx += dx * 1.5
       lastX = clientX
     }
     const handleUp = () => {

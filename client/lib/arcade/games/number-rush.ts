@@ -16,6 +16,7 @@ interface State {
 const COLS = 3
 const ROWS = 3
 const TOTAL = COLS * ROWS
+const MAX_MISTAKES = 3
 
 function shuffledCells(): Cell[] {
   const nums = Array.from({ length: TOTAL }, (_, i) => i + 1)
@@ -69,8 +70,10 @@ export const numberRush: MiniGame<State> = {
         }
         return cell
       })
-      const over = next > TOTAL
-      s = { ...s, cells, next, mistakes, over, finishedAt: over ? s.elapsed : null }
+      const cleared = next > TOTAL
+      const failed = mistakes >= MAX_MISTAKES
+      const over = cleared || failed
+      s = { ...s, cells, next, mistakes, over, finishedAt: cleared ? s.elapsed : null }
     }
     return s
   },
@@ -84,9 +87,9 @@ export const numberRush: MiniGame<State> = {
     ctx.fillText(`다음: ${state.next > 9 ? '완료!' : state.next}`, W / 2, H * 0.12)
     ctx.fillStyle = '#f87171'
     ctx.font = '13px sans-serif'
-    ctx.fillText(`실수 ${state.mistakes}`, W / 2, H * 0.18)
+    ctx.fillText(`실수 ${state.mistakes} / ${MAX_MISTAKES}`, W / 2, H * 0.18)
 
-    const r = Math.min(W / state.cols, H * 0.65 / state.rows) * 0.36
+    const r = Math.min(W / state.cols, H * 0.65 / state.rows) * 0.42
     for (const cell of state.cells) {
       const cx = cell.x * W
       const cy = cell.y * H
@@ -104,15 +107,21 @@ export const numberRush: MiniGame<State> = {
     }
 
     if (state.over) {
-      ctx.fillStyle = '#4ade80'
-      ctx.font = 'bold 22px sans-serif'
-      ctx.fillText(`${(state.finishedAt! / 1000).toFixed(2)}초 완료!`, W / 2, H * 0.92)
+      if (state.finishedAt != null) {
+        ctx.fillStyle = '#4ade80'
+        ctx.font = 'bold 22px sans-serif'
+        ctx.fillText(`${(state.finishedAt / 1000).toFixed(2)}초 완료!`, W / 2, H * 0.92)
+      } else {
+        ctx.fillStyle = '#f87171'
+        ctx.font = 'bold 22px sans-serif'
+        ctx.fillText('실수 초과! 실패', W / 2, H * 0.92)
+      }
     }
   },
   isOver: (s) => s.over,
-  // 빠를수록, 실수 적을수록 고득점. 기준 4초=100점.
+  // 빠를수록, 실수 적을수록 고득점. 기준 4초=100점. 목숨 초과 실패 시 0점.
   score: (s) => {
-    if (!s.over || s.finishedAt == null) return 0
+    if (s.finishedAt == null) return 0
     const base = Math.max(0, Math.round(400 - s.finishedAt / 10))
     return Math.max(0, base - s.mistakes * 15)
   },

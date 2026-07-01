@@ -14,6 +14,10 @@ interface State {
 const INITIAL_W = 0.32
 const MIN_W = 0.05
 const LEVEL_H_RATIO = 0.09 // 화면 높이 대비 블록 한 층 높이
+const TOLERANCE = 0.025 // 살짝 빗나가도 완전 일치로 봐주는 관용 범위
+
+// 카메라 스크롤을 부드럽게 보간하기 위한 모듈 스코프 상태 (렌더 전용, 게임 로직에는 영향 없음)
+let smoothScroll = 0
 
 export const stackTower: MiniGame<State> = {
   id: 'stack-tower',
@@ -22,6 +26,7 @@ export const stackTower: MiniGame<State> = {
   instruction: '움직이는 블록을 탭해서 정확히 쌓으세요!',
   accentColor: '#f97316',
   init() {
+    smoothScroll = 0
     return {
       stack: [{ x: 0.5 - INITIAL_W / 2, w: INITIAL_W }],
       movingX: 0,
@@ -37,9 +42,15 @@ export const stackTower: MiniGame<State> = {
 
     if (input.tapped) {
       const base = s.stack[s.stack.length - 1]
-      const overlapStart = Math.max(base.x, s.movingX)
-      const overlapEnd = Math.min(base.x + base.w, s.movingX + s.movingW)
-      const overlapW = overlapEnd - overlapStart
+      let overlapStart = Math.max(base.x, s.movingX)
+      let overlapEnd = Math.min(base.x + base.w, s.movingX + s.movingW)
+      let overlapW = overlapEnd - overlapStart
+
+      // 관용 범위 안이면 빗나간 걸 완전 일치로 스냅 (짜증나는 판정 완화)
+      if (overlapW >= s.movingW - TOLERANCE) {
+        overlapW = s.movingW
+        overlapStart = Math.max(0, Math.min(1 - s.movingW, s.movingX))
+      }
 
       if (overlapW <= MIN_W * 0.6) {
         return { ...s, over: true }
@@ -72,9 +83,11 @@ export const stackTower: MiniGame<State> = {
     const levelH = H * LEVEL_H_RATIO
     const baseY = H * 0.92
 
-    // 카메라: 쌓일수록 위로 스크롤
+    // 카메라: 쌓일수록 위로 스크롤 (급격한 점프 대신 부드럽게 보간)
     const visibleLevels = Math.floor(H * 0.75 / levelH)
-    const scrollOffset = Math.max(0, state.stack.length - visibleLevels)
+    const targetScroll = Math.max(0, state.stack.length - visibleLevels)
+    smoothScroll += (targetScroll - smoothScroll) * 0.12
+    const scrollOffset = smoothScroll
 
     state.stack.forEach((b, i) => {
       const levelFromBottom = i - scrollOffset
