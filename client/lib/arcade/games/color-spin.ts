@@ -6,6 +6,7 @@ const SEGMENTS = PALETTE.length
 interface State {
   angle: number // 0~1 (한 바퀴 비율)
   speed: number // per ms
+  colors: string[] // 이번 라운드의 세그먼트별 색 배치 (매 라운드 셔플되어 암기 방지)
   targetIndex: number
   round: number
   totalRounds: number
@@ -17,6 +18,16 @@ interface State {
 }
 
 const TOTAL_ROUNDS = 6
+const MAX_SPEED = 0.00058 // 속도 상한 — 후반부가 판정 불가능할 정도로 빨라지지 않도록
+
+function shuffledPalette(): string[] {
+  const arr = [...PALETTE]
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[arr[i], arr[j]] = [arr[j], arr[i]]
+  }
+  return arr
+}
 
 function judge(angle: number, targetIndex: number): { hit: 'perfect' | 'good' | 'miss'; pts: number } {
   const segCenter = (targetIndex + 0.5) / SEGMENTS
@@ -38,6 +49,7 @@ export const colorSpin: MiniGame<State> = {
     return {
       angle: 0,
       speed: 0.00035,
+      colors: shuffledPalette(),
       targetIndex: Math.floor(Math.random() * SEGMENTS),
       round: 1,
       totalRounds: TOTAL_ROUNDS,
@@ -61,8 +73,9 @@ export const colorSpin: MiniGame<State> = {
       return {
         ...s,
         round: s.round + 1,
+        colors: shuffledPalette(),
         targetIndex: Math.floor(Math.random() * SEGMENTS),
-        speed: s.speed + 0.00004,
+        speed: Math.min(MAX_SPEED, s.speed + 0.00004),
       }
     }
 
@@ -85,7 +98,7 @@ export const colorSpin: MiniGame<State> = {
       ctx.moveTo(cx, cy)
       ctx.arc(cx, cy, r, a0, a1)
       ctx.closePath()
-      ctx.fillStyle = i === state.targetIndex ? PALETTE[i] : `${PALETTE[i]}55`
+      ctx.fillStyle = i === state.targetIndex ? state.colors[i] : `${state.colors[i]}55`
       ctx.fill()
       if (i === state.targetIndex) {
         ctx.strokeStyle = '#fff'

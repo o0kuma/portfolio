@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { MiniGame, ArcadeInput } from '@/lib/arcade/engine'
 import { sfx, vibrate } from '@/lib/arcade/sound'
+import { burst, stepParticles, renderParticles, type Particle } from '@/lib/arcade/particles'
 
 const COUNTDOWN_MS = 2200 // "3, 2, 1" 표시 시간
 
@@ -25,6 +26,9 @@ export default function GameCanvas<TState>({
   const overFiredRef = useRef(false)
   const countdownRef = useRef(COUNTDOWN_MS)
   const pausedRef = useRef(paused)
+  const particlesRef = useRef<Particle[]>([])
+  const lastTapRef = useRef({ x: 0.5, y: 0.5 })
+  const shakeRef = useRef(0) // 남은 흔들림 시간(ms)
 
   useEffect(() => {
     pausedRef.current = paused
@@ -34,6 +38,8 @@ export default function GameCanvas<TState>({
     stateRef.current = game.init()
     overFiredRef.current = false
     countdownRef.current = COUNTDOWN_MS
+    particlesRef.current = []
+    shakeRef.current = 0
   }, [game, resetKey])
 
   useEffect(() => {
@@ -60,13 +66,14 @@ export default function GameCanvas<TState>({
         inputRef.current.tapped = true
         inputRef.current.tapX = (clientX - rect.left) / rect.width
         inputRef.current.tapY = (clientY - rect.top) / rect.height
+        lastTapRef.current = { x: inputRef.current.tapX, y: inputRef.current.tapY }
       }
     }
     const handleMove = (clientX: number) => {
       if (lastX == null) return
       const rect = canvas.getBoundingClientRect()
       const dx = (clientX - lastX) / rect.width
-      inputRef.current.dx += dx * 2.2
+      inputRef.current.dx += dx * 1.5
       lastX = clientX
     }
     const handleUp = () => {
@@ -129,14 +136,34 @@ export default function GameCanvas<TState>({
 
         const evt = game.soundEvent?.(prev, next)
         if (evt) {
-          if (evt === 'perfect') { sfx.perfect(); vibrate(25) }
-          else if (evt === 'success') { sfx.success(); vibrate(12) }
-          else if (evt === 'fail') { sfx.fail(); vibrate(60) }
-          else if (evt === 'tick') sfx.tick()
-          else if (evt === 'tap') sfx.tap()
+          const { x, y } = lastTapRef.current
+          if (evt === 'perfect') {
+            sfx.perfect(); vibrate(25)
+            particlesRef.current.push(...burst(x, y, '#fbbf24', 22))
+          } else if (evt === 'success') {
+            sfx.success(); vibrate(12)
+            particlesRef.current.push(...burst(x, y, '#4ade80', 14))
+          } else if (evt === 'fail') {
+            sfx.fail(); vibrate(60)
+            shakeRef.current = 260
+          } else if (evt === 'tick') {
+            sfx.tick()
+          } else if (evt === 'tap') {
+            sfx.tap()
+          }
         }
 
+        particlesRef.current = stepParticles(particlesRef.current, dt)
+        if (shakeRef.current > 0) shakeRef.current = Math.max(0, shakeRef.current - dt)
+
+        const shakeMag = shakeRef.current > 0 ? (shakeRef.current / 260) * 8 : 0
+        ctx.save()
+        if (shakeMag > 0) {
+          ctx.translate((Math.random() - 0.5) * shakeMag, (Math.random() - 0.5) * shakeMag)
+        }
         game.render(ctx, next, W, H)
+        renderParticles(ctx, particlesRef.current, W, H)
+        ctx.restore()
 
         if (game.isOver(next)) {
           overFiredRef.current = true

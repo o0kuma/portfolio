@@ -13,10 +13,20 @@ interface State {
   over: boolean
 }
 
-const TOTAL_ROUNDS = 3
+const TOTAL_ROUNDS = 5
 
 function randomWait(): number {
   return 800 + Math.random() * 2200
+}
+
+// 라운드가 충분하면(5개) 최고/최저 1개씩 제외해 운으로 좋은 기록이 나오는 걸 방지
+function trimmedAverage(times: number[]): number {
+  if (times.length < 5) {
+    return times.reduce((a, b) => a + b, 0) / times.length
+  }
+  const sorted = [...times].sort((a, b) => a - b)
+  const trimmed = sorted.slice(1, -1)
+  return trimmed.reduce((a, b) => a + b, 0) / trimmed.length
 }
 
 export const reaction: MiniGame<State> = {
@@ -98,7 +108,7 @@ export const reaction: MiniGame<State> = {
     } else if (state.phase === 'fail') {
       ctx.fillText('너무 빨랐어요! 다시 탭해서 재시도', W / 2, H / 2)
     } else if (state.phase === 'result') {
-      const avg = Math.round(state.times.reduce((a, b) => a + b, 0) / state.times.length)
+      const avg = Math.round(trimmedAverage(state.times))
       ctx.fillText(`평균 ${avg}ms`, W / 2, H / 2)
     }
 
@@ -116,7 +126,7 @@ export const reaction: MiniGame<State> = {
   // 평균 반응속도가 빠를수록 높은 점수 (250ms 기준 100점, 느릴수록 감점)
   score: (s) => {
     if (s.times.length === 0) return 0
-    const avg = s.times.reduce((a, b) => a + b, 0) / s.times.length
+    const avg = trimmedAverage(s.times)
     return Math.max(0, Math.round(300 - avg))
   },
   toCoins: (score) => Math.max(0, Math.floor(score / 15)),

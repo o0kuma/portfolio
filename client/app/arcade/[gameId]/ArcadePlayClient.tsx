@@ -9,6 +9,7 @@ import ArcadeLeaderboard from '@/components/arcade/ArcadeLeaderboard'
 import { getArcadeGame } from '@/lib/arcade/registry'
 import { defaultToCoins } from '@/lib/arcade/engine'
 import { addCoins, setBestScore } from '@/lib/arcade/coins'
+import { getTodayChallenge, isChallengeClaimedToday, claimChallenge } from '@/lib/arcade/challenge'
 
 function getSessionId(): string {
   const KEY = 'arcade_session_id'
@@ -27,7 +28,7 @@ function getSessionId(): string {
 export default function ArcadePlayClient({ gameId }: { gameId: string }) {
   const game = useMemo(() => getArcadeGame(gameId), [gameId])
   const [resetKey, setResetKey] = useState(0)
-  const [result, setResult] = useState<{ score: number; coins: number; isNew: boolean } | null>(null)
+  const [result, setResult] = useState<{ score: number; coins: number; isNew: boolean; challengeBonus: number } | null>(null)
   const [playerName, setPlayerName] = useState('')
   const [leaderboardKey, setLeaderboardKey] = useState(0)
   const [submitted, setSubmitted] = useState(false)
@@ -43,10 +44,19 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
   if (!game) return null
 
   const handleGameOver = (score: number) => {
-    const coins = (game.toCoins ?? defaultToCoins)(score)
-    addCoins(coins)
+    let coins = (game.toCoins ?? defaultToCoins)(score)
     const { isNew } = setBestScore(game.id, score)
-    setResult({ score, coins, isNew })
+
+    let challengeBonus = 0
+    const challenge = getTodayChallenge()
+    if (challenge.gameId === game.id && score >= challenge.target && !isChallengeClaimedToday()) {
+      challengeBonus = challenge.bonus
+      coins += challengeBonus
+      claimChallenge()
+    }
+
+    addCoins(coins)
+    setResult({ score, coins, isNew, challengeBonus })
     setSubmitted(false)
   }
 
@@ -122,6 +132,9 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
                 <p className="mb-1 text-sm text-slate-400">게임 종료</p>
                 <p className="mb-3 text-4xl font-black" style={{ color: game.accentColor }}>{result.score}</p>
                 {result.isNew && <p className="mb-2 text-xs font-bold text-amber-400">🏆 신기록!</p>}
+                {result.challengeBonus > 0 && (
+                  <p className="mb-2 text-xs font-bold text-emerald-400">🎯 오늘의 도전 완료! +{result.challengeBonus} 보너스</p>
+                )}
                 <p className="mb-4 text-sm text-slate-300">🪙 +{result.coins} 코인 획득</p>
 
                 {!submitted ? (
