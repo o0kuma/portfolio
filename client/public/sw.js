@@ -1,7 +1,9 @@
-const CACHE_NAME = 'portfolio-v1'
+const CACHE_NAME = 'portfolio-v2'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
+  '/arcade',
+  '/arcade-manifest.json',
 ]
 
 self.addEventListener('install', (event) => {
@@ -29,6 +31,21 @@ self.addEventListener('fetch', (event) => {
       fetch(request).catch(() => new Response(JSON.stringify({ error: 'Offline' }), {
         headers: { 'Content-Type': 'application/json' }
       }))
+    )
+    return
+  }
+
+  // 빌드 해시가 붙은 정적 청크(_next/static)는 불변이므로 캐시 우선 — 오프라인 재방문 시 게임이 즉시 로드됨
+  if (url.pathname.startsWith('/_next/static/')) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached
+        return fetch(request).then((res) => {
+          const clone = res.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+          return res
+        })
+      })
     )
     return
   }
