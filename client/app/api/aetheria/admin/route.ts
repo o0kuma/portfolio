@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
-import { isAdminAuthenticated } from '@/lib/adminAuth'
+import { isAdminAuthorized } from '@/lib/adminAuth'
 import { ensureBudgetTable, setSimulationRunning, isSimulationRunning, getDailyBudgetCents, getTodaySpendCents } from '@/lib/aetheria/budget'
 import { ensureAgentTables } from '@/lib/aetheria/engine'
 
@@ -14,8 +14,8 @@ const PostSchema = z.object({
   dailyBudgetCents: z.number().int().min(10).max(5000).optional(),
 })
 
-export async function GET() {
-  if (!(await isAdminAuthenticated())) {
+export async function GET(request: NextRequest) {
+  if (!(await isAdminAuthorized(request))) {
     return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
   }
   await ensureBudgetTable()
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  if (!(await isAdminAuthenticated())) {
+  if (!(await isAdminAuthorized(request))) {
     return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
   }
 
