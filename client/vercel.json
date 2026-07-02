@@ -7,6 +7,10 @@
     {
       "path": "/api/cron/lotto-sync",
       "schedule": "0 16 * * 6"
+    },
+    {
+      "path": "/api/cron/aetheria-tick",
+      "schedule": "*/10 * * * *"
     }
   ]
 }
