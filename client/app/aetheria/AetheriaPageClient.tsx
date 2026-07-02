@@ -274,6 +274,31 @@ export default function AetheriaPageClient() {
         {/* 그리드 월드 */}
         <WorldGrid agents={agents} />
 
+        {/* 순위표 */}
+        {agents.length > 0 && (
+          <div className="mb-8 rounded-xl border border-amber-800/30 bg-amber-950/5 p-4">
+            <h2 className="mb-3 text-sm font-bold text-amber-300">🏆 골드 순위</h2>
+            <div className="space-y-1.5">
+              {[...agents]
+                .sort((a, b) => b.gold - a.gold)
+                .map((a, i) => {
+                  const medal = ['🥇', '🥈', '🥉'][i]
+                  const dead = a.status !== 'alive'
+                  return (
+                    <div key={a.id} className="flex items-center gap-2 text-xs">
+                      <span className="w-5 text-center font-mono text-slate-500">{medal ?? i + 1}</span>
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
+                      <span className={`flex-1 font-semibold ${dead ? 'text-slate-600 line-through' : 'text-slate-200'}`}>
+                        {a.name}
+                      </span>
+                      <span className="font-mono text-amber-300">🪙 {a.gold}</span>
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        )}
+
         {/* 에이전트 카드 */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {agents.map((a) => {
