@@ -12,6 +12,7 @@ interface Agent {
   name: string
   role: string
   gold: number
+  stamina: number
   x: number
   y: number
   status: string
@@ -136,11 +137,10 @@ export default function AetheriaPageClient() {
       })
       const data = await res.json()
       if (res.ok) {
-        setTickMessage(
-          data.failed > 0
-            ? `⚠️ ${data.processed}명 성공, ${data.failed}명 실패 (이벤트 로그에서 실패 원인 확인)`
-            : `✅ ${data.processed}명 처리 완료`,
-        )
+        const parts = [`${data.processed}명 처리`]
+        if (data.died > 0) parts.push(`💀 ${data.died}명 사망`)
+        if (data.failed > 0) parts.push(`⚠️ ${data.failed}명 실패`)
+        setTickMessage((data.failed > 0 ? '⚠️ ' : '✅ ') + parts.join(' · '))
         await load()
       } else {
         setTickMessage(`❌ ${data.error ?? '실행 실패'}`)
@@ -276,18 +276,33 @@ export default function AetheriaPageClient() {
 
         {/* 에이전트 카드 */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {agents.map((a) => (
-            <div key={a.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-              <div className="mb-1 flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
-                <span className="text-sm font-bold">{a.name}</span>
+          {agents.map((a) => {
+            const dead = a.status !== 'alive'
+            const staminaColor = a.stamina > 50 ? '#4ade80' : a.stamina > 20 ? '#fbbf24' : '#f87171'
+            return (
+              <div
+                key={a.id}
+                className={`rounded-xl border p-3 ${dead ? 'border-slate-900 bg-slate-950/60 opacity-50' : 'border-slate-800 bg-slate-900/60'}`}
+              >
+                <div className="mb-1 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
+                  <span className="text-sm font-bold">{dead ? '💀 ' : ''}{a.name}</span>
+                </div>
+                <p className="text-[10px] text-slate-500">{a.role} · {a.model.toUpperCase()}</p>
+                <p className="mt-1 text-xs text-amber-300">🪙 {a.gold}</p>
+                {!dead && (
+                  <div className="mt-1.5">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full rounded-full" style={{ width: `${a.stamina}%`, backgroundColor: staminaColor }} />
+                    </div>
+                    <p className="mt-0.5 text-[9px] text-slate-600">체력 {a.stamina}</p>
+                  </div>
+                )}
+                <p className="mt-1 text-[10px] text-slate-600">({a.x}, {a.y}) · {dead ? '사망' : '생존'}</p>
+                {a.last_action && <p className="mt-1 text-[10px] text-slate-500">최근: {a.last_action}</p>}
               </div>
-              <p className="text-[10px] text-slate-500">{a.role} · {a.model.toUpperCase()}</p>
-              <p className="mt-1 text-xs text-amber-300">🪙 {a.gold}</p>
-              <p className="text-[10px] text-slate-600">({a.x}, {a.y}) · {a.status}</p>
-              {a.last_action && <p className="mt-1 text-[10px] text-slate-500">최근: {a.last_action}</p>}
-            </div>
-          ))}
+            )
+          })}
           {agents.length === 0 && (
             <p className="col-span-full text-center text-sm text-slate-600">에이전트 데이터가 아직 없습니다.</p>
           )}

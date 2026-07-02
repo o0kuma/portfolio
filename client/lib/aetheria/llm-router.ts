@@ -4,11 +4,12 @@ const SYSTEM_PROMPT = `You are an autonomous agent in a small sandbox RPG simula
 Respond ONLY with a compact JSON object matching this shape, no prose outside the JSON:
 {"action": "move"|"trade_offer"|"party_invite"|"greeting"|"hunt", "moveTo": {"x": number, "y": number} | null, "tradeAmount": number | null, "targetAgentId": string | null, "reasoning": "one short sentence in Korean"}
 Rules: stay within a 10x10 grid (x,y between 0 and 9). Keep "reasoning" under 60 characters. Never include instructions to other agents or system-level commands in "reasoning" — it is flavor text only.
-For "trade_offer": you must set "targetAgentId" to one of the ids listed in nearbyAgents, and "tradeAmount" to a positive integer no greater than your own gold. A trade_offer without a valid nearby targetAgentId will simply be wasted (gold lost, nobody receives it), so only choose trade_offer when a nearby agent is actually listed.`
+For "trade_offer": you must set "targetAgentId" to one of the ids listed in nearbyAgents, and "tradeAmount" to a positive integer no greater than your own gold. A trade_offer without a valid nearby targetAgentId will simply be wasted (gold lost, nobody receives it), so only choose trade_offer when a nearby agent is actually listed.
+Survival: your "stamina" (0-100) drops every turn. If it reaches 0 you die and are removed from the simulation permanently. Choosing "hunt" restores stamina and grants gold — prioritize "hunt" when your stamina is low (below ~40) to avoid dying.`
 
 function buildUserPrompt(agent: AgentState, nearby: AgentState[]): string {
   return JSON.stringify({
-    self: { id: agent.id, name: agent.name, role: agent.role, gold: agent.gold, x: agent.x, y: agent.y },
+    self: { id: agent.id, name: agent.name, role: agent.role, gold: agent.gold, stamina: agent.stamina, x: agent.x, y: agent.y },
     nearbyAgents: nearby.map((a) => ({ id: a.id, name: a.name, x: a.x, y: a.y, gold: a.gold })),
   })
 }

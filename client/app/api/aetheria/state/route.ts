@@ -14,7 +14,7 @@ const fetchState = unstable_cache(
     await ensureAgentTables()
 
     const agentsRes = await dbQuery(
-      `SELECT id, model, name, role, gold, x, y, status, last_action, updated_at
+      `SELECT id, model, name, role, gold, stamina, x, y, status, last_action, updated_at
        FROM aetheria_agents ORDER BY id`,
     )
     const running = await isSimulationRunning()
