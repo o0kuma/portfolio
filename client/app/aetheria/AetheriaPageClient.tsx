@@ -46,6 +46,10 @@ export default function AetheriaPageClient() {
 
   const [tokenInput, setTokenInput] = useState('')
   const [tokenError, setTokenError] = useState('')
+  const [envStatus, setEnvStatus] = useState<{
+    openai: { present: boolean; length: number }
+    gemini: { present: boolean; length: number }
+  } | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -73,6 +77,10 @@ export default function AetheriaPageClient() {
     const res = await fetch('/api/aetheria/admin', { headers: adminAuthHeaders() })
     const ok = res.ok
     setIsAdmin(ok)
+    if (ok) {
+      const data = await res.json()
+      setEnvStatus(data.envStatus ?? null)
+    }
     return ok
   }, [])
 
@@ -250,6 +258,17 @@ export default function AetheriaPageClient() {
           <p className="mt-1 text-[10px] text-slate-600">
             크론은 하루 1회만 자동 실행됩니다 — 테스트하려면 "지금 1틱 실행"을 누르세요 (예산 상한은 그대로 적용됨)
           </p>
+
+          {envStatus && (
+            <div className="mt-3 flex gap-4 border-t border-cyan-900/30 pt-2 text-[11px]">
+              <span className={envStatus.openai.present ? 'text-emerald-400' : 'text-red-400'}>
+                {envStatus.openai.present ? '✅' : '❌'} OPENAI_API_KEY {envStatus.openai.present ? `(${envStatus.openai.length}자)` : '미설정'}
+              </span>
+              <span className={envStatus.gemini.present ? 'text-emerald-400' : 'text-red-400'}>
+                {envStatus.gemini.present ? '✅' : '❌'} GEMINI_API_KEY {envStatus.gemini.present ? `(${envStatus.gemini.length}자)` : '미설정'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* 그리드 월드 */}
