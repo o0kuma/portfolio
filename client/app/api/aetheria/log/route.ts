@@ -6,6 +6,7 @@ import { unstable_cache } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 import { ensureAgentTables } from '@/lib/aetheria/engine'
+import { isAdminAuthorized } from '@/lib/adminAuth'
 
 const GetSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional().default(30),
@@ -29,8 +30,11 @@ const fetchLog = unstable_cache(
   { revalidate: 20, tags: ['aetheria-log'] },
 )
 
-// 방문자용 — 모더레이션을 이미 통과해 저장된 display_text만 노출. LLM 호출 없음.
+// 관리자 전용 — LLM 호출은 없지만 비공개로 유지한다.
 export async function GET(request: NextRequest) {
+  if (!(await isAdminAuthorized(request))) {
+    return NextResponse.json({ events: [], message: 'Unauthorized' }, { status: 401 })
+  }
   try {
     const parsed = GetSchema.safeParse({ limit: request.nextUrl.searchParams.get('limit') ?? undefined })
     if (!parsed.success) {
