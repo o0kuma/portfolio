@@ -60,9 +60,13 @@ export async function hasBudgetRemaining(): Promise<boolean> {
   return spent < cap
 }
 
-export async function recordSpend(model: string, calls: number): Promise<void> {
+export async function recordSpend(
+  model: string,
+  calls: number,
+  query: typeof dbQuery = dbQuery,
+): Promise<void> {
   const cost = (ESTIMATED_COST_PER_CALL[model] ?? 0.3) * calls
-  await dbQuery(
+  await query(
     `INSERT INTO aetheria_budget (date, spent_cents) VALUES (CURRENT_DATE, $1)
      ON CONFLICT (date) DO UPDATE SET spent_cents = aetheria_budget.spent_cents + $1`,
     [cost],
