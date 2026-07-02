@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
-import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
-import { hasAdminAccess } from '@/lib/admin-access'
-import { adminAuthHeaders } from '@/lib/admin-token'
+import { FiArrowLeft, FiRefreshCw, FiLock } from 'react-icons/fi'
+import { setStoredAdminToken, adminAuthHeaders } from '@/lib/admin-token'
 import WorldGrid from '@/components/aetheria/WorldGrid'
 
 interface Agent {
@@ -39,6 +38,11 @@ export default function AetheriaPageClient() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
 
+  // 관리자 토큰 입력 UI 상태
+  const [showTokenInput, setShowTokenInput] = useState(false)
+  const [tokenInput, setTokenInput] = useState('')
+  const [tokenError, setTokenError] = useState('')
+
   const load = useCallback(async () => {
     try {
       const [stateRes, logRes] = await Promise.all([
@@ -56,12 +60,32 @@ export default function AetheriaPageClient() {
     }
   }, [])
 
+  // 저장된 토큰으로 실제 서버 인증이 통과하는지 검증 (localStorage에 값이 있다고 관리자라고 간주하지 않음)
+  const verifyAdmin = useCallback(async () => {
+    const res = await fetch('/api/aetheria/admin', { headers: adminAuthHeaders() })
+    setIsAdmin(res.ok)
+    return res.ok
+  }, [])
+
   useEffect(() => {
-    setIsAdmin(hasAdminAccess())
+    verifyAdmin()
     load()
     const interval = setInterval(load, 30_000)
     return () => clearInterval(interval)
-  }, [load])
+  }, [load, verifyAdmin])
+
+  const submitToken = async () => {
+    setTokenError('')
+    setStoredAdminToken(tokenInput)
+    const ok = await verifyAdmin()
+    if (ok) {
+      setShowTokenInput(false)
+      setTokenInput('')
+    } else {
+      setTokenError('토큰이 올바르지 않습니다.')
+      setStoredAdminToken('')
+    }
+  }
 
   const toggleRunning = async () => {
     setBusy(true)
@@ -91,8 +115,36 @@ export default function AetheriaPageClient() {
             <button onClick={load} className="text-slate-500 hover:text-cyan-300" aria-label="새로고침">
               <FiRefreshCw size={14} />
             </button>
+            {!isAdmin && (
+              <button
+                onClick={() => setShowTokenInput((v) => !v)}
+                className="text-slate-600 hover:text-cyan-300"
+                aria-label="관리자 로그인"
+              >
+                <FiLock size={13} />
+              </button>
+            )}
           </div>
         </div>
+
+        {showTokenInput && !isAdmin && (
+          <div className="border-t border-cyan-900/30 bg-cyan-950/10 px-4 py-3">
+            <div className="mx-auto flex max-w-3xl items-center gap-2">
+              <input
+                type="password"
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && submitToken()}
+                placeholder="관리자 토큰(ADMIN_API_TOKEN) 입력"
+                className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none"
+              />
+              <button onClick={submitToken} className="rounded-lg bg-cyan-600 px-3 py-1.5 text-xs font-bold hover:bg-cyan-500">
+                확인
+              </button>
+            </div>
+            {tokenError && <p className="mx-auto mt-1.5 max-w-3xl text-[11px] text-red-400">{tokenError}</p>}
+          </div>
+        )}
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-8">
@@ -165,7 +217,7 @@ export default function AetheriaPageClient() {
         </div>
 
         <p className="mt-6 text-center text-[11px] text-slate-600">
-          10분마다 자동으로 진행됩니다 (방문으로는 진행되지 않음) · 예산 초과 시 자동 정지
+          하루 1회 정해진 시각에 자동으로 진행됩니다 (방문으로는 진행되지 않음) · 예산 초과 시 자동 정지
         </p>
       </main>
     </div>
