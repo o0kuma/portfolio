@@ -128,7 +128,11 @@ export default function AetheriaPageClient() {
       })
       const data = await res.json()
       if (res.ok) {
-        setTickMessage(`✅ ${data.processed}명 처리 완료`)
+        setTickMessage(
+          data.failed > 0
+            ? `⚠️ ${data.processed}명 성공, ${data.failed}명 실패 (이벤트 로그에서 실패 원인 확인)`
+            : `✅ ${data.processed}명 처리 완료`,
+        )
         await load()
       } else {
         setTickMessage(`❌ ${data.error ?? '실행 실패'}`)
@@ -221,7 +225,7 @@ export default function AetheriaPageClient() {
         <div className="mb-6 rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-400">
-              관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(2) : '0.00'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
+              관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
             </div>
             <div className="flex gap-2">
               <button
