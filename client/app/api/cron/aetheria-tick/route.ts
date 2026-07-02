@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { runTickBatch } from '@/lib/aetheria/engine'
 import { ensureBudgetTable, isSimulationRunning, hasBudgetRemaining } from '@/lib/aetheria/budget'
 
@@ -28,6 +29,8 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await runTickBatch()
+    revalidateTag('aetheria-state')
+    revalidateTag('aetheria-log')
     return NextResponse.json({ ok: true, ...result })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { z } from 'zod'
 import { dbQuery } from '@/lib/neon-server'
 import { isAdminAuthenticated } from '@/lib/adminAuth'
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    revalidateTag('aetheria-state')
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
