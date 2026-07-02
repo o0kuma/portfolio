@@ -24,7 +24,12 @@ export async function GET(request: NextRequest) {
     getDailyBudgetCents(),
     getTodaySpendCents(),
   ])
-  return NextResponse.json({ success: true, running, dailyBudgetCents: budget, spentCentsToday: spent })
+  // 값은 절대 노출하지 않고 존재 여부/길이만 확인 — Vercel을 오가지 않고 여기서 바로 진단 가능하게
+  const envStatus = {
+    openai: { present: Boolean(process.env.OPENAI_API_KEY), length: process.env.OPENAI_API_KEY?.length ?? 0 },
+    gemini: { present: Boolean(process.env.GEMINI_API_KEY), length: process.env.GEMINI_API_KEY?.length ?? 0 },
+  }
+  return NextResponse.json({ success: true, running, dailyBudgetCents: budget, spentCentsToday: spent, envStatus })
 }
 
 export async function POST(request: NextRequest) {
