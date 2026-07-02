@@ -17,12 +17,16 @@ const fetchState = unstable_cache(
       `SELECT id, model, name, role, gold, stamina, x, y, status, last_action, updated_at
        FROM aetheria_agents ORDER BY id`,
     )
+    const tickRes = await dbQuery<{ last_tick_id: number }>(
+      `SELECT last_tick_id FROM aetheria_tick_state WHERE id = 1`,
+    )
     const running = await isSimulationRunning()
     const [spent, budget] = await Promise.all([getTodaySpendCents(), getDailyBudgetCents()])
 
     return {
       agents: agentsRes.rows,
       running,
+      currentTick: tickRes.rows[0]?.last_tick_id ?? 0,
       budget: { spentCents: spent, capCents: budget },
     }
   },

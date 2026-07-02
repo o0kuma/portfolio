@@ -40,6 +40,7 @@ export default function AetheriaPageClient() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [events, setEvents] = useState<LogEvent[]>([])
   const [running, setRunning] = useState(false)
+  const [currentTick, setCurrentTick] = useState(0)
   const [budget, setBudget] = useState<{ spentCents: number; capCents: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const [tickBusy, setTickBusy] = useState(false)
@@ -67,6 +68,7 @@ export default function AetheriaPageClient() {
       const log = await logRes.json()
       setAgents(state.agents ?? [])
       setRunning(Boolean(state.running))
+      setCurrentTick(state.currentTick ?? 0)
       setBudget(state.budget ?? null)
       setEvents(log.events ?? [])
     } catch {
@@ -221,6 +223,18 @@ export default function AetheriaPageClient() {
           <h1 className="mb-2 text-3xl font-black">🧠 Project Aetheria</h1>
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — 자율 에이전트 샌드박스 시뮬레이션</p>
         </div>
+
+        {agents.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs text-slate-400">
+            <span>🕐 {currentTick}틱째 진행</span>
+            <span>💚 생존 {agents.filter((a) => a.status === 'alive').length}/{agents.length}</span>
+            {agents.some((a) => a.gold > 0) && (
+              <span>
+                👑 최고 부자: {[...agents].sort((a, b) => b.gold - a.gold)[0]?.name} (🪙{[...agents].sort((a, b) => b.gold - a.gold)[0]?.gold})
+              </span>
+            )}
+          </div>
+        )}
 
         {!running && (
           <p className="mb-6 rounded-lg border border-amber-800/40 bg-amber-950/10 px-4 py-2 text-center text-xs text-amber-300">
