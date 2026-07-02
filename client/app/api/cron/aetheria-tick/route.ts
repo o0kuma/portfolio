@@ -9,10 +9,18 @@ import { ensureBudgetTable, isSimulationRunning, hasBudgetRemaining } from '@/li
 
 // 크론 전용 진입점 — 방문자 요청으로는 절대 호출되지 않는다 (CRON_SECRET 필수).
 export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  const cronSecret = process.env.CRON_SECRET
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret && (process.env.NODE_ENV === 'production' || process.env.VERCEL)) {
+    console.error('CRON_SECRET is required for /api/cron/aetheria-tick in deployed environments.')
+    return NextResponse.json({ error: 'Cron endpoint is not configured' }, { status: 503 })
+  }
+
+  if (cronSecret) {
+    const authHeader = request.headers.get('authorization')
+    const providedSecret = authHeader?.replace(/^Bearer\s+/i, '').trim()
+    if (providedSecret !== cronSecret) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
 
   try {

@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg'
+import { Pool, QueryResult, QueryResultRow } from 'pg'
 
 // Lazily initialized so missing DATABASE_URL produces a clear error at query time
 // rather than silently defaulting to 127.0.0.1:5432.
@@ -24,6 +24,30 @@ function getPool(): Pool {
   return _pool
 }
 
-export async function dbQuery<T = any>(text: string, params: any[] = []): Promise<QueryResult<T>> {
+export async function dbQuery<T extends QueryResultRow = any>(
+  text: string,
+  params: any[] = [],
+): Promise<QueryResult<T>> {
   return getPool().query<T>(text, params)
+}
+
+/** Run queries in a single transaction; rolls back on any thrown error. */
+export async function dbTransaction<T>(
+  fn: (query: typeof dbQuery) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect()
+  const query = <R extends QueryResultRow = any>(text: string, params: any[] = []) =>
+    client.query<R>(text, params)
+
+  try {
+    await client.query('BEGIN')
+    const result = await fn(query)
+    await client.query('COMMIT')
+    return result
+  } catch (e) {
+    await client.query('ROLLBACK')
+    throw e
+  } finally {
+    client.release()
+  }
 }
