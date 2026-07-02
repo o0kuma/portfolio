@@ -46,7 +46,7 @@ async function callGemini(prompt: string): Promise<string> {
         max_tokens: 200,
         temperature: 0.8,
       }),
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(8000),
     },
   )
   if (!res.ok) throw new Error(`Gemini error ${res.status}`)
@@ -70,7 +70,7 @@ async function callOpenAI(prompt: string): Promise<string> {
       temperature: 0.8,
       response_format: { type: 'json_object' },
     }),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(8000),
   })
   if (!res.ok) throw new Error(`OpenAI error ${res.status}`)
   const data = await res.json()

@@ -10,7 +10,7 @@
     },
     {
       "path": "/api/cron/aetheria-tick",
-      "schedule": "*/10 * * * *"
+      "schedule": "0 9 * * *"
     }
   ]
 }

@@ -11,4 +11,6 @@ export const INITIAL_AGENTS: Array<{ id: string; model: AgentModel; name: string
 ]
 
 export const GRID_SIZE = 10
-export const MAX_AGENTS_PER_TICK_BATCH = 3 // Serverless 타임아웃 방지용 배치 크기
+// 크론이 하루 1회(Hobby 플랜 제한)라 한 번의 틱에서 전 에이전트를 처리한다.
+// 6개 × 순차 호출(각 15초 타임아웃) → maxDuration=60s 안에서 안전 (Pro 플랜 전환 시 배치를 줄이고 주기를 늘리면 됨)
+export const MAX_AGENTS_PER_TICK_BATCH = 6
