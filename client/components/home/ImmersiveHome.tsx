@@ -78,6 +78,9 @@ function ImmersiveHomeInner() {
             <Link href="/lotto" className="hidden sm:block transition-colors hover:text-white">
               로또
             </Link>
+            <Link href="/aetheria" className="hidden sm:block transition-colors hover:text-white">
+              AETHERIA
+            </Link>
             <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
               방명록
             </Link>
