@@ -12,21 +12,36 @@ function buildUserPrompt(agent: AgentState, nearby: AgentState[]): string {
   })
 }
 
-function parseDecision(raw: string): AgentDecision {
+function tryParseJson(text: string): Record<string, unknown> | null {
   try {
-    // 모델이 코드블록으로 감싸는 경우 대비
-    const cleaned = raw.trim().replace(/^```json\s*|\s*```$/g, '')
-    const data = JSON.parse(cleaned)
+    return JSON.parse(text)
+  } catch {
+    return null
+  }
+}
+
+function parseDecision(raw: string): AgentDecision {
+  const cleaned = raw.trim().replace(/^```json\s*|\s*```$/g, '').trim()
+
+  // 1차: 그대로 파싱, 2차: 응답 안에 섞여 나온 {...} 블록만 추출해서 파싱 (모델이 설명을 덧붙인 경우 대비)
+  let data = tryParseJson(cleaned)
+  if (!data) {
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (match) data = tryParseJson(match[0])
+  }
+
+  if (data) {
     return {
-      action: data.action ?? 'move',
-      targetAgentId: data.targetAgentId ?? undefined,
-      moveTo: data.moveTo ?? undefined,
+      action: (data.action as AgentDecision['action']) ?? 'move',
+      targetAgentId: (data.targetAgentId as string) ?? undefined,
+      moveTo: (data.moveTo as AgentDecision['moveTo']) ?? undefined,
       tradeAmount: typeof data.tradeAmount === 'number' ? data.tradeAmount : undefined,
       reasoning: typeof data.reasoning === 'string' ? data.reasoning.slice(0, 80) : '',
     }
-  } catch {
-    return { action: 'move', reasoning: '' }
   }
+
+  // 파싱 완전 실패 — 원인 진단을 위해 모델의 실제 응답 일부를 그대로 남긴다 (표시 전 모더레이션 통과 필요)
+  return { action: 'move', reasoning: `[파싱실패] ${cleaned.slice(0, 60) || '(빈 응답)'}` }
 }
 
 async function callGemini(prompt: string): Promise<string> {
@@ -43,7 +58,7 @@ async function callGemini(prompt: string): Promise<string> {
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: prompt },
         ],
-        max_tokens: 200,
+        max_tokens: 300,
         temperature: 0.8,
       }),
       signal: AbortSignal.timeout(8000),
@@ -66,7 +81,7 @@ async function callOpenAI(prompt: string): Promise<string> {
         { role: 'system', content: SYSTEM_PROMPT },
         { role: 'user', content: prompt },
       ],
-      max_tokens: 200,
+      max_tokens: 300,
       temperature: 0.8,
       response_format: { type: 'json_object' },
     }),

@@ -92,6 +92,7 @@ function nearbyOf(agent: AgentState, all: AgentState[], radius = 3): AgentState[
 export interface TickRunResult {
   tickId: number
   processed: number
+  failed: number
   skipped: string | null
 }
 
@@ -108,7 +109,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
 
   const agents = await loadAliveAgents()
   if (agents.length === 0) {
-    return { tickId: lastTickId, processed: 0, skipped: 'no alive agents' }
+    return { tickId: lastTickId, processed: 0, failed: 0, skipped: 'no alive agents' }
   }
 
   const tickId = lastIndex === 0 ? lastTickId + 1 : lastTickId
@@ -116,6 +117,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
   const nextIndex = lastIndex + batch.length >= agents.length ? 0 : lastIndex + batch.length
 
   let processed = 0
+  let failed = 0
   for (const agent of batch) {
     try {
       const decision = await decideAgentAction(agent, nearbyOf(agent, agents))
@@ -156,8 +158,19 @@ export async function runTickBatch(): Promise<TickRunResult> {
 
       processed++
     } catch (err) {
+      failed++
+      const errMsg = err instanceof Error ? err.message : String(err)
       console.error(`[aetheria] agent ${agent.id} failed:`, err)
-      // 개별 에이전트 실패는 틱 전체를 막지 않음
+      // 실패도 로그에 남겨서 관리자가 원인을 볼 수 있게 함 (LLM 호출 자체가 실패한 경우 — API 키/요금/네트워크 문제 등)
+      try {
+        await dbQuery(
+          `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+           VALUES ($1,$2,'error',$3,$4)`,
+          [tickId, agent.id, `[호출 실패] ${errMsg.slice(0, 100)}`, JSON.stringify({ error: errMsg })],
+        )
+      } catch {
+        // 로그 기록 실패는 무시
+      }
     }
   }
 
@@ -166,5 +179,5 @@ export async function runTickBatch(): Promise<TickRunResult> {
     [tickId, nextIndex],
   )
 
-  return { tickId, processed, skipped: null }
+  return { tickId, processed, failed, skipped: null }
 }
