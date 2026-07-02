@@ -60,6 +60,9 @@ async function callGemini(prompt: string): Promise<string> {
         ],
         max_tokens: 300,
         temperature: 0.8,
+        // gemini-2.5-flash는 기본적으로 내부 "thinking" 토큰을 max_tokens에서 먼저 소비해
+        // 실제 JSON 응답이 잘리는 문제가 있음 — thinking을 꺼서 토큰을 전부 응답에 쓰게 함
+        reasoning_effort: 'none',
       }),
       signal: AbortSignal.timeout(8000),
     },
