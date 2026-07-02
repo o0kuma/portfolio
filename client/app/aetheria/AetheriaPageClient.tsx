@@ -169,6 +169,17 @@ export default function AetheriaPageClient() {
           </button>
           {tokenError && <p className="text-center text-[11px] text-red-400">{tokenError}</p>}
         </div>
+
+        <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600">
+          <span className="h-px w-10 bg-slate-800" /> 또는 <span className="h-px w-10 bg-slate-800" />
+        </div>
+        <Link
+          href={`/admin/login?redirect=${encodeURIComponent('/aetheria')}`}
+          className="text-xs font-semibold text-cyan-400 hover:text-cyan-300"
+        >
+          관리자 비밀번호로 로그인 →
+        </Link>
+
         <Link href="/" className="mt-4 text-xs text-slate-600 hover:text-slate-400">← 메인으로</Link>
       </div>
     )

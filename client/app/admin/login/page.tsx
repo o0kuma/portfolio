@@ -1,13 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { Suspense, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function AdminLoginPage() {
+function AdminLoginForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+  // 오픈 리다이렉트 방지 — 사이트 내부 경로만 허용
+  const rawRedirect = searchParams.get('redirect') ?? '/admin'
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/admin'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -22,7 +26,7 @@ export default function AdminLoginPage() {
       })
 
       if (res.ok) {
-        router.push('/admin')
+        router.push(redirectTo)
         router.refresh()
       } else {
         const data = await res.json()
@@ -70,5 +74,13 @@ export default function AdminLoginPage() {
         </form>
       </div>
     </div>
+  )
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-neutral-950" />}>
+      <AdminLoginForm />
+    </Suspense>
   )
 }
