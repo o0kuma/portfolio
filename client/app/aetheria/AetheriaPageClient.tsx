@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
 import { hasAdminAccess } from '@/lib/admin-access'
 import { adminAuthHeaders } from '@/lib/admin-token'
+import WorldGrid from '@/components/aetheria/WorldGrid'
 
 interface Agent {
   id: string
@@ -100,6 +101,14 @@ export default function AetheriaPageClient() {
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — 자율 에이전트 샌드박스 시뮬레이션</p>
         </div>
 
+        {!running && (
+          <p className="mb-6 rounded-lg border border-amber-800/40 bg-amber-950/10 px-4 py-2 text-center text-xs text-amber-300">
+            {agents.length === 0
+              ? '시뮬레이션이 아직 시작되지 않았습니다. 관리자가 시작하면 다음 크론 실행 시각에 첫 데이터가 생성됩니다.'
+              : '시뮬레이션이 정지된 상태입니다. 마지막으로 기록된 상태를 보고 있습니다.'}
+          </p>
+        )}
+
         {isAdmin && (
           <div className="mb-6 flex items-center justify-between rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
             <div className="text-xs text-slate-400">
@@ -116,6 +125,9 @@ export default function AetheriaPageClient() {
             </button>
           </div>
         )}
+
+        {/* 그리드 월드 */}
+        <WorldGrid agents={agents} />
 
         {/* 에이전트 카드 */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
