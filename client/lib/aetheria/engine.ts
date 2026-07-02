@@ -132,9 +132,25 @@ export async function runTickBatch(): Promise<TickRunResult> {
       }
 
       // 거래는 구조화 필드로만 처리 — 상대 텍스트를 프롬프트에 재주입하지 않는다.
+      // 실제로 상대에게 골드가 전달되려면 targetAgentId가 근처(nearbyOf)에 있는 살아있는 에이전트여야 한다.
       let gold = agent.gold
+      let tradeRecipient: AgentState | null = null
       if (decision.action === 'trade_offer' && typeof decision.tradeAmount === 'number') {
-        gold = Math.max(0, gold - Math.min(decision.tradeAmount, gold))
+        const nearby = nearbyOf(agent, agents)
+        const target = decision.targetAgentId
+          ? nearby.find((a) => a.id === decision.targetAgentId)
+          : null
+        if (target) {
+          const amount = Math.max(0, Math.min(Math.round(decision.tradeAmount), gold))
+          if (amount > 0) {
+            gold -= amount
+            tradeRecipient = target
+            await dbQuery(
+              `UPDATE aetheria_agents SET gold = gold + $1, updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
+              [amount, target.id],
+            )
+          }
+        }
       }
 
       const mod = moderateText(decision.reasoning || '...')
@@ -144,6 +160,10 @@ export async function runTickBatch(): Promise<TickRunResult> {
         [x, y, gold, decision.action, agent.id],
       )
 
+      const displayText = tradeRecipient
+        ? `${mod.text} (→ ${tradeRecipient.name}에게 ${agent.gold - gold}골드 전달)`
+        : mod.text
+
       await dbQuery(
         `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
          VALUES ($1,$2,$3,$4,$5)`,
@@ -151,8 +171,12 @@ export async function runTickBatch(): Promise<TickRunResult> {
           tickId,
           agent.id,
           decision.action,
-          mod.text,
-          JSON.stringify({ moveTo: decision.moveTo ?? null, tradeAmount: decision.tradeAmount ?? null }),
+          displayText,
+          JSON.stringify({
+            moveTo: decision.moveTo ?? null,
+            tradeAmount: decision.tradeAmount ?? null,
+            tradeRecipientId: tradeRecipient?.id ?? null,
+          }),
         ],
       )
 
