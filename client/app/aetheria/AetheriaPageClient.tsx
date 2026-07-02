@@ -12,6 +12,7 @@ interface Agent {
   name: string
   role: string
   gold: number
+  stamina: number
   x: number
   y: number
   status: string
@@ -39,6 +40,7 @@ export default function AetheriaPageClient() {
   const [agents, setAgents] = useState<Agent[]>([])
   const [events, setEvents] = useState<LogEvent[]>([])
   const [running, setRunning] = useState(false)
+  const [currentTick, setCurrentTick] = useState(0)
   const [budget, setBudget] = useState<{ spentCents: number; capCents: number } | null>(null)
   const [busy, setBusy] = useState(false)
   const [tickBusy, setTickBusy] = useState(false)
@@ -66,6 +68,7 @@ export default function AetheriaPageClient() {
       const log = await logRes.json()
       setAgents(state.agents ?? [])
       setRunning(Boolean(state.running))
+      setCurrentTick(state.currentTick ?? 0)
       setBudget(state.budget ?? null)
       setEvents(log.events ?? [])
     } catch {
@@ -136,11 +139,10 @@ export default function AetheriaPageClient() {
       })
       const data = await res.json()
       if (res.ok) {
-        setTickMessage(
-          data.failed > 0
-            ? `⚠️ ${data.processed}명 성공, ${data.failed}명 실패 (이벤트 로그에서 실패 원인 확인)`
-            : `✅ ${data.processed}명 처리 완료`,
-        )
+        const parts = [`${data.processed}명 처리`]
+        if (data.died > 0) parts.push(`💀 ${data.died}명 사망`)
+        if (data.failed > 0) parts.push(`⚠️ ${data.failed}명 실패`)
+        setTickMessage((data.failed > 0 ? '⚠️ ' : '✅ ') + parts.join(' · '))
         await load()
       } else {
         setTickMessage(`❌ ${data.error ?? '실행 실패'}`)
@@ -222,6 +224,18 @@ export default function AetheriaPageClient() {
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — 자율 에이전트 샌드박스 시뮬레이션</p>
         </div>
 
+        {agents.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs text-slate-400">
+            <span>🕐 {currentTick}틱째 진행</span>
+            <span>💚 생존 {agents.filter((a) => a.status === 'alive').length}/{agents.length}</span>
+            {agents.some((a) => a.gold > 0) && (
+              <span>
+                👑 최고 부자: {[...agents].sort((a, b) => b.gold - a.gold)[0]?.name} (🪙{[...agents].sort((a, b) => b.gold - a.gold)[0]?.gold})
+              </span>
+            )}
+          </div>
+        )}
+
         {!running && (
           <p className="mb-6 rounded-lg border border-amber-800/40 bg-amber-950/10 px-4 py-2 text-center text-xs text-amber-300">
             {agents.length === 0
@@ -274,20 +288,60 @@ export default function AetheriaPageClient() {
         {/* 그리드 월드 */}
         <WorldGrid agents={agents} />
 
+        {/* 순위표 */}
+        {agents.length > 0 && (
+          <div className="mb-8 rounded-xl border border-amber-800/30 bg-amber-950/5 p-4">
+            <h2 className="mb-3 text-sm font-bold text-amber-300">🏆 골드 순위</h2>
+            <div className="space-y-1.5">
+              {[...agents]
+                .sort((a, b) => b.gold - a.gold)
+                .map((a, i) => {
+                  const medal = ['🥇', '🥈', '🥉'][i]
+                  const dead = a.status !== 'alive'
+                  return (
+                    <div key={a.id} className="flex items-center gap-2 text-xs">
+                      <span className="w-5 text-center font-mono text-slate-500">{medal ?? i + 1}</span>
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
+                      <span className={`flex-1 font-semibold ${dead ? 'text-slate-600 line-through' : 'text-slate-200'}`}>
+                        {a.name}
+                      </span>
+                      <span className="font-mono text-amber-300">🪙 {a.gold}</span>
+                    </div>
+                  )
+                })}
+            </div>
+          </div>
+        )}
+
         {/* 에이전트 카드 */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {agents.map((a) => (
-            <div key={a.id} className="rounded-xl border border-slate-800 bg-slate-900/60 p-3">
-              <div className="mb-1 flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
-                <span className="text-sm font-bold">{a.name}</span>
+          {agents.map((a) => {
+            const dead = a.status !== 'alive'
+            const staminaColor = a.stamina > 50 ? '#4ade80' : a.stamina > 20 ? '#fbbf24' : '#f87171'
+            return (
+              <div
+                key={a.id}
+                className={`rounded-xl border p-3 ${dead ? 'border-slate-900 bg-slate-950/60 opacity-50' : 'border-slate-800 bg-slate-900/60'}`}
+              >
+                <div className="mb-1 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: MODEL_COLOR[a.model] }} />
+                  <span className="text-sm font-bold">{dead ? '💀 ' : ''}{a.name}</span>
+                </div>
+                <p className="text-[10px] text-slate-500">{a.role} · {a.model.toUpperCase()}</p>
+                <p className="mt-1 text-xs text-amber-300">🪙 {a.gold}</p>
+                {!dead && (
+                  <div className="mt-1.5">
+                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
+                      <div className="h-full rounded-full" style={{ width: `${a.stamina}%`, backgroundColor: staminaColor }} />
+                    </div>
+                    <p className="mt-0.5 text-[9px] text-slate-600">체력 {a.stamina}</p>
+                  </div>
+                )}
+                <p className="mt-1 text-[10px] text-slate-600">({a.x}, {a.y}) · {dead ? '사망' : '생존'}</p>
+                {a.last_action && <p className="mt-1 text-[10px] text-slate-500">최근: {a.last_action}</p>}
               </div>
-              <p className="text-[10px] text-slate-500">{a.role} · {a.model.toUpperCase()}</p>
-              <p className="mt-1 text-xs text-amber-300">🪙 {a.gold}</p>
-              <p className="text-[10px] text-slate-600">({a.x}, {a.y}) · {a.status}</p>
-              {a.last_action && <p className="mt-1 text-[10px] text-slate-500">최근: {a.last_action}</p>}
-            </div>
-          ))}
+            )
+          })}
           {agents.length === 0 && (
             <p className="col-span-full text-center text-sm text-slate-600">에이전트 데이터가 아직 없습니다.</p>
           )}

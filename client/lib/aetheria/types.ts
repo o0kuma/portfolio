@@ -6,6 +6,7 @@ export interface AgentState {
   name: string
   role: string // 'trader' | 'hunter' | 'diplomat' 등 — 목표 성향
   gold: number
+  stamina: number
   x: number
   y: number
   status: 'alive' | 'dead'
