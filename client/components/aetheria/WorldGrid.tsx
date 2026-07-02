@@ -141,8 +141,8 @@ export default function WorldGrid({ agents }: { agents: Agent[] }) {
 
   return (
     <div className="mb-8 overflow-hidden rounded-xl border border-slate-800 bg-[#0f0a05] p-3">
-      <div className="mx-auto aspect-square w-full max-w-md" style={{ imageRendering: 'pixelated' }}>
-        <canvas ref={canvasRef} width={480} height={480} className="h-full w-full rounded-lg" />
+      <div className="mx-auto aspect-square w-full max-w-2xl" style={{ imageRendering: 'pixelated' }}>
+        <canvas ref={canvasRef} width={800} height={800} className="h-full w-full rounded-lg" />
       </div>
       <div className="mt-3 flex justify-center gap-5 text-[11px] text-slate-400">
         <span className="flex items-center gap-1.5">

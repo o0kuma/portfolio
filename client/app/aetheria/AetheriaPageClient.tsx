@@ -37,6 +37,8 @@ export default function AetheriaPageClient() {
   const [budget, setBudget] = useState<{ spentCents: number; capCents: number } | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [tickBusy, setTickBusy] = useState(false)
+  const [tickMessage, setTickMessage] = useState('')
 
   // 관리자 토큰 입력 UI 상태
   const [showTokenInput, setShowTokenInput] = useState(false)
@@ -101,10 +103,32 @@ export default function AetheriaPageClient() {
     }
   }
 
+  const runTickNow = async () => {
+    setTickBusy(true)
+    setTickMessage('')
+    try {
+      const res = await fetch('/api/aetheria/admin/run-tick', {
+        method: 'POST',
+        headers: adminAuthHeaders(),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setTickMessage(`✅ ${data.processed}명 처리 완료`)
+        await load()
+      } else {
+        setTickMessage(`❌ ${data.error ?? '실행 실패'}`)
+      }
+    } catch {
+      setTickMessage('❌ 네트워크 오류')
+    } finally {
+      setTickBusy(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#05070d] pb-20 text-white">
       <header className="sticky top-0 z-30 border-b border-cyan-900/40 bg-[#05070d]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
             <FiArrowLeft className="h-4 w-4" /> 메인
           </Link>
@@ -129,7 +153,7 @@ export default function AetheriaPageClient() {
 
         {showTokenInput && !isAdmin && (
           <div className="border-t border-cyan-900/30 bg-cyan-950/10 px-4 py-3">
-            <div className="mx-auto flex max-w-3xl items-center gap-2">
+            <div className="mx-auto flex max-w-4xl items-center gap-2">
               <input
                 type="password"
                 value={tokenInput}
@@ -142,12 +166,12 @@ export default function AetheriaPageClient() {
                 확인
               </button>
             </div>
-            {tokenError && <p className="mx-auto mt-1.5 max-w-3xl text-[11px] text-red-400">{tokenError}</p>}
+            {tokenError && <p className="mx-auto mt-1.5 max-w-4xl text-[11px] text-red-400">{tokenError}</p>}
           </div>
         )}
       </header>
 
-      <main className="mx-auto max-w-3xl px-4 pt-8">
+      <main className="mx-auto max-w-4xl px-4 pt-8">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-3xl font-black">🧠 Project Aetheria</h1>
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — 자율 에이전트 샌드박스 시뮬레이션</p>
@@ -162,19 +186,34 @@ export default function AetheriaPageClient() {
         )}
 
         {isAdmin && (
-          <div className="mb-6 flex items-center justify-between rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
-            <div className="text-xs text-slate-400">
-              관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(2) : '0.00'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
+          <div className="mb-6 rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="text-xs text-slate-400">
+                관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(2) : '0.00'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={runTickNow}
+                  disabled={tickBusy}
+                  className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-600 disabled:opacity-50"
+                >
+                  {tickBusy ? '실행 중...' : '⚡ 지금 1틱 실행'}
+                </button>
+                <button
+                  onClick={toggleRunning}
+                  disabled={busy}
+                  className={`rounded-lg px-4 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
+                    running ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
+                  }`}
+                >
+                  {running ? '정지' : '시작'}
+                </button>
+              </div>
             </div>
-            <button
-              onClick={toggleRunning}
-              disabled={busy}
-              className={`rounded-lg px-4 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
-                running ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
-              }`}
-            >
-              {running ? '정지' : '시작'}
-            </button>
+            {tickMessage && <p className="mt-2 text-[11px] text-slate-400">{tickMessage}</p>}
+            <p className="mt-1 text-[10px] text-slate-600">
+              크론은 하루 1회만 자동 실행됩니다 — 테스트하려면 "지금 1틱 실행"을 누르세요 (예산 상한은 그대로 적용됨)
+            </p>
           </div>
         )}
 
