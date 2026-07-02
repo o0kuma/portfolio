@@ -11,6 +11,8 @@ const STAMINA_UPKEEP = 12 // 틱마다 소모
 const HUNT_STAMINA_GAIN = 35
 const HUNT_GOLD_MIN = 5
 const HUNT_GOLD_MAX = 20
+const PARTY_STAMINA_GAIN = 15 // 함께 쉬며 회복 (Social Interaction 축 — 협력의 실질적 보상)
+const GREETING_STAMINA_GAIN = 5 // 사기 진작 정도의 작은 회복
 
 export async function ensureAgentTables() {
   await dbQuery(`
@@ -167,14 +169,31 @@ export async function runTickBatch(): Promise<TickRunResult> {
         }
       }
 
-      // 생존 시스템: 매 틱 체력 소모, 사냥(hunt)일 때만 회복 + 골드 보상 (LLM 신고가 아니라 서버가 직접 지급)
+      // 생존 시스템: 매 틱 체력 소모, 행동에 따라 회복 (LLM 신고가 아니라 서버가 직접 지급)
       let stamina = agent.stamina - STAMINA_UPKEEP
       let huntGold = 0
+      let partyPartner: AgentState | null = null
+
       if (decision.action === 'hunt') {
         stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
         huntGold = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
         gold += huntGold
+      } else if (decision.action === 'party_invite') {
+        // 근처의 살아있는 에이전트와 함께할 때만 실제 효과 발생 — 둘 다 체력 회복 (협력의 실질적 보상)
+        const nearby = nearbyOf(agent, agents)
+        const partner = decision.targetAgentId ? nearby.find((a) => a.id === decision.targetAgentId) : null
+        if (partner) {
+          partyPartner = partner
+          stamina = Math.min(STAMINA_MAX, stamina + PARTY_STAMINA_GAIN)
+          await dbQuery(
+            `UPDATE aetheria_agents SET stamina = LEAST(100, stamina + $1), updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
+            [PARTY_STAMINA_GAIN, partner.id],
+          )
+        }
+      } else if (decision.action === 'greeting') {
+        stamina = Math.min(STAMINA_MAX, stamina + GREETING_STAMINA_GAIN)
       }
+
       stamina = Math.max(0, Math.min(STAMINA_MAX, stamina))
       const isDead = stamina <= 0
 
@@ -183,6 +202,9 @@ export async function runTickBatch(): Promise<TickRunResult> {
       let displayText = mod.text
       if (tradeRecipient) displayText += ` (→ ${tradeRecipient.name}에게 ${agent.gold - gold + huntGold}골드 전달)`
       if (huntGold > 0) displayText += ` [+${huntGold}골드, 체력 +${HUNT_STAMINA_GAIN}]`
+      if (partyPartner) displayText += ` (${partyPartner.name}과 함께 휴식, 둘 다 체력 +${PARTY_STAMINA_GAIN})`
+      else if (decision.action === 'party_invite') displayText += ' (근처에 함께할 상대가 없어 무산됨)'
+      if (decision.action === 'greeting') displayText += ` [체력 +${GREETING_STAMINA_GAIN}]`
 
       await dbQuery(
         `UPDATE aetheria_agents SET x=$1, y=$2, gold=$3, stamina=$4, status=$5, last_action=$6, updated_at=NOW() WHERE id=$7`,
@@ -201,6 +223,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
             moveTo: decision.moveTo ?? null,
             tradeAmount: decision.tradeAmount ?? null,
             tradeRecipientId: tradeRecipient?.id ?? null,
+            partyPartnerId: partyPartner?.id ?? null,
             stamina,
             huntGold,
           }),
