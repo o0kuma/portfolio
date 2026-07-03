@@ -187,6 +187,7 @@ interface NpcAgent {
   id: string
   model: 'gpt' | 'gemini'
   name: string
+  role: string
   gold: number
   stamina: number
   x: number
@@ -548,8 +549,11 @@ export default function RPGPageClient() {
     map: buildMap(),
     animId: 0,
     npcAgents: [] as NpcAgent[],
+    camX: 0,
+    camY: 0,
   })
   const [dialog, setDialog] = useState<{ bld: Bld } | null>(null)
+  const [selectedNpc, setSelectedNpc] = useState<NpcAgent | null>(null)
   const [started, setStarted] = useState(false)
   // AI 연구소 실시간 현황판용 (React state로 관리해 다이얼로그에서 렌더)
   const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number }>({
@@ -683,6 +687,8 @@ export default function RPGPageClient() {
       let camY = s.py - H / 2
       camX = Math.max(0, Math.min(camX, MAP_W * TILE - W))
       camY = Math.max(0, Math.min(camY, MAP_H * TILE - H))
+      s.camX = camX
+      s.camY = camY
 
       // Draw map
       const t0x = Math.max(0, Math.floor(camX / TILE))
@@ -725,6 +731,17 @@ export default function RPGPageClient() {
         ctx.fillStyle = b.wall
         ctx.fillRect(W - mm - 10 + b.tx * ms, 14 + b.ty * ms, b.tw * ms, b.th * ms)
       })
+
+      // AI 에이전트 위치 (모델별 색상 점) — 광장 좌표를 미니맵에 매핑
+      for (const npc of s.npcAgents) {
+        if (npc.status !== 'alive') continue
+        const worldTx = PLAZA_TX + (npc.x / (AGENT_GRID - 1)) * PLAZA_TW
+        const worldTy = PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH
+        ctx.fillStyle = npc.model === 'gpt' ? '#3ab0a0' : '#bf5a3a'
+        ctx.fillRect(W - mm - 10 + worldTx * ms - 1, 14 + worldTy * ms - 1, 3, 3)
+      }
+
+      // 플레이어 위치 (노란 점)
       ctx.fillStyle = '#ffd700'
       ctx.fillRect(W - mm - 10 + (s.px / TILE) * ms - 2, 14 + (s.py / TILE) * ms - 2, 4, 4)
 
@@ -792,7 +809,30 @@ export default function RPGPageClient() {
   // ── Game ─────────────────────────────────────────────────────────────────────
   return (
     <div className="w-full h-screen overflow-hidden bg-[#1a2e1a] relative" style={{ imageRendering: 'pixelated' }}>
-      <canvas ref={canvasRef} className="absolute inset-0" style={{ imageRendering: 'pixelated' }} />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0"
+        style={{ imageRendering: 'pixelated' }}
+        onClick={(e) => {
+          const s = stateRef.current
+          const rect = e.currentTarget.getBoundingClientRect()
+          // 캔버스 내부 좌표 → 월드 좌표
+          const scaleX = e.currentTarget.width / rect.width
+          const scaleY = e.currentTarget.height / rect.height
+          const wx = (e.clientX - rect.left) * scaleX + s.camX
+          const wy = (e.clientY - rect.top) * scaleY + s.camY
+          // 가장 가까운 에이전트 히트 테스트 (반경 24px)
+          let hit: NpcAgent | null = null
+          let best = 24
+          for (const npc of s.npcAgents) {
+            const ax = (PLAZA_TX + (npc.x / (AGENT_GRID - 1)) * PLAZA_TW) * TILE
+            const ay = (PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH) * TILE
+            const d = Math.hypot(ax - wx, ay - wy)
+            if (d < best) { best = d; hit = npc }
+          }
+          if (hit) setSelectedNpc(hit)
+        }}
+      />
 
       {/* Back button */}
       <Link
@@ -833,6 +873,44 @@ export default function RPGPageClient() {
                   </p>
                 ))}
               </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 에이전트 클릭 시 상세 카드 */}
+      {selectedNpc && (
+        <div
+          className="absolute inset-0 z-40 flex items-center justify-center bg-black/50 px-6"
+          onClick={() => setSelectedNpc(null)}
+        >
+          <div
+            className="w-full max-w-xs rounded-xl border-2 p-5 shadow-2xl"
+            style={{
+              background: '#0a0a1a',
+              borderColor: selectedNpc.model === 'gpt' ? '#3ab0a0' : '#bf5a3a',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: selectedNpc.model === 'gpt' ? '#3ab0a0' : '#bf5a3a' }}
+              />
+              <span className="font-mono text-base font-black text-white">
+                {selectedNpc.status !== 'alive' ? '💀 ' : ''}{selectedNpc.name}
+              </span>
+              <span className="ml-auto text-[10px] font-mono text-slate-500">닫기 ✕</span>
+            </div>
+            <div className="space-y-1.5 font-mono text-sm text-slate-300">
+              <p>모델: <span className="text-white">{selectedNpc.model === 'gpt' ? 'GPT-4o mini' : 'Gemini 2.5 Flash'}</span></p>
+              <p>역할: <span className="text-white">{selectedNpc.role}</span></p>
+              <p>골드: <span className="text-amber-300">🪙 {selectedNpc.gold}</span></p>
+              <p>체력: <span className="text-emerald-300">❤️ {selectedNpc.stamina}</span></p>
+              <p>상태: <span className="text-white">{selectedNpc.status === 'alive' ? '생존' : '사망'}</span></p>
+              {selectedNpc.last_action && (
+                <p>최근 행동: <span className="text-white">{ACTION_BUBBLE[selectedNpc.last_action] ?? selectedNpc.last_action}</span></p>
               )}
             </div>
           </div>
