@@ -9,7 +9,7 @@ import { FiDownload, FiGithub, FiMail, FiPhone } from 'react-icons/fi'
 const SKILLS = [
   'HTML5', 'CSS3', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Svelte',
   'Node.js', 'MySQL', 'PixiJS', 'jQuery', 'EJS', 'Web Components',
-  'Git', 'GitHub', 'GitLab', 'Figma', 'Zeplin', 'Adobe Photoshop', 'Go',
+  'Go', 'Java', 'Git', 'GitHub', 'GitLab', 'Figma', 'Zeplin', 'Adobe Photoshop',
 ]
 
 const WORK = [

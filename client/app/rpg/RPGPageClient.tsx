@@ -58,6 +58,8 @@ const BUILDINGS: Bld[] = [
       '● PixiJS            ★★★☆☆',
       '',
       '── Backend / DB ──',
+      '● Go                ★★★☆☆',
+      '● Java              ★★★☆☆',
       '● Node.js / Express ★★★☆☆',
       '● MySQL / MariaDB   ★★★☆☆',
       '● PHP               ★★☆☆☆',

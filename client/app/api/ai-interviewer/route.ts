@@ -9,7 +9,7 @@ Career:
 - 퀀텀에이아이(Quantum AI), 2025.12 ~ 현재, 프론트엔드 개발
 - (주)소프트위즈, 2020.05 ~ 2025.12, 웹팀/대리 — Next.js 브랜드 사이트, Svelte+Web Components CRM, PixiJS 트레이딩 UI, MySQL 사내 시스템
 - 스마일데이, 2018.12 ~ 2020.02, 웹개발팀/사원 — 에이전시 외주 퍼블리싱, jQuery 인터랙션
-Skills: HTML5/CSS3, JavaScript, TypeScript, React, Next.js, Svelte, Node.js, MySQL, PixiJS, Figma.
+Skills: 주력은 프론트엔드(HTML5/CSS3, JavaScript, TypeScript, React, Next.js, Svelte, PixiJS). 백엔드도 Go/Java/Node.js로 서버·API 개발 가능. 퍼블리싱(HTML/CSS 반응형)도 능숙. MySQL, Figma.
 Projects: BABA OPTION(Next.js 브랜드 사이트), CRM(Svelte+Web Components), babaoption WTS(PixiJS), mytradinginfo(React), mysoftwiz(EJS), 랄라(React 유아 AI 앱), kmuseum(박물관 예약).
 강점: 퍼블리싱은 누구보다 자신 있으며, 반응형 UI와 상태 기반 인터랙션 구현에 능숙합니다.
 Answer questions about hiring, skills, projects, or collaboration in Korean unless asked in English.
