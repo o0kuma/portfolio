@@ -186,6 +186,28 @@ interface NpcAgent {
   last_action: string | null
 }
 
+interface AetheriaEvent {
+  agent_name: string
+  model: 'gpt' | 'gemini'
+  event_type: string
+  display_text: string
+}
+
+// 에이전트 행동을 머리 위 말풍선용 짧은 라벨로 변환
+const ACTION_BUBBLE: Record<string, string> = {
+  hunt: '🍖 사냥!',
+  trade_offer: '💰 거래',
+  party_invite: '🤝 협력',
+  greeting: '👋 인사',
+  move: '🚶 이동',
+  death: '💀',
+  error: '…',
+}
+function actionBubble(action: string | null): string | null {
+  if (!action) return null
+  return ACTION_BUBBLE[action] ?? null
+}
+
 // ── Tile map (0=grass,1=path,2=tree,3=water) ──────────────────────────────────
 function buildMap(): number[][] {
   const m: number[][] = Array.from({ length: MAP_H }, () => Array(MAP_W).fill(0))
@@ -421,7 +443,90 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
   ctx.textAlign = 'center'
   ctx.fillText(label, px, y - 6)
 
+  // Speech bubble — 살아있는 에이전트의 현재 행동 (이름표 위)
+  const bubble = dead ? null : actionBubble(npc.last_action)
+  if (bubble) {
+    ctx.font = 'bold 10px sans-serif'
+    const bw = ctx.measureText(bubble).width + 12
+    const by = y - 34
+    ctx.fillStyle = 'rgba(255,255,255,0.92)'
+    ctx.beginPath()
+    // 둥근 말풍선
+    const bx = px - bw / 2
+    const r = 5
+    ctx.moveTo(bx + r, by)
+    ctx.arcTo(bx + bw, by, bx + bw, by + 16, r)
+    ctx.arcTo(bx + bw, by + 16, bx, by + 16, r)
+    ctx.arcTo(bx, by + 16, bx, by, r)
+    ctx.arcTo(bx, by, bx + bw, by, r)
+    ctx.closePath()
+    ctx.fill()
+    // 꼬리
+    ctx.beginPath()
+    ctx.moveTo(px - 3, by + 16)
+    ctx.lineTo(px + 3, by + 16)
+    ctx.lineTo(px, by + 21)
+    ctx.closePath()
+    ctx.fill()
+    ctx.fillStyle = '#1a1a1a'
+    ctx.fillText(bubble, px, by + 12)
+  }
+
   ctx.globalAlpha = 1
+}
+
+// AI 연구소 건물 안에서 보는 실시간 현황판 (RPG 안에서 모든 걸 확인)
+function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number } }) {
+  const { agents, events, tick } = data
+  const alive = agents.filter((a) => a.status === 'alive').length
+  const sorted = [...agents].sort((a, b) => b.gold - a.gold)
+
+  if (agents.length === 0) {
+    return (
+      <p className="font-mono text-sm text-green-100/60">
+        아직 시뮬레이션 데이터가 없습니다. 8시간마다 에이전트들의 하루가 진행됩니다.
+      </p>
+    )
+  }
+
+  return (
+    <div className="max-h-[60vh] space-y-3 overflow-y-auto font-mono text-sm">
+      <p className="text-green-300">
+        🕐 {tick}일차 · 💚 생존 {alive}/{agents.length}
+      </p>
+
+      {/* 에이전트 현황 */}
+      <div className="space-y-1">
+        {sorted.map((a) => {
+          const dead = a.status !== 'alive'
+          const color = a.model === 'gpt' ? '#8be0d4' : '#f0a888'
+          return (
+            <div key={a.id} className={`flex items-center gap-2 text-xs ${dead ? 'opacity-40' : ''}`}>
+              <span style={{ color }} className="w-14 font-bold">{dead ? '💀' : ''}{a.name}</span>
+              <span className="text-green-700">{a.model.toUpperCase()}</span>
+              <span className="text-amber-300">🪙{a.gold}</span>
+              {!dead && <span className="text-green-200">❤️{a.stamina}</span>}
+              <span className="ml-auto text-green-100/50">{ACTION_BUBBLE[a.last_action ?? ''] ?? a.last_action ?? '-'}</span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* 최근 이벤트 로그 */}
+      {events.length > 0 && (
+        <div className="border-t border-[#4a8a5a]/30 pt-2">
+          <p className="mb-1 text-[10px] text-green-700">최근 활동</p>
+          <div className="space-y-0.5">
+            {events.slice(0, 8).map((e, i) => (
+              <p key={i} className="text-[11px] text-green-100/60">
+                <span className="text-green-300">{e.agent_name}</span> {e.display_text}
+              </p>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
@@ -437,6 +542,12 @@ export default function RPGPageClient() {
   })
   const [dialog, setDialog] = useState<{ bld: Bld } | null>(null)
   const [started, setStarted] = useState(false)
+  // AI 연구소 실시간 현황판용 (React state로 관리해 다이얼로그에서 렌더)
+  const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number }>({
+    agents: [],
+    events: [],
+    tick: 0,
+  })
   const dialogRef = useRef(dialog)
   dialogRef.current = dialog
 
@@ -480,6 +591,11 @@ export default function RPGPageClient() {
         if (!res.ok || cancelled) return
         const data = await res.json()
         stateRef.current.npcAgents = data.agents ?? []
+        setAetheriaData({
+          agents: data.agents ?? [],
+          events: data.recentEvents ?? [],
+          tick: data.currentTick ?? 0,
+        })
       } catch {
         // 네트워크 오류는 무시 — 다음 폴링에서 재시도
       }
@@ -693,6 +809,9 @@ export default function RPGPageClient() {
                 </h3>
                 <span className="ml-auto text-[10px] font-mono text-green-700">E · ESC 로 닫기</span>
               </div>
+              {dialog.bld.id === 'aetheria' ? (
+                <AetheriaPanel data={aetheriaData} />
+              ) : (
               <div className="space-y-1.5">
                 {dialog.bld.lines.map((line, i) => (
                   <p key={i} className={`font-mono text-sm ${
@@ -705,6 +824,7 @@ export default function RPGPageClient() {
                   </p>
                 ))}
               </div>
+              )}
             </div>
           </div>
         </div>
