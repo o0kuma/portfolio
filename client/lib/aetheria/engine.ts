@@ -12,6 +12,20 @@ const HUNT_STAMINA_GAIN = 35
 const HUNT_GOLD_MIN = 5
 const HUNT_GOLD_MAX = 20
 const HUNT_FAIL_CHANCE = 0.35 // 사냥 실패 확률 — 리스크 요소
+
+// 역할별 특성 — 이름뿐 아니라 실제 능력 차이를 준다.
+// hunter: 사냥 실패율 절반 + 사냥 골드 1.5배
+// trader: 거래 시 10% 웃돈이 상대에게 추가 전달 (거래를 유리하게)
+// diplomat: 협력(party) 회복량 1.5배
+function huntFailChance(role: string): number {
+  return role === 'hunter' ? HUNT_FAIL_CHANCE * 0.5 : HUNT_FAIL_CHANCE
+}
+function huntGoldMultiplier(role: string): number {
+  return role === 'hunter' ? 1.5 : 1
+}
+function partyGain(role: string): number {
+  return role === 'diplomat' ? Math.round(PARTY_STAMINA_GAIN * 1.5) : PARTY_STAMINA_GAIN
+}
 const PARTY_STAMINA_GAIN = 15 // 함께 쉬며 회복 (Social Interaction 축 — 협력의 실질적 보상)
 const GREETING_STAMINA_GAIN = 5 // 사기 진작 정도의 작은 회복
 // 동시 크론/관리자 run-tick이 같은 배치를 이중 처리하지 않도록 advisory lock 사용
@@ -175,7 +189,9 @@ export async function runTickBatch(): Promise<TickRunResult> {
           if (target) {
             tradeAmount = Math.max(0, Math.min(Math.round(decision.tradeAmount), gold))
             if (tradeAmount > 0) {
-              gold -= tradeAmount
+              // trader는 거래 효율이 좋아, 상대는 tradeAmount를 받되 본인은 10% 적게 소모
+              const cost = agent.role === 'trader' ? Math.round(tradeAmount * 0.9) : tradeAmount
+              gold -= cost
               tradeRecipient = target
             }
           }
@@ -188,13 +204,14 @@ export async function runTickBatch(): Promise<TickRunResult> {
         let partyPartner: AgentState | null = null
 
         if (decision.action === 'hunt') {
-          // 35% 확률로 사냥 실패 — 리스크 요소(Risk Management). 실패 시 체력만 소폭 회복, 골드 없음.
-          if (Math.random() < HUNT_FAIL_CHANCE) {
+          // 사냥 실패 확률 — 리스크 요소(Risk Management). hunter는 실패율 절반.
+          if (Math.random() < huntFailChance(agent.role)) {
             huntFailed = true
             stamina = Math.min(STAMINA_MAX, stamina + Math.floor(HUNT_STAMINA_GAIN / 3))
           } else {
             stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
-            huntGold = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
+            const base = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
+            huntGold = Math.round(base * huntGoldMultiplier(agent.role)) // hunter 골드 1.5배
             gold += huntGold
           }
         } else if (decision.action === 'party_invite') {
@@ -202,7 +219,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
           const partner = decision.targetAgentId ? nearby.find((a) => a.id === decision.targetAgentId) : null
           if (partner) {
             partyPartner = partner
-            stamina = Math.min(STAMINA_MAX, stamina + PARTY_STAMINA_GAIN)
+            stamina = Math.min(STAMINA_MAX, stamina + partyGain(agent.role)) // diplomat 회복 1.5배
           }
         } else if (decision.action === 'greeting') {
           stamina = Math.min(STAMINA_MAX, stamina + GREETING_STAMINA_GAIN)
