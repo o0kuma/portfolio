@@ -496,8 +496,17 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
 }
 
 // AI 연구소 건물 안에서 보는 실시간 현황판 (RPG 안에서 모든 걸 확인)
-function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number } }) {
-  const { agents, events, tick, season } = data
+interface HallEntry {
+  name: string
+  model: 'gpt' | 'gemini'
+  role: string
+  season: number
+  survived_days: number
+  final_gold: number
+}
+
+function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number; hallOfFame: { longest: HallEntry[]; richest: HallEntry[] } } }) {
+  const { agents, events, tick, season, hallOfFame } = data
   const alive = agents.filter((a) => a.status === 'alive').length
   const sorted = [...agents].sort((a, b) => b.gold - a.gold)
 
@@ -545,6 +554,31 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
           </div>
         </div>
       )}
+
+      {/* 명예의 전당 */}
+      {(hallOfFame.longest.length > 0 || hallOfFame.richest.length > 0) && (
+        <div className="border-t border-[#4a8a5a]/30 pt-2">
+          <p className="mb-1 text-[10px] text-amber-500">🏛️ 명예의 전당</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <p className="mb-0.5 text-[10px] text-green-700">🕐 최장수</p>
+              {hallOfFame.longest.map((h, i) => (
+                <p key={i} className="text-[11px] text-green-100/60">
+                  {i + 1}. {h.name} — {h.survived_days}일 <span className="text-green-800">(S{h.season})</span>
+                </p>
+              ))}
+            </div>
+            <div>
+              <p className="mb-0.5 text-[10px] text-green-700">🪙 최고부자</p>
+              {hallOfFame.richest.map((h, i) => (
+                <p key={i} className="text-[11px] text-green-100/60">
+                  {i + 1}. {h.name} — {h.final_gold} <span className="text-green-800">(S{h.season})</span>
+                </p>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -567,11 +601,12 @@ export default function RPGPageClient() {
   const [selectedNpc, setSelectedNpc] = useState<NpcAgent | null>(null)
   const [started, setStarted] = useState(false)
   // AI 연구소 실시간 현황판용 (React state로 관리해 다이얼로그에서 렌더)
-  const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number }>({
+  const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number; hallOfFame: { longest: HallEntry[]; richest: HallEntry[] } }>({
     agents: [],
     events: [],
     tick: 0,
     season: 1,
+    hallOfFame: { longest: [], richest: [] },
   })
   const dialogRef = useRef(dialog)
   dialogRef.current = dialog
@@ -621,6 +656,7 @@ export default function RPGPageClient() {
           events: data.recentEvents ?? [],
           tick: data.currentTick ?? 0,
           season: data.season ?? 1,
+          hallOfFame: data.hallOfFame ?? { longest: [], richest: [] },
         })
       } catch {
         // 네트워크 오류는 무시 — 다음 폴링에서 재시도

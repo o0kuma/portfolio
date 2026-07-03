@@ -18,14 +18,23 @@ const fetchPublicState = unstable_cache(
        FROM aetheria_agents ORDER BY id`,
     )
     const eventsRes = await dbQuery(
-      `SELECT e.agent_id, a.name AS agent_name, a.model, e.event_type, e.display_text, e.created_at
+      `SELECT e.agent_id, COALESCE(a.name, '시스템') AS agent_name, COALESCE(a.model, 'gpt') AS model, e.event_type, e.display_text, e.created_at
        FROM aetheria_events e
-       JOIN aetheria_agents a ON a.id = e.agent_id
+       LEFT JOIN aetheria_agents a ON a.id = e.agent_id
        ORDER BY e.created_at DESC
-       LIMIT 10`,
+       LIMIT 12`,
     )
     const tickRes = await dbQuery<{ last_tick_id: number; season: number }>(
       `SELECT last_tick_id, season FROM aetheria_tick_state WHERE id = 1`,
+    )
+    // 명예의 전당 — 최장수 / 최고부자 각 상위 5
+    const longestRes = await dbQuery(
+      `SELECT name, model, role, season, survived_days, final_gold
+       FROM aetheria_hall_of_fame ORDER BY survived_days DESC, final_gold DESC LIMIT 5`,
+    )
+    const richestRes = await dbQuery(
+      `SELECT name, model, role, season, survived_days, final_gold
+       FROM aetheria_hall_of_fame ORDER BY final_gold DESC, survived_days DESC LIMIT 5`,
     )
 
     return {
@@ -33,6 +42,7 @@ const fetchPublicState = unstable_cache(
       recentEvents: eventsRes.rows,
       currentTick: tickRes.rows[0]?.last_tick_id ?? 0,
       season: tickRes.rows[0]?.season ?? 1,
+      hallOfFame: { longest: longestRes.rows, richest: richestRes.rows },
     }
   },
   ['aetheria-public-state'],

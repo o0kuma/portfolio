@@ -49,6 +49,23 @@ export async function ensureAgentTables() {
   `)
   // 기존에 이미 만들어진 테이블에도 stamina 컬럼을 추가 (마이그레이션)
   await dbQuery(`ALTER TABLE aetheria_agents ADD COLUMN IF NOT EXISTS stamina INT DEFAULT 100`)
+  // 태어난(부활한) 틱 — 생존일 계산용
+  await dbQuery(`ALTER TABLE aetheria_agents ADD COLUMN IF NOT EXISTS born_tick INT DEFAULT 0`)
+
+  // 명예의 전당 — 사망한 에이전트의 최종 기록 (역대 최장수/최고부자)
+  await dbQuery(`
+    CREATE TABLE IF NOT EXISTS aetheria_hall_of_fame (
+      id SERIAL PRIMARY KEY,
+      agent_id VARCHAR(32) NOT NULL,
+      name VARCHAR(50) NOT NULL,
+      model VARCHAR(16) NOT NULL,
+      role VARCHAR(20) NOT NULL,
+      season INT NOT NULL,
+      final_gold INT NOT NULL,
+      survived_days INT NOT NULL,
+      died_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `)
 
   await dbQuery(`
     CREATE TABLE IF NOT EXISTS aetheria_events (
@@ -92,13 +109,13 @@ export async function ensureAgentTables() {
 
 // 전멸 시 새 시즌 시작 — 모든 에이전트를 초기 상태(체력·골드 100, 무작위 위치, 생존)로 되살리고 시즌 번호 +1.
 // 과거 이벤트 로그는 보존한다(명예의 전당/기록용).
-async function startNewSeason(query: typeof dbQuery): Promise<number> {
+async function startNewSeason(query: typeof dbQuery, currentTick: number): Promise<number> {
   for (const a of INITIAL_AGENTS) {
     const x = Math.floor(Math.random() * GRID_SIZE)
     const y = Math.floor(Math.random() * GRID_SIZE)
     await query(
-      `UPDATE aetheria_agents SET gold=100, stamina=100, x=$2, y=$3, status='alive', last_action=NULL, updated_at=NOW() WHERE id=$1`,
-      [a.id, x, y],
+      `UPDATE aetheria_agents SET gold=100, stamina=100, x=$2, y=$3, status='alive', last_action=NULL, born_tick=$4, updated_at=NOW() WHERE id=$1`,
+      [a.id, x, y, currentTick],
     )
   }
   const seasonRes = await query<{ season: number }>(
@@ -110,6 +127,7 @@ async function startNewSeason(query: typeof dbQuery): Promise<number> {
 function toAgentState(row: {
   id: string; model: string; name: string; role: string; gold: number; stamina: number | null
   x: number; y: number; status: string; last_action: string | null; updated_at: string
+  born_tick?: number | null
 }): AgentState {
   return {
     id: row.id,
@@ -123,6 +141,7 @@ function toAgentState(row: {
     status: row.status as AgentState['status'],
     lastAction: row.last_action,
     updatedAt: row.updated_at,
+    bornTick: row.born_tick ?? 0,
   }
 }
 
@@ -300,10 +319,17 @@ export async function runTickBatch(): Promise<TickRunResult> {
           )
 
           if (isDead) {
+            const survivedDays = Math.max(0, tickId - (agent.bornTick ?? 0))
             await query(
               `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
                VALUES ($1,$2,'death',$3,$4)`,
-              [tickId, agent.id, `💀 ${agent.name}이(가) 체력을 모두 소진해 사망했습니다.`, JSON.stringify({})],
+              [tickId, agent.id, `💀 ${agent.name}이(가) ${survivedDays}일 만에 사망했습니다. (최종 🪙${gold})`, JSON.stringify({ survivedDays, finalGold: gold })],
+            )
+            // 명예의 전당 기록
+            await query(
+              `INSERT INTO aetheria_hall_of_fame (agent_id, name, model, role, season, final_gold, survived_days)
+               VALUES ($1,$2,$3,$4,(SELECT season FROM aetheria_tick_state WHERE id=1),$5,$6)`,
+              [agent.id, agent.name, agent.model, agent.role, gold, survivedDays],
             )
           }
         })
@@ -338,7 +364,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
       `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
     )
     if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
-      const newSeason = await startNewSeason(dbQuery)
+      const newSeason = await startNewSeason(dbQuery, tickId)
       await dbQuery(
         `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
          VALUES ($1,'system','season',$2,$3)`,

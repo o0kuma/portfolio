@@ -12,6 +12,7 @@ export interface AgentState {
   status: 'alive' | 'dead'
   lastAction: string | null
   updatedAt: string
+  bornTick?: number
 }
 
 // 에이전트 간 교환은 구조화 데이터만 — 자유 텍스트는 표시 전용(displayText)이며
