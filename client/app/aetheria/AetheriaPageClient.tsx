@@ -58,8 +58,6 @@ export default function AetheriaPageClient() {
   const [currentTick, setCurrentTick] = useState(0)
   const [budget, setBudget] = useState<{ spentCents: number; capCents: number } | null>(null)
   const [busy, setBusy] = useState(false)
-  const [tickBusy, setTickBusy] = useState(false)
-  const [tickMessage, setTickMessage] = useState('')
 
   const [tokenInput, setTokenInput] = useState('')
   const [tokenError, setTokenError] = useState('')
@@ -145,31 +143,6 @@ export default function AetheriaPageClient() {
       await load()
     } finally {
       setBusy(false)
-    }
-  }
-
-  const runTickNow = async () => {
-    setTickBusy(true)
-    setTickMessage('')
-    try {
-      const res = await fetch('/api/aetheria/admin/run-tick', {
-        method: 'POST',
-        headers: adminAuthHeaders(),
-      })
-      const data = await res.json()
-      if (res.ok) {
-        const parts = [`${data.processed}명 처리`]
-        if (data.died > 0) parts.push(`💀 ${data.died}명 사망`)
-        if (data.failed > 0) parts.push(`⚠️ ${data.failed}명 실패`)
-        setTickMessage((data.failed > 0 ? '⚠️ ' : '✅ ') + parts.join(' · '))
-        await load()
-      } else {
-        setTickMessage(`❌ ${data.error ?? '실행 실패'}`)
-      }
-    } catch {
-      setTickMessage('❌ 네트워크 오류')
-    } finally {
-      setTickBusy(false)
     }
   }
 
@@ -268,28 +241,18 @@ export default function AetheriaPageClient() {
             <div className="text-xs text-slate-400">
               관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={runTickNow}
-                disabled={tickBusy}
-                className="rounded-lg bg-slate-700 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-600 disabled:opacity-50"
-              >
-                {tickBusy ? '실행 중...' : '⚡ 지금 1틱 실행'}
-              </button>
-              <button
-                onClick={toggleRunning}
-                disabled={busy}
-                className={`rounded-lg px-4 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
-                  running ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
-                }`}
-              >
-                {running ? '정지' : '시작'}
-              </button>
-            </div>
+            <button
+              onClick={toggleRunning}
+              disabled={busy}
+              className={`rounded-lg px-4 py-1.5 text-xs font-bold transition disabled:opacity-50 ${
+                running ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
+              }`}
+            >
+              {running ? '정지' : '시작'}
+            </button>
           </div>
-          {tickMessage && <p className="mt-2 text-[11px] text-slate-400">{tickMessage}</p>}
           <p className="mt-1 text-[10px] text-slate-600">
-            크론은 하루 1회만 자동 실행됩니다 — 테스트하려면 "지금 1틱 실행"을 누르세요 (예산 상한은 그대로 적용됨)
+            8시간마다(하루 3회) 자동으로 진행됩니다 — 수동 실행은 없습니다. 예산 초과 시 자동 정지.
           </p>
 
           {envStatus && (
@@ -413,7 +376,7 @@ export default function AetheriaPageClient() {
         </div>
 
         <p className="mt-6 text-center text-[11px] text-slate-600">
-          하루 1회 정해진 시각에 자동으로 진행됩니다 (방문으로는 진행되지 않음) · 예산 초과 시 자동 정지
+          8시간마다(하루 3회) 자동으로 진행됩니다 (방문으로는 진행되지 않음) · 예산 초과 시 자동 정지 · 이 에이전트들은 <Link href="/rpg" className="underline hover:text-cyan-400">/rpg</Link>에서도 살아 움직입니다
         </p>
       </main>
     </div>

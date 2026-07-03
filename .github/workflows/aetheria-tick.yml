@@ -1,0 +1,17 @@
+name: Aetheria Tick
+
+on:
+  schedule:
+    # 하루 3회, 8시간마다 (UTC 기준 00:10 / 08:10 / 16:10)
+    - cron: '10 0,8,16 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Aetheria tick endpoint
+        run: |
+          curl -sS -X GET "https://kuuuma.com/api/cron/aetheria-tick" \
+            -H "Authorization: Bearer ${{ secrets.AETHERIA_CRON_SECRET }}" \
+            --fail-with-body
