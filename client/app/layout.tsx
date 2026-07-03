@@ -101,7 +101,7 @@ export default function RootLayout({
   const fontVars = `${inter.variable} ${fraunces.variable}`
 
   return (
-    <html lang="ko" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
+    <html lang="en" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

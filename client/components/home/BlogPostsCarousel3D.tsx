@@ -314,6 +314,8 @@ function GlassPostCard({
           <Link
             href={`/posts/${post._id}`}
             className="transition-colors hover:text-indigo-200"
+            style={{ touchAction: 'auto' }}
+            onPointerDown={(e) => e.stopPropagation()}
           >
             {post.title}
           </Link>
@@ -360,7 +362,9 @@ function GlassPostCard({
 
         <Link
           href={`/posts/${post._id}`}
-          className="relative mt-8 inline-flex items-center gap-3 border-b border-white/25 pb-1 font-mono text-[11px] tracking-[0.35em] text-white/70 transition hover:border-white/60 hover:text-white"
+          className="relative z-20 mt-8 inline-flex items-center gap-3 border-b border-white/25 pb-1 font-mono text-[11px] tracking-[0.35em] text-white/70 transition hover:border-white/60 hover:text-white"
+          style={{ touchAction: 'auto' }}
+          onPointerDown={(e) => e.stopPropagation()}
         >
           READ ENTRY
           <FiArrowRight size={16} aria-hidden />

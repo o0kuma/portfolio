@@ -147,7 +147,44 @@ const BUILDINGS: Bld[] = [
       '← 나가서 /games 로 방문하세요!',
     ],
   },
+  {
+    id: 'aetheria', label: 'AI 연구소', emoji: '🧪',
+    tx: 4, ty: 15, tw: 8, th: 5,
+    wall: '#4a2d6b', roof: '#2d1b4a',
+    lines: [
+      '[ Project Aetheria ]',
+      '',
+      '이 마을 광장(오른쪽 공터)에는',
+      'GPT와 Gemini, 두 AI 부족이',
+      '실제로 살아 움직이고 있습니다.',
+      '',
+      '스스로 이동하고, 사냥하고,',
+      '거래하고, 때론 죽기도 합니다.',
+      '8시간마다 그들의 하루가 흘러갑니다.',
+      '',
+      '광장에 가서 직접 관찰해보세요.',
+    ],
+  },
 ]
+
+// AI 에이전트가 돌아다니는 마을 광장 (10x10 좌표계를 이 타일 범위에 매핑)
+const PLAZA_TX = 13
+const PLAZA_TY = 16
+const PLAZA_TW = 8
+const PLAZA_TH = 5
+const AGENT_GRID = 10
+
+interface NpcAgent {
+  id: string
+  model: 'gpt' | 'gemini'
+  name: string
+  gold: number
+  stamina: number
+  x: number
+  y: number
+  status: string
+  last_action: string | null
+}
 
 // ── Tile map (0=grass,1=path,2=tree,3=water) ──────────────────────────────────
 function buildMap(): number[][] {
@@ -345,6 +382,48 @@ function drawPlayer(ctx: CanvasRenderingContext2D, px: number, py: number, dir: 
   ctx.fillRect(x + PW - 13, y + PH - 2, 8, 4)
 }
 
+// Project Aetheria 에이전트 NPC — 플레이어보다 살짝 작고, 모델별 색상 + 이름표
+function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: number, bob: number) {
+  const w = PW * 0.85
+  const h = PH * 0.85
+  const x = px - w / 2
+  const y = py - h + bob
+  const bodyColor = npc.model === 'gpt' ? '#3ab0a0' : '#bf5a3a'
+  const dead = npc.status !== 'alive'
+
+  ctx.globalAlpha = dead ? 0.35 : 1
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'
+  ctx.beginPath()
+  ctx.ellipse(px, py + 2, 9, 3.5, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  // Body
+  ctx.fillStyle = bodyColor
+  ctx.fillRect(x + 3, y + 10, w - 6, h - 12)
+
+  // Head
+  ctx.fillStyle = '#f0c878'
+  ctx.fillRect(x + 3, y, w - 6, 12)
+
+  // Hair
+  ctx.fillStyle = '#2a1a0a'
+  ctx.fillRect(x + 3, y, w - 6, 3)
+
+  // Nameplate
+  ctx.fillStyle = 'rgba(0,0,0,0.65)'
+  const label = `${dead ? '💀' : ''}${npc.name}`
+  ctx.font = 'bold 10px monospace'
+  const tw = ctx.measureText(label).width
+  ctx.fillRect(px - tw / 2 - 4, y - 16, tw + 8, 13)
+  ctx.fillStyle = npc.model === 'gpt' ? '#8be0d4' : '#f0a888'
+  ctx.textAlign = 'center'
+  ctx.fillText(label, px, y - 6)
+
+  ctx.globalAlpha = 1
+}
+
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function RPGPageClient() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -354,6 +433,7 @@ export default function RPGPageClient() {
     dir: 0, frame: 0, nearId: null as string | null,
     map: buildMap(),
     animId: 0,
+    npcAgents: [] as NpcAgent[],
   })
   const [dialog, setDialog] = useState<{ bld: Bld } | null>(null)
   const [started, setStarted] = useState(false)
@@ -389,6 +469,28 @@ export default function RPGPageClient() {
       if (bld) setDialog({ bld })
     }
   }, [])
+
+  // Project Aetheria 에이전트를 마을 광장 NPC로 불러온다 (읽기 전용, LLM 호출 없음).
+  useEffect(() => {
+    if (!started) return
+    let cancelled = false
+    const fetchAgents = async () => {
+      try {
+        const res = await fetch('/api/aetheria/public', { cache: 'no-store' })
+        if (!res.ok || cancelled) return
+        const data = await res.json()
+        stateRef.current.npcAgents = data.agents ?? []
+      } catch {
+        // 네트워크 오류는 무시 — 다음 폴링에서 재시도
+      }
+    }
+    fetchAgents()
+    const interval = setInterval(fetchAgents, 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+    }
+  }, [started])
 
   useEffect(() => {
     if (!started) return
@@ -471,6 +573,14 @@ export default function RPGPageClient() {
       // Draw buildings (sorted by y for depth)
       const sorted = [...BUILDINGS].sort((a, b) => a.ty - b.ty)
       sorted.forEach(b => drawBuilding(ctx, b, camX, camY, s.nearId))
+
+      // Draw Aetheria NPC agents (마을 광장을 돌아다니는 실제 AI 에이전트)
+      const bob = Math.sin(s.frame * 0.08) * 2
+      for (const npc of s.npcAgents) {
+        const worldX = (PLAZA_TX + (npc.x / (AGENT_GRID - 1)) * PLAZA_TW) * TILE
+        const worldY = (PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH) * TILE
+        drawNpc(ctx, npc, worldX - camX, worldY - camY, bob)
+      }
 
       // Draw player
       drawPlayer(ctx, s.px - camX, s.py - camY, s.dir, s.frame)
