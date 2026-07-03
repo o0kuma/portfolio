@@ -1026,7 +1026,7 @@ export const translations = {
       },
     },
   },
-} as const
+}
 
 export type TranslationDict = (typeof translations)['ko']
 
