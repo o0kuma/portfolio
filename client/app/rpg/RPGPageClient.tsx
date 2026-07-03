@@ -496,8 +496,8 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
 }
 
 // AI 연구소 건물 안에서 보는 실시간 현황판 (RPG 안에서 모든 걸 확인)
-function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number } }) {
-  const { agents, events, tick } = data
+function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number } }) {
+  const { agents, events, tick, season } = data
   const alive = agents.filter((a) => a.status === 'alive').length
   const sorted = [...agents].sort((a, b) => b.gold - a.gold)
 
@@ -512,7 +512,7 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
   return (
     <div className="max-h-[60vh] space-y-3 overflow-y-auto font-mono text-sm">
       <p className="text-green-300">
-        🕐 {tick}일차 · 💚 생존 {alive}/{agents.length}
+        🗓️ 시즌 {season} · 🕐 {tick}일차 · 💚 생존 {alive}/{agents.length}
       </p>
 
       {/* 에이전트 현황 */}
@@ -567,10 +567,11 @@ export default function RPGPageClient() {
   const [selectedNpc, setSelectedNpc] = useState<NpcAgent | null>(null)
   const [started, setStarted] = useState(false)
   // AI 연구소 실시간 현황판용 (React state로 관리해 다이얼로그에서 렌더)
-  const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number }>({
+  const [aetheriaData, setAetheriaData] = useState<{ agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number }>({
     agents: [],
     events: [],
     tick: 0,
+    season: 1,
   })
   const dialogRef = useRef(dialog)
   dialogRef.current = dialog
@@ -619,6 +620,7 @@ export default function RPGPageClient() {
           agents: data.agents ?? [],
           events: data.recentEvents ?? [],
           tick: data.currentTick ?? 0,
+          season: data.season ?? 1,
         })
       } catch {
         // 네트워크 오류는 무시 — 다음 폴링에서 재시도

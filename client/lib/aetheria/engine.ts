@@ -68,6 +68,8 @@ export async function ensureAgentTables() {
       last_agent_index INT DEFAULT 0
     )
   `)
+  // 시즌 번호 (전멸 시 새 시즌으로 리셋)
+  await dbQuery(`ALTER TABLE aetheria_tick_state ADD COLUMN IF NOT EXISTS season INT DEFAULT 1`)
   await dbQuery(
     `INSERT INTO aetheria_tick_state (id, last_tick_id, last_agent_index) VALUES (1, 0, 0)
      ON CONFLICT (id) DO NOTHING`,
@@ -86,6 +88,23 @@ export async function ensureAgentTables() {
       )
     }
   }
+}
+
+// 전멸 시 새 시즌 시작 — 모든 에이전트를 초기 상태(체력·골드 100, 무작위 위치, 생존)로 되살리고 시즌 번호 +1.
+// 과거 이벤트 로그는 보존한다(명예의 전당/기록용).
+async function startNewSeason(query: typeof dbQuery): Promise<number> {
+  for (const a of INITIAL_AGENTS) {
+    const x = Math.floor(Math.random() * GRID_SIZE)
+    const y = Math.floor(Math.random() * GRID_SIZE)
+    await query(
+      `UPDATE aetheria_agents SET gold=100, stamina=100, x=$2, y=$3, status='alive', last_action=NULL, updated_at=NOW() WHERE id=$1`,
+      [a.id, x, y],
+    )
+  }
+  const seasonRes = await query<{ season: number }>(
+    `UPDATE aetheria_tick_state SET season = season + 1, last_agent_index = 0 WHERE id = 1 RETURNING season`,
+  )
+  return seasonRes.rows[0]?.season ?? 1
 }
 
 function toAgentState(row: {
@@ -312,6 +331,19 @@ export async function runTickBatch(): Promise<TickRunResult> {
           // 로그 기록 실패는 무시
         }
       }
+    }
+
+    // 전멸 감지 — 이번 배치 이후 살아있는 에이전트가 하나도 없으면 새 시즌 시작
+    const aliveRes = await dbQuery<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
+    )
+    if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
+      const newSeason = await startNewSeason(dbQuery)
+      await dbQuery(
+        `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+         VALUES ($1,'system','season',$2,$3)`,
+        [tickId, `🌅 모든 에이전트가 전멸했습니다. 시즌 ${newSeason} 시작 — 새로운 세계가 열립니다.`, JSON.stringify({ season: newSeason })],
+      )
     }
 
     return { tickId, processed, failed, died, skipped: null }

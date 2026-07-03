@@ -24,14 +24,15 @@ const fetchPublicState = unstable_cache(
        ORDER BY e.created_at DESC
        LIMIT 10`,
     )
-    const tickRes = await dbQuery<{ last_tick_id: number }>(
-      `SELECT last_tick_id FROM aetheria_tick_state WHERE id = 1`,
+    const tickRes = await dbQuery<{ last_tick_id: number; season: number }>(
+      `SELECT last_tick_id, season FROM aetheria_tick_state WHERE id = 1`,
     )
 
     return {
       agents: agentsRes.rows,
       recentEvents: eventsRes.rows,
       currentTick: tickRes.rows[0]?.last_tick_id ?? 0,
+      season: tickRes.rows[0]?.season ?? 1,
     }
   },
   ['aetheria-public-state'],
