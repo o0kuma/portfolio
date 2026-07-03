@@ -176,6 +176,16 @@ const BUILDINGS: Bld[] = [
   },
 ]
 
+// 게임 아케이드 건물에서 바로 갈 수 있는 게임 목록
+const ARCADE_GAMES: Array<{ label: string; emoji: string; href: string }> = [
+  { label: '아케이드', emoji: '🕹️', href: '/arcade' },
+  { label: 'Tower Defense', emoji: '🏰', href: '/tower-defense' },
+  { label: 'Survive', emoji: '⚔️', href: '/survive' },
+  { label: 'Tetris', emoji: '🧱', href: '/tetris' },
+  { label: 'Typing', emoji: '⌨️', href: '/typing-game' },
+  { label: '로또 6/45', emoji: '🎰', href: '/lotto' },
+]
+
 // AI 에이전트가 돌아다니는 마을 광장 (10x10 좌표계를 이 타일 범위에 매핑)
 const PLAZA_TX = 13
 const PLAZA_TY = 16
@@ -904,6 +914,23 @@ export default function RPGPageClient() {
               </div>
               {dialog.bld.id === 'aetheria' ? (
                 <AetheriaPanel data={aetheriaData} />
+              ) : dialog.bld.id === 'games' ? (
+                <div>
+                  <p className="mb-3 font-mono text-sm font-bold text-green-300">[ 게임 아케이드 ]</p>
+                  <p className="mb-4 font-mono text-xs text-green-100/60">플레이할 게임을 선택하세요.</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {ARCADE_GAMES.map((g) => (
+                      <Link
+                        key={g.href}
+                        href={g.href}
+                        className="flex items-center gap-2 rounded-lg border border-[#4a8a5a]/40 bg-[#0f1a0f] px-3 py-2.5 font-mono text-sm text-green-200 transition-colors hover:border-green-400 hover:bg-[#12251a]"
+                      >
+                        <span className="text-lg">{g.emoji}</span>
+                        {g.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ) : (
               <div className="space-y-1.5">
                 {dialog.bld.lines.map((line, i) => (
