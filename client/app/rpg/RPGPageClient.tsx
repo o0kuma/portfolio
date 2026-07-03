@@ -551,6 +551,7 @@ export default function RPGPageClient() {
     npcAgents: [] as NpcAgent[],
     camX: 0,
     camY: 0,
+    dayPhase: 0,
   })
   const [dialog, setDialog] = useState<{ bld: Bld } | null>(null)
   const [selectedNpc, setSelectedNpc] = useState<NpcAgent | null>(null)
@@ -664,7 +665,11 @@ export default function RPGPageClient() {
       return s.map[ty]?.[tx] === 2
     }
 
+    let lastTs = performance.now()
     const loop = () => {
+      const now = performance.now()
+      const dt = Math.min(100, now - lastTs)
+      lastTs = now
       if (!dialogRef.current) {
         const k = s.keys
         let dx = 0, dy = 0
@@ -715,6 +720,45 @@ export default function RPGPageClient() {
 
       // Draw player
       drawPlayer(ctx, s.px - camX, s.py - camY, s.dir, s.frame)
+
+      // ── 낮/밤 사이클 오버레이 ──────────────────────────────────
+      // 약 90초에 하루가 한 바퀴 (낮→노을→밤→새벽). 맵·캐릭터 위, HUD 아래에 색조를 씌운다.
+      s.dayPhase = (s.dayPhase + dt / 90000) % 1
+      const phase = s.dayPhase
+      // 밤일수록 어둡고 푸른 톤, 노을엔 주황 톤
+      let overlay: string | null = null
+      if (phase < 0.25) {
+        // 아침 → 한낮: 오버레이 없음
+        overlay = null
+      } else if (phase < 0.4) {
+        // 해질녘 (주황)
+        const k = (phase - 0.25) / 0.15
+        overlay = `rgba(255,140,60,${0.22 * k})`
+      } else if (phase < 0.55) {
+        // 노을 → 밤 진입
+        const k = (phase - 0.4) / 0.15
+        overlay = `rgba(30,20,70,${0.15 + 0.4 * k})`
+      } else if (phase < 0.8) {
+        // 깊은 밤 (짙은 남색)
+        overlay = 'rgba(20,20,60,0.55)'
+      } else {
+        // 새벽 → 아침 (점점 밝아짐)
+        const k = (phase - 0.8) / 0.2
+        overlay = `rgba(20,20,60,${0.55 * (1 - k)})`
+      }
+      if (overlay) {
+        ctx.fillStyle = overlay
+        ctx.fillRect(0, 0, W, H)
+      }
+
+      // 시간대 라벨
+      const timeLabel = phase < 0.25 ? '☀️ 낮' : phase < 0.4 ? '🌇 해질녘' : phase < 0.8 ? '🌙 밤' : '🌅 새벽'
+      ctx.fillStyle = 'rgba(0,0,0,0.4)'
+      ctx.fillRect(10, 10, 74, 24)
+      ctx.fillStyle = '#f0f0f0'
+      ctx.font = 'bold 12px sans-serif'
+      ctx.textAlign = 'left'
+      ctx.fillText(timeLabel, 18, 27)
 
       // Minimap
       const mm = 120, ms = mm / MAP_W
