@@ -30,6 +30,21 @@ interface LogEvent {
 }
 
 const MODEL_COLOR: Record<string, string> = { gpt: '#10b981', gemini: '#3b82f6' }
+const MODEL_LABEL: Record<string, string> = { gpt: 'GPT-4o mini', gemini: 'Gemini 2.5 Flash' }
+
+interface ModelStat {
+  model: string
+  alive: number
+  dead: number
+  avgGold: number
+  avgStamina: number
+  totalGold: number
+  huntCount: number
+  huntGoldEarned: number
+  tradeCount: number
+  partyCount: number
+  deathCount: number
+}
 
 // 이 페이지는 비용 관리를 위해 본인(관리자)만 볼 수 있다.
 // 인증 전에는 어떤 시뮬레이션 데이터도 요청하지 않는다.
@@ -52,13 +67,15 @@ export default function AetheriaPageClient() {
     openai: { present: boolean; length: number }
     gemini: { present: boolean; length: number }
   } | null>(null)
+  const [modelStats, setModelStats] = useState<ModelStat[]>([])
 
   const load = useCallback(async () => {
     try {
       const headers = adminAuthHeaders()
-      const [stateRes, logRes] = await Promise.all([
+      const [stateRes, logRes, statsRes] = await Promise.all([
         fetch('/api/aetheria/state', { cache: 'no-store', headers }),
         fetch('/api/aetheria/log?limit=30', { cache: 'no-store', headers }),
+        fetch('/api/aetheria/stats', { cache: 'no-store', headers }),
       ])
       if (stateRes.status === 401 || logRes.status === 401) {
         setIsAdmin(false)
@@ -66,11 +83,13 @@ export default function AetheriaPageClient() {
       }
       const state = await stateRes.json()
       const log = await logRes.json()
+      const stats = await statsRes.json().catch(() => ({ stats: [] }))
       setAgents(state.agents ?? [])
       setRunning(Boolean(state.running))
       setCurrentTick(state.currentTick ?? 0)
       setBudget(state.budget ?? null)
       setEvents(log.events ?? [])
+      setModelStats(stats.stats ?? [])
     } catch {
       // 네트워크 오류는 무시, 다음 폴링에서 재시도
     }
@@ -284,6 +303,36 @@ export default function AetheriaPageClient() {
             </div>
           )}
         </div>
+
+        {/* 모델 비교 — "어떤 지능이 생태계를 지배하는가?" */}
+        {modelStats.length > 0 && (
+          <div className="mb-8 rounded-xl border border-purple-800/30 bg-purple-950/5 p-4">
+            <h2 className="mb-3 text-sm font-bold text-purple-300">🧬 모델 비교</h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {modelStats.map((s) => (
+                <div key={s.model} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                  <div className="mb-2 flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: MODEL_COLOR[s.model] }} />
+                    <span className="text-sm font-bold text-white">{MODEL_LABEL[s.model] ?? s.model}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-400">
+                    <span>생존/사망</span><span className="text-right text-slate-200">{s.alive} / {s.dead}</span>
+                    <span>평균 골드</span><span className="text-right text-amber-300">🪙 {s.avgGold}</span>
+                    <span>평균 체력</span><span className="text-right text-slate-200">{s.avgStamina}</span>
+                    <span>총 보유 골드</span><span className="text-right text-amber-300">🪙 {s.totalGold}</span>
+                    <span>사냥 횟수</span><span className="text-right text-slate-200">{s.huntCount}회</span>
+                    <span>사냥 수익</span><span className="text-right text-amber-300">🪙 {s.huntGoldEarned}</span>
+                    <span>거래 시도</span><span className="text-right text-slate-200">{s.tradeCount}회</span>
+                    <span>협력 시도</span><span className="text-right text-slate-200">{s.partyCount}회</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[10px] text-slate-600">
+              에이전트 3개씩의 작은 표본이라 참고용입니다. 틱이 쌓일수록 통계적 의미가 커집니다.
+            </p>
+          </div>
+        )}
 
         {/* 그리드 월드 */}
         <WorldGrid agents={agents} />
