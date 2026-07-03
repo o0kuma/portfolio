@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare, FiChevronDown } from 'react-icons/fi'
+import { FiMenu, FiX, FiSearch, FiSettings, FiMessageSquare } from 'react-icons/fi'
 import ThemeToggle from './ThemeToggle'
 import ThemePicker from './ThemePicker'
 import SearchBar from './SearchBar'
@@ -23,18 +22,6 @@ export default function Header() {
   const [isAIMessengerOpen, setIsAIMessengerOpen] = useState(false)
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
-  const [isMoreOpen, setIsMoreOpen] = useState(false)
-  const moreRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
-        setIsMoreOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
 
   useEffect(() => {
     setShowAdmin(hasAdminAccess())
@@ -77,22 +64,12 @@ export default function Header() {
     closeMenu()
   }
 
-  const navItems: Array<
-    { label: string; kind: 'section'; id: string } | { label: string; kind: 'path'; href: string }
-  > = [
-    { label: t.nav.about, kind: 'section', id: 'about' },
-    { label: t.nav.skills, kind: 'section', id: 'skills' },
-    { label: t.nav.projects, kind: 'section', id: 'projects' },
-    { label: t.nav.contact, kind: 'section', id: 'contact' },
-    { label: '게임', kind: 'path', href: '/games' },
-    { label: '맛집', kind: 'path', href: '/food' },
-    { label: '방명록', kind: 'path', href: '/guestbook' },
-  ]
-
-  const moreItems: Array<{ label: string; href: string }> = [
-    { label: '북마크', href: '/bookmarks' },
-    { label: '블로그', href: '/posts' },
-    { label: '오프라인', href: '/offline-posts' },
+  // 포트폴리오 페이지 전용 헤더 — 이 페이지 내 영역 이동만 담당 (다른 메뉴는 메인 페이지 헤더에서만 노출)
+  const navItems: Array<{ label: string; id: string }> = [
+    { label: t.nav.about, id: 'about' },
+    { label: t.nav.skills, id: 'skills' },
+    { label: t.nav.projects, id: 'projects' },
+    { label: t.nav.contact, id: 'contact' },
   ]
 
   return (
@@ -118,53 +95,17 @@ export default function Header() {
             </button>
 
             <nav className="hidden md:flex items-center space-x-6">
-              {navItems.map((item) =>
-                item.kind === 'section' ? (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollToSection(item.id)}
-                    className="relative text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide group"
-                  >
-                    {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-px bg-neutral-400 group-hover:w-full transition-all duration-300" />
-                  </button>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="relative text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide group"
-                  >
-                    {item.label}
-                    <span className="absolute bottom-0 left-0 w-0 h-px bg-neutral-400 group-hover:w-full transition-all duration-300" />
-                  </Link>
-                )
-              )}
-
-              {/* More dropdown */}
-              <div ref={moreRef} className="relative">
+              {navItems.map((item) => (
                 <button
+                  key={item.id}
                   type="button"
-                  onClick={() => setIsMoreOpen((v) => !v)}
-                  className="flex items-center gap-1 text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide"
+                  onClick={() => scrollToSection(item.id)}
+                  className="relative text-neutral-500 hover:text-neutral-100 transition-colors font-medium text-sm tracking-wide group"
                 >
-                  더보기 <FiChevronDown size={13} className={`transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+                  {item.label}
+                  <span className="absolute bottom-0 left-0 w-0 h-px bg-neutral-400 group-hover:w-full transition-all duration-300" />
                 </button>
-                {isMoreOpen && (
-                  <div className="absolute top-full mt-2 right-0 w-32 rounded-xl border border-neutral-800 bg-neutral-950/95 backdrop-blur-md py-1 z-50 shadow-xl">
-                    {moreItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setIsMoreOpen(false)}
-                        className="block px-4 py-2 text-sm text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/50 transition-colors"
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
+              ))}
             </nav>
 
             <div className="flex items-center space-x-4">
@@ -249,36 +190,15 @@ export default function Header() {
         >
           <div className="page-shell py-4">
             <nav className="flex flex-col space-y-4">
-              {navItems.map((item) =>
-                item.kind === 'section' ? (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollToSection(item.id)}
-                    className="text-left text-neutral-200 hover:text-neutral-50 transition-colors font-medium py-2"
-                  >
-                    {item.label}
-                  </button>
-                ) : (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={closeMenu}
-                    className="text-left text-neutral-200 hover:text-neutral-50 transition-colors font-medium py-2"
-                  >
-                    {item.label}
-                  </Link>
-                )
-              )}
-              {moreItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={closeMenu}
-                  className="text-left text-neutral-400 hover:text-neutral-50 transition-colors font-medium py-2 text-sm"
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToSection(item.id)}
+                  className="text-left text-neutral-200 hover:text-neutral-50 transition-colors font-medium py-2"
                 >
                   {item.label}
-                </Link>
+                </button>
               ))}
             </nav>
           </div>

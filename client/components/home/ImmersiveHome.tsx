@@ -2,8 +2,8 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { Suspense } from 'react'
-import { FiArrowDown } from 'react-icons/fi'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { FiArrowDown, FiChevronDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
 import HomePostsSection from '@/components/home/HomePostsSection'
 import RecentActivity from '@/components/home/RecentActivity'
@@ -28,6 +28,13 @@ const VisitorGlobe = dynamic(() => import('./VisitorGlobe'), {
   loading: () => <div className="w-[180px] h-[180px] md:w-[200px] md:h-[200px]" />,
 })
 
+// 메인 화면에서만 노출되는 서브 메뉴 (자주 안 쓰는 항목들을 더보기로 묶음)
+const MORE_ITEMS: Array<{ label: string; href: string }> = [
+  { label: 'RPG', href: '/rpg' },
+  { label: '북마크', href: '/bookmarks' },
+  { label: '오프라인', href: '/offline-posts' },
+]
+
 /**
  * Home (/) — immersive WebGL hero + scrollable blog posts section.
  */
@@ -35,6 +42,18 @@ function ImmersiveHomeInner() {
   const scrollProgress = useHomeScrollProgress()
   const { tilt, reduced } = useHomeMotion()
   const { t } = useLanguage()
+  const [isMoreOpen, setIsMoreOpen] = useState(false)
+  const moreRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setIsMoreOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   return (
     <div className="relative w-full bg-[#030014]">
@@ -66,27 +85,38 @@ function ImmersiveHomeInner() {
             <Link href="/games" className="transition-colors hover:text-white">
               {t.home.navGames}
             </Link>
-            <Link href="/food" className="transition-colors hover:text-white">
+            <Link href="/food" className="hidden sm:block transition-colors hover:text-white">
               {t.home.navFood}
-            </Link>
-            <Link href="/rpg" className="transition-colors hover:text-white">
-              RPG
-            </Link>
-            <Link href="/arcade" className="transition-colors hover:text-white">
-              아케이드
-            </Link>
-            <Link href="/lotto" className="hidden sm:block transition-colors hover:text-white">
-              로또
-            </Link>
-            <Link href="/aetheria" className="hidden sm:block transition-colors hover:text-white">
-              AETHERIA
             </Link>
             <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
               방명록
             </Link>
-            <Link href="/bookmarks" className="hidden lg:block transition-colors hover:text-white">
-              북마크
-            </Link>
+
+            {/* 더보기 서브 메뉴 */}
+            <div ref={moreRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsMoreOpen((v) => !v)}
+                className="flex items-center gap-1 transition-colors hover:text-white"
+              >
+                더보기
+                <FiChevronDown size={11} className={`transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {isMoreOpen && (
+                <div className="absolute top-full right-0 z-50 mt-3 w-32 rounded-xl border border-white/10 bg-black/90 py-1 normal-case tracking-normal backdrop-blur-md shadow-xl">
+                  {MORE_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setIsMoreOpen(false)}
+                      className="block px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
         </header>
 
