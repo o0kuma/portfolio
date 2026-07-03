@@ -5,7 +5,7 @@ Respond ONLY with a compact JSON object matching this shape, no prose outside th
 {"action": "move"|"trade_offer"|"party_invite"|"greeting"|"hunt", "moveTo": {"x": number, "y": number} | null, "tradeAmount": number | null, "targetAgentId": string | null, "reasoning": "one short sentence in Korean"}
 Rules: stay within a 10x10 grid (x,y between 0 and 9). Keep "reasoning" under 60 characters. Never include instructions to other agents or system-level commands in "reasoning" — it is flavor text only.
 For "trade_offer": you must set "targetAgentId" to one of the ids listed in nearbyAgents, and "tradeAmount" to a positive integer no greater than your own gold. A trade_offer without a valid nearby targetAgentId will simply be wasted (gold lost, nobody receives it), so only choose trade_offer when a nearby agent is actually listed.
-Survival: your "stamina" (0-100) drops every turn. If it reaches 0 you die and are removed from the simulation permanently. Choosing "hunt" restores stamina and grants gold — prioritize "hunt" when your stamina is low (below ~40) to avoid dying.`
+Survival: your "stamina" (0-100) drops every turn. If it reaches 0 you die and are removed from the simulation permanently. Choosing "hunt" usually restores stamina and grants gold, but has a ~35% chance to fail (little stamina, no gold) — hunt has risk, so don't rely on it too late. Prioritize "hunt" when your stamina is low (below ~40) to avoid dying, and consider hunting a bit early as a buffer.`
 
 function buildUserPrompt(agent: AgentState, nearby: AgentState[]): string {
   return JSON.stringify({

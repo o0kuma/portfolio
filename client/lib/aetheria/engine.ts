@@ -11,6 +11,7 @@ const STAMINA_UPKEEP = 12 // 틱마다 소모
 const HUNT_STAMINA_GAIN = 35
 const HUNT_GOLD_MIN = 5
 const HUNT_GOLD_MAX = 20
+const HUNT_FAIL_CHANCE = 0.35 // 사냥 실패 확률 — 리스크 요소
 const PARTY_STAMINA_GAIN = 15 // 함께 쉬며 회복 (Social Interaction 축 — 협력의 실질적 보상)
 const GREETING_STAMINA_GAIN = 5 // 사기 진작 정도의 작은 회복
 // 동시 크론/관리자 run-tick이 같은 배치를 이중 처리하지 않도록 advisory lock 사용
@@ -183,12 +184,19 @@ export async function runTickBatch(): Promise<TickRunResult> {
         // 생존 시스템: 매 틱 체력 소모, 행동에 따라 회복 (LLM 신고가 아니라 서버가 직접 지급)
         let stamina = agent.stamina - STAMINA_UPKEEP
         let huntGold = 0
+        let huntFailed = false
         let partyPartner: AgentState | null = null
 
         if (decision.action === 'hunt') {
-          stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
-          huntGold = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
-          gold += huntGold
+          // 35% 확률로 사냥 실패 — 리스크 요소(Risk Management). 실패 시 체력만 소폭 회복, 골드 없음.
+          if (Math.random() < HUNT_FAIL_CHANCE) {
+            huntFailed = true
+            stamina = Math.min(STAMINA_MAX, stamina + Math.floor(HUNT_STAMINA_GAIN / 3))
+          } else {
+            stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
+            huntGold = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
+            gold += huntGold
+          }
         } else if (decision.action === 'party_invite') {
           const nearby = nearbyOf(agent, agents)
           const partner = decision.targetAgentId ? nearby.find((a) => a.id === decision.targetAgentId) : null
@@ -208,6 +216,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
         let displayText = mod.text
         if (tradeRecipient) displayText += ` (→ ${tradeRecipient.name}에게 ${tradeAmount}골드 전달)`
         if (huntGold > 0) displayText += ` [+${huntGold}골드, 체력 +${HUNT_STAMINA_GAIN}]`
+        else if (huntFailed) displayText += ' [사냥 실패… 빈손]'
         if (partyPartner) displayText += ` (${partyPartner.name}과 함께 휴식, 둘 다 체력 +${PARTY_STAMINA_GAIN})`
         else if (decision.action === 'party_invite') displayText += ' (근처에 함께할 상대가 없어 무산됨)'
         if (decision.action === 'greeting') displayText += ` [체력 +${GREETING_STAMINA_GAIN}]`
