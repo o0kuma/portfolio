@@ -20,4 +20,12 @@ describe('aetheria cron safety', () => {
     expect(source).toMatch(/dbTransaction/);
     expect(source).toMatch(/checkpointIndex/);
   });
+
+  test('recovers from wipe when no alive agents at tick start', () => {
+    const enginePath = path.resolve(__dirname, '../../client/lib/aetheria/engine.ts');
+    const source = fs.readFileSync(enginePath, 'utf8');
+
+    expect(source).toMatch(/tryStartNewSeasonIfWiped/);
+    expect(source).toMatch(/agents\.length === 0[\s\S]*tryStartNewSeasonIfWiped/);
+  });
 });

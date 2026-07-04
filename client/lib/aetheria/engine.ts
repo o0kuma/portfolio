@@ -124,6 +124,32 @@ async function startNewSeason(query: typeof dbQuery, currentTick: number): Promi
   return seasonRes.rows[0]?.season ?? 1
 }
 
+// 마지막 사망 커밋 후 프로세스가 죽으면 다음 틱이 "no alive agents"로 조기 종료되어 영구 정지될 수 있다.
+// 전멸 감지·시즌 리셋을 한 곳에 모아 배치 종료와 조기 종료 경로 모두에서 복구한다.
+async function tryStartNewSeasonIfWiped(tickId: number): Promise<number | null> {
+  const aliveRes = await dbQuery<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
+  )
+  if (Number(aliveRes.rows[0]?.count ?? 0) > 0) return null
+
+  const totalRes = await dbQuery<{ count: string }>(
+    `SELECT COUNT(*)::text AS count FROM aetheria_agents`,
+  )
+  if (Number(totalRes.rows[0]?.count ?? 0) === 0) return null
+
+  const newSeason = await startNewSeason(dbQuery, tickId)
+  await dbQuery(
+    `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+     VALUES ($1,'system','season',$2,$3)`,
+    [
+      tickId,
+      `🌅 모든 에이전트가 전멸했습니다. 시즌 ${newSeason} 시작 — 새로운 세계가 열립니다.`,
+      JSON.stringify({ season: newSeason }),
+    ],
+  )
+  return newSeason
+}
+
 function toAgentState(row: {
   id: string; model: string; name: string; role: string; gold: number; stamina: number | null
   x: number; y: number; status: string; last_action: string | null; updated_at: string
@@ -192,7 +218,14 @@ export async function runTickBatch(): Promise<TickRunResult> {
 
     const agents = await loadAliveAgents()
     if (agents.length === 0) {
-      return { tickId: lastTickId, processed: 0, failed: 0, died: 0, skipped: 'no alive agents' }
+      const newSeason = await tryStartNewSeasonIfWiped(lastTickId)
+      return {
+        tickId: lastTickId,
+        processed: 0,
+        failed: 0,
+        died: 0,
+        skipped: newSeason ? `all dead — season ${newSeason} started` : 'no alive agents',
+      }
     }
 
     const tickId = lastIndex === 0 ? lastTickId + 1 : lastTickId
@@ -359,18 +392,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
       }
     }
 
-    // 전멸 감지 — 이번 배치 이후 살아있는 에이전트가 하나도 없으면 새 시즌 시작
-    const aliveRes = await dbQuery<{ count: string }>(
-      `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
-    )
-    if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
-      const newSeason = await startNewSeason(dbQuery, tickId)
-      await dbQuery(
-        `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
-         VALUES ($1,'system','season',$2,$3)`,
-        [tickId, `🌅 모든 에이전트가 전멸했습니다. 시즌 ${newSeason} 시작 — 새로운 세계가 열립니다.`, JSON.stringify({ season: newSeason })],
-      )
-    }
+    await tryStartNewSeasonIfWiped(tickId)
 
     return { tickId, processed, failed, died, skipped: null }
   } finally {
