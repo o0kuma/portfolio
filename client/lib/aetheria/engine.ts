@@ -109,7 +109,7 @@ export async function ensureAgentTables() {
 
 // 전멸 시 새 시즌 시작 — 모든 에이전트를 초기 상태(체력·골드 100, 무작위 위치, 생존)로 되살리고 시즌 번호 +1.
 // 과거 이벤트 로그는 보존한다(명예의 전당/기록용).
-async function startNewSeason(query: typeof dbQuery, currentTick: number): Promise<number> {
+export async function startNewSeason(query: typeof dbQuery, currentTick: number): Promise<number> {
   for (const a of INITIAL_AGENTS) {
     const x = Math.floor(Math.random() * GRID_SIZE)
     const y = Math.floor(Math.random() * GRID_SIZE)
@@ -166,6 +166,41 @@ export interface TickRunResult {
   skipped: string | null
 }
 
+/** Resolve batch cursor; clamp when deaths/timeouts left last_agent_index past the alive list. */
+export function resolveTickCursor(
+  lastIndex: number,
+  aliveCount: number,
+): { effectiveIndex: number; staleCursor: boolean; tickIdDelta: number } {
+  if (aliveCount <= 0) {
+    return { effectiveIndex: 0, staleCursor: false, tickIdDelta: 0 }
+  }
+  const staleCursor = lastIndex >= aliveCount
+  const effectiveIndex = staleCursor ? 0 : lastIndex
+  // New tick only on a genuine wrap (index 0), not when recovering a stale cursor.
+  const tickIdDelta = effectiveIndex === 0 && !staleCursor ? 1 : 0
+  return { effectiveIndex, staleCursor, tickIdDelta }
+}
+
+async function recoverFromWipeout(lastTickId: number): Promise<TickRunResult> {
+  const newSeason = await startNewSeason(dbQuery, lastTickId)
+  await dbQuery(
+    `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+     VALUES ($1,'system','season',$2,$3)`,
+    [
+      lastTickId,
+      `🌅 모든 에이전트가 전멸했습니다. 시즌 ${newSeason} 시작 — 새로운 세계가 열립니다.`,
+      JSON.stringify({ season: newSeason }),
+    ],
+  )
+  return {
+    tickId: lastTickId,
+    processed: 0,
+    failed: 0,
+    died: 0,
+    skipped: 'season restarted after wipeout',
+  }
+}
+
 // 한 번의 크론 호출 = 한 배치(최대 MAX_AGENTS_PER_TICK_BATCH명) 처리.
 // 전체 에이전트를 순환하며 인덱스를 이어가므로, 크론이 여러 번 돌면 전원이 골고루 처리된다.
 export async function runTickBatch(): Promise<TickRunResult> {
@@ -192,12 +227,16 @@ export async function runTickBatch(): Promise<TickRunResult> {
 
     const agents = await loadAliveAgents()
     if (agents.length === 0) {
-      return { tickId: lastTickId, processed: 0, failed: 0, died: 0, skipped: 'no alive agents' }
+      return recoverFromWipeout(lastTickId)
     }
 
-    const tickId = lastIndex === 0 ? lastTickId + 1 : lastTickId
-    const batch = agents.slice(lastIndex, lastIndex + MAX_AGENTS_PER_TICK_BATCH)
-    const nextIndex = lastIndex + batch.length >= agents.length ? 0 : lastIndex + batch.length
+    const { effectiveIndex, staleCursor, tickIdDelta } = resolveTickCursor(lastIndex, agents.length)
+    if (staleCursor) {
+      await dbQuery(`UPDATE aetheria_tick_state SET last_agent_index = 0 WHERE id = 1`)
+    }
+
+    const tickId = lastTickId + tickIdDelta
+    const batch = agents.slice(effectiveIndex, effectiveIndex + MAX_AGENTS_PER_TICK_BATCH)
 
     let processed = 0
     let failed = 0
@@ -338,7 +377,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
 
         processed++
         // 타임아웃/크래시 후 재시도 시 이미 처리된 에이전트를 건너뛰도록 매 성공마다 체크포인트
-        const checkpointIndex = lastIndex + processed >= agents.length ? 0 : lastIndex + processed
+        const checkpointIndex = effectiveIndex + processed >= agents.length ? 0 : effectiveIndex + processed
         await dbQuery(
           `UPDATE aetheria_tick_state SET last_tick_id = $1, last_agent_index = $2 WHERE id = 1`,
           [tickId, checkpointIndex],
@@ -364,12 +403,7 @@ export async function runTickBatch(): Promise<TickRunResult> {
       `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
     )
     if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
-      const newSeason = await startNewSeason(dbQuery, tickId)
-      await dbQuery(
-        `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
-         VALUES ($1,'system','season',$2,$3)`,
-        [tickId, `🌅 모든 에이전트가 전멸했습니다. 시즌 ${newSeason} 시작 — 새로운 세계가 열립니다.`, JSON.stringify({ season: newSeason })],
-      )
+      await recoverFromWipeout(tickId)
     }
 
     return { tickId, processed, failed, died, skipped: null }
