@@ -379,8 +379,14 @@ export default function TowerDefenseCanvas({ engineRef, status, mapId, onTap, la
     const canvas = canvasRef.current
     if (!canvas) return
     const toWorld = (clientX: number, clientY: number) => {
+      // Derive the projection from the LIVE canvas rect rather than the cached
+      // viewRef: on mobile the 64vh container height changes when the address
+      // bar shows/hides, which can leave viewRef stale and map taps to the
+      // wrong cell. The rect is always the true on-screen size.
       const rect = canvas.getBoundingClientRect()
-      const { scale, ox, oy } = viewRef.current
+      const scale = Math.min(rect.width / WORLD_WIDTH, rect.height / WORLD_HEIGHT)
+      const ox = (rect.width - WORLD_WIDTH * scale) / 2
+      const oy = (rect.height - WORLD_HEIGHT * scale) / 2
       return {
         wx: (clientX - rect.left - ox) / scale,
         wy: (clientY - rect.top - oy) / scale,
