@@ -653,16 +653,30 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
     ctx.globalAlpha = 1
   }
 
+  // rounded "robot head" body — dark outline + beveled shell
+  const rr = Math.max(4, plate * 0.35)
   ctx.fillStyle = '#0c1124'
-  ctx.fillRect(t.x - plate - 1, t.y - plate - 1, (plate + 1) * 2, (plate + 1) * 2)
-  ctx.fillStyle = darken(col, 50)
-  ctx.fillRect(t.x - plate, t.y - plate, plate * 2, plate * 2)
-  ctx.fillStyle = lighten(col, 30)
-  ctx.fillRect(t.x - plate, t.y - plate, plate * 2, 2)
-  ctx.fillRect(t.x - plate, t.y - plate, 2, plate * 2)
-  ctx.fillStyle = darken(col, 30)
-  ctx.fillRect(t.x - plate, t.y + plate - 2, plate * 2, 2)
-  ctx.fillRect(t.x + plate - 2, t.y - plate, 2, plate * 2)
+  ctx.beginPath()
+  ctx.roundRect(t.x - plate - 1, t.y - plate - 1, (plate + 1) * 2, (plate + 1) * 2, rr + 1)
+  ctx.fill()
+  ctx.fillStyle = darken(col, 46)
+  ctx.beginPath()
+  ctx.roundRect(t.x - plate, t.y - plate, plate * 2, plate * 2, rr)
+  ctx.fill()
+  // top rim light
+  ctx.save()
+  ctx.beginPath()
+  ctx.roundRect(t.x - plate, t.y - plate, plate * 2, plate * 2, rr)
+  ctx.clip()
+  ctx.fillStyle = lighten(col, 22)
+  ctx.fillRect(t.x - plate, t.y - plate, plate * 2, plate * 0.7)
+  ctx.fillStyle = darken(col, 26)
+  ctx.fillRect(t.x - plate, t.y + plate - 3, plate * 2, 3)
+  // little side "ears" / bolts
+  ctx.fillStyle = darken(col, 34)
+  ctx.fillRect(t.x - plate, t.y - 2, 2, 4)
+  ctx.fillRect(t.x + plate - 2, t.y - 2, 2, 4)
+  ctx.restore()
 
   if (evolved) {
     // octagonal base plate over the square one
@@ -697,6 +711,43 @@ function drawTower(ctx: CanvasRenderingContext2D, t: Tower, now: number) {
     ctx.stroke()
     ctx.restore()
     ctx.globalAlpha = 1
+  }
+
+  // character eyes — sit on the "forehead" toward the aim, glance at target.
+  // The barrel passes between them like a nose, so the tower reads as a face.
+  {
+    const ex = Math.cos(t.aimAngle)
+    const ey = Math.sin(t.aimAngle)
+    const perpx = -ey
+    const perpy = ex
+    const fwd = plate * 0.28
+    const gap = plate * 0.42
+    const eyeR = plate * 0.26
+    const blinkT = (now / 1000 + t.id * 1.7) % 4
+    const blinking = blinkT > 3.85 // quick blink every ~4s
+    for (const sign of [-1, 1]) {
+      const cxE = t.x + ex * fwd + perpx * sign * gap
+      const cyE = t.y + ey * fwd + perpy * sign * gap
+      // socket
+      ctx.fillStyle = '#0b0f1f'
+      ctx.beginPath()
+      ctx.arc(cxE, cyE, eyeR, 0, Math.PI * 2)
+      ctx.fill()
+      if (blinking) {
+        ctx.fillStyle = darken(col, 20)
+        ctx.fillRect(cxE - eyeR, cyE - 1, eyeR * 2, 2)
+      } else {
+        // white + glowing colored pupil looking toward aim
+        ctx.fillStyle = '#eef6ff'
+        ctx.beginPath()
+        ctx.arc(cxE, cyE, eyeR * 0.72, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.fillStyle = lighten(col, 45)
+        ctx.beginPath()
+        ctx.arc(cxE + ex * eyeR * 0.32, cyE + ey * eyeR * 0.32, eyeR * 0.42, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    }
   }
 
   const flash = t.flashMs > 0
