@@ -97,14 +97,14 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
           <FiArrowLeft className="h-4 w-4" /> 목록
         </Link>
         <span className="text-sm font-bold">{game.emoji} {game.title}</span>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-1">
           {!result && (
-            <button onClick={() => setPaused((p) => !p)} className="text-slate-400 hover:text-white" aria-label="일시정지">
-              {paused ? <FiPlay className="h-4 w-4" /> : <FiPause className="h-4 w-4" />}
+            <button onClick={() => setPaused((p) => !p)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="일시정지">
+              {paused ? <FiPlay className="h-5 w-5" /> : <FiPause className="h-5 w-5" />}
             </button>
           )}
-          <button onClick={retry} className="text-slate-400 hover:text-white" aria-label="재시작">
-            <FiRotateCcw className="h-4 w-4" />
+          <button onClick={retry} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="재시작">
+            <FiRotateCcw className="h-5 w-5" />
           </button>
         </div>
       </header>

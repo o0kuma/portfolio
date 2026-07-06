@@ -936,20 +936,24 @@ export default function RPGPageClient() {
 
       {/* Dialog box */}
       {dialog && (
-        <div className="absolute inset-0 z-30 flex items-end justify-center pb-12 px-8 pointer-events-none">
-          <div
-            className="w-full max-w-2xl pointer-events-auto"
-            onClick={() => setDialog(null)}
-          >
-            <div className="bg-[#0a0a1a] border-2 border-[#4a8a5a] rounded-xl p-6 shadow-2xl"
+        <div className="absolute inset-0 z-30 flex items-end justify-center pb-12 px-4 sm:px-8 pointer-events-none">
+          <div className="w-full max-w-2xl pointer-events-auto">
+            <div className="bg-[#0a0a1a] border-2 border-[#4a8a5a] rounded-xl p-5 sm:p-6 shadow-2xl"
               style={{ boxShadow: '0 0 40px rgba(74,138,90,0.4)' }}>
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#4a8a5a]/40">
                 <span className="text-2xl">{dialog.bld.emoji}</span>
                 <h3 className="text-green-400 font-black font-mono text-sm tracking-wider">
                   {dialog.bld.label}
                 </h3>
-                <span className="ml-auto text-[10px] font-mono text-green-700">E · ESC 로 닫기</span>
+                <button
+                  onClick={() => setDialog(null)}
+                  className="ml-auto text-[11px] font-mono text-green-600 hover:text-green-300"
+                  aria-label="닫기"
+                >
+                  ✕ 닫기
+                </button>
               </div>
+              <div className="max-h-[60vh] overflow-y-auto">
               {dialog.bld.id === 'aetheria' ? (
                 <AetheriaPanel data={aetheriaData} />
               ) : dialog.bld.id === 'games' ? (
@@ -983,6 +987,7 @@ export default function RPGPageClient() {
                 ))}
               </div>
               )}
+              </div>
             </div>
           </div>
         </div>

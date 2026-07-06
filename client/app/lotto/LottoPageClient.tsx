@@ -403,7 +403,7 @@ export default function LottoPageClient() {
               <button onClick={reset} disabled={drawing || autoRunning} className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50">초기화</button>
             </div>
           </div>
-          <div className="grid grid-cols-9 gap-1.5">
+          <div className="grid grid-cols-6 gap-2 sm:grid-cols-9 sm:gap-1.5">
             {NUMBERS.map((n) => {
               const sel = picked.includes(n)
               return (
