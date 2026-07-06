@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    revalidateTag('td-leaderboard')
+    revalidateTag('td-leaderboard', 'max')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

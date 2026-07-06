@@ -491,7 +491,7 @@ export default function FoodClient({
                               initial={{ opacity: 0, height: 0 }}
                               animate={{ opacity: 1, height: 360 }}
                               exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3, ease: 'easeInOut' }}
+                              transition={{ duration: 0.3, ease: 'easeInOut' as const }}
                               className="mb-5 overflow-hidden rounded-xl border border-emerald-500/30 bg-neutral-900"
                             >
                               <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">

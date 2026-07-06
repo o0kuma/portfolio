@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const result = await runSync(10)
-    revalidateTag('lotto-stats')
+    revalidateTag('lotto-stats', 'max')
     return NextResponse.json(result)
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

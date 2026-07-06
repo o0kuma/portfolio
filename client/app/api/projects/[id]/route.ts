@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { isAdminAuthorized } from '@/lib/adminAuth'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 const ALLOWED_PROJECT_COLUMNS = new Set([
   'title',
@@ -24,7 +24,7 @@ const ALLOWED_PROJECT_COLUMNS = new Set([
 
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const result = await dbQuery('SELECT * FROM projects WHERE id = $1 LIMIT 1', [id])
     const project = result.rows[0]
@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
 
     // Accept both camelCase and snake_case keys from the client
@@ -97,7 +97,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     await dbQuery('DELETE FROM projects WHERE id = $1', [id])
 
     return NextResponse.json({ message: '프로젝트가 삭제되었습니다.' })

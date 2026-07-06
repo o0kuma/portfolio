@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
         series || null,
       ],
     )
-    revalidateTag('posts')
+    revalidateTag('posts', 'max')
     return NextResponse.json({ message: '포스트가 생성되었습니다.', post: result.rows[0] }, { status: 201 })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

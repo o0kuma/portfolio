@@ -121,7 +121,7 @@ function GameCard({ game, index }: { game: GameInfo; index: number }) {
     <motion.div
       initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.1, ease: 'easeOut' }}
+      transition={{ duration: 0.45, delay: index * 0.1, ease: 'easeOut' as const }}
     >
       <div
         className={`group relative overflow-hidden rounded-2xl border border-slate-700/60 bg-gradient-to-br ${game.gradient} p-6 transition-all duration-300 hover:scale-[1.025] hover:border-slate-500 hover:shadow-2xl ${game.glowColor}`}

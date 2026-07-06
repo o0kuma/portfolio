@@ -56,7 +56,7 @@ export default function KuumaCompanion() {
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const targetPos = useRef({ x: -100, y: -100 })
   const currentPos = useRef({ x: -100, y: -100 })
-  const rafRef = useRef<number>()
+  const rafRef = useRef<number | undefined>(undefined)
 
   const [bubble, setBubble] = useState<string | null>(null)
   const [isOpen, setIsOpen] = useState(false)
@@ -68,11 +68,11 @@ export default function KuumaCompanion() {
   const [ttsEnabled, setTtsEnabled] = useState(false)
 
   const lastMoveRef = useRef(Date.now())
-  const idleTimerRef = useRef<ReturnType<typeof setTimeout>>()
-  const sectionTimerRef = useRef<ReturnType<typeof setInterval>>()
-  const bubbleTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const idleTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const sectionTimerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const bubbleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const emotionTimerRef = useRef<ReturnType<typeof setTimeout>>()
+  const emotionTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   function speak(text: string) {
     if (!ttsEnabled || typeof window === 'undefined') return

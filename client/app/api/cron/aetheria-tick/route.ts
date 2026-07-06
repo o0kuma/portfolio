@@ -37,8 +37,8 @@ export async function GET(request: NextRequest) {
     }
 
     const result = await runTickBatch()
-    revalidateTag('aetheria-state')
-    revalidateTag('aetheria-log')
+    revalidateTag('aetheria-state', 'max')
+    revalidateTag('aetheria-log', 'max')
     return NextResponse.json({ ok: true, ...result })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

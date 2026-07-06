@@ -171,7 +171,7 @@ export default function Hero() {
       >
         <motion.button
           animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' as const }}
           className="text-neutral-600 hover:text-neutral-300 transition-colors cursor-pointer"
           onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
           aria-label={t.hero.scrollDown}

@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
       [playerName, score, lines, level ?? null, stage, sessionId],
     )
 
-    revalidateTag('tetris-leaderboard')
+    revalidateTag('tetris-leaderboard', 'max')
     return NextResponse.json({ ok: true, id: insert.rows[0]?.id })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

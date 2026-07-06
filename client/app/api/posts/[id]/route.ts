@@ -6,7 +6,7 @@ import { revalidateTag } from 'next/cache'
 import { dbQuery } from '@/lib/neon-server'
 import { isAdminRequest } from '@/lib/requireAdmin'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 const ALLOWED_POST_COLUMNS = new Set([
   'title',
@@ -22,7 +22,7 @@ const ALLOWED_POST_COLUMNS = new Set([
 
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
-    const { id } = params
+    const { id } = await params
 
     await dbQuery('UPDATE posts SET views = COALESCE(views, 0) + 1 WHERE id = $1', [id])
 
@@ -71,7 +71,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     const body = await request.json()
     const entries = Object.entries(body ?? {}).filter(([k]) => ALLOWED_POST_COLUMNS.has(k))
     if (!entries.length) {
@@ -89,7 +89,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
     if (!result.rows[0]) {
       return NextResponse.json({ message: '포스트를 찾을 수 없습니다.' }, { status: 404 })
     }
-    revalidateTag('posts')
+    revalidateTag('posts', 'max')
     return NextResponse.json({ message: '포스트가 업데이트되었습니다.', post: result.rows[0] })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -104,9 +104,9 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
-    const { id } = params
+    const { id } = await params
     await dbQuery('DELETE FROM posts WHERE id = $1', [id])
-    revalidateTag('posts')
+    revalidateTag('posts', 'max')
     return NextResponse.json({ message: '포스트가 삭제되었습니다.' })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { isAdminAuthenticated } from '@/lib/adminAuth'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 const ALLOWED_COLUMNS = new Set([
   'title', 'description', 'ad_type', 'position',
@@ -27,7 +27,8 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
 
     const setClause = entries.map(([k], i) => `${k} = $${i + 1}`).join(', ')
     const values: unknown[] = entries.map(([, v]) => v)
-    values.push(params.id)
+    const { id } = await params
+    values.push(id)
 
     const result = await dbQuery(
       `UPDATE advertisements SET ${setClause}, updated_at = NOW() WHERE id = $${values.length} RETURNING *`,
@@ -51,7 +52,8 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
       return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
-    await dbQuery('DELETE FROM advertisements WHERE id = $1', [params.id])
+    const { id } = await params
+    await dbQuery('DELETE FROM advertisements WHERE id = $1', [id])
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('[/api/admin/ads/[id] DELETE]', error.message)

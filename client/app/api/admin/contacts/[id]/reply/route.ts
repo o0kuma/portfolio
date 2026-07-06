@@ -7,7 +7,7 @@ import { dbQuery } from '@/lib/neon-server'
 import nodemailer from 'nodemailer'
 import { google } from 'googleapis'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 async function createTransporter() {
   const oauth2Client = new google.auth.OAuth2(
@@ -38,7 +38,7 @@ export async function POST(
     return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
   }
 
-  const { id } = params
+  const { id } = await params
 
   try {
     const body = await request.json()

@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    revalidateTag('aetheria-state')
+    revalidateTag('aetheria-state', 'max')
     return NextResponse.json({ success: true })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

@@ -23,7 +23,7 @@ const SKILLS = [
 export default function SkillSphere() {
   const containerRef = useRef<HTMLDivElement>(null)
   const angleRef = useRef({ x: 0, y: 0 })
-  const rafRef = useRef<number>()
+  const rafRef = useRef<number | undefined>(undefined)
   const isDragging = useRef(false)
   const lastMouse = useRef({ x: 0, y: 0 })
   const [positions, setPositions] = useState<{ x: number; y: number; z: number; scale: number }[]>([])

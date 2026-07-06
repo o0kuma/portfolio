@@ -11,7 +11,7 @@ import { runSync, clampLimit } from '@/lib/lotto/sync'
 export async function GET(request: NextRequest) {
   try {
     const result = await runSync(clampLimit(request.nextUrl.searchParams.get('limit')))
-    revalidateTag('lotto-stats')
+    revalidateTag('lotto-stats', 'max')
     return NextResponse.json(result)
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
     const result = await runSync(clampLimit(body?.limit))
-    revalidateTag('lotto-stats')
+    revalidateTag('lotto-stats', 'max')
     return NextResponse.json(result)
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

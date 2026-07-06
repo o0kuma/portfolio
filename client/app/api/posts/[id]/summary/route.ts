@@ -5,11 +5,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { generatePostSummary } from '@/lib/post-summary'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 export async function GET(_request: NextRequest, { params }: Ctx) {
   try {
-    const { id } = params
+    const { id } = await params
 
     await dbQuery(
       `CREATE TABLE IF NOT EXISTS post_summaries (

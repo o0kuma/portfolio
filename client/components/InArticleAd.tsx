@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import AdBanner from './AdBanner'
 
 interface InArticleAdProps {
@@ -16,9 +16,9 @@ export function insertAdsInContent(
   postId: string,
   postCategory?: string,
   postTags?: string[]
-): (string | JSX.Element)[] {
+): (string | React.JSX.Element)[] {
   const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0)
-  const result: (string | JSX.Element)[] = []
+  const result: (string | React.JSX.Element)[] = []
   
   // 3-4개 단락마다 광고 삽입
   const adInterval = 3

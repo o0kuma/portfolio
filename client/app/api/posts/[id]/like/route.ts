@@ -4,11 +4,11 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 
-type Ctx = { params: { id: string } }
+type Ctx = { params: Promise<{ id: string }> }
 
 export async function POST(_request: NextRequest, { params }: Ctx) {
   try {
-    const { id } = params
+    const { id } = await params
 
     const postResult = await dbQuery('SELECT likes FROM posts WHERE id = $1 LIMIT 1', [id])
     if (!postResult.rows[0]) {
