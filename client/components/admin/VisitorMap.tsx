@@ -1,9 +1,14 @@
 'use client'
 
-import { useState } from 'react'
-import { ComposableMap, Geographies, Geography, Marker } from 'react-simple-maps'
+import { useEffect, useMemo, useState } from 'react'
+import { geoEqualEarth, geoPath } from 'd3-geo'
+import { feature } from 'topojson-client'
+import type { FeatureCollection, Geometry } from 'geojson'
 
 const GEO_URL = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+
+const VIEW_W = 800
+const VIEW_H = 400
 
 interface MapPoint {
   lat: number
@@ -35,63 +40,87 @@ function getMarkerRadius(count: number): number {
 
 export default function VisitorMap({ mapPoints }: VisitorMapProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
+  const [geographies, setGeographies] = useState<FeatureCollection | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch(GEO_URL)
+      .then((res) => res.json())
+      .then((topology) => {
+        if (cancelled) return
+        const obj = topology.objects.countries
+        const fc = feature(topology, obj) as unknown as FeatureCollection
+        setGeographies(fc)
+      })
+      .catch(() => setGeographies(null))
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  // geoEqualEarth with scale 147 matches the previous react-simple-maps default framing.
+  const projection = useMemo(
+    () => geoEqualEarth().scale(147).translate([VIEW_W / 2, VIEW_H / 2 + 20]),
+    [],
+  )
+  const pathGen = useMemo(() => geoPath(projection), [projection])
+
+  const countryPaths = useMemo(() => {
+    if (!geographies) return []
+    return geographies.features
+      .map((f, i) => ({ key: i, d: pathGen(f as unknown as Geometry) }))
+      .filter((p): p is { key: number; d: string } => !!p.d)
+  }, [geographies, pathGen])
+
+  const markers = useMemo(
+    () =>
+      mapPoints
+        .map((point) => {
+          const xy = projection([point.lng, point.lat])
+          return xy ? { point, x: xy[0], y: xy[1] } : null
+        })
+        .filter((m): m is { point: MapPoint; x: number; y: number } => !!m),
+    [mapPoints, projection],
+  )
 
   return (
     <div className="relative w-full" style={{ background: '#0a0a0a', borderRadius: '0.75rem', overflow: 'hidden' }}>
-      <ComposableMap
-        projectionConfig={{ scale: 147 }}
+      <svg
+        viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
+        preserveAspectRatio="xMidYMid meet"
         style={{ width: '100%', height: '384px' }}
       >
-        <Geographies geography={GEO_URL}>
-          {({ geographies }: { geographies: unknown[] }) =>
-            geographies.map((geo: unknown) => {
-              const g = geo as { rsmKey: string }
-              return (
-                <Geography
-                  key={g.rsmKey}
-                  geography={geo}
-                  fill="#262626"
-                  stroke="#404040"
-                  strokeWidth={0.5}
-                  style={{
-                    default: { outline: 'none' },
-                    hover: { outline: 'none', fill: '#333' },
-                    pressed: { outline: 'none' },
-                  }}
-                />
-              )
-            })
-          }
-        </Geographies>
-
-        {mapPoints.map((point, i) => (
-          <Marker
-            key={i}
-            coordinates={[point.lng, point.lat]}
-            onMouseEnter={(e: React.MouseEvent) => {
-              const rect = (e.currentTarget as SVGElement)
-                .closest('svg')
-                ?.getBoundingClientRect()
-              setTooltip({
-                x: e.clientX - (rect?.left ?? 0),
-                y: e.clientY - (rect?.top ?? 0),
-                city: point.city,
-                country: point.country,
-                count: point.count,
-              })
-            }}
-            onMouseLeave={() => setTooltip(null)}
-          >
+        <g>
+          {countryPaths.map((c) => (
+            <path key={c.key} d={c.d} fill="#262626" stroke="#404040" strokeWidth={0.5} />
+          ))}
+        </g>
+        <g>
+          {markers.map(({ point, x, y }, i) => (
             <circle
+              key={i}
+              cx={x}
+              cy={y}
               r={getMarkerRadius(point.count)}
               fill="rgba(239, 68, 68, 0.75)"
               stroke="#ef4444"
               strokeWidth={1}
               style={{ cursor: 'pointer' }}
+              onMouseEnter={(e) => {
+                const rect = (e.currentTarget as SVGElement).closest('svg')?.getBoundingClientRect()
+                setTooltip({
+                  x: e.clientX - (rect?.left ?? 0),
+                  y: e.clientY - (rect?.top ?? 0),
+                  city: point.city,
+                  country: point.country,
+                  count: point.count,
+                })
+              }}
+              onMouseLeave={() => setTooltip(null)}
             />
-          </Marker>
-        ))}
-      </ComposableMap>
+          ))}
+        </g>
+      </svg>
 
       {tooltip && (
         <div
