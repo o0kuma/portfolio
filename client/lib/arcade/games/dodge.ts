@@ -103,15 +103,54 @@ export const dodge: MiniGame<State> = {
     ctx.fillStyle = '#1c1017'
     ctx.fillRect(0, 0, W, H)
 
-    // 블록
-    ctx.fillStyle = '#ef4444'
+    // 블록 — 위험한 운석 느낌: 몸통 + 하이라이트 + 발광 테두리
     for (const b of state.blocks) {
-      ctx.fillRect(b.x * W, b.y * H, b.w * W, 0.045 * H)
+      const bx = b.x * W
+      const by = b.y * H
+      const bw = b.w * W
+      const bh = 0.045 * H
+      ctx.fillStyle = '#7f1d1d'
+      ctx.fillRect(bx, by, bw, bh)
+      ctx.fillStyle = '#ef4444'
+      ctx.fillRect(bx, by, bw, bh * 0.55)
+      ctx.fillStyle = 'rgba(255,180,120,0.5)'
+      ctx.fillRect(bx, by, bw, 2)
     }
 
-    // 플레이어
+    // 플레이어 — 작은 우주선/캐릭터: 몸통 + 눈 + 추진 불꽃
+    const pw = PLAYER_W * W
+    const px = state.playerX * W
+    const pyTop = PLAYER_Y_RATIO * H - 0.02 * H
+    const ph = 0.045 * H
+    const cx = px
+    const cyc = pyTop + ph / 2
+    // 추진 불꽃 (아래로)
+    const flick = 0.6 + Math.abs(Math.sin(state.elapsed / 90)) * 0.4
+    ctx.fillStyle = '#fb923c'
+    ctx.beginPath()
+    ctx.moveTo(cx - pw * 0.18, pyTop + ph)
+    ctx.lineTo(cx + pw * 0.18, pyTop + ph)
+    ctx.lineTo(cx, pyTop + ph + ph * flick)
+    ctx.closePath()
+    ctx.fill()
+    // 몸통 (둥근 삼각형 느낌의 셔틀)
     ctx.fillStyle = '#38bdf8'
-    ctx.fillRect((state.playerX - PLAYER_W / 2) * W, PLAYER_Y_RATIO * H - 0.02 * H, PLAYER_W * W, 0.045 * H)
+    ctx.beginPath()
+    ctx.moveTo(cx, pyTop - ph * 0.35)
+    ctx.lineTo(cx + pw / 2, pyTop + ph)
+    ctx.lineTo(cx - pw / 2, pyTop + ph)
+    ctx.closePath()
+    ctx.fill()
+    // 캐노피 하이라이트
+    ctx.fillStyle = '#e0f2fe'
+    ctx.beginPath()
+    ctx.ellipse(cx, cyc, pw * 0.16, ph * 0.32, 0, 0, Math.PI * 2)
+    ctx.fill()
+    // 눈
+    ctx.fillStyle = '#0c4a6e'
+    ctx.beginPath()
+    ctx.arc(cx, cyc, pw * 0.06, 0, Math.PI * 2)
+    ctx.fill()
 
     ctx.fillStyle = '#e2e8f0'
     ctx.font = 'bold 20px sans-serif'

@@ -19,16 +19,24 @@ export function xpForLevel(level: number): number {
 
 /** Enemy spawn cadence shrinks over time (ms between spawns). */
 export function spawnIntervalMs(elapsedSec: number): number {
-  return Math.max(220, 1100 - elapsedSec * 9)
+  // Warm-up: the first ~18s spawn slowly so a fresh run can grab its first
+  // couple of upgrades before the swarm ramps up.
+  if (elapsedSec < 18) return 1700 - elapsedSec * 22 // 1700ms → ~1300ms
+  return Math.max(220, 1300 - (elapsedSec - 18) * 9)
 }
 
 /** Enemy count spawned per wave grows slowly. */
 export function spawnBatch(elapsedSec: number): number {
-  return 1 + Math.floor(elapsedSec / 35)
+  // Stay at a single enemy per wave through the opening so it never feels
+  // like a wall on spawn.
+  if (elapsedSec < 45) return 1
+  return 1 + Math.floor((elapsedSec - 45) / 35)
 }
 
 /** Enemy HP scales gently with time so late game stays tense. */
 export function enemyHpScale(elapsedSec: number): number {
+  // Softer early scaling so opening enemies die in ~2 hits, then ramps in.
+  if (elapsedSec < 20) return 1 + elapsedSec / 120
   return 1 + elapsedSec / 60
 }
 
