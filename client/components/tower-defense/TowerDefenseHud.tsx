@@ -90,7 +90,7 @@ export default function TowerDefenseHud({
   const showProgress = hud.wave > 0 && !hud.waveIdle
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex flex-col gap-2 p-3">
+    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col gap-2 p-3">
       {/* top stat row */}
       <div className="flex items-center justify-between gap-1.5 font-mono text-[11px] text-white/90 sm:text-xs">
         <div className="flex items-center gap-1.5">
