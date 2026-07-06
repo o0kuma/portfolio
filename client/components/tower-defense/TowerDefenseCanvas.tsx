@@ -145,11 +145,12 @@ export default function TowerDefenseCanvas({ engineRef, status, mapId, onTap, la
       const shakeX = e && e.shake > 0 ? (Math.random() - 0.5) * e.shake : 0
       const shakeY = e && e.shake > 0 ? (Math.random() - 0.5) * e.shake : 0
 
-      ctx.setTransform(
-        dpr,
-        0,
-        0,
-        dpr,
+      // Establish a CSS-pixel user space (backing store scaled by dpr), then
+      // translate/scale in CSS px. Folding the offset into setTransform's e/f
+      // treated it as *device* px, so on dpr>1 screens (most phones) the world
+      // was drawn shifted — taps then landed on the wrong cell.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.translate(
         Math.round((ox + shakeX) * dpr) / dpr,
         Math.round((oy + shakeY) * dpr) / dpr,
       )
