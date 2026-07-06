@@ -65,9 +65,17 @@ const periodLabels: { value: Period; label: string }[] = [
   { value: 'all', label: '전체' },
 ]
 
+interface HeatmapStat {
+  section: string
+  views: number
+  totalDuration: number
+  avgDuration: number
+}
+
 export default function AdminVisitorsPage() {
   const router = useRouter()
   const [data, setData] = useState<VisitorData | null>(null)
+  const [heatmap, setHeatmap] = useState<HeatmapStat[]>([])
   const [loading, setLoading] = useState(true)
   const [period, setPeriod] = useState<Period>('all')
 
@@ -87,6 +95,13 @@ export default function AdminVisitorsPage() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }, [router, period])
+
+  useEffect(() => {
+    fetch('/api/heatmap')
+      .then((res) => (res.ok ? res.json() : []))
+      .then((rows) => setHeatmap(Array.isArray(rows) ? rows : []))
+      .catch(() => setHeatmap([]))
+  }, [])
 
   // Derive today count and city count from data
   const todayCount = data?.recentVisitors.filter((v) => {
@@ -209,6 +224,35 @@ export default function AdminVisitorsPage() {
             </ul>
           )}
         </div>
+      </div>
+
+      {/* 섹션 히트맵 — 어떤 섹션이 가장 많이 읽혔는지 */}
+      <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
+        <h2 className="mb-3 text-sm font-semibold text-neutral-400">섹션 히트맵 (조회수 · 평균 체류)</h2>
+        {heatmap.length === 0 ? (
+          <p className="text-sm text-neutral-500">아직 기록된 데이터가 없습니다.</p>
+        ) : (
+          <div className="space-y-2">
+            {(() => {
+              const max = Math.max(...heatmap.map((h) => h.views), 1)
+              return heatmap.map((h) => (
+                <div key={h.section} className="flex items-center gap-3 text-xs">
+                  <span className="w-28 shrink-0 truncate font-mono text-neutral-300">{h.section}</span>
+                  <div className="h-4 flex-1 overflow-hidden rounded bg-neutral-800">
+                    <div
+                      className="h-full rounded bg-cyan-500/70"
+                      style={{ width: `${(h.views / max) * 100}%` }}
+                    />
+                  </div>
+                  <span className="w-12 shrink-0 text-right font-mono text-neutral-400">{h.views}회</span>
+                  <span className="w-16 shrink-0 text-right font-mono text-neutral-500">
+                    {(h.avgDuration / 1000).toFixed(1)}초
+                  </span>
+                </div>
+              ))
+            })()}
+          </div>
+        )}
       </div>
     </div>
   )
