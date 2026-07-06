@@ -31,6 +31,7 @@ interface Project {
   status: string
   participants?: string
   role?: string
+  retrospective?: string // 기술 선택 이유 / 배운 점
 }
 
 const SAMPLE_PROJECTS: Project[] = [
@@ -51,6 +52,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '개인',
     role: '기획·구현',
+    retrospective:
+      '게임 로직을 UI와 완전히 분리해 순수 함수로 만든 덕에 테스트와 리팩터링이 쉬웠습니다. 모바일 스와이프 입력을 다루며 터치 이벤트와 키보드 입력을 하나의 상태 모델로 통합하는 법을 배웠습니다.',
   },
   {
     id: '1',
@@ -69,6 +72,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '팀 프로젝트(회사)',
     role: '전체 개발 담당',
+    retrospective:
+      'SEO와 초기 로딩 속도가 중요한 브랜드 사이트라 Next.js의 SSR/SSG를 택했습니다. SCSS 구조를 컴포넌트 단위로 나눠 팀원과 스타일 충돌 없이 협업하는 경험을 쌓았습니다.',
   },
   {
     id: '2',
@@ -87,6 +92,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'in-progress',
     participants: '팀 프로젝트(회사)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '여러 백엔드 페이지에 반복 삽입되는 UI를 Web Components로 캡슐화해, 프레임워크에 종속되지 않는 재사용 컴포넌트를 만들었습니다. Svelte의 반응성과 결합해 관리자 화면의 상태 관리를 단순하게 유지했습니다.',
   },
   {
     id: '3',
@@ -391,6 +398,15 @@ function ProjectCard({
                 <span>{project.role}</span>
               </div>
             )}
+          </div>
+        )}
+
+        {project.retrospective && (
+          <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-900/40 p-3">
+            <p className="mb-1 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-neutral-500">
+              <FiCode size={10} /> 기술 회고
+            </p>
+            <p className="text-xs leading-relaxed text-neutral-400">{project.retrospective}</p>
           </div>
         )}
 
