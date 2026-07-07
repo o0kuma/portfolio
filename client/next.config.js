@@ -67,7 +67,7 @@ const nextConfig = {
 
   // Experimental: optimize package imports for large libraries
   experimental: {
-    optimizePackageImports: ['framer-motion', 'react-icons'],
+    optimizePackageImports: ['framer-motion', 'react-icons', 'three', '@react-three/drei'],
   },
 
   webpack: (config) => {

@@ -45,7 +45,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
         display: ['var(--font-display)', 'Georgia', 'serif'],
-        mono: ['Fira Code', 'monospace'],
+        mono: ['var(--font-mono)', 'Fira Code', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

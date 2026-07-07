@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter, Fraunces } from 'next/font/google'
+import { Inter, Fraunces, Fira_Code } from 'next/font/google'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
-import ChatbotWidget from '@/components/ChatbotWidget'
+import ChatbotWidgetClient from '@/components/ChatbotWidgetClient'
 
 
 import LiveCursorsClient from '@/components/LiveCursorsClient'
@@ -23,6 +23,13 @@ const inter = Inter({
 const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
+  display: 'swap',
+})
+
+const firaCode = Fira_Code({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  variable: '--font-mono',
   display: 'swap',
 })
 
@@ -98,7 +105,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const fontVars = `${inter.variable} ${fraunces.variable}`
+  const fontVars = `${inter.variable} ${fraunces.variable} ${firaCode.variable}`
 
   return (
     <html lang="en" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
@@ -155,14 +162,11 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
         <link rel="manifest" href="/site.webmanifest" />
-
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className={`${inter.className} font-sans antialiased`}>
         <Providers>{children}</Providers>
         <ToastContainer />
-        <ChatbotWidget />
+        <ChatbotWidgetClient />
         <LiveCursorsClient />
       </body>
     </html>
