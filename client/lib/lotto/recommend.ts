@@ -121,9 +121,25 @@ export function recommend(strategy: Strategy, stats?: RecommendStats | null): nu
   return generateFiltered(weights)
 }
 
-export const STRATEGY_INFO: Record<Strategy, { label: string; emoji: string; desc: string }> = {
-  balanced: { label: '밸런스 추천', emoji: '⚖️', desc: '홀짝·고저·합계·연속수 균형을 맞춘 통계적 조합' },
-  hot: { label: '핫넘버', emoji: '🔥', desc: '자주 당첨된 번호 위주' },
-  cold: { label: '콜드넘버', emoji: '❄️', desc: '오래 안 나온 번호 위주' },
-  mix: { label: '핫+콜드 믹스', emoji: '🌗', desc: '자주 나온 번호와 안 나온 번호를 절반씩' },
+export const STRATEGY_INFO: Record<Strategy, { label: string; labelEn: string; emoji: string; desc: string; descEn: string }> = {
+  balanced: {
+    label: '밸런스 추천', labelEn: 'Balanced Pick', emoji: '⚖️',
+    desc: '홀짝·고저·합계·연속수 균형을 맞춘 통계적 조합',
+    descEn: 'A statistically balanced pick across odd/even, high/low, sum, and consecutive numbers',
+  },
+  hot: {
+    label: '핫넘버', labelEn: 'Hot Numbers', emoji: '🔥',
+    desc: '자주 당첨된 번호 위주',
+    descEn: 'Favors numbers that have won often',
+  },
+  cold: {
+    label: '콜드넘버', labelEn: 'Cold Numbers', emoji: '❄️',
+    desc: '오래 안 나온 번호 위주',
+    descEn: "Favors numbers that haven't come up in a while",
+  },
+  mix: {
+    label: '핫+콜드 믹스', labelEn: 'Hot + Cold Mix', emoji: '🌗',
+    desc: '자주 나온 번호와 안 나온 번호를 절반씩',
+    descEn: 'Half frequently-drawn, half rarely-drawn numbers',
+  },
 }
