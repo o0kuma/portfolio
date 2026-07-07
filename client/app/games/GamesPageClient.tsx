@@ -13,8 +13,11 @@ import { useLanguage } from '@/lib/LanguageContext'
 type GameInfo = {
   href: string
   title: string
+  titleKo: string
   description: string
+  descriptionKo: string
   genre: string
+  genreKo: string
   difficulty: number
   techStack: string[]
   emoji: string
@@ -27,8 +30,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/tower-defense',
     title: 'Tower Defense',
+    titleKo: 'Tower Defense',
     description: 'Strategically place towers to stop the incoming waves of enemies. Resource management and upgrades are key!',
+    descriptionKo: '전략적으로 타워를 배치해 몰려오는 적을 막아라. 자원 관리와 업그레이드가 핵심!',
     genre: 'Strategy',
+    genreKo: '전략',
     difficulty: 3,
     techStack: ['React', 'Canvas'],
     emoji: '🏰',
@@ -39,8 +45,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/survive',
     title: 'Survive',
+    titleKo: 'Survive',
     description: 'Dodge waves of enemies in this top-down shooter and survive as long as possible. Online multiplayer supported!',
+    descriptionKo: '탑다운 슈터로 밀려오는 적들을 피하며 최대한 오래 생존하라. 온라인 대전 지원!',
     genre: 'Action',
+    genreKo: '액션',
     difficulty: 4,
     techStack: ['React', 'Canvas', 'WebSocket'],
     emoji: '⚔️',
@@ -51,8 +60,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/typing-game',
     title: 'Typing Game',
+    titleKo: 'Typing Game',
     description: 'Type code snippets to measure your WPM and accuracy. Typing practice built for developers!',
+    descriptionKo: '코드 스니펫을 타이핑해 WPM과 정확도를 측정하세요. 개발자를 위한 타이핑 훈련!',
     genre: 'Puzzle',
+    genreKo: '퍼즐',
     difficulty: 2,
     techStack: ['React', 'TypeScript'],
     emoji: '⌨️',
@@ -63,8 +75,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/tetris',
     title: 'Tetris',
+    titleKo: 'Tetris',
     description: 'Classic Tetris! Stack blocks and clear lines to chase the highest score.',
+    descriptionKo: '클래식 테트리스! 블록을 쌓고 라인을 지워 최고 점수에 도전하세요.',
     genre: 'Puzzle',
+    genreKo: '퍼즐',
     difficulty: 2,
     techStack: ['React', 'Canvas'],
     emoji: '🧱',
@@ -75,8 +90,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/lotto',
     title: 'Lotto 6/45',
+    titleKo: '로또 6/45',
     description: 'Pick numbers and try the draw! Compare against real past draws, or run infinite auto-purchases until you win 1st prize.',
+    descriptionKo: '번호를 고르고 추첨에 도전! 역대 실제 회차와 비교하거나 1등 나올 때까지 무한 자동 구매.',
     genre: 'Luck/Sim',
+    genreKo: '운/시뮬',
     difficulty: 1,
     techStack: ['Next.js', 'API'],
     emoji: '🎰',
@@ -87,8 +105,11 @@ const GAMES: GameInfo[] = [
   {
     href: '/arcade',
     title: 'Pocket Arcade',
+    titleKo: '포켓 아케이드',
     description: 'A collection of quick one-handed mini games. Collect coins and chase the high score.',
+    descriptionKo: '한 손으로 즐기는 초단타 미니게임 모음. 코인을 모으고 최고 기록에 도전하세요.',
     genre: 'Arcade',
+    genreKo: '아케이드',
     difficulty: 2,
     techStack: ['Canvas', 'PWA'],
     emoji: '🕹️',
@@ -98,15 +119,23 @@ const GAMES: GameInfo[] = [
   },
 ]
 
-const STATS = [
+const STATS_EN = [
   { label: '9 Games', icon: '🎮' },
   { label: 'Browser-based', icon: '🌐' },
   { label: 'Free to Play', icon: '🆓' },
 ]
+const STATS_KO = [
+  { label: '9개 게임', icon: '🎮' },
+  { label: '브라우저 기반', icon: '🌐' },
+  { label: '무료 플레이', icon: '🆓' },
+]
 
-function DifficultyStars({ count }: { count: number }) {
+function DifficultyStars({ count, locale }: { count: number; locale: string }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`Difficulty ${count} points`}>
+    <div
+      className="flex items-center gap-0.5"
+      aria-label={locale === 'en' ? `Difficulty ${count} points` : `난이도 ${count}점`}
+    >
       {Array.from({ length: 5 }).map((_, i) => (
         <span key={i} className={i < count ? 'text-amber-400' : 'text-slate-700'} aria-hidden>
           ★
@@ -116,7 +145,8 @@ function DifficultyStars({ count }: { count: number }) {
   )
 }
 
-function GameCard({ game, index }: { game: GameInfo; index: number }) {
+function GameCard({ game, index, locale }: { game: GameInfo; index: number; locale: string }) {
+  const en = locale === 'en'
   return (
     <motion.div
       initial={{ opacity: 0, y: 32 }}
@@ -135,15 +165,15 @@ function GameCard({ game, index }: { game: GameInfo; index: number }) {
             <span
               className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${game.accentColor}`}
             >
-              {game.genre}
+              {en ? game.genre : game.genreKo}
             </span>
-            <DifficultyStars count={game.difficulty} />
+            <DifficultyStars count={game.difficulty} locale={locale} />
           </div>
         </div>
 
         {/* info */}
-        <h2 className="mb-1.5 text-lg font-bold text-white">{game.title}</h2>
-        <p className="mb-4 text-sm leading-relaxed text-slate-400">{game.description}</p>
+        <h2 className="mb-1.5 text-lg font-bold text-white">{en ? game.title : game.titleKo}</h2>
+        <p className="mb-4 text-sm leading-relaxed text-slate-400">{en ? game.description : game.descriptionKo}</p>
 
         {/* tech badges */}
         <div className="mb-5 flex flex-wrap gap-1.5">
@@ -163,7 +193,7 @@ function GameCard({ game, index }: { game: GameInfo; index: number }) {
           className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95"
         >
           <FiPlay className="h-3.5 w-3.5" aria-hidden />
-          Play
+          {en ? 'Play' : '플레이하기'}
         </Link>
       </div>
     </motion.div>
@@ -171,7 +201,9 @@ function GameCard({ game, index }: { game: GameInfo; index: number }) {
 }
 
 export default function GamesPageClient() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const en = locale === 'en'
+  const STATS = en ? STATS_EN : STATS_KO
 
   return (
     <div className="min-h-screen bg-slate-950 pb-16 text-white">
@@ -191,13 +223,13 @@ export default function GamesPageClient() {
               href="/games/stats"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
             >
-              View Stats
+              {en ? 'View Stats' : '전적 보기'}
             </Link>
             <Link
               href="/achievements"
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition hover:border-amber-600 hover:text-amber-300"
             >
-              🏆 Achievements
+              {en ? '🏆 Achievements' : '🏆 업적'}
             </Link>
           </div>
         </div>
@@ -214,7 +246,9 @@ export default function GamesPageClient() {
           <h1 className="font-display mb-3 text-5xl font-bold tracking-tight">
             🎮 Game Hub
           </h1>
-          <p className="text-lg text-slate-400">Mini games you can play right in your browser</p>
+          <p className="text-lg text-slate-400">
+            {en ? 'Mini games you can play right in your browser' : '브라우저에서 바로 즐기는 미니 게임'}
+          </p>
         </motion.div>
 
         {/* Stat chips */}
@@ -238,7 +272,7 @@ export default function GamesPageClient() {
         {/* Game cards grid */}
         <div className="mb-16 grid gap-5 sm:grid-cols-2">
           {GAMES.map((game, i) => (
-            <GameCard key={game.href} game={game} index={i} />
+            <GameCard key={game.href} game={game} index={i} locale={locale} />
           ))}
         </div>
 
