@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import type { MiniGame, ArcadeInput } from '@/lib/arcade/engine'
 import { sfx, vibrate } from '@/lib/arcade/sound'
 import { burst, stepParticles, renderParticles, type Particle } from '@/lib/arcade/particles'
+import { useLanguage } from '@/lib/LanguageContext'
 
 const COUNTDOWN_MS = 2200 // "3, 2, 1" 표시 시간
 
@@ -18,6 +19,9 @@ export default function GameCanvas<TState>({
   resetKey: number
   paused?: boolean
 }) {
+  const { locale } = useLanguage()
+  const localeRef = useRef(locale)
+  localeRef.current = locale
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef<TState>(game.init())
@@ -104,7 +108,7 @@ export default function GameCanvas<TState>({
         ctx.fillStyle = '#fff'
         ctx.font = 'bold 24px sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText('일시정지', W / 2, H / 2)
+        ctx.fillText(localeRef.current === 'en' ? 'Paused' : '일시정지', W / 2, H / 2)
         rafRef.current = requestAnimationFrame(loop)
         return
       }
