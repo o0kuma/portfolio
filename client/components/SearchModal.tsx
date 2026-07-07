@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { FiSearch, FiX, FiFileText, FiLayout, FiZap } from 'react-icons/fi'
 import { getCategoryLabel } from '@/lib/post-categories'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface SearchPost {
   id: string
@@ -16,9 +17,11 @@ interface SearchPost {
 
 interface StaticItem {
   title: string
+  titleEn: string
   url: string
   type: 'page' | 'game'
   desc: string
+  descEn: string
 }
 
 interface SearchModalProps {
@@ -27,15 +30,16 @@ interface SearchModalProps {
 }
 
 const STATIC_PAGES: StaticItem[] = [
-  { title: '방명록', url: '/guestbook', type: 'page', desc: '방문자 방명록' },
-  { title: '푸드맵', url: '/food', type: 'page', desc: '맛집 지도' },
-  { title: 'Tower Defense', url: '/tower-defense', type: 'game', desc: '전략 타워 디펜스 게임' },
-  { title: 'Survive', url: '/survive', type: 'game', desc: '탑다운 슈터 게임' },
-  { title: 'Typing Game', url: '/typing-game', type: 'game', desc: '타이핑 속도 측정' },
-  { title: 'Tetris', url: '/tetris', type: 'game', desc: '클래식 테트리스' },
+  { title: '방명록', titleEn: 'Guestbook', url: '/guestbook', type: 'page', desc: '방문자 방명록', descEn: 'Visitor guestbook' },
+  { title: '푸드맵', titleEn: 'Food Map', url: '/food', type: 'page', desc: '맛집 지도', descEn: 'Restaurant map' },
+  { title: 'Tower Defense', titleEn: 'Tower Defense', url: '/tower-defense', type: 'game', desc: '전략 타워 디펜스 게임', descEn: 'Strategy tower-defense game' },
+  { title: 'Survive', titleEn: 'Survive', url: '/survive', type: 'game', desc: '탑다운 슈터 게임', descEn: 'Top-down shooter game' },
+  { title: 'Typing Game', titleEn: 'Typing Game', url: '/typing-game', type: 'game', desc: '타이핑 속도 측정', descEn: 'Typing speed test' },
+  { title: 'Tetris', titleEn: 'Tetris', url: '/tetris', type: 'game', desc: '클래식 테트리스', descEn: 'Classic Tetris' },
 ]
 
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
+  const { locale } = useLanguage()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [posts, setPosts] = useState<SearchPost[]>([])
@@ -79,7 +83,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
       const filtered = STATIC_PAGES.filter(
         (item) =>
           item.title.toLowerCase().includes(lower) ||
-          item.desc.toLowerCase().includes(lower),
+          item.desc.toLowerCase().includes(lower) ||
+          item.titleEn.toLowerCase().includes(lower) ||
+          item.descEn.toLowerCase().includes(lower),
       )
       setStaticResults(filtered)
     } else {
@@ -145,7 +151,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             type="text"
             value={query}
             onChange={handleChange}
-            placeholder="검색어를 입력하세요"
+            placeholder={locale === 'en' ? 'Type to search' : '검색어를 입력하세요'}
             className="flex-1 bg-transparent text-neutral-100 text-lg placeholder:text-neutral-600 outline-none"
           />
           {query && (
@@ -161,7 +167,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
             type="button"
             onClick={onClose}
             className="text-neutral-600 hover:text-neutral-400 transition-colors ml-1"
-            aria-label="닫기"
+            aria-label={locale === 'en' ? 'Close' : '닫기'}
           >
             <span className="text-xs font-mono border border-neutral-700 rounded px-1.5 py-0.5">ESC</span>
           </button>
@@ -171,19 +177,19 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
         <div className="max-h-[60vh] overflow-y-auto">
           {!query.trim() && (
             <div className="py-12 text-center text-neutral-600 font-mono text-sm">
-              검색어를 입력하세요
+              {locale === 'en' ? 'Type to search' : '검색어를 입력하세요'}
             </div>
           )}
 
           {query.trim() && isLoading && (
             <div className="py-12 text-center text-neutral-600 font-mono text-sm">
-              검색 중...
+              {locale === 'en' ? 'Searching...' : '검색 중...'}
             </div>
           )}
 
           {query.trim() && !isLoading && !hasResults && (
             <div className="py-12 text-center text-neutral-600 font-mono text-sm">
-              검색 결과가 없습니다
+              {locale === 'en' ? 'No results' : '검색 결과가 없습니다'}
             </div>
           )}
 
@@ -194,7 +200,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <section>
                   <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
                     <FiFileText size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">포스트</span>
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">{locale === 'en' ? 'Posts' : '포스트'}</span>
                   </div>
                   <ul>
                     {posts.map((post) => {
@@ -236,7 +242,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <section>
                   <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
                     <FiLayout size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">페이지</span>
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">{locale === 'en' ? 'Pages' : '페이지'}</span>
                   </div>
                   <ul>
                     {staticPages.map((item) => (
@@ -249,9 +255,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           <FiLayout size={14} className="text-neutral-700 group-hover:text-violet-400 shrink-0 transition-colors" />
                           <div className="flex-1 min-w-0">
                             <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
-                              {item.title}
+                              {locale === 'en' ? item.titleEn : item.title}
                             </p>
-                            <p className="text-neutral-600 text-xs font-mono truncate">{item.desc}</p>
+                            <p className="text-neutral-600 text-xs font-mono truncate">{locale === 'en' ? item.descEn : item.desc}</p>
                           </div>
                           <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
                             page
@@ -268,7 +274,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                 <section>
                   <div className="flex items-center gap-2 px-5 py-2 border-b border-neutral-800/60">
                     <FiZap size={12} className="text-neutral-600" />
-                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">게임</span>
+                    <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">{locale === 'en' ? 'Games' : '게임'}</span>
                   </div>
                   <ul>
                     {staticGames.map((item) => (
@@ -281,9 +287,9 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
                           <FiZap size={14} className="text-neutral-700 group-hover:text-yellow-400 shrink-0 transition-colors" />
                           <div className="flex-1 min-w-0">
                             <p className="text-neutral-100 font-medium text-sm truncate group-hover:text-white transition-colors">
-                              {item.title}
+                              {locale === 'en' ? item.titleEn : item.title}
                             </p>
-                            <p className="text-neutral-600 text-xs font-mono truncate">{item.desc}</p>
+                            <p className="text-neutral-600 text-xs font-mono truncate">{locale === 'en' ? item.descEn : item.desc}</p>
                           </div>
                           <span className="text-[10px] font-mono bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded uppercase tracking-wider shrink-0">
                             game

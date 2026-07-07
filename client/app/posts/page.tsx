@@ -214,7 +214,7 @@ export default function PostsPage() {
   }
 
   const handleDeletePost = async (postId: string) => {
-    if (!confirm('정말로 이 게시글을 삭제하시겠습니까?')) return
+    if (!confirm(locale === 'en' ? 'Are you sure you want to delete this post?' : '정말로 이 게시글을 삭제하시겠습니까?')) return
 
     try {
       const response = await fetch(`${API_BASE_URL}/api/posts/${postId}`, {
@@ -227,11 +227,11 @@ export default function PostsPage() {
         setCurrentPage(1)
       } else {
         const data = await response.json()
-        toast.error('삭제 실패: ' + data.message)
+        toast.error((locale === 'en' ? 'Delete failed: ' : '삭제 실패: ') + data.message)
       }
     } catch (error) {
       console.error('Error deleting post:', error)
-      toast.error('삭제 중 오류가 발생했습니다.')
+      toast.error(locale === 'en' ? 'An error occurred while deleting.' : '삭제 중 오류가 발생했습니다.')
     }
   }
 
@@ -346,7 +346,7 @@ export default function PostsPage() {
             href="/posts/series"
             className="text-xs font-mono px-3 py-1.5 rounded-lg border border-neutral-700 text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            📚 시리즈
+            {locale === 'en' ? '📚 Series' : '📚 시리즈'}
           </Link>
         </div>
 
@@ -399,14 +399,14 @@ export default function PostsPage() {
                             <button
                               onClick={(e) => { e.preventDefault(); handleEditPost(post) }}
                               className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
-                              title="수정"
+                              title={locale === 'en' ? 'Edit' : '수정'}
                             >
                               <FiEdit size={14} />
                             </button>
                             <button
                               onClick={(e) => { e.preventDefault(); handleDeletePost(post._id) }}
                               className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
-                              title="삭제"
+                              title={locale === 'en' ? 'Delete' : '삭제'}
                             >
                               <FiTrash2 size={14} />
                             </button>
@@ -512,7 +512,7 @@ export default function PostsPage() {
         {/* 모든 포스트 로드 완료 메시지 */}
         {!hasMore && filteredPosts.length > 0 && (
           <div className="text-center py-8">
-            <p className="text-neutral-600 font-mono text-xs">모든 포스트를 불러왔습니다</p>
+            <p className="text-neutral-600 font-mono text-xs">{locale === 'en' ? "You've reached the end" : '모든 포스트를 불러왔습니다'}</p>
           </div>
         )}
       </div>

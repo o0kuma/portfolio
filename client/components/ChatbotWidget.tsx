@@ -2,16 +2,30 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { FiMessageCircle, FiX, FiSend } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
   content: string
 }
 
+function getInitialGreeting(): string {
+  let lang = 'en'
+  try {
+    lang = localStorage.getItem('lang') || 'en'
+  } catch {
+    // localStorage unavailable
+  }
+  return lang === 'ko'
+    ? '안녕하세요! 포트폴리오에 대해 궁금한 것이 있으시면 무엇이든 물어보세요 😊'
+    : 'Hi! Ask me anything about this portfolio 😊'
+}
+
 export default function ChatbotWidget() {
+  const { locale } = useLanguage()
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([
-    { role: 'assistant', content: "Hi! Feel free to ask me anything about the portfolio 😊" },
+    { role: 'assistant', content: getInitialGreeting() },
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -46,13 +60,13 @@ export default function ChatbotWidget() {
       } else {
         setMessages((prev) => [
           ...prev,
-          { role: 'assistant', content: data.message ?? 'An error occurred. Please try again shortly.' },
+          { role: 'assistant', content: data.message ?? (locale === 'en' ? 'Something went wrong. Please try again shortly.' : '오류가 발생했습니다. 잠시 후 다시 시도해주세요.') },
         ])
       }
     } catch {
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'A network error occurred.' },
+        { role: 'assistant', content: locale === 'en' ? 'A network error occurred.' : '네트워크 오류가 발생했습니다.' },
       ])
     } finally {
       setIsLoading(false)
@@ -67,12 +81,12 @@ export default function ChatbotWidget() {
           <div className="flex items-center justify-between px-4 py-3 bg-neutral-800 border-b border-neutral-700">
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-              <span className="text-sm font-semibold text-neutral-100">Portfolio Assistant</span>
+              <span className="text-sm font-semibold text-neutral-100">{locale === 'en' ? 'Portfolio Assistant' : '포트폴리오 어시스턴트'}</span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
               className="text-neutral-500 hover:text-neutral-300 transition-colors"
-              aria-label="Close"
+              aria-label={locale === 'en' ? 'Close' : '닫기'}
             >
               <FiX size={18} />
             </button>
@@ -118,7 +132,7 @@ export default function ChatbotWidget() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-                placeholder="Type your message..."
+                placeholder={locale === 'en' ? 'Type a message...' : '메시지를 입력하세요...'}
                 className="flex-1 bg-neutral-700 text-neutral-100 text-sm placeholder-neutral-500 rounded-xl px-3 py-2 outline-none focus:ring-1 focus:ring-cyan-500"
                 disabled={isLoading}
               />
@@ -126,7 +140,7 @@ export default function ChatbotWidget() {
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
                 className="p-2 bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 text-white rounded-xl transition-colors"
-                aria-label="Send"
+                aria-label={locale === 'en' ? 'Send' : '전송'}
               >
                 <FiSend size={15} />
               </button>
@@ -140,7 +154,7 @@ export default function ChatbotWidget() {
       <button
         onClick={() => setIsOpen((v) => !v)}
         className="w-14 h-14 rounded-full bg-cyan-600 hover:bg-cyan-500 text-white shadow-lg flex items-center justify-center transition-colors"
-        aria-label="Toggle chatbot"
+        aria-label={locale === 'en' ? 'Toggle chatbot' : '챗봇 열기/닫기'}
       >
         {isOpen ? <FiX size={22} /> : <FiMessageCircle size={22} />}
       </button>

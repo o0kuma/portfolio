@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react'
 import { useVisitorCount } from '@/hooks/useVisitorCount'
+import { useLanguage } from '@/lib/LanguageContext'
 
 export default function VisitorCounter() {
+  const { locale } = useLanguage()
   const { count } = useVisitorCount()
 
   const [pulse, setPulse] = useState(false)
@@ -27,10 +29,10 @@ export default function VisitorCounter() {
         pulse ? 'scale-110 text-white/90' : 'scale-100',
       ].join(' ')}
       aria-live="polite"
-      aria-label={`누적 방문자 ${shown}명`}
+      aria-label={locale === 'en' ? `${shown} total visitors` : `누적 방문자 ${shown}명`}
     >
       <span className="text-[10px]" aria-hidden>👁</span>
-      <span>누적 방문자 {shown}명</span>
+      <span>{locale === 'en' ? `${shown} total visitors` : `누적 방문자 ${shown}명`}</span>
     </span>
   )
 }

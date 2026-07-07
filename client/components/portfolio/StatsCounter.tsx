@@ -49,7 +49,7 @@ function StatCard({ value, suffix, label, description, animate }: StatItem & { a
 }
 
 export default function StatsCounter() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [inView, setInView] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const years = new Date().getFullYear() - 2019
@@ -66,10 +66,10 @@ export default function StatsCounter() {
   }, [])
 
   const stats: StatItem[] = [
-    { value: years, suffix: '+', label: t.about?.statYearsSuffix ?? '년 경력', description: '2019년부터 현재까지' },
-    { value: 12, suffix: '+', label: t.about?.statProjectsSuffix ?? '프로젝트', description: '금융 · 트레이딩 · SaaS · 게임' },
-    { value: 8, suffix: '+', label: '기술 스택', description: 'Frontend · Backend · DevOps' },
-    { value: 100, suffix: '%', label: '납기 준수', description: '모든 프로젝트 일정 내 완료' },
+    { value: years, suffix: '+', label: t.about?.statYearsSuffix ?? '년 경력', description: locale === 'en' ? 'From 2019 to present' : '2019년부터 현재까지' },
+    { value: 12, suffix: '+', label: t.about?.statProjectsSuffix ?? '프로젝트', description: locale === 'en' ? 'Finance · Trading · SaaS · Games' : '금융 · 트레이딩 · SaaS · 게임' },
+    { value: 8, suffix: '+', label: locale === 'en' ? 'Tech stack' : '기술 스택', description: 'Frontend · Backend · DevOps' },
+    { value: 100, suffix: '%', label: locale === 'en' ? 'On-time delivery' : '납기 준수', description: locale === 'en' ? 'Every project delivered on schedule' : '모든 프로젝트 일정 내 완료' },
   ]
 
   return (

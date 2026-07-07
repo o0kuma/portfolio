@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface TrailPoint {
   x: number
@@ -20,6 +21,7 @@ interface Cursor {
 
 const COLORS = ['#f87171', '#fb923c', '#facc15', '#4ade80', '#60a5fa', '#c084fc', '#f472b6', '#22d3ee']
 const NAMES = ['익명의 방문자', '누군가', '신비한 방문자', '탐험가', '구경꾼', '방랑자', '호기심쟁이']
+const NAMES_EN = ['Anonymous', 'Someone', 'Mystery guest', 'Explorer', 'Onlooker', 'Wanderer', 'Curious one']
 
 function getMyId(): string {
   if (typeof window === 'undefined') return ''
@@ -32,10 +34,12 @@ function getMyId(): string {
 }
 
 export default function LiveCursors() {
+  const { locale } = useLanguage()
   const [cursors, setCursors] = useState<Cursor[]>([])
   const myId = useRef(getMyId())
   const myColor = useRef(COLORS[Math.floor(Math.random() * COLORS.length)])
-  const myName = useRef(NAMES[Math.floor(Math.random() * NAMES.length)])
+  const nameSet = locale === 'en' ? NAMES_EN : NAMES
+  const myName = useRef(nameSet[Math.floor(Math.random() * nameSet.length)])
   const posRef = useRef({ x: -1, y: -1 })
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface ActivityItem {
   id: string
@@ -14,6 +15,7 @@ function formatDate(iso: string): string {
 }
 
 export default function RecentActivity() {
+  const { locale } = useLanguage()
   const [items, setItems] = useState<ActivityItem[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -30,7 +32,7 @@ export default function RecentActivity() {
             results.push({
               id: `post-${p.id}`,
               timestamp: p.created_at,
-              label: `새 글: ${p.title}`,
+              label: locale === 'en' ? `New post: ${p.title}` : `새 글: ${p.title}`,
             })
           }
         }
@@ -47,7 +49,9 @@ export default function RecentActivity() {
           results.push({
             id: `tetris-${top.playerName}`,
             timestamp: top.createdAt,
-            label: `테트리스 최고기록: ${top.score.toLocaleString()}점 (${top.playerName})`,
+            label: locale === 'en'
+              ? `Tetris best: ${top.score.toLocaleString()} (${top.playerName})`
+              : `테트리스 최고기록: ${top.score.toLocaleString()}점 (${top.playerName})`,
           })
         }
       } catch {
@@ -61,14 +65,14 @@ export default function RecentActivity() {
     }
 
     load()
-  }, [])
+  }, [locale])
 
   if (loading || items.length === 0) return null
 
   return (
     <section className="mx-auto max-w-2xl px-6 py-8">
       <h2 className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-500">
-        최근 활동
+        {locale === 'en' ? 'Recent activity' : '최근 활동'}
       </h2>
       <ul className="space-y-2.5">
         {items.map((item) => (

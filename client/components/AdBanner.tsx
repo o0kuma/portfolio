@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FiX } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface AdBannerProps {
   adType: 'banner' | 'in_article' | 'sidebar' | 'popup'
@@ -31,6 +32,7 @@ export default function AdBanner({
   postTags = [],
   className = ''
 }: AdBannerProps) {
+  const { locale } = useLanguage()
   const [ad, setAd] = useState<Advertisement | null>(null)
   const [impressionId, setImpressionId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -158,7 +160,7 @@ export default function AdBanner({
           />
         </a>
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">
-          광고
+          {locale === 'en' ? 'Ad' : '광고'}
         </div>
       </motion.div>
     )

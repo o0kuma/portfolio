@@ -221,7 +221,7 @@ export default function PostDetailPage() {
     if (isSavedOffline) {
       await removeOfflinePost(post._id)
       setIsSavedOffline(false)
-      toast.success('오프라인 저장이 해제되었습니다')
+      toast.success(locale === 'en' ? 'Removed from offline saves' : '오프라인 저장이 해제되었습니다')
     } else {
       await savePostOffline({
         id: post._id,
@@ -231,7 +231,7 @@ export default function PostDetailPage() {
         createdAt: post.createdAt,
       })
       setIsSavedOffline(true)
-      toast.success('오프라인에서 읽을 수 있습니다')
+      toast.success(locale === 'en' ? 'Available to read offline' : '오프라인에서 읽을 수 있습니다')
     }
   }
 
@@ -315,9 +315,9 @@ export default function PostDetailPage() {
     try {
       const res = await fetch(`/api/posts/${postId}/summary`)
       const data = await res.json() as { summary?: string; message?: string }
-      setSummary(data.summary ?? data.message ?? '요약을 불러올 수 없습니다.')
+      setSummary(data.summary ?? data.message ?? (locale === 'en' ? "Couldn't load the summary." : '요약을 불러올 수 없습니다.'))
     } catch {
-      setSummary('요약을 불러오는 중 오류가 발생했습니다.')
+      setSummary(locale === 'en' ? 'An error occurred while loading the summary.' : '요약을 불러오는 중 오류가 발생했습니다.')
     } finally {
       setSummaryLoading(false)
     }
@@ -342,21 +342,21 @@ export default function PostDetailPage() {
               <button
                 onClick={handleOfflineSave}
                 className="p-2 text-neutral-500 hover:text-neutral-300 transition-colors"
-                title={isSavedOffline ? '저장됨' : '오프라인 저장'}
+                title={isSavedOffline ? (locale === 'en' ? 'Saved' : '저장됨') : (locale === 'en' ? 'Save offline' : '오프라인 저장')}
               >
-                {isSavedOffline ? '✓ 저장됨' : '📥 오프라인 저장'}
+                {isSavedOffline ? (locale === 'en' ? '✓ Saved' : '✓ 저장됨') : (locale === 'en' ? '📥 Save offline' : '📥 오프라인 저장')}
               </button>
               <button
                 onClick={() => setShowEditForm(true)}
                 className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
-                title="수정"
+                title={locale === 'en' ? 'Edit' : '수정'}
               >
                 <FiEdit size={18} />
               </button>
               <button
                 onClick={handleDeletePost}
                 className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
-                title="삭제"
+                title={locale === 'en' ? 'Delete' : '삭제'}
               >
                 <FiTrash2 size={18} />
               </button>
@@ -393,9 +393,9 @@ export default function PostDetailPage() {
                 <button
                   onClick={handleOfflineSave}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 text-xs font-mono transition-colors"
-                  title="오프라인 저장"
+                  title={locale === 'en' ? 'Save offline' : '오프라인 저장'}
                 >
-                  {isSavedOffline ? '✓ 저장됨' : '📥 저장'}
+                  {isSavedOffline ? (locale === 'en' ? '✓ Saved' : '✓ 저장됨') : (locale === 'en' ? '📥 Save' : '📥 저장')}
                 </button>
               </div>
 
@@ -451,7 +451,7 @@ export default function PostDetailPage() {
                 >
                   <span className="flex items-center gap-2">
                     <FiZap size={14} />
-                    ✨ AI 요약 보기
+                    {locale === 'en' ? '✨ View AI summary' : '✨ AI 요약 보기'}
                   </span>
                   {summaryOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
                 </button>
@@ -460,7 +460,7 @@ export default function PostDetailPage() {
                     {summaryLoading ? (
                       <div className="flex items-center gap-2 text-amber-500/60 text-sm font-mono py-2">
                         <div className="w-4 h-4 border-2 border-amber-500/40 border-t-amber-400 rounded-full animate-spin" />
-                        요약 생성 중...
+                        {locale === 'en' ? 'Generating summary...' : '요약 생성 중...'}
                       </div>
                     ) : (
                       <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">{summary}</p>
@@ -504,7 +504,7 @@ export default function PostDetailPage() {
               <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em]">
-                    이 시리즈의 다른 글
+                    {locale === 'en' ? 'More in this series' : '이 시리즈의 다른 글'}
                   </h3>
                   <span className="text-xs font-mono text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
                     {post.series}
@@ -524,7 +524,7 @@ export default function PostDetailPage() {
                         {formatDateShort(sp.createdAt)}
                       </p>
                       <span className="text-xs font-mono text-cyan-400 hover:text-cyan-300">
-                        읽기 &rarr;
+                        {locale === 'en' ? 'Read' : '읽기'} &rarr;
                       </span>
                     </Link>
                   ))}

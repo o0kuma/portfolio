@@ -6,7 +6,7 @@ import { interpolate } from '@/lib/i18n'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 
 export default function About() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const years = new Date().getFullYear() - 2019
 
   const stats = [
@@ -122,11 +122,14 @@ export default function About() {
                   />
                 </div>
                 <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
-                  현재 관심사
+                  {locale === 'en' ? 'Current interests' : '현재 관심사'}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {['Three.js WebGL', 'AI 통합', '게임 개발', '성능 최적화', '풀스택'].map((tag) => (
+                {(locale === 'en'
+                  ? ['Three.js WebGL', 'AI integration', 'Game development', 'Performance optimization', 'Full-stack']
+                  : ['Three.js WebGL', 'AI 통합', '게임 개발', '성능 최적화', '풀스택']
+                ).map((tag) => (
                   <span
                     key={tag}
                     className="px-3 py-1 rounded-full text-xs font-mono bg-neutral-800 text-neutral-400 border border-neutral-700 hover:bg-indigo-900/40 hover:border-indigo-600 hover:text-indigo-300 transition-colors cursor-default"
@@ -148,7 +151,7 @@ export default function About() {
                   />
                 </div>
                 <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
-                  사용 중인 도구
+                  {locale === 'en' ? 'Tools I use' : '사용 중인 도구'}
                 </span>
               </div>
               <div className="flex flex-wrap gap-2">

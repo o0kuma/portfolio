@@ -29,10 +29,10 @@ const VisitorGlobe = dynamic(() => import('./VisitorGlobe'), {
 })
 
 // 메인 화면에서만 노출되는 서브 메뉴 (자주 안 쓰는 항목들을 더보기로 묶음)
-const MORE_ITEMS: Array<{ label: string; href: string }> = [
-  { label: 'RPG', href: '/rpg' },
-  { label: '북마크', href: '/bookmarks' },
-  { label: '오프라인', href: '/offline-posts' },
+const MORE_ITEMS: Array<{ label: string; labelEn: string; href: string }> = [
+  { label: 'RPG', labelEn: 'RPG', href: '/rpg' },
+  { label: '북마크', labelEn: 'Bookmarks', href: '/bookmarks' },
+  { label: '오프라인', labelEn: 'Offline', href: '/offline-posts' },
 ]
 
 /**
@@ -41,7 +41,7 @@ const MORE_ITEMS: Array<{ label: string; href: string }> = [
 function ImmersiveHomeInner() {
   const scrollProgress = useHomeScrollProgress()
   const { tilt, reduced } = useHomeMotion()
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
 
@@ -89,7 +89,7 @@ function ImmersiveHomeInner() {
               {t.home.navFood}
             </Link>
             <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
-              방명록
+              {locale === 'en' ? 'Guestbook' : '방명록'}
             </Link>
 
             {/* 더보기 서브 메뉴 */}
@@ -99,7 +99,7 @@ function ImmersiveHomeInner() {
                 onClick={() => setIsMoreOpen((v) => !v)}
                 className="flex items-center gap-1 transition-colors hover:text-white"
               >
-                더보기
+                {locale === 'en' ? 'More' : '더보기'}
                 <FiChevronDown size={11} className={`transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
               </button>
               {isMoreOpen && (
@@ -111,7 +111,7 @@ function ImmersiveHomeInner() {
                       onClick={() => setIsMoreOpen(false)}
                       className="block px-4 py-2 text-xs font-medium text-white/70 transition-colors hover:bg-white/10 hover:text-white"
                     >
-                      {item.label}
+                      {locale === 'en' ? item.labelEn : item.label}
                     </Link>
                   ))}
                 </div>

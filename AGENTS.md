@@ -6,6 +6,8 @@
 
 This is a Korean-language portfolio website (`kuuuma.com`) with a Node.js Express backend (`server/`) and a Next.js 14 frontend (`client/`). It includes blog posts, portfolio projects, a contact form, AI chatbot, subscription/monetization features, and a Tetris game demo.
 
+개발 오케스트레이션(역할 분담, 시나리오, 검증 게이트) 설계는 `docs/gemini-orchestration/DESIGN.md` 참고.
+
 ### Portfolio visibility
 
 `/portfolio` and nav links are **public by default**. To hide: set `PORTFOLIO_DISABLED=true` (server runtime, no rebuild on Vercel) and/or `NEXT_PUBLIC_PORTFOLIO_DISABLED=true` (client nav at build time). Legacy opt-out: `PORTFOLIO_ENABLED=false` and `NEXT_PUBLIC_PORTFOLIO_ENABLED=false`. Local overrides load from `server/.env` in dev via `next.config.js`.

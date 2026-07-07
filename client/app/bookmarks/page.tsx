@@ -22,6 +22,7 @@ type ResourceCategory = '전체' | '레퍼런스' | '프레임워크' | '도구'
 interface DevResource {
   name: string
   description: string
+  descriptionEn: string
   url: string
   category: Exclude<ResourceCategory, '전체'>
   icon: string
@@ -31,6 +32,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'MDN Web Docs',
     description: 'HTML, CSS, JavaScript의 공식 웹 기술 레퍼런스',
+    descriptionEn: 'The official web technology reference for HTML, CSS, and JavaScript',
     url: 'https://developer.mozilla.org',
     category: '레퍼런스',
     icon: '📖',
@@ -38,6 +40,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'Can I Use',
     description: '브라우저 호환성을 한눈에 확인하는 도구',
+    descriptionEn: 'A tool to check browser compatibility at a glance',
     url: 'https://caniuse.com',
     category: '도구',
     icon: '🔍',
@@ -45,6 +48,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'Tailwind CSS Docs',
     description: 'Utility-first CSS 프레임워크 공식 문서',
+    descriptionEn: 'Official docs for the utility-first CSS framework',
     url: 'https://tailwindcss.com/docs',
     category: '프레임워크',
     icon: '🎨',
@@ -52,6 +56,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'Vercel Docs',
     description: '배포, Edge Functions, Analytics 등 Vercel 공식 가이드',
+    descriptionEn: 'The official Vercel guide covering deployment, Edge Functions, Analytics, and more',
     url: 'https://vercel.com/docs',
     category: '도구',
     icon: '▲',
@@ -59,6 +64,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'Three.js Docs',
     description: '웹 3D 그래픽을 위한 Three.js 공식 레퍼런스',
+    descriptionEn: 'The official Three.js reference for 3D graphics on the web',
     url: 'https://threejs.org/docs',
     category: '레퍼런스',
     icon: '🌐',
@@ -66,6 +72,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'TypeScript Handbook',
     description: 'TypeScript 공식 핸드북 — 기초부터 고급 타입까지',
+    descriptionEn: 'The official TypeScript handbook — from the basics to advanced types',
     url: 'https://www.typescriptlang.org/docs/handbook',
     category: '레퍼런스',
     icon: '📘',
@@ -73,6 +80,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'React Docs',
     description: '최신 React 공식 문서 (react.dev)',
+    descriptionEn: 'The latest official React documentation (react.dev)',
     url: 'https://react.dev',
     category: '프레임워크',
     icon: '⚛️',
@@ -80,6 +88,7 @@ const DEV_RESOURCES: DevResource[] = [
   {
     name: 'Next.js Docs',
     description: 'App Router, Server Components, 배포까지 Next.js 가이드',
+    descriptionEn: 'The Next.js guide covering App Router, Server Components, and deployment',
     url: 'https://nextjs.org/docs',
     category: '프레임워크',
     icon: '🔺',
@@ -87,6 +96,13 @@ const DEV_RESOURCES: DevResource[] = [
 ]
 
 const CATEGORY_FILTERS: ResourceCategory[] = ['전체', '레퍼런스', '프레임워크', '도구']
+
+const CATEGORY_LABELS: Record<ResourceCategory, { ko: string; en: string }> = {
+  전체: { ko: '전체', en: 'All' },
+  레퍼런스: { ko: '레퍼런스', en: 'Reference' },
+  프레임워크: { ko: '프레임워크', en: 'Framework' },
+  도구: { ko: '도구', en: 'Tools' },
+}
 
 const CATEGORY_COLORS: Record<Exclude<ResourceCategory, '전체'>, string> = {
   레퍼런스: 'bg-blue-900/50 text-blue-300 border border-blue-800',
@@ -212,7 +228,7 @@ export default function BookmarksPage() {
                       : 'bg-neutral-800 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700'
                   }`}
                 >
-                  {cat}
+                  {locale === 'en' ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].ko}
                 </button>
               ))}
             </div>
@@ -236,9 +252,9 @@ export default function BookmarksPage() {
                     </div>
                     <span className="text-neutral-600 text-xs group-hover:text-neutral-400 transition-colors">↗</span>
                   </div>
-                  <p className="text-neutral-500 text-xs leading-relaxed">{resource.description}</p>
+                  <p className="text-neutral-500 text-xs leading-relaxed">{locale === 'en' ? resource.descriptionEn : resource.description}</p>
                   <span className={`self-start px-2 py-0.5 rounded-full text-xs font-mono ${CATEGORY_COLORS[resource.category]}`}>
-                    {resource.category}
+                    {locale === 'en' ? CATEGORY_LABELS[resource.category].en : CATEGORY_LABELS[resource.category].ko}
                   </span>
                 </a>
               ))}
