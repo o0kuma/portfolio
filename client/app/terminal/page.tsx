@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useLanguage } from '@/lib/LanguageContext'
 
-const FILES = {
+const FILES_KO = {
   'about.txt': `이름: 오승일 (kuuuma)
 직업: 프론트엔드 / 풀스택 개발자
 기술: React, Next.js, TypeScript, Node.js, PostgreSQL
@@ -27,8 +28,48 @@ GitHub: github.com/kuuuma
 포트폴리오: kuuuma.com`,
 }
 
-const COMMANDS: Record<string, (args: string[]) => string | null> = {
-  help: () => `사용 가능한 명령어:
+const FILES_EN = {
+  'about.txt': `Name: Seungil Oh (kuuuma)
+Role: Frontend / Full-stack Developer
+Tech: React, Next.js, TypeScript, Node.js, PostgreSQL
+Specialty: Web game development, UI/UX design
+Contact: Use the Contact form on this site`,
+  'skills.txt': `Frontend: React, Next.js, TypeScript, TailwindCSS
+Backend: Node.js, Express, PostgreSQL, Prisma
+Tools: Git, Docker, Vercel, Supabase
+Games: Canvas API, WebSocket, Game Loop`,
+  'projects.txt': `1. Portfolio site (kuuuma.com)
+   - Next.js 14, TailwindCSS, PostgreSQL
+2. Tetris
+   - Canvas API, pure TypeScript
+3. Survive
+   - 2D shooter, boss stages, upgrade system
+4. Tower Defense
+   - Pathfinding, wave system
+5. Typing Game
+   - WPM measurement, leaderboard`,
+  'contact.txt': `Email: Use the Contact form on this site
+GitHub: github.com/kuuuma
+Portfolio: kuuuma.com`,
+}
+
+function buildCommands(files: typeof FILES_KO, en: boolean): Record<string, (args: string[]) => string | null> {
+  return {
+    help: () =>
+      en
+        ? `Available commands:
+  ls              - list files
+  cat <file>      - view file contents
+  cd <path>       - navigate (about, posts, food, games, portfolio)
+  clear           - clear the screen
+  whoami          - developer info
+  skills          - tech stack
+  projects        - project list
+  contact         - contact info
+  play <game>     - launch a game (tetris, survive, tower)
+  kuuma           - say hi to Kuuma
+  help            - this help`
+        : `사용 가능한 명령어:
   ls              - 파일 목록 보기
   cat <파일>      - 파일 내용 보기
   cd <경로>       - 페이지 이동 (about, posts, food, games, portfolio)
@@ -40,34 +81,37 @@ const COMMANDS: Record<string, (args: string[]) => string | null> = {
   play <게임>     - 게임 실행 (tetris, survive, tower)
   kuuma           - 쿠마에게 인사
   help            - 도움말`,
-  ls: () => Object.keys(FILES).join('  '),
-  cat: (args) => {
-    const file = args[0]
-    if (!file) return '사용법: cat <파일명>'
-    return FILES[file as keyof typeof FILES] ?? `cat: ${file}: No such file or directory`
-  },
-  whoami: () => FILES['about.txt'],
-  skills: () => FILES['skills.txt'],
-  projects: () => FILES['projects.txt'],
-  contact: () => FILES['contact.txt'],
-  clear: () => null, // special
-  kuuma: () => '안녕하세요! 저는 쿠마입니다 👋 J키를 누르면 대화할 수 있어요!',
-  play: (args) => {
-    const game = args[0]
-    if (!game) return '사용법: play <tetris|survive|tower>'
-    const routes: Record<string, string> = { tetris: '/tetris', survive: '/survive', tower: '/tower-defense' }
-    if (routes[game]) return `__navigate__${routes[game]}`
-    return `play: ${game}: 알 수 없는 게임. tetris, survive, tower 중 선택하세요.`
-  },
-  cd: (args) => {
-    const dest = args[0]
-    const routes: Record<string, string> = {
-      about: '/portfolio', posts: '/posts', food: '/food',
-      games: '/games', portfolio: '/portfolio', home: '/', '/': '/'
-    }
-    if (routes[dest]) return `__navigate__${routes[dest]}`
-    return `cd: ${dest}: No such directory`
-  },
+    ls: () => Object.keys(files).join('  '),
+    cat: (args) => {
+      const file = args[0]
+      if (!file) return en ? 'usage: cat <filename>' : '사용법: cat <파일명>'
+      return files[file as keyof typeof files] ?? `cat: ${file}: No such file or directory`
+    },
+    whoami: () => files['about.txt'],
+    skills: () => files['skills.txt'],
+    projects: () => files['projects.txt'],
+    contact: () => files['contact.txt'],
+    clear: () => null, // special
+    kuuma: () => (en ? "Hi! I'm Kuuma 👋 Press J to chat!" : '안녕하세요! 저는 쿠마입니다 👋 J키를 누르면 대화할 수 있어요!'),
+    play: (args) => {
+      const game = args[0]
+      if (!game) return en ? 'usage: play <tetris|survive|tower>' : '사용법: play <tetris|survive|tower>'
+      const routes: Record<string, string> = { tetris: '/tetris', survive: '/survive', tower: '/tower-defense' }
+      if (routes[game]) return `__navigate__${routes[game]}`
+      return en
+        ? `play: ${game}: unknown game. Choose from tetris, survive, tower.`
+        : `play: ${game}: 알 수 없는 게임. tetris, survive, tower 중 선택하세요.`
+    },
+    cd: (args) => {
+      const dest = args[0]
+      const routes: Record<string, string> = {
+        about: '/portfolio', posts: '/posts', food: '/food',
+        games: '/games', portfolio: '/portfolio', home: '/', '/': '/'
+      }
+      if (routes[dest]) return `__navigate__${routes[dest]}`
+      return `cd: ${dest}: No such directory`
+    },
+  }
 }
 
 interface Line {
@@ -76,10 +120,14 @@ interface Line {
 }
 
 export default function TerminalPage() {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
+  const FILES = en ? FILES_EN : FILES_KO
+  const COMMANDS = buildCommands(FILES, en)
   const [lines, setLines] = useState<Line[]>([
     { type: 'system', text: 'kuuuma portfolio terminal v1.0.0' },
     { type: 'system', text: '──────────────────────────────────' },
-    { type: 'system', text: "도움말을 보려면 'help'를 입력하세요." },
+    { type: 'system', text: en ? "Type 'help' to see available commands." : "도움말을 보려면 'help'를 입력하세요." },
     { type: 'system', text: '' },
   ])
   const [input, setInput] = useState('')
@@ -113,12 +161,15 @@ export default function TerminalPage() {
     }
 
     if (!handler) {
-      newLines.push({ type: 'error', text: `command not found: ${cmd}. 'help' 를 입력해보세요.` })
+      newLines.push({
+        type: 'error',
+        text: en ? `command not found: ${cmd}. Try 'help'.` : `command not found: ${cmd}. 'help' 를 입력해보세요.`,
+      })
     } else {
       const result = handler(args)
       if (result?.startsWith('__navigate__')) {
         const path = result.replace('__navigate__', '')
-        newLines.push({ type: 'output', text: `→ ${path} 로 이동합니다...` })
+        newLines.push({ type: 'output', text: en ? `→ navigating to ${path}...` : `→ ${path} 로 이동합니다...` })
         setTimeout(() => router.push(path), 800)
       } else if (result !== null && result !== undefined) {
         newLines.push({ type: 'output', text: result })
@@ -165,7 +216,7 @@ export default function TerminalPage() {
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <div className="w-3 h-3 rounded-full bg-green-500" />
           <span className="ml-3 text-green-600 text-xs">kuuuma@portfolio ~ terminal</span>
-          <a href="/" className="ml-auto text-green-700 hover:text-green-500 text-xs transition-colors">← 나가기</a>
+          <a href="/" className="ml-auto text-green-700 hover:text-green-500 text-xs transition-colors">{en ? '← Exit' : '← 나가기'}</a>
         </div>
 
         {/* Output lines */}
