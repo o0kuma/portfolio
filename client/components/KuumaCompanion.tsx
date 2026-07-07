@@ -1,10 +1,58 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
-const sectionMessages: Record<string, string[]> = {
+const sectionMessagesKo: Record<string, string[]> = {
   home: [
-    "Hi! Are you browsing the portfolio? 🤖",
-    "Feel free to ask if you have any questions.",
+    '안녕하세요! 포트폴리오를 둘러보고 계신가요? 🤖',
+    '궁금한 점이 있으시면 언제든 물어보세요.',
+    '저는 쿠마입니다. 무엇을 도와드릴까요?',
+  ],
+  about: [
+    '개발자에 대해 더 알고 싶으신가요?',
+    '직접 연락해보시는 건 어떨까요?',
+    '개발자 소개 섹션을 보고 계시네요!',
+  ],
+  skills: [
+    'React와 Next.js가 주력 스택이에요.',
+    '풀스택 개발 경험이 있답니다.',
+    '다양한 기술 스택을 다루고 있어요.',
+  ],
+  projects: [
+    '이 프로젝트들은 직접 만든 것들이에요.',
+    '데모가 궁금하시면 클릭해보세요!',
+    '어떤 프로젝트가 가장 흥미로우세요?',
+  ],
+  posts: [
+    '기술 블로그를 운영 중이에요.',
+    '어떤 주제가 궁금하신가요?',
+    '새로운 글이 자주 업데이트돼요!',
+  ],
+  games: [
+    '게임도 직접 개발했어요!',
+    '테트리스, 서바이브, 타워 디펜스가 있어요.',
+    '한번 플레이해보시겠어요?',
+  ],
+  food: [
+    '맛집 리스트를 Notion으로 관리해요.',
+    '추천 맛집이 필요하세요?',
+    '맛있는 곳들만 골라놨어요!',
+  ],
+  contact: [
+    '프로젝트 협업을 원하시나요?',
+    '이메일로 연락주시면 답장드릴게요!',
+    '언제든지 연락해 주세요!',
+  ],
+  admin: [
+    '관리자 페이지에 오셨군요.',
+    '무엇을 관리하시려고요?',
+  ],
+}
+
+const sectionMessagesEn: Record<string, string[]> = {
+  home: [
+    'Hi! Are you browsing the portfolio? 🤖',
+    'Feel free to ask if you have any questions.',
     "I'm Kuuma. How can I help you?",
   ],
   about: [
@@ -48,11 +96,15 @@ const sectionMessages: Record<string, string[]> = {
   ],
 }
 
-const chips = ['What projects are there?', 'How can I contact you?', 'What tech do you use?']
+const chipsKo = ['어떤 프로젝트가 있나요?', '연락 방법은?', '어떤 기술 써요?']
+const chipsEn = ['What projects are there?', 'How can I contact you?', 'What tech do you use?']
 
 type Emotion = 'idle' | 'happy' | 'thinking' | 'surprised' | 'error'
 
 export default function KuumaCompanion() {
+  const { locale } = useLanguage()
+  const localeRef = useRef(locale)
+  localeRef.current = locale
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const targetPos = useRef({ x: -100, y: -100 })
   const currentPos = useRef({ x: -100, y: -100 })
@@ -78,7 +130,7 @@ export default function KuumaCompanion() {
     if (!ttsEnabled || typeof window === 'undefined') return
     window.speechSynthesis.cancel()
     const utter = new SpeechSynthesisUtterance(text)
-    utter.lang = 'en-US'
+    utter.lang = localeRef.current === 'en' ? 'en-US' : 'ko-KR'
     utter.rate = 1.1
     utter.pitch = 1.1
     window.speechSynthesis.speak(utter)
@@ -178,11 +230,13 @@ export default function KuumaCompanion() {
   useEffect(() => {
     if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
 
+    const sectionMessages = localeRef.current === 'en' ? sectionMessagesEn : sectionMessagesKo
     const msgs = sectionMessages[currentSection] || sectionMessages.home
     const randomMsg = () => msgs[Math.floor(Math.random() * msgs.length)]
+    const chatHint = localeRef.current === 'en' ? '  (Press J to chat)' : '  (J키로 대화하기)'
 
     const initialTimer = setTimeout(() => {
-      const bubbleText = randomMsg() + '  (Press J to chat)'
+      const bubbleText = randomMsg() + chatHint
       showBubble(bubbleText)
       speak(bubbleText)
       sectionTimerRef.current = setInterval(
@@ -265,13 +319,13 @@ export default function KuumaCompanion() {
           }),
         })
         const data = await res.json()
-        const reply = data.reply || "Sorry, I didn't get a response."
+        const reply = data.reply || (locale === 'en' ? "Sorry, I didn't get a response." : '죄송해요, 응답을 받지 못했어요.')
         setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
         speak(reply)
         if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
         emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 1000)
       } catch {
-        setMessages((prev) => [...prev, { role: 'assistant', content: 'Connection issue occurred. Please try again.' }])
+        setMessages((prev) => [...prev, { role: 'assistant', content: locale === 'en' ? 'Connection issue occurred. Please try again.' : '연결에 문제가 생겼어요. 다시 시도해주세요.' }])
         setEmotion('error')
         if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
         emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 3000)
@@ -280,7 +334,7 @@ export default function KuumaCompanion() {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [input, loading, messages, ttsEnabled]
+    [input, loading, messages, ttsEnabled, locale]
   )
 
   return (
@@ -406,7 +460,7 @@ export default function KuumaCompanion() {
           alignItems: 'center',
           justifyContent: 'center',
         }}
-        aria-label="Open Kuuma chat"
+        aria-label={locale === 'en' ? 'Open Kuuma chat' : '쿠마 채팅 열기'}
       >
         <div
           className="w-8 h-8 rounded-full border border-cyan-500/60 bg-cyan-950/80 flex items-center justify-center"
@@ -430,12 +484,12 @@ export default function KuumaCompanion() {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
-            <span className="text-cyan-400 text-xs tracking-widest">KUUMA</span>
+            <span className="text-cyan-400 text-xs tracking-widest">{locale === 'en' ? 'KUUMA' : '쿠마'}</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setTtsEnabled(o => !o)}
                 className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
-                title="Toggle voice"
+                title={locale === 'en' ? 'Toggle voice' : '음성 on/off'}
               >
                 {ttsEnabled ? '🔊' : '🔇'}
               </button>
@@ -451,7 +505,7 @@ export default function KuumaCompanion() {
           {/* Messages */}
           <div className="h-48 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 && (
-              <div className="text-cyan-700 text-xs text-center mt-10">Ask me anything</div>
+              <div className="text-cyan-700 text-xs text-center mt-10">{locale === 'en' ? 'Ask me anything' : '무엇이든 물어보세요'}</div>
             )}
             {messages.map((m, i) => (
               <div
@@ -471,7 +525,7 @@ export default function KuumaCompanion() {
               </div>
             ))}
             {loading && (
-              <div className="text-cyan-500 text-xs animate-pulse">Thinking...</div>
+              <div className="text-cyan-500 text-xs animate-pulse">{locale === 'en' ? 'Thinking...' : '생각 중...'}</div>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -482,7 +536,7 @@ export default function KuumaCompanion() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              placeholder="Ask Kuuma anything..."
+              placeholder={locale === 'en' ? 'Ask Kuuma anything...' : '쿠마에게 물어보세요...'}
               className="flex-1 bg-transparent text-xs text-cyan-300 placeholder-cyan-800 px-3 py-2 outline-none"
             />
             <button
