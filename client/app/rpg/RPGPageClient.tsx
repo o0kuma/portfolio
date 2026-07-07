@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
+import { useLanguage } from '@/lib/LanguageContext'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TILE = 40
@@ -13,18 +14,43 @@ const PH = 28
 
 // ── Buildings ─────────────────────────────────────────────────────────────────
 interface Bld {
-  id: string; label: string; emoji: string
+  id: string; label: string; labelEn: string; emoji: string
   tx: number; ty: number; tw: number; th: number
   wall: string; roof: string
-  lines: string[]
+  lines: string[]; linesEn: string[]
+}
+
+// Resolve a building's display label / body lines by locale.
+function bldLabel(b: Bld, locale: string): string {
+  return locale === 'en' ? b.labelEn : b.label
+}
+function bldLines(b: Bld, locale: string): string[] {
+  return locale === 'en' ? b.linesEn : b.lines
 }
 
 const BUILDINGS: Bld[] = [
   {
-    id: 'about', label: 'House of About', emoji: '🏠',
+    id: 'about', label: '소개의 집', labelEn: 'House of About', emoji: '🏠',
     tx: 3, ty: 4, tw: 10, th: 8,
     wall: '#8b6914', roof: '#c0522d',
     lines: [
+      '[ 오승일 / Seungil Oh ]',
+      '',
+      '프론트엔드 개발자 · 개발경력 7년+',
+      '',
+      '주력은 프론트엔드입니다.',
+      'React · Next.js · Svelte · TypeScript로',
+      '상태 기반 UI와 인터랙션을 설계·구현합니다.',
+      '',
+      '백엔드도 다룹니다.',
+      'Go · Java로 서버·API 개발이 가능하며,',
+      '프론트-백엔드를 아우르는 작업에 익숙합니다.',
+      '',
+      '퍼블리싱도 자신 있습니다.',
+      'HTML/CSS로 픽셀 단위 마크업과',
+      '반응형 화면을 정확하게 구현합니다.',
+    ],
+    linesEn: [
       '[ Seungil Oh ]',
       '',
       'Frontend Developer · 7+ years of experience',
@@ -43,10 +69,34 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'skills', label: 'Skill Tower', emoji: '🏰',
+    id: 'skills', label: '스킬 타워', labelEn: 'Skill Tower', emoji: '🏰',
     tx: 32, ty: 3, tw: 9, th: 11,
     wall: '#3a3a7a', roof: '#5555aa',
     lines: [
+      '[ 기술 스택 ]',
+      '',
+      '── Frontend ──',
+      '● HTML5 / CSS3      ★★★★★',
+      '● JavaScript (ES6+) ★★★★★',
+      '● React / Next.js   ★★★★☆',
+      '● Svelte            ★★★★☆',
+      '● TypeScript        ★★★☆☆',
+      '● PixiJS            ★★★☆☆',
+      '',
+      '── Backend / DB ──',
+      '● Go                ★★★☆☆',
+      '● Java              ★★★☆☆',
+      '● Node.js / Express ★★★☆☆',
+      '● MySQL / MariaDB   ★★★☆☆',
+      '● PHP               ★★☆☆☆',
+      '',
+      '── Tools / Design ──',
+      '● Figma / Zeplin    ★★★★☆',
+      '● Git / GitHub      ★★★★☆',
+      '● AWS / Vercel      ★★★☆☆',
+      '● Webpack / Vite    ★★★☆☆',
+    ],
+    linesEn: [
       '[ Tech Stack ]',
       '',
       '── Frontend ──',
@@ -72,10 +122,21 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'projects', label: 'Project Shop', emoji: '🏪',
+    id: 'projects', label: '프로젝트 상점', labelEn: 'Project Shop', emoji: '🏪',
     tx: 30, ty: 20, tw: 12, th: 8,
     wall: '#2a6b3a', roof: '#1e4a28',
     lines: [
+      '[ 주요 프로젝트 ]',
+      '',
+      '▸ BABA OPTION — Next.js 브랜드 사이트',
+      '▸ CRM — Svelte + Web Components',
+      '▸ babaoption WTS — PixiJS + Svelte',
+      '▸ mytradinginfo — React 코인 정보',
+      '▸ mysoftwiz — EJS 회사 소개',
+      '▸ kmuseum — 박물관 예약 사이트',
+      '▸ 랄라 — React 유아 AI 앱',
+    ],
+    linesEn: [
       '[ Featured Projects ]',
       '',
       '▸ BABA OPTION — Next.js brand site',
@@ -88,10 +149,44 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'career', label: 'Career Museum', emoji: '🏛️',
+    id: 'career', label: '경력 박물관', labelEn: 'Career Museum', emoji: '🏛️',
     tx: 3, ty: 22, tw: 13, th: 8,
     wall: '#555544', roof: '#333322',
     lines: [
+      '[ 경력 ]',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '● 퀀텀에이아이 (Quantum AI)',
+      '  2025.12.15 ~ 현재',
+      '  프론트엔드 개발',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '● (주)소프트위즈',
+      '  2020.05 ~ 2025.12.05 (5년 7개월)',
+      '  웹팀 · 대리',
+      '',
+      '  주요 업무:',
+      '  · Next.js 기반 브랜드 사이트 구축',
+      '  · Svelte + Web Components CRM 개발',
+      '  · PixiJS 기반 트레이딩 UI 개발',
+      '  · MySQL 연동 사내 관리 시스템 개발',
+      '  · AWS 서버 운영 및 배포 관리',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '● 스마일데이',
+      '  2018.12 ~ 2020.02 (1년 2개월)',
+      '  웹개발팀 · 사원',
+      '',
+      '  주요 업무:',
+      '  · HTML/CSS/JS 퍼블리싱',
+      '  · jQuery 기반 인터렉션 구현',
+      '  · PHP + MySQL 웹 서비스 유지보수',
+      '  · 반응형 웹 개발',
+      '',
+      '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
+      '  총 경력: 약 7년+',
+    ],
+    linesEn: [
       '[ Career ]',
       '',
       '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━',
@@ -127,10 +222,20 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'contact', label: 'Contact Post Office', emoji: '📮',
+    id: 'contact', label: '연락처 우체국', labelEn: 'Contact Post Office', emoji: '📮',
     tx: 18, ty: 26, tw: 9, th: 7,
     wall: '#8a3a2a', roof: '#aa4422',
     lines: [
+      '[ 연락처 ]',
+      '',
+      '📧  c8c8c81828@gmail.com',
+      '📱  050-6679-1577',
+      '🐙  github.com/oikikomori',
+      '🌐  kuuuma.com',
+      '',
+      '언제든지 연락 주세요!',
+    ],
+    linesEn: [
       '[ Contact ]',
       '',
       '📧  c8c8c81828@gmail.com',
@@ -142,10 +247,20 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'games', label: 'Game Arcade', emoji: '🕹️',
+    id: 'games', label: '게임 아케이드', labelEn: 'Game Arcade', emoji: '🕹️',
     tx: 19, ty: 4, tw: 10, th: 8,
     wall: '#1a1a2e', roof: '#e94560',
     lines: [
+      '[ 게임 아케이드 ]',
+      '',
+      '▸ Tower Defense — 전략 타워 디펜스',
+      '▸ Survive — 탑다운 슈터 생존',
+      '▸ Typing Game — 타이핑 속도 측정',
+      '▸ Tetris — 클래식 테트리스',
+      '',
+      '← 나가서 /games 로 방문하세요!',
+    ],
+    linesEn: [
       '[ Game Arcade ]',
       '',
       '▸ Tower Defense — strategy tower defense',
@@ -157,10 +272,23 @@ const BUILDINGS: Bld[] = [
     ],
   },
   {
-    id: 'aetheria', label: 'AI Lab', emoji: '🧪',
+    id: 'aetheria', label: 'AI 연구소', labelEn: 'AI Lab', emoji: '🧪',
     tx: 4, ty: 15, tw: 8, th: 5,
     wall: '#4a2d6b', roof: '#2d1b4a',
     lines: [
+      '[ Project Aetheria ]',
+      '',
+      '이 마을 광장(오른쪽 공터)에는',
+      'GPT와 Gemini, 두 AI 부족이',
+      '실제로 살아 움직이고 있습니다.',
+      '',
+      '스스로 이동하고, 사냥하고,',
+      '거래하고, 때론 죽기도 합니다.',
+      '8시간마다 그들의 하루가 흘러갑니다.',
+      '',
+      '광장에 가서 직접 관찰해보세요.',
+    ],
+    linesEn: [
       '[ Project Aetheria ]',
       '',
       "In this town's plaza (the open lot to the right),",
@@ -176,14 +304,14 @@ const BUILDINGS: Bld[] = [
   },
 ]
 
-// Games reachable directly from the Game Arcade building
-const ARCADE_GAMES: Array<{ label: string; emoji: string; href: string }> = [
-  { label: 'Arcade', emoji: '🕹️', href: '/arcade' },
-  { label: 'Tower Defense', emoji: '🏰', href: '/tower-defense' },
-  { label: 'Survive', emoji: '⚔️', href: '/survive' },
-  { label: 'Tetris', emoji: '🧱', href: '/tetris' },
-  { label: 'Typing', emoji: '⌨️', href: '/typing-game' },
-  { label: 'Lotto 6/45', emoji: '🎰', href: '/lotto' },
+// 게임 아케이드 건물에서 바로 갈 수 있는 게임 목록
+const ARCADE_GAMES: Array<{ label: string; labelEn: string; emoji: string; href: string }> = [
+  { label: '아케이드', labelEn: 'Arcade', emoji: '🕹️', href: '/arcade' },
+  { label: 'Tower Defense', labelEn: 'Tower Defense', emoji: '🏰', href: '/tower-defense' },
+  { label: 'Survive', labelEn: 'Survive', emoji: '⚔️', href: '/survive' },
+  { label: 'Tetris', labelEn: 'Tetris', emoji: '🧱', href: '/tetris' },
+  { label: 'Typing', labelEn: 'Typing', emoji: '⌨️', href: '/typing-game' },
+  { label: '로또 6/45', labelEn: 'Lotto 6/45', emoji: '🎰', href: '/lotto' },
 ]
 
 // AI 에이전트가 돌아다니는 마을 광장 (10x10 좌표계를 이 타일 범위에 매핑)
@@ -213,13 +341,13 @@ interface AetheriaEvent {
   display_text: string
 }
 
-// 에이전트 행동을 머리 위 말풍선용 짧은 라벨로 변환
+// 에이전트 행동을 머리 위 말풍선용 짧은 라벨로 변환 (한/영 공용 — 이모지 위주)
 const ACTION_BUBBLE: Record<string, string> = {
-  hunt: '🍖 Hunt!',
-  trade_offer: '💰 Trade',
-  party_invite: '🤝 Ally',
-  greeting: '👋 Hi',
-  move: '🚶 Move',
+  hunt: '🍖',
+  trade_offer: '💰',
+  party_invite: '🤝',
+  greeting: '👋',
+  move: '🚶',
   death: '💀',
   error: '…',
 }
@@ -291,7 +419,7 @@ function drawTile(ctx: CanvasRenderingContext2D, t: number, sx: number, sy: numb
   }
 }
 
-function drawBuilding(ctx: CanvasRenderingContext2D, b: Bld, camX: number, camY: number, nearId: string | null) {
+function drawBuilding(ctx: CanvasRenderingContext2D, b: Bld, camX: number, camY: number, nearId: string | null, locale: string) {
   const sx = b.tx * TILE - camX
   const sy = b.ty * TILE - camY
   const sw = b.tw * TILE
@@ -354,7 +482,7 @@ function drawBuilding(ctx: CanvasRenderingContext2D, b: Bld, camX: number, camY:
   ctx.fillStyle = '#3a2010'
   ctx.font = 'bold 11px monospace'
   ctx.textAlign = 'center'
-  ctx.fillText(`${b.emoji} ${b.label}`, sx + sw / 2, sy + sh - 55)
+  ctx.fillText(`${b.emoji} ${bldLabel(b, locale)}`, sx + sw / 2, sy + sh - 55)
 
   // Glow if near
   if (isNear) {
@@ -372,7 +500,7 @@ function drawBuilding(ctx: CanvasRenderingContext2D, b: Bld, camX: number, camY:
     ctx.fillStyle = '#ffd700'
     ctx.font = 'bold 12px monospace'
     ctx.textAlign = 'center'
-    ctx.fillText('[E] Enter', sx + sw / 2, sy - 10)
+    ctx.fillText(locale === 'en' ? '[E] Enter' : '[E] 입장하기', sx + sw / 2, sy - 10)
   }
 }
 
@@ -505,15 +633,18 @@ interface HallEntry {
   final_gold: number
 }
 
-function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number; hallOfFame: { longest: HallEntry[]; richest: HallEntry[] } } }) {
+function AetheriaPanel({ data, locale }: { data: { agents: NpcAgent[]; events: AetheriaEvent[]; tick: number; season: number; hallOfFame: { longest: HallEntry[]; richest: HallEntry[] } }; locale: string }) {
   const { agents, events, tick, season, hallOfFame } = data
   const alive = agents.filter((a) => a.status === 'alive').length
   const sorted = [...agents].sort((a, b) => b.gold - a.gold)
+  const en = locale === 'en'
 
   if (agents.length === 0) {
     return (
       <p className="font-mono text-sm text-green-100/60">
-        No simulation data yet. Agents advance a day every 8 hours.
+        {en
+          ? 'No simulation data yet. Agents advance a day every 8 hours.'
+          : '아직 시뮬레이션 데이터가 없습니다. 8시간마다 에이전트들의 하루가 진행됩니다.'}
       </p>
     )
   }
@@ -521,17 +652,19 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
   return (
     <div className="max-h-[60vh] space-y-3 overflow-y-auto font-mono text-sm">
       <p className="text-green-300">
-        🗓️ Season {season} · 🕐 Day {tick} · 💚 Alive {alive}/{agents.length}
+        {en
+          ? <>🗓️ Season {season} · 🕐 Day {tick} · 💚 Alive {alive}/{agents.length}</>
+          : <>🗓️ 시즌 {season} · 🕐 {tick}일차 · 💚 생존 {alive}/{agents.length}</>}
       </p>
 
       <Link
         href="/aetheria/history"
         className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300 transition hover:bg-amber-500/20"
       >
-        🏛️ Chronicle · View Hall of Fame →
+        {en ? '🏛️ Chronicle · View Hall of Fame →' : '🏛️ 연대기 · 명예의 전당 보기 →'}
       </Link>
 
-      {/* Agent status */}
+      {/* Agent status / 에이전트 현황 */}
       <div className="space-y-1">
         {sorted.map((a) => {
           const dead = a.status !== 'alive'
@@ -548,10 +681,10 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
         })}
       </div>
 
-      {/* Recent event log */}
+      {/* Recent event log / 최근 이벤트 로그 */}
       {events.length > 0 && (
         <div className="border-t border-[#4a8a5a]/30 pt-2">
-          <p className="mb-1 text-[10px] text-green-700">Recent Activity</p>
+          <p className="mb-1 text-[10px] text-green-700">{en ? 'Recent Activity' : '최근 활동'}</p>
           <div className="space-y-0.5">
             {events.slice(0, 8).map((e, i) => (
               <p key={i} className="text-[11px] text-green-100/60">
@@ -562,21 +695,21 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
         </div>
       )}
 
-      {/* Hall of Fame */}
+      {/* Hall of Fame / 명예의 전당 */}
       {(hallOfFame.longest.length > 0 || hallOfFame.richest.length > 0) && (
         <div className="border-t border-[#4a8a5a]/30 pt-2">
-          <p className="mb-1 text-[10px] text-amber-500">🏛️ Hall of Fame</p>
+          <p className="mb-1 text-[10px] text-amber-500">{en ? '🏛️ Hall of Fame' : '🏛️ 명예의 전당'}</p>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <p className="mb-0.5 text-[10px] text-green-700">🕐 Longest Survivor</p>
+              <p className="mb-0.5 text-[10px] text-green-700">{en ? '🕐 Longest Survivor' : '🕐 최장수'}</p>
               {hallOfFame.longest.map((h, i) => (
                 <p key={i} className="text-[11px] text-green-100/60">
-                  {i + 1}. {h.name} — {h.survived_days}d <span className="text-green-800">(S{h.season})</span>
+                  {i + 1}. {h.name} — {en ? `${h.survived_days}d` : `${h.survived_days}일`} <span className="text-green-800">(S{h.season})</span>
                 </p>
               ))}
             </div>
             <div>
-              <p className="mb-0.5 text-[10px] text-green-700">🪙 Richest</p>
+              <p className="mb-0.5 text-[10px] text-green-700">{en ? '🪙 Richest' : '🪙 최고부자'}</p>
               {hallOfFame.richest.map((h, i) => (
                 <p key={i} className="text-[11px] text-green-100/60">
                   {i + 1}. {h.name} — {h.final_gold} <span className="text-green-800">(S{h.season})</span>
@@ -592,6 +725,9 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
 
 // ── Main Component ────────────────────────────────────────────────────────────
 export default function RPGPageClient() {
+  const { locale } = useLanguage()
+  const localeRef = useRef(locale)
+  localeRef.current = locale
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const stateRef = useRef({
     px: 23 * TILE, py: 15 * TILE,
@@ -763,7 +899,7 @@ export default function RPGPageClient() {
 
       // Draw buildings (sorted by y for depth)
       const sorted = [...BUILDINGS].sort((a, b) => a.ty - b.ty)
-      sorted.forEach(b => drawBuilding(ctx, b, camX, camY, s.nearId))
+      sorted.forEach(b => drawBuilding(ctx, b, camX, camY, s.nearId, localeRef.current))
 
       // Draw Aetheria NPC agents (마을 광장을 돌아다니는 실제 AI 에이전트)
       const bob = Math.sin(s.frame * 0.08) * 2
@@ -806,8 +942,11 @@ export default function RPGPageClient() {
         ctx.fillRect(0, 0, W, H)
       }
 
-      // Time-of-day label
-      const timeLabel = phase < 0.25 ? '☀️ Day' : phase < 0.4 ? '🌇 Sunset' : phase < 0.8 ? '🌙 Night' : '🌅 Dawn'
+      // Time-of-day label / 시간대 라벨
+      const timeLabel =
+        localeRef.current === 'en'
+          ? (phase < 0.25 ? '☀️ Day' : phase < 0.4 ? '🌇 Sunset' : phase < 0.8 ? '🌙 Night' : '🌅 Dawn')
+          : (phase < 0.25 ? '☀️ 낮' : phase < 0.4 ? '🌇 해질녘' : phase < 0.8 ? '🌙 밤' : '🌅 새벽')
       ctx.fillStyle = 'rgba(0,0,0,0.4)'
       ctx.fillRect(10, 10, 74, 24)
       ctx.fillStyle = '#f0f0f0'
@@ -850,7 +989,11 @@ export default function RPGPageClient() {
       ctx.fillStyle = '#aaaaaa'
       ctx.font = '11px monospace'
       ctx.textAlign = 'left'
-      ctx.fillText('WASD / Arrows: Move  |  E: Enter/Close', 18, H - 18)
+      ctx.fillText(
+        localeRef.current === 'en' ? 'WASD / Arrows: Move  |  E: Enter/Close' : 'WASD / 방향키: 이동  |  E: 입장/닫기',
+        18,
+        H - 18,
+      )
 
       s.animId = requestAnimationFrame(loop)
     }
@@ -873,21 +1016,20 @@ export default function RPGPageClient() {
           <h1 className="text-5xl font-black text-white mb-2" style={{ textShadow: '0 0 30px #4a7' }}>
             🗺️ kuuuma World
           </h1>
-          <p className="text-green-300/60 font-mono text-sm">Explore the portfolio through the town</p>
+          <p className="text-green-300/60 font-mono text-sm">
+            {locale === 'en' ? 'Explore the portfolio through the town' : '마을을 탐험하며 포트폴리오를 둘러보세요'}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-xs font-mono text-green-300/70 border border-green-800 px-8 py-5 rounded-xl bg-black/30">
-          <div>🏠 House of About</div>
-          <div>🏰 Skill Tower</div>
-          <div>🏪 Project Shop</div>
-          <div>🏛️ Career Museum</div>
-          <div>📮 Contact Post Office</div>
-          <div>🕹️ Game Arcade</div>
+          {BUILDINGS.filter((b) => b.id !== 'aetheria').map((b) => (
+            <div key={b.id}>{b.emoji} {bldLabel(b, locale)}</div>
+          ))}
         </div>
 
         <div className="text-center text-xs font-mono text-green-400/50 space-y-1">
-          <p>WASD / Arrow Keys — Move</p>
-          <p>E — Enter building / Close</p>
+          <p>{locale === 'en' ? 'WASD / Arrow Keys — Move' : 'WASD / 방향키 — 이동'}</p>
+          <p>{locale === 'en' ? 'E — Enter building / Close' : 'E — 건물 입장 / 닫기'}</p>
         </div>
 
         <button
@@ -895,11 +1037,11 @@ export default function RPGPageClient() {
           className="px-10 py-4 bg-green-600 hover:bg-green-500 text-white font-black text-lg rounded-xl transition-all hover:scale-105 active:scale-95"
           style={{ boxShadow: '0 0 30px #2d6a2d' }}
         >
-          ▶ Start Game
+          {locale === 'en' ? '▶ Start Game' : '▶ 게임 시작'}
         </button>
 
         <Link href="/" className="text-green-600 hover:text-green-400 text-xs font-mono transition-colors">
-          ← Back to Home
+          {locale === 'en' ? '← Back to Home' : '← 메인으로 돌아가기'}
         </Link>
       </div>
     )
@@ -938,7 +1080,7 @@ export default function RPGPageClient() {
         href="/"
         className="absolute top-4 left-4 z-20 text-[11px] font-mono text-white/40 hover:text-white/80 bg-black/40 px-3 py-1.5 rounded transition-colors"
       >
-        ← Exit
+        {locale === 'en' ? '← Exit' : '← 나가기'}
       </Link>
 
       {/* Dialog box */}
@@ -950,23 +1092,27 @@ export default function RPGPageClient() {
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#4a8a5a]/40">
                 <span className="text-2xl">{dialog.bld.emoji}</span>
                 <h3 className="text-green-400 font-black font-mono text-sm tracking-wider">
-                  {dialog.bld.label}
+                  {bldLabel(dialog.bld, locale)}
                 </h3>
                 <button
                   onClick={() => setDialog(null)}
                   className="ml-auto text-[11px] font-mono text-green-600 hover:text-green-300"
-                  aria-label="Close"
+                  aria-label={locale === 'en' ? 'Close' : '닫기'}
                 >
-                  ✕ Close
+                  {locale === 'en' ? '✕ Close' : '✕ 닫기'}
                 </button>
               </div>
               <div className="max-h-[60vh] overflow-y-auto">
               {dialog.bld.id === 'aetheria' ? (
-                <AetheriaPanel data={aetheriaData} />
+                <AetheriaPanel data={aetheriaData} locale={locale} />
               ) : dialog.bld.id === 'games' ? (
                 <div>
-                  <p className="mb-3 font-mono text-sm font-bold text-green-300">[ Game Arcade ]</p>
-                  <p className="mb-4 font-mono text-xs text-green-100/60">Choose a game to play.</p>
+                  <p className="mb-3 font-mono text-sm font-bold text-green-300">
+                    {locale === 'en' ? '[ Game Arcade ]' : '[ 게임 아케이드 ]'}
+                  </p>
+                  <p className="mb-4 font-mono text-xs text-green-100/60">
+                    {locale === 'en' ? 'Choose a game to play.' : '플레이할 게임을 선택하세요.'}
+                  </p>
                   <div className="grid grid-cols-2 gap-2">
                     {ARCADE_GAMES.map((g) => (
                       <Link
@@ -975,14 +1121,14 @@ export default function RPGPageClient() {
                         className="flex items-center gap-2 rounded-lg border border-[#4a8a5a]/40 bg-[#0f1a0f] px-3 py-2.5 font-mono text-sm text-green-200 transition-colors hover:border-green-400 hover:bg-[#12251a]"
                       >
                         <span className="text-lg">{g.emoji}</span>
-                        {g.label}
+                        {locale === 'en' ? g.labelEn : g.label}
                       </Link>
                     ))}
                   </div>
                 </div>
               ) : (
               <div className="space-y-1.5">
-                {dialog.bld.lines.map((line, i) => (
+                {bldLines(dialog.bld, locale).map((line, i) => (
                   <p key={i} className={`font-mono text-sm ${
                     line.startsWith('[') ? 'text-green-300 font-bold' :
                     line.startsWith('●') || line.startsWith('▸') ? 'text-green-200' :
@@ -1022,16 +1168,18 @@ export default function RPGPageClient() {
               <span className="font-mono text-base font-black text-white">
                 {selectedNpc.status !== 'alive' ? '💀 ' : ''}{selectedNpc.name}
               </span>
-              <span className="ml-auto text-[10px] font-mono text-slate-500">Close ✕</span>
+              <span className="ml-auto text-[10px] font-mono text-slate-500">
+                {locale === 'en' ? 'Close ✕' : '닫기 ✕'}
+              </span>
             </div>
             <div className="space-y-1.5 font-mono text-sm text-slate-300">
-              <p>Model: <span className="text-white">{selectedNpc.model === 'gpt' ? 'GPT-4o mini' : 'Gemini 2.5 Flash'}</span></p>
-              <p>Role: <span className="text-white">{selectedNpc.role}</span></p>
-              <p>Gold: <span className="text-amber-300">🪙 {selectedNpc.gold}</span></p>
+              <p>{locale === 'en' ? 'Model' : '모델'}: <span className="text-white">{selectedNpc.model === 'gpt' ? 'GPT-4o mini' : 'Gemini 2.5 Flash'}</span></p>
+              <p>{locale === 'en' ? 'Role' : '역할'}: <span className="text-white">{selectedNpc.role}</span></p>
+              <p>{locale === 'en' ? 'Gold' : '골드'}: <span className="text-amber-300">🪙 {selectedNpc.gold}</span></p>
               <p>HP: <span className="text-emerald-300">❤️ {selectedNpc.stamina}</span></p>
-              <p>Status: <span className="text-white">{selectedNpc.status === 'alive' ? 'Alive' : 'Dead'}</span></p>
+              <p>{locale === 'en' ? 'Status' : '상태'}: <span className="text-white">{selectedNpc.status === 'alive' ? (locale === 'en' ? 'Alive' : '생존') : (locale === 'en' ? 'Dead' : '사망')}</span></p>
               {selectedNpc.last_action && (
-                <p>Last action: <span className="text-white">{ACTION_BUBBLE[selectedNpc.last_action] ?? selectedNpc.last_action}</span></p>
+                <p>{locale === 'en' ? 'Last action' : '마지막 행동'}: <span className="text-white">{ACTION_BUBBLE[selectedNpc.last_action] ?? selectedNpc.last_action}</span></p>
               )}
             </div>
           </div>
@@ -1069,7 +1217,7 @@ export default function RPGPageClient() {
           <button
             onPointerDown={(e) => { e.preventDefault(); touchAction() }}
             className="absolute bottom-12 right-8 z-20 w-20 h-20 rounded-full bg-green-600/80 border-2 border-green-300/60 text-white font-black text-xl active:bg-green-500 backdrop-blur-sm select-none touch-none"
-            aria-label="Enter / Close"
+            aria-label={locale === 'en' ? 'Enter / Close' : '입장 / 닫기'}
           >
             E
           </button>

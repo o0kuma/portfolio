@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 import { geoEqualEarth, geoPath } from 'd3-geo'
 import { feature } from 'topojson-client'
 import type { FeatureCollection, Geometry } from 'geojson'
@@ -39,6 +40,7 @@ function getMarkerRadius(count: number): number {
 }
 
 export default function VisitorMap({ mapPoints }: VisitorMapProps) {
+  const { locale } = useLanguage()
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const [geographies, setGeographies] = useState<FeatureCollection | null>(null)
 
@@ -128,9 +130,9 @@ export default function VisitorMap({ mapPoints }: VisitorMapProps) {
           style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}
         >
           <p className="font-semibold text-white">
-            {[tooltip.city, tooltip.country].filter(Boolean).join(', ') || 'Unknown'}
+            {[tooltip.city, tooltip.country].filter(Boolean).join(', ') || (locale === 'en' ? 'Unknown' : '알 수 없음')}
           </p>
-          <p className="text-neutral-400">{tooltip.count} visitor(s)</p>
+          <p className="text-neutral-400">{locale === 'en' ? `${tooltip.count} visitors` : `방문자 ${tooltip.count}명`}</p>
         </div>
       )}
     </div>
