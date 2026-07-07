@@ -41,9 +41,9 @@ function shuffledCells(): Cell[] {
 
 export const numberRush: MiniGame<State> = {
   id: 'number-rush',
-  title: '숫자 순서',
+  title: 'Number Rush',
   emoji: '🔢',
-  instruction: '1부터 9까지 순서대로 빠르게 탭!',
+  instruction: 'Tap 1 through 9 in order as fast as you can!',
   accentColor: '#38bdf8',
   init() {
     return { cells: shuffledCells(), next: 1, cols: COLS, rows: ROWS, elapsed: 0, mistakes: 0, over: false, finishedAt: null }

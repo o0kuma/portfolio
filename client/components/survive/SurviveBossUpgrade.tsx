@@ -16,8 +16,8 @@ export default function SurviveBossUpgrade({ choices, onChoose }: Props) {
         style={{ animation: 'fadeInUp 0.3s ease-out' }}
       >
         <div className="mb-1 text-center text-amber-400 text-3xl">👑</div>
-        <h3 className="mb-1 text-center font-display text-2xl font-bold text-amber-300">보스 처치!</h3>
-        <p className="mb-5 text-center text-sm text-amber-200/60">특수 강화를 하나 선택하세요</p>
+        <h3 className="mb-1 text-center font-display text-2xl font-bold text-amber-300">Boss Defeated!</h3>
+        <p className="mb-5 text-center text-sm text-amber-200/60">Choose a special upgrade</p>
         <div className="flex flex-col gap-3">
           {choices.map((u) => (
             <button

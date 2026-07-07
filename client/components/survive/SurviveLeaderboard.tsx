@@ -8,13 +8,13 @@ export default function SurviveLeaderboard({ refreshKey = 0 }: { refreshKey?: nu
     <GameLeaderboard
       apiPath="/api/survive/scores"
       refreshKey={refreshKey}
-      title="랭킹 TOP 10"
+      title="Top 10"
       columns={[
-        { key: 'timeSec', label: '시간', format: (v) => formatTime(Number(v)) },
+        { key: 'timeSec', label: 'Time', format: (v) => formatTime(Number(v)) },
         { key: 'level', label: 'Lv' },
-        { key: 'kills', label: '처치' },
+        { key: 'kills', label: 'Kills' },
       ]}
-      emptyText="아직 기록이 없습니다"
+      emptyText="No records yet"
     />
   )
 }

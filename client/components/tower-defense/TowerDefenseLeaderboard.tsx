@@ -15,12 +15,12 @@ export default function TowerDefenseLeaderboard({
       apiPath="/api/tower-defense/scores"
       refreshKey={refreshKey}
       day={day ?? undefined}
-      title={day ? '오늘의 챌린지 랭킹' : '랭킹 TOP 10'}
+      title={day ? "Today's Challenge Ranking" : 'Top 10'}
       columns={[
-        { key: 'wave', label: '웨이브' },
-        { key: 'kills', label: '처치' },
+        { key: 'wave', label: 'Wave' },
+        { key: 'kills', label: 'Kills' },
       ]}
-      emptyText="아직 기록이 없습니다"
+      emptyText="No records yet"
     />
   )
 }

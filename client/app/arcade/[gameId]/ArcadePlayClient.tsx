@@ -94,16 +94,16 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
     <div className="flex h-[100dvh] flex-col bg-[#0a0a12] text-white">
       <header className="flex items-center gap-3 border-b border-slate-800 px-4 py-3">
         <Link href="/arcade" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
-          <FiArrowLeft className="h-4 w-4" /> 목록
+          <FiArrowLeft className="h-4 w-4" /> List
         </Link>
         <span className="text-sm font-bold">{game.emoji} {game.title}</span>
         <div className="ml-auto flex items-center gap-1">
           {!result && (
-            <button onClick={() => setPaused((p) => !p)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="일시정지">
+            <button onClick={() => setPaused((p) => !p)} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Pause">
               {paused ? <FiPlay className="h-5 w-5" /> : <FiPause className="h-5 w-5" />}
             </button>
           )}
-          <button onClick={retry} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="재시작">
+          <button onClick={retry} className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white" aria-label="Restart">
             <FiRotateCcw className="h-5 w-5" />
           </button>
         </div>
@@ -129,27 +129,27 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
                 animate={{ scale: 1, opacity: 1 }}
                 className="w-full max-w-xs rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center"
               >
-                <p className="mb-1 text-sm text-slate-400">게임 종료</p>
+                <p className="mb-1 text-sm text-slate-400">Game Over</p>
                 <p className="mb-3 text-4xl font-black" style={{ color: game.accentColor }}>{result.score}</p>
-                {result.isNew && <p className="mb-2 text-xs font-bold text-amber-400">🏆 신기록!</p>}
+                {result.isNew && <p className="mb-2 text-xs font-bold text-amber-400">🏆 New Record!</p>}
                 {result.challengeBonus > 0 && (
-                  <p className="mb-2 text-xs font-bold text-emerald-400">🎯 오늘의 도전 완료! +{result.challengeBonus} 보너스</p>
+                  <p className="mb-2 text-xs font-bold text-emerald-400">🎯 Today's Challenge complete! +{result.challengeBonus} bonus</p>
                 )}
-                <p className="mb-4 text-sm text-slate-300">🪙 +{result.coins} 코인 획득</p>
+                <p className="mb-4 text-sm text-slate-300">🪙 +{result.coins} coins earned</p>
 
                 {!submitted ? (
                   <div className="mb-4 flex flex-col gap-2">
                     <input
                       value={playerName}
                       onChange={(e) => setPlayerName(e.target.value.slice(0, 20))}
-                      placeholder="닉네임 (랭킹 등록, 선택)"
+                      placeholder="Nickname (for ranking, optional)"
                       className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
                     />
                     <button
                       onClick={submitScore}
                       className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-bold text-black hover:bg-amber-400"
                     >
-                      🏆 랭킹 등록
+                      🏆 Submit Score
                     </button>
                   </div>
                 ) : (
@@ -163,13 +163,13 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
                     onClick={retry}
                     className="flex-1 rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-700"
                   >
-                    다시하기
+                    Play Again
                   </button>
                   <Link
                     href="/arcade"
                     className="flex-1 rounded-lg border border-slate-700 px-4 py-2.5 text-center text-sm font-semibold text-slate-300 hover:border-slate-500"
                   >
-                    목록으로
+                    Back to List
                   </Link>
                 </div>
               </motion.div>

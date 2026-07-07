@@ -33,10 +33,10 @@ export default function ArcadeMenuClient() {
         <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3">
           {!standalone && (
             <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
-              <FiArrowLeft className="h-4 w-4" /> 메인
+              <FiArrowLeft className="h-4 w-4" /> Home
             </Link>
           )}
-          <span className={`text-sm font-bold text-white ${standalone ? '' : 'ml-1'}`}>🕹️ 포켓 아케이드</span>
+          <span className={`text-sm font-bold text-white ${standalone ? '' : 'ml-1'}`}>🕹️ Pocket Arcade</span>
           <div className="ml-auto flex items-center gap-1.5 rounded-full border border-amber-600/40 bg-amber-950/30 px-3 py-1 text-xs font-bold text-amber-300">
             🪙 {coins.toLocaleString()}
           </div>
@@ -45,11 +45,11 @@ export default function ArcadeMenuClient() {
 
       <main className="mx-auto max-w-md px-4 pt-8">
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 text-center">
-          <h1 className="mb-2 text-3xl font-black">🕹️ 포켓 아케이드</h1>
-          <p className="text-sm text-slate-400">한 손으로 즐기는 초단타 미니게임</p>
+          <h1 className="mb-2 text-3xl font-black">🕹️ Pocket Arcade</h1>
+          <p className="text-sm text-slate-400">Ultra-short mini games you can play one-handed</p>
         </motion.div>
 
-        {/* 레벨 배지 */}
+        {/* Level badge */}
         <div className="mb-5 flex items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-3">
           <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-sm font-black text-purple-300">
             Lv.{level}
@@ -61,7 +61,7 @@ export default function ArcadeMenuClient() {
           </div>
         </div>
 
-        {/* 오늘의 도전 */}
+        {/* Today's Challenge */}
         <Link
           href={`/arcade/${challenge.gameId}`}
           className={`mb-6 flex items-center gap-3 rounded-2xl border p-4 transition ${
@@ -72,11 +72,11 @@ export default function ArcadeMenuClient() {
         >
           <span className="text-2xl">{claimed ? '✅' : '🎯'}</span>
           <div className="flex-1">
-            <p className="text-xs font-bold text-amber-300">오늘의 도전</p>
-            <p className="text-sm text-white">{challenge.emoji} {challenge.gameTitle} — {challenge.target}점 이상</p>
+            <p className="text-xs font-bold text-amber-300">Today's Challenge</p>
+            <p className="text-sm text-white">{challenge.emoji} {challenge.gameTitle} — {challenge.target}+ points</p>
           </div>
           <div className="text-right text-xs font-bold text-amber-300">
-            {claimed ? '완료' : `+${challenge.bonus} 🪙`}
+            {claimed ? 'Done' : `+${challenge.bonus} 🪙`}
           </div>
         </Link>
 
@@ -99,7 +99,7 @@ export default function ArcadeMenuClient() {
                   <p className="text-xs text-slate-500">{g.instruction}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[10px] text-slate-500">최고기록</p>
+                  <p className="text-[10px] text-slate-500">Best Score</p>
                   <p className="text-sm font-bold" style={{ color: g.accentColor }}>{bests[g.id] ?? 0}</p>
                 </div>
               </Link>
@@ -108,7 +108,7 @@ export default function ArcadeMenuClient() {
         </div>
 
         <p className="mt-8 text-center text-[11px] text-slate-600">
-          게임 점수는 코인으로 환산되어 누적됩니다 · 더 많은 게임이 추가될 예정
+          Game scores are converted into coins · More games coming soon
         </p>
       </main>
     </div>

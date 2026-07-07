@@ -12,8 +12,8 @@ export default function SurviveLevelUp({ choices, onChoose }: Props) {
   return (
     <div className="absolute inset-0 z-30 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
       <div className="mx-4 w-full max-w-md">
-        <h3 className="mb-1 text-center font-display text-2xl font-bold text-white">레벨 업!</h3>
-        <p className="mb-5 text-center text-sm text-white/60">강화를 하나 선택하세요</p>
+        <h3 className="mb-1 text-center font-display text-2xl font-bold text-white">Level Up!</h3>
+        <p className="mb-5 text-center text-sm text-white/60">Choose an upgrade</p>
         <div className="flex flex-col gap-3">
           {choices.map((u) => (
             <button

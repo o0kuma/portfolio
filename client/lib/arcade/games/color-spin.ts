@@ -41,9 +41,9 @@ function judge(angle: number, targetIndex: number): { hit: 'perfect' | 'good' | 
 
 export const colorSpin: MiniGame<State> = {
   id: 'color-spin',
-  title: '컬러 스핀',
+  title: 'Color Spin',
   emoji: '🎡',
-  instruction: '바늘이 표시된 색 위에 올 때 탭!',
+  instruction: 'Tap when the needle is on the highlighted color!',
   accentColor: '#a855f7',
   init() {
     return {

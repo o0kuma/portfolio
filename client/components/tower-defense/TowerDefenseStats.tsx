@@ -50,7 +50,7 @@ export default function TowerDefenseStats({ stats, wave }: Props) {
         })}
       </div>
       <div className="mt-2 border-t border-white/10 pt-2 flex justify-between">
-        <span className="text-[9px] text-white/30 font-mono">총 처치</span>
+        <span className="text-[9px] text-white/30 font-mono">Total Kills</span>
         <span className="text-[10px] text-white/60 font-mono font-bold">{totalKills}</span>
       </div>
     </motion.div>

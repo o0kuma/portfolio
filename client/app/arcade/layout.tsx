@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: '아케이드',
+    title: 'Arcade',
     statusBarStyle: 'black-translucent',
   },
 }

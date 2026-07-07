@@ -21,9 +21,9 @@ let smoothScroll = 0
 
 export const stackTower: MiniGame<State> = {
   id: 'stack-tower',
-  title: '스택 타워',
+  title: 'Stack Tower',
   emoji: '🏗️',
-  instruction: '움직이는 블록을 탭해서 정확히 쌓으세요!',
+  instruction: 'Tap to stack the moving block precisely!',
   accentColor: '#f97316',
   init() {
     smoothScroll = 0

@@ -27,9 +27,9 @@ function judge(pos: number): { hit: 'perfect' | 'good' | 'miss'; pts: number } {
 
 export const tapTiming: MiniGame<State> = {
   id: 'tap-timing',
-  title: '타이밍 탭',
+  title: 'Timing Tap',
   emoji: '🎯',
-  instruction: '바가 초록 존 중앙에 왔을 때 탭!',
+  instruction: 'Tap when the bar hits the center of the green zone!',
   accentColor: '#22c55e',
   init() {
     return {

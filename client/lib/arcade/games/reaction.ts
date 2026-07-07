@@ -31,9 +31,9 @@ function trimmedAverage(times: number[]): number {
 
 export const reaction: MiniGame<State> = {
   id: 'reaction',
-  title: '반응속도',
+  title: 'Reaction Time',
   emoji: '⚡',
-  instruction: '화면이 초록으로 바뀌면 최대한 빨리 탭!',
+  instruction: 'Tap as fast as you can when the screen turns green!',
   accentColor: '#eab308',
   init() {
     return {

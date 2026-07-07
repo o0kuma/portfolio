@@ -36,9 +36,9 @@ function spawnRow(): Block[] {
 
 export const dodge: MiniGame<State> = {
   id: 'dodge',
-  title: '닷지',
+  title: 'Dodge',
   emoji: '🕹️',
-  instruction: '좌우로 탭해서 떨어지는 블록을 피하세요!',
+  instruction: 'Tap left/right to dodge falling blocks!',
   accentColor: '#ef4444',
   init() {
     return {

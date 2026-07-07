@@ -68,7 +68,7 @@ function GoogleMapEmbed({ item }: { item: RestaurantItem }) {
   if (!MAPS_KEY) {
     return (
       <div className="flex items-center justify-center h-full text-neutral-600 font-mono text-xs">
-        NEXT_PUBLIC_GOOGLE_MAPS_KEY 미설정
+        NEXT_PUBLIC_GOOGLE_MAPS_KEY not set
       </div>
     )
   }
@@ -107,7 +107,7 @@ function ImageCarousel({ images, name }: { images: string[]; name: string }) {
         type="button"
         onClick={(e) => { e.stopPropagation(); setIdx((i) => (i - 1 + images.length) % images.length) }}
         className="absolute left-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/carousel:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-        aria-label="이전"
+        aria-label="Previous"
       >
         ←
       </button>
@@ -115,7 +115,7 @@ function ImageCarousel({ images, name }: { images: string[]; name: string }) {
         type="button"
         onClick={(e) => { e.stopPropagation(); setIdx((i) => (i + 1) % images.length) }}
         className="absolute right-1 top-1/2 -translate-y-1/2 z-10 opacity-0 group-hover/carousel:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-        aria-label="다음"
+        aria-label="Next"
       >
         →
       </button>
@@ -127,7 +127,7 @@ function ImageCarousel({ images, name }: { images: string[]; name: string }) {
             type="button"
             onClick={(e) => { e.stopPropagation(); setIdx(i) }}
             className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? 'bg-white' : 'bg-white/40'}`}
-            aria-label={`이미지 ${i + 1}`}
+            aria-label={`Image ${i + 1}`}
           />
         ))}
       </div>
@@ -167,7 +167,7 @@ function RestaurantCard({
         <div className="flex items-center gap-1.5 shrink-0">
           {item.checked && (
             <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 bg-cyan-400/5 px-1.5 py-0.5 rounded">
-              방문
+              Visited
             </span>
           )}
           {item.category && <CategoryBadge category={item.category} />}
@@ -267,10 +267,7 @@ export default function FoodClient({
             <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">Food</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-neutral-50">
-            맛집 리스트
-            <span className="block text-neutral-500 text-xl md:text-2xl font-medium mt-2">
-              Restaurant List
-            </span>
+            Restaurant List
           </h1>
         </div>
       </div>
@@ -278,13 +275,13 @@ export default function FoodClient({
       <div className="container-custom py-10">
         {error && (
           <div className="py-20 text-center space-y-2">
-            <p className="text-neutral-500 font-mono text-sm">노션 데이터를 불러오지 못했습니다.</p>
+            <p className="text-neutral-500 font-mono text-sm">Failed to load Notion data.</p>
             {errorMessage && <p className="text-red-400 font-mono text-xs">{errorMessage}</p>}
           </div>
         )}
 
         {!error && regions.length === 0 && (
-          <p className="text-neutral-500 font-mono text-sm py-20 text-center">등록된 맛집이 없습니다.</p>
+          <p className="text-neutral-500 font-mono text-sm py-20 text-center">No restaurants registered.</p>
         )}
 
         {!error && regions.length > 0 && (
@@ -319,7 +316,7 @@ export default function FoodClient({
               {/* Desktop: vertical sidebar */}
               <div className="hidden md:block sticky top-24 space-y-0.5">
                 <p className="text-[10px] font-mono text-neutral-600 tracking-widest uppercase px-3 pb-2">
-                  지역
+                  Regions
                 </p>
                 {regions.map((region) => {
                   const isActive = activeRegion === region.id
@@ -366,7 +363,7 @@ export default function FoodClient({
                       </h2>
                       <div className="flex items-center gap-3">
                         <span className="text-xs font-mono text-neutral-600">
-                          총 {current.items.length}곳
+                          {current.items.length} places
                         </span>
                         {/* View mode toggle */}
                         <div className="flex items-center border border-neutral-700 rounded-full overflow-hidden">
@@ -379,7 +376,7 @@ export default function FoodClient({
                                 : 'text-neutral-500 hover:text-neutral-300'
                             }`}
                           >
-                            리스트
+                            List
                           </button>
                           <button
                             type="button"
@@ -391,7 +388,7 @@ export default function FoodClient({
                             }`}
                           >
                             <MapPinIcon size={10} />
-                            지도
+                            Map
                           </button>
                         </div>
                         <a
@@ -401,7 +398,7 @@ export default function FoodClient({
                           className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
                         >
                           <MapPinIcon />
-                          <span>전체 지도</span>
+                          <span>Full Map</span>
                           <ExternalLinkIcon />
                         </a>
                       </div>
@@ -414,7 +411,7 @@ export default function FoodClient({
                         <div className="w-64 shrink-0 overflow-y-auto flex flex-col gap-1.5 pr-1 scrollbar-none">
                           {filteredItems.length === 0 ? (
                             <p className="text-neutral-600 font-mono text-xs py-6 text-center">
-                              식당이 없습니다
+                              No restaurants
                             </p>
                           ) : filteredItems.map((item) => {
                             const isActive = mapItem?.id === item.id
@@ -464,7 +461,7 @@ export default function FoodClient({
                                   rel="noopener noreferrer"
                                   className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors shrink-0"
                                 >
-                                  구글맵에서 열기
+                                  Open in Google Maps
                                   <ExternalLinkIcon />
                                 </a>
                               </div>
@@ -474,7 +471,7 @@ export default function FoodClient({
                             </>
                           ) : (
                             <div className="flex-1 flex items-center justify-center text-neutral-700 font-mono text-sm">
-                              식당을 선택하세요
+                              Select a restaurant
                             </div>
                           )}
                         </div>
@@ -511,7 +508,7 @@ export default function FoodClient({
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors"
                                   >
-                                    구글맵에서 열기
+                                    Open in Google Maps
                                     <ExternalLinkIcon />
                                   </a>
                                   <button
@@ -536,7 +533,7 @@ export default function FoodClient({
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="식당 이름 검색..."
+                            placeholder="Search restaurant name..."
                             className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
                           />
                         </div>
@@ -553,7 +550,7 @@ export default function FoodClient({
                                   : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
                               }`}
                             >
-                              전체
+                              All
                             </button>
                             {categories.map((cat) => {
                               const isActive = activeCategory === cat
@@ -582,18 +579,18 @@ export default function FoodClient({
                                   : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
                               }`}
                             >
-                              방문만 보기
+                              Visited only
                             </button>
                           </div>
                         )}
 
                         {current.items.length === 0 ? (
                           <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                            아직 등록된 맛집이 없어요.
+                            No restaurants registered yet.
                           </p>
                         ) : filteredItems.length === 0 ? (
                           <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                            조건에 맞는 식당이 없어요.
+                            No restaurants match your filters.
                           </p>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">

@@ -76,7 +76,7 @@ export default function TowerDefenseTutorial({ locale, onDone }: Props) {
               onClick={handleDone}
               className="text-xs text-slate-500 hover:text-slate-300 transition-colors"
             >
-              건너뛰기
+              {locale === 'ko' ? '건너뛰기' : 'Skip'}
             </button>
           </div>
 
@@ -104,7 +104,9 @@ export default function TowerDefenseTutorial({ locale, onDone }: Props) {
               onClick={isLast ? handleDone : () => setStep(s => s + 1)}
               className="rounded-lg bg-cyan-500 px-4 py-1.5 text-xs font-semibold text-slate-950 hover:bg-cyan-400 transition-colors"
             >
-              {isLast ? '시작하기 🚀' : '다음 →'}
+              {isLast
+                ? (locale === 'ko' ? '시작하기 🚀' : 'Start 🚀')
+                : (locale === 'ko' ? '다음 →' : 'Next →')}
             </button>
           </div>
         </motion.div>
