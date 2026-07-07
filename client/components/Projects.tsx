@@ -6,6 +6,7 @@ import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from '
 import Link from 'next/link'
 import SearchBar from './SearchBar'
 import ProjectModal from './portfolio/ProjectModal'
+import { useLanguage } from '@/lib/LanguageContext'
 import {
   portfolioViewport,
   sectionReveal,
@@ -295,12 +296,143 @@ const SAMPLE_PROJECTS: Project[] = [
   },
 ]
 
+// English overrides for the built-in sample projects, keyed by project id.
+// DB-sourced projects have no entry and fall back to their stored (Korean) text.
+type ProjectEn = Partial<Pick<Project, 'title' | 'description' | 'content' | 'participants' | 'role' | 'retrospective'>>
+const PROJECT_EN: Record<string, ProjectEn> = {
+  'tetris-web': {
+    title: 'Tetris (Web Demo)',
+    description: 'Browser-playable Tetris — SRS rotation, hold, mobile gestures',
+    content:
+      'Built with Next.js and pure TypeScript game logic. Supports 7-bag randomization, ghost piece, per-level gravity and local high scores, with both desktop keyboard and mobile swipe/button input.',
+    participants: 'Solo',
+    role: 'Design & implementation',
+    retrospective:
+      'Keeping the game logic fully separate from the UI as pure functions made testing and refactoring easy. Handling mobile swipe input taught me to unify touch and keyboard into a single state model.',
+  },
+  '1': {
+    title: 'BabaOption',
+    description: 'Easytros / binary-option brand site',
+    content:
+      'A brand site for binary options, built with Next.js and Node.js. Applied responsive design and a modern UI/UX to improve the user experience.',
+    participants: 'Team project (company)',
+    role: 'Full development',
+    retrospective:
+      'Chose Next.js SSR/SSG because SEO and initial load speed mattered for a brand site. Splitting SCSS by component let the team collaborate without style conflicts.',
+  },
+  '2': {
+    title: 'CRM (Deposit/Withdrawal Management)',
+    description: 'CRM site for the BabaOption / Easytros options platform',
+    content:
+      'A CRM for a binary-option platform that manages deposit and withdrawal operations. Built a modern admin interface with Svelte and Web Components.',
+    participants: 'Team project (company)',
+    role: 'Publishing & frontend development',
+    retrospective:
+      'Encapsulated UI repeated across many backend pages into framework-agnostic reusable Web Components. Combined with Svelte reactivity to keep the admin state management simple.',
+  },
+  '3': {
+    title: 'Easytros (Options)',
+    description: 'A WTS to trade with coins or currency',
+    content:
+      'A web trading system for playing options with coins or currency. Implemented interactive game elements with PixiJS and state management with Svelte.',
+    participants: 'Team project (company)',
+    role: 'Publishing & frontend development',
+  },
+  '4': {
+    title: 'Lalla',
+    description: 'AI-based early-childhood growth app',
+    content:
+      'A web app that uses AI to help kindergartens and parents raise young children more conveniently and effectively. Built a responsive, user-friendly UI on React.',
+    participants: 'Solo (freelance)',
+    role: 'Publishing & frontend development',
+  },
+  '4-1': {
+    title: 'tzzim',
+    description: 'Golf tee-time booking website',
+    content:
+      'A golf tee-time website that introduces courses and lets users make reservations. Built a responsive, user-friendly UI on React.',
+    participants: 'Solo (freelance)',
+    role: 'Publishing & frontend development',
+  },
+  '5': {
+    title: 'mytradinginfo / admin',
+    description: 'Crypto information site with an admin panel',
+    content:
+      'A crypto information site built for advertising and customer acquisition around company projects. Developed the responsive design and the admin panel.',
+    participants: 'Team project (company)',
+    role: 'Publishing & frontend development',
+  },
+  '6': {
+    title: 'mysoftwiz / admin',
+    description: 'Company site with an admin panel',
+    content:
+      'A company introduction site that accepts resumes and inquiries, plus an admin panel to manage them. Implemented server-side rendering with the EJS template engine.',
+    participants: 'Team project (company)',
+    role: 'Publishing & frontend development',
+  },
+  '7': {
+    title: 'babaglobal',
+    description: 'Company homepage for the baba brand',
+    content:
+      'An in-house company introduction homepage for the baba brand. Handled responsive page publishing and frontend work with Semantic UI.',
+    participants: 'Team project (company)',
+    role: 'Publishing & frontend development',
+  },
+  '8': {
+    title: 'Shoretech',
+    description: 'Swimming-pool introduction site',
+    content:
+      'A swimming-pool introduction site delivered as a freelance markup-only job. Introduced the pool facilities and services with a clean, intuitive design.',
+    participants: 'Freelance project',
+    role: 'Markup/publishing',
+  },
+  '9': {
+    title: 'Daejin University Family Companies',
+    description: 'Daejin University family-company site',
+    content:
+      'A freelance markup project for Daejin University family companies. Like other universities, built a family-company site for the assigned school.',
+    participants: 'Freelance project',
+    role: 'Markup/publishing',
+  },
+  '10': {
+    title: 'Daejeon Mobility Support Center',
+    description: 'Mobility support center for people with reduced mobility',
+    content:
+      'A freelance markup project for a mobility support center serving people with reduced mobility.',
+    participants: 'Freelance project',
+    role: 'Full markup/publishing',
+  },
+  '11': {
+    title: 'Study PT',
+    description: 'Personalized study-training project',
+    content:
+      'A personalized study-training project delivered as freelance work by two people. Handled all the markup to make studying more convenient for students.',
+    participants: '2 people (freelance)',
+    role: 'Full markup/publishing',
+  },
+  '12': {
+    title: 'kmuseum',
+    description: 'Nationwide museum reservation system',
+    content:
+      'Worked on kmuseum with two people, handling all the markup. A site to reserve performances, exhibitions and events at museums nationwide, built to make things convenient for visitors.',
+    participants: '2 people',
+    role: 'Full markup/publishing',
+  },
+}
+
+/** Apply English overrides (if any) to a project for the given locale. */
+function localizeProject(p: Project, locale: 'ko' | 'en'): Project {
+  if (locale !== 'en') return p
+  const en = PROJECT_EN[p.id]
+  return en ? { ...p, ...en } : p
+}
+
 const CATEGORIES = [
-  { id: 'all', name: '전체' },
-  { id: 'web', name: '웹/마켓/스토어' },
-  { id: 'mobile', name: '모바일' },
-  { id: 'desktop', name: '데스크톱' },
-  { id: 'other', name: '기타' },
+  { id: 'all', name: '전체', nameEn: 'All' },
+  { id: 'web', name: '웹/마켓/스토어', nameEn: 'Web / Market / Store' },
+  { id: 'mobile', name: '모바일', nameEn: 'Mobile' },
+  { id: 'desktop', name: '데스크톱', nameEn: 'Desktop' },
+  { id: 'other', name: '기타', nameEn: 'Other' },
 ]
 
 function getCaseStudySlug(title: string): string | null {
@@ -311,9 +443,12 @@ function getCaseStudySlug(title: string): string | null {
   return null
 }
 
-function formatProjectDate(d: string) {
-  if (!d) return '현재'
-  return new Date(d).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long' })
+function formatProjectDate(d: string, locale: 'ko' | 'en' = 'ko') {
+  if (!d) return locale === 'en' ? 'Present' : '현재'
+  return new Date(d).toLocaleDateString(locale === 'en' ? 'en-US' : 'ko-KR', {
+    year: 'numeric',
+    month: locale === 'en' ? 'short' : 'long',
+  })
 }
 
 function ProjectCard({
@@ -325,6 +460,14 @@ function ProjectCard({
   layout: 'track' | 'grid'
   onClick?: () => void
 }) {
+  const { locale } = useLanguage()
+  const en = locale === 'en' ? PROJECT_EN[project.id] : undefined
+  const title = en?.title ?? project.title
+  const description = en?.description ?? project.description
+  const participants = en?.participants ?? project.participants
+  const role = en?.role ?? project.role
+  const retrospective = en?.retrospective ?? project.retrospective
+
   const widthClass =
     layout === 'track'
       ? 'min-w-[min(88vw,22rem)] md:min-w-[26rem] snap-start shrink-0'
@@ -338,7 +481,7 @@ function ProjectCard({
       <div className="relative h-36 bg-neutral-900 border-b border-neutral-800 overflow-hidden shrink-0">
         <img
           src={project.images[0] || '/images/placeholder.svg'}
-          alt={project.title}
+          alt={title}
           className="absolute inset-0 w-full h-full object-cover opacity-40 grayscale"
           onError={(e) => {
             e.currentTarget.src = '/images/placeholder.svg'
@@ -360,10 +503,10 @@ function ProjectCard({
             }`}
           >
             {project.status === 'completed'
-              ? '완료'
+              ? locale === 'en' ? 'Done' : '완료'
               : project.status === 'in-progress'
-                ? '진행중'
-                : '계획'}
+                ? locale === 'en' ? 'In progress' : '진행중'
+                : locale === 'en' ? 'Planned' : '계획'}
           </span>
         </div>
       </div>
@@ -372,41 +515,41 @@ function ProjectCard({
         <div className="flex items-center gap-1.5 text-neutral-600 text-xs mb-3 font-mono">
           <FiCalendar size={11} />
           <span>
-            {formatProjectDate(project.startDate)} — {formatProjectDate(project.endDate)}
+            {formatProjectDate(project.startDate, locale === 'en' ? 'en' : 'ko')} — {formatProjectDate(project.endDate, locale === 'en' ? 'en' : 'ko')}
           </span>
         </div>
 
         <h3 className="text-neutral-100 font-semibold text-lg mb-2 leading-snug group-hover:text-white transition-colors">
-          {project.title}
+          {title}
         </h3>
 
         <p className="text-neutral-500 text-sm leading-relaxed mb-4 line-clamp-2">
-          {project.description}
+          {description}
         </p>
 
-        {(project.participants || project.role) && (
+        {(participants || role) && (
           <div className="mb-4 space-y-1">
-            {project.participants && (
+            {participants && (
               <div className="flex items-center gap-2 text-neutral-600 text-xs">
                 <FiUser size={11} />
-                <span>{project.participants}</span>
+                <span>{participants}</span>
               </div>
             )}
-            {project.role && (
+            {role && (
               <div className="flex items-center gap-2 text-neutral-600 text-xs">
                 <FiCode size={11} />
-                <span>{project.role}</span>
+                <span>{role}</span>
               </div>
             )}
           </div>
         )}
 
-        {project.retrospective && (
+        {retrospective && (
           <div className="mb-4 rounded-lg border border-neutral-800 bg-neutral-900/40 p-3">
             <p className="mb-1 flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider text-neutral-500">
-              <FiCode size={10} /> 기술 회고
+              <FiCode size={10} /> {locale === 'en' ? 'Tech retrospective' : '기술 회고'}
             </p>
-            <p className="text-xs leading-relaxed text-neutral-400">{project.retrospective}</p>
+            <p className="text-xs leading-relaxed text-neutral-400">{retrospective}</p>
           </div>
         )}
 
@@ -535,6 +678,7 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
 }
 
 export default function Projects() {
+  const { locale } = useLanguage()
   const [projects, setProjects] = useState<Project[]>([])
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([])
   const [selectedCategory, setSelectedCategory] = useState('all')
@@ -728,7 +872,7 @@ export default function Projects() {
                   : 'border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200'
               }`}
             >
-              {cat.name}
+              {locale === 'en' ? cat.nameEn : cat.name}
             </button>
           ))}
         </div>
@@ -785,7 +929,7 @@ export default function Projects() {
       </div>
     </div>
     {selectedProject && (
-      <ProjectModal project={selectedProject} onClose={() => setSelectedProject(null)} />
+      <ProjectModal project={localizeProject(selectedProject, locale === 'en' ? 'en' : 'ko')} onClose={() => setSelectedProject(null)} />
     )}
     </>
   )
