@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface SectionStat {
   section: string
@@ -27,6 +28,8 @@ function formatSeconds(ms: number): string {
 }
 
 export default function HeatmapView() {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [stats, setStats] = useState<SectionStat[]>([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
@@ -56,7 +59,7 @@ export default function HeatmapView() {
   if (loading) {
     return (
       <div className="p-6 text-neutral-400 text-sm animate-pulse">
-        Loading heatmap data...
+        {en ? 'Loading heatmap data...' : '히트맵 데이터 로딩 중...'}
       </div>
     )
   }
@@ -64,7 +67,7 @@ export default function HeatmapView() {
   if (stats.length === 0) {
     return (
       <div className="p-6 text-neutral-500 text-sm">
-        No section data collected yet.
+        {en ? 'No section data collected yet.' : '아직 수집된 섹션 데이터가 없습니다.'}
       </div>
     )
   }
@@ -72,10 +75,12 @@ export default function HeatmapView() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-100">Section Heatmap</h2>
+        <h2 className="text-lg font-semibold text-neutral-100">{en ? 'Section Heatmap' : '섹션 히트맵'}</h2>
         {lastUpdated && (
           <span className="text-xs text-neutral-500">
-            Last updated: {lastUpdated.toLocaleTimeString()} (auto-refreshes every 30s)
+            {en
+              ? `Last updated: ${lastUpdated.toLocaleTimeString()} (auto-refreshes every 30s)`
+              : `마지막 갱신: ${lastUpdated.toLocaleTimeString()} (30초마다 자동 갱신)`}
           </span>
         )}
       </div>
@@ -93,7 +98,7 @@ export default function HeatmapView() {
                   {stat.section}
                 </span>
                 <span className="text-neutral-400 text-xs">
-                  {stat.views}x · avg {formatSeconds(stat.avgDuration)}
+                  {en ? `${stat.views}x · avg ${formatSeconds(stat.avgDuration)}` : `${stat.views}회 · 평균 ${formatSeconds(stat.avgDuration)}`}
                 </span>
               </div>
               <div className="w-full bg-neutral-800 rounded-full h-5 overflow-hidden">
@@ -115,14 +120,14 @@ export default function HeatmapView() {
 
       {/* Legend */}
       <div className="flex items-center gap-2 pt-2">
-        <span className="text-xs text-neutral-500">Low</span>
+        <span className="text-xs text-neutral-500">{en ? 'Low' : '낮음'}</span>
         <div
           className="h-3 flex-1 rounded"
           style={{
             background: 'linear-gradient(to right, hsl(240,70%,55%), hsl(120,85%,45%), hsl(0,100%,40%))',
           }}
         />
-        <span className="text-xs text-neutral-500">High</span>
+        <span className="text-xs text-neutral-500">{en ? 'High' : '높음'}</span>
       </div>
     </div>
   )
