@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { adminAuthHeaders } from '@/lib/admin-token'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface Contact {
   id: string
@@ -19,6 +20,8 @@ interface ReplyModal {
 }
 
 export default function AdminContactsPage() {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [contacts, setContacts] = useState<Contact[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -32,13 +35,13 @@ export default function AdminContactsPage() {
       const res = await fetch('/api/contact', { headers: adminAuthHeaders() })
       const data = await res.json()
       if (data.success) setContacts(data.contacts)
-      else setError(data.error || 'Failed to load')
+      else setError(data.error || (en ? 'Failed to load' : '불러오기 실패'))
     } catch {
-      setError('Network error')
+      setError(en ? 'Network error' : '네트워크 오류')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [en])
 
   useEffect(() => { fetchContacts() }, [fetchContacts])
 
@@ -58,10 +61,10 @@ export default function AdminContactsPage() {
         setReplyModal(null)
         fetchContacts()
       } else {
-        setReplyError(data.error || 'Send failed')
+        setReplyError(data.error || (en ? 'Send failed' : '전송 실패'))
       }
     } catch {
-      setReplyError('Network error')
+      setReplyError(en ? 'Network error' : '네트워크 오류')
     } finally {
       setReplying(false)
     }
@@ -69,8 +72,8 @@ export default function AdminContactsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-neutral-100 mb-6">Contact Management</h1>
-      {loading && <p className="text-neutral-500 font-mono text-sm">Loading...</p>}
+      <h1 className="text-2xl font-bold text-neutral-100 mb-6">{en ? 'Contact Management' : '연락처 관리'}</h1>
+      {loading && <p className="text-neutral-500 font-mono text-sm">{en ? 'Loading...' : '불러오는 중...'}</p>}
       {error && <p className="text-red-400 font-mono text-sm">{error}</p>}
       {!loading && !error && (
         <div className="space-y-3">
@@ -92,7 +95,7 @@ export default function AdminContactsPage() {
                   <p className="text-xs font-semibold text-neutral-300 mb-1">{c.subject}</p>
                   <p className="text-xs text-neutral-500 line-clamp-2">{c.message}</p>
                   <p className="text-[10px] text-neutral-700 mt-1 font-mono">
-                    {new Date(c.created_at).toLocaleString('en-US')}
+                    {new Date(c.created_at).toLocaleString(en ? 'en-US' : 'ko-KR')}
                   </p>
                 </div>
                 <button
@@ -100,13 +103,15 @@ export default function AdminContactsPage() {
                   onClick={() => setReplyModal({ contact: c, body: '' })}
                   className="shrink-0 px-3 py-1.5 text-xs font-mono bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 rounded-lg transition-colors"
                 >
-                  Reply
+                  {en ? 'Reply' : '답장'}
                 </button>
               </div>
             </div>
           ))}
           {contacts.length === 0 && (
-            <p className="text-neutral-600 font-mono text-sm text-center py-12">No contacts found.</p>
+            <p className="text-neutral-600 font-mono text-sm text-center py-12">
+              {en ? 'No contacts found.' : '연락처가 없습니다.'}
+            </p>
           )}
         </div>
       )}
@@ -116,7 +121,7 @@ export default function AdminContactsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between p-5 border-b border-neutral-800">
-              <h2 className="font-semibold text-neutral-100">Send Reply</h2>
+              <h2 className="font-semibold text-neutral-100">{en ? 'Send Reply' : '답장 보내기'}</h2>
               <button
                 type="button"
                 onClick={() => setReplyModal(null)}
@@ -139,13 +144,13 @@ export default function AdminContactsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-1">Message</label>
+                <label className="block text-xs font-mono text-neutral-500 mb-1">{en ? 'Message' : '내용'}</label>
                 <textarea
                   value={replyModal.body}
                   onChange={(e) => setReplyModal({ ...replyModal, body: e.target.value })}
                   rows={6}
                   className="w-full bg-neutral-800 border border-neutral-700 text-neutral-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-neutral-500 resize-none"
-                  placeholder={`Hi ${replyModal.contact.name},\n\n`}
+                  placeholder={en ? `Hi ${replyModal.contact.name},\n\n` : `안녕하세요 ${replyModal.contact.name}님,\n\n`}
                   required
                 />
               </div>
@@ -156,14 +161,14 @@ export default function AdminContactsPage() {
                   onClick={() => setReplyModal(null)}
                   className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
                 >
-                  Cancel
+                  {en ? 'Cancel' : '취소'}
                 </button>
                 <button
                   type="submit"
                   disabled={replying}
                   className="px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {replying ? 'Sending...' : 'Send Reply'}
+                  {replying ? (en ? 'Sending...' : '전송 중...') : (en ? 'Send Reply' : '답장 전송')}
                 </button>
               </div>
             </form>
