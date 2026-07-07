@@ -21,12 +21,12 @@ interface DrawResult {
 }
 
 const RANK_LABEL: Record<number, string> = {
-  1: '🎉 1등 당첨!',
-  2: '🥈 2등 당첨!',
-  3: '🥉 3등 당첨!',
-  4: '4등 당첨',
-  5: '5등 당첨',
-  0: '꽝 — 다음 기회에',
+  1: '🎉 1st Prize!',
+  2: '🥈 2nd Prize!',
+  3: '🥉 3rd Prize!',
+  4: '4th Prize',
+  5: '5th Prize',
+  0: 'No win — better luck next time',
 }
 
 const NUMBERS = Array.from({ length: 45 }, (_, i) => i + 1)
@@ -47,12 +47,12 @@ function getSessionId(): string {
 }
 
 function formatKRW(n: number): string {
-  if (n >= 100_000_000) return `${(n / 100_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}억원`
-  if (n >= 10_000) return `${Math.round(n / 10_000).toLocaleString()}만원`
-  return `${n.toLocaleString()}원`
+  if (n >= 100_000_000) return `₩${(n / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}M`
+  if (n >= 10_000) return `₩${Math.round(n / 1_000).toLocaleString()}K`
+  return `₩${n.toLocaleString()}`
 }
 
-// 클라이언트 측 빠른 추첨 (auto 모드 전용 — 리더보드 미반영)
+// Client-side quick draw (auto mode only — not reflected in the leaderboard)
 function localDraw(): { drawn: number[]; bonus: number } {
   const pool = [...NUMBERS]
   for (let i = pool.length - 1; i > 0; i--) {
@@ -77,18 +77,18 @@ export default function LottoPageClient() {
   const [picked, setPicked] = useState<number[]>([])
   const [playerName, setPlayerName] = useState('')
   const [drawing, setDrawing] = useState(false)
-  const [revealed, setRevealed] = useState(0) // 공개된 공 개수 (애니메이션)
+  const [revealed, setRevealed] = useState(0) // Number of revealed balls (animation)
   const [result, setResult] = useState<DrawResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [profit, setProfit] = useState(0)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  // auto 모드 상태
+  // Auto mode state
   const [autoRunning, setAutoRunning] = useState(false)
   const [autoStats, setAutoStats] = useState<{ tickets: number; best: number; spent: number; counts: Record<number, number> } | null>(null)
   const autoStopRef = useRef(false)
 
-  // 통계(빈도) — 있으면 핫/콜드 추천 활성화
+  // Stats (frequency) — enables hot/cold recommendations when available
   const [stats, setStats] = useState<(RecommendStats & { counts?: { n: number; count: number }[]; latestDraw?: number; totalDraws?: number }) | null>(null)
   const [statsAvailable, setStatsAvailable] = useState(false)
   const [lastStrategy, setLastStrategy] = useState<Strategy | null>(null)
@@ -148,7 +148,7 @@ export default function LottoPageClient() {
     setError(null)
   }
 
-  // 선택한 번호를 로또 용지 스타일 이미지로 저장
+  // Save the selected numbers as a lottery-ticket-style image
   const saveTicketImage = useCallback(() => {
     if (picked.length !== 6) return
     const W = 600, H = 280
@@ -158,7 +158,7 @@ export default function LottoPageClient() {
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    // 배경
+    // Background
     const grad = ctx.createLinearGradient(0, 0, W, H)
     grad.addColorStop(0, '#0f172a')
     grad.addColorStop(1, '#1e1b4b')
@@ -172,9 +172,9 @@ export default function LottoPageClient() {
 
     ctx.fillStyle = '#94a3b8'
     ctx.font = '14px sans-serif'
-    ctx.fillText(lastStrategy ? `${STRATEGY_INFO[lastStrategy].emoji} ${STRATEGY_INFO[lastStrategy].label}` : '내 행운의 번호', 32, 82)
+    ctx.fillText(lastStrategy ? `${STRATEGY_INFO[lastStrategy].emoji} ${STRATEGY_INFO[lastStrategy].label}` : 'My lucky numbers', 32, 82)
 
-    // 번호 공
+    // Number balls
     const colorOf = (n: number) =>
       n <= 10 ? '#fbc400' : n <= 20 ? '#69c8f2' : n <= 30 ? '#ff7272' : n <= 40 ? '#aaaaaa' : '#b0d840'
     const r = 36
@@ -197,7 +197,7 @@ export default function LottoPageClient() {
     ctx.font = '13px sans-serif'
     ctx.textAlign = 'center'
     ctx.textBaseline = 'alphabetic'
-    ctx.fillText('kuuuma.com · 로또 번호 추천', W / 2, H - 28)
+    ctx.fillText('kuuuma.com · Lotto Number Picker', W / 2, H - 28)
 
     const url = canvas.toDataURL('image/png')
     const a = document.createElement('a')
@@ -228,14 +228,14 @@ export default function LottoPageClient() {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.message ?? '추첨에 실패했습니다.')
+        setError(data.message ?? 'The draw failed.')
         setDrawing(false)
         return
       }
       const r = data as DrawResult
       setResult(r)
 
-      // 공 하나씩 공개
+      // Reveal balls one by one
       for (let i = 1; i <= 7; i++) {
         await new Promise((rs) => setTimeout(rs, 450))
         setRevealed(i)
@@ -248,13 +248,13 @@ export default function LottoPageClient() {
       }
       setRefreshKey((k) => k + 1)
     } catch {
-      setError('네트워크 오류가 발생했습니다.')
+      setError('A network error occurred.')
     } finally {
       setDrawing(false)
     }
   }, [picked, drawing, mode, playerName, sessionId])
 
-  // ── auto 모드: 1등 나올 때까지 ──
+  // ── Auto mode: repeat until 1st prize ──
   const runAuto = useCallback(async () => {
     if (picked.length !== 6) return
     setAutoRunning(true)
@@ -266,7 +266,7 @@ export default function LottoPageClient() {
     const start = performance.now()
 
     while (!autoStopRef.current && tickets < MAX) {
-      // 배치로 돌려 UI 블로킹 최소화
+      // Run in batches to minimize UI blocking
       for (let i = 0; i < 5000; i++) {
         const { drawn, bonus } = localDraw()
         const rank = localJudge(picked, drawn, bonus)
@@ -279,7 +279,7 @@ export default function LottoPageClient() {
       }
       setAutoStats({ tickets, best: best === 99 ? 0 : best, spent: tickets * 1000, counts: { ...counts } })
       await new Promise((rs) => setTimeout(rs, 0))
-      if (performance.now() - start > 30_000) break // 안전장치
+      if (performance.now() - start > 30_000) break // safety guard
     }
     setAutoRunning(false)
   }, [picked])
@@ -292,25 +292,25 @@ export default function LottoPageClient() {
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white">
-            <FiArrowLeft className="h-4 w-4" /> 메인으로
+            <FiArrowLeft className="h-4 w-4" /> Home
           </Link>
-          <span className="text-sm font-semibold text-slate-200">🎰 로또 6/45</span>
-          <Link href="/games" className="ml-auto text-xs font-semibold text-slate-400 hover:text-white">게임 허브 →</Link>
+          <span className="text-sm font-semibold text-slate-200">🎰 Lotto 6/45</span>
+          <Link href="/games" className="ml-auto text-xs font-semibold text-slate-400 hover:text-white">Game Hub →</Link>
         </div>
       </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-8">
         <div className="mb-6 text-center">
-          <h1 className="font-display mb-2 text-4xl font-bold">🎰 로또 번호 맞추기</h1>
-          <p className="text-sm text-slate-400">번호 6개를 고르고 추첨에 도전하세요</p>
+          <h1 className="font-display mb-2 text-4xl font-bold">🎰 Lotto Number Match</h1>
+          <p className="text-sm text-slate-400">Pick 6 numbers and try your luck in the draw</p>
         </div>
 
-        {/* 모드 선택 */}
+        {/* Mode selection */}
         <div className="mb-6 flex justify-center gap-2">
           {([
-            ['sim', '🎲 시뮬레이션'],
-            ['history', '📜 역대 회차 도전'],
-            ['auto', '⚡ 무한 자동'],
+            ['sim', '🎲 Simulation'],
+            ['history', '📜 Past Draw Challenge'],
+            ['auto', '⚡ Infinite Auto'],
           ] as const).map(([m, label]) => (
             <button
               key={m}
@@ -326,19 +326,19 @@ export default function LottoPageClient() {
         </div>
 
         <p className="mb-4 text-center text-xs text-slate-500">
-          {mode === 'sim' && '서버에서 6개+보너스를 추첨해 등수를 판정합니다.'}
-          {mode === 'history' && '실제 역대 당첨 회차(무작위)와 비교합니다. "그때 샀다면?"'}
-          {mode === 'auto' && '1등이 나올 때까지 자동으로 구매를 반복합니다. (브라우저 계산, 랭킹 미반영)'}
+          {mode === 'sim' && 'The server draws 6 numbers + a bonus and determines your rank.'}
+          {mode === 'history' && 'Compare against a real past winning draw (random). "What if I had bought a ticket then?"'}
+          {mode === 'auto' && 'Automatically repeats purchases until you hit 1st prize. (Browser-calculated, not reflected on the leaderboard)'}
         </p>
 
-        {/* 추천 번호 패널 */}
+        {/* Recommended numbers panel */}
         <div className="mb-5 rounded-2xl border border-amber-700/40 bg-amber-950/10 p-4">
           <div className="mb-3 flex items-center gap-2">
-            <span className="text-sm font-semibold text-amber-300">📊 추천 번호</span>
+            <span className="text-sm font-semibold text-amber-300">📊 Recommended Numbers</span>
             {statsAvailable && stats?.totalDraws ? (
-              <span className="text-[11px] text-slate-500">역대 {stats.totalDraws}회차 통계 기반</span>
+              <span className="text-[11px] text-slate-500">Based on {stats.totalDraws} past draws</span>
             ) : (
-              <span className="text-[11px] text-slate-500">통계적 밸런스 기반</span>
+              <span className="text-[11px] text-slate-500">Based on statistical balance</span>
             )}
           </div>
           <div className="flex flex-wrap gap-2">
@@ -351,7 +351,7 @@ export default function LottoPageClient() {
                   key={s}
                   onClick={() => applyRecommendation(s)}
                   disabled={disabled}
-                  title={needsStats && !statsAvailable ? `${info.desc} (통계 미적재 시 밸런스로 대체)` : info.desc}
+                  title={needsStats && !statsAvailable ? `${info.desc} (falls back to balanced when stats are unavailable)` : info.desc}
                   className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-40 ${
                     lastStrategy === s
                       ? 'border-amber-500 bg-amber-500/20 text-amber-300'
@@ -366,20 +366,20 @@ export default function LottoPageClient() {
           {lastStrategy && (
             <p className="mt-2.5 text-[11px] text-slate-500">
               {STRATEGY_INFO[lastStrategy].emoji} {STRATEGY_INFO[lastStrategy].desc}
-              {lastStrategy !== 'balanced' && !statsAvailable && ' — 통계 미적재로 밸런스 적용됨'}
+              {lastStrategy !== 'balanced' && !statsAvailable && ' — balanced strategy applied since stats are unavailable'}
             </p>
           )}
-          {/* 빈도 미니 차트 */}
+          {/* Frequency mini chart */}
           {statsAvailable && stats?.counts && (
             <div className="mt-4">
-              <p className="mb-1.5 text-[11px] font-semibold text-slate-400">번호별 출현 빈도</p>
+              <p className="mb-1.5 text-[11px] font-semibold text-slate-400">Appearance Frequency by Number</p>
               <div className="flex items-end gap-[2px]" style={{ height: 48 }}>
                 {(() => {
                   const max = Math.max(...stats.counts.map((c) => c.count), 1)
                   return stats.counts.map((c) => (
                     <div
                       key={c.n}
-                      title={`${c.n}번: ${c.count}회`}
+                      title={`#${c.n}: ${c.count} times`}
                       className="flex-1 rounded-sm"
                       style={{ height: `${Math.max(8, (c.count / max) * 100)}%`, backgroundColor: ballColor(c.n), opacity: 0.75 }}
                     />
@@ -387,20 +387,20 @@ export default function LottoPageClient() {
                 })()}
               </div>
               <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
-                <span className="text-slate-500">🔥 핫: <span className="text-orange-300">{stats.hot.slice(0, 5).join(', ')}</span></span>
-                <span className="text-slate-500">❄️ 콜드: <span className="text-sky-300">{stats.cold.slice(0, 5).join(', ')}</span></span>
+                <span className="text-slate-500">🔥 Hot: <span className="text-orange-300">{stats.hot.slice(0, 5).join(', ')}</span></span>
+                <span className="text-slate-500">❄️ Cold: <span className="text-sky-300">{stats.cold.slice(0, 5).join(', ')}</span></span>
               </div>
             </div>
           )}
         </div>
 
-        {/* 번호 선택판 */}
+        {/* Number selection board */}
         <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-900/60 p-4">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-300">번호 선택 <span className="text-amber-400">{picked.length}/6</span></span>
+            <span className="text-sm font-semibold text-slate-300">Select Numbers <span className="text-amber-400">{picked.length}/6</span></span>
             <div className="flex gap-2">
-              <button onClick={autoFill} disabled={drawing || autoRunning} className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50">자동</button>
-              <button onClick={reset} disabled={drawing || autoRunning} className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50">초기화</button>
+              <button onClick={autoFill} disabled={drawing || autoRunning} className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50">Auto</button>
+              <button onClick={reset} disabled={drawing || autoRunning} className="rounded-lg bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:bg-slate-700 disabled:opacity-50">Reset</button>
             </div>
           </div>
           <div className="grid grid-cols-6 gap-2 sm:grid-cols-9 sm:gap-1.5">
@@ -423,27 +423,27 @@ export default function LottoPageClient() {
           </div>
         </div>
 
-        {/* 조합 분석 카드 */}
+        {/* Combination analysis card */}
         {picked.length === 6 && (
           <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-900/40 p-4">
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-300">🔍 내 조합 분석</span>
+              <span className="text-sm font-semibold text-slate-300">🔍 My Combination Analysis</span>
               <button
                 onClick={saveTicketImage}
                 disabled={drawing || autoRunning}
                 className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:border-amber-600/60 disabled:opacity-50"
               >
-                🖼️ 이미지 저장
+                🖼️ Save Image
               </button>
             </div>
             {(() => {
               const a = analyze(picked)
               const items = [
-                { label: '홀:짝', value: `${a.odd}:${6 - a.odd}`, ok: a.odd >= 2 && a.odd <= 4 },
-                { label: '고:저', value: `${6 - a.low}:${a.low}`, ok: a.low >= 2 && a.low <= 4 },
-                { label: '합계', value: `${a.sum}`, ok: a.sum >= 100 && a.sum <= 175 },
-                { label: '연속수', value: a.maxConsecutive <= 1 ? '없음' : `${a.maxConsecutive}연속`, ok: a.maxConsecutive <= 2 },
-                { label: '끝수종류', value: `${a.distinctLastDigits}종`, ok: a.distinctLastDigits >= 4 },
+                { label: 'Odd:Even', value: `${a.odd}:${6 - a.odd}`, ok: a.odd >= 2 && a.odd <= 4 },
+                { label: 'High:Low', value: `${6 - a.low}:${a.low}`, ok: a.low >= 2 && a.low <= 4 },
+                { label: 'Sum', value: `${a.sum}`, ok: a.sum >= 100 && a.sum <= 175 },
+                { label: 'Consecutive', value: a.maxConsecutive <= 1 ? 'None' : `${a.maxConsecutive} in a row`, ok: a.maxConsecutive <= 2 },
+                { label: 'Last Digits', value: `${a.distinctLastDigits} unique`, ok: a.distinctLastDigits >= 4 },
               ]
               return (
                 <>
@@ -458,8 +458,8 @@ export default function LottoPageClient() {
                   </div>
                   <p className="mt-2.5 text-center text-[11px] text-slate-500">
                     {a.passed
-                      ? '✅ 역대 1등 조합들이 가진 통계적 균형을 모두 만족합니다.'
-                      : '⚠️ 일부 항목이 통계적 평균에서 벗어나 있습니다. (재미로만 참고)'}
+                      ? '✅ Satisfies all the statistical balance found in past 1st-prize combinations.'
+                      : '⚠️ Some values are outside the statistical average. (For fun only)'}
                   </p>
                 </>
               )
@@ -467,31 +467,31 @@ export default function LottoPageClient() {
           </div>
         )}
 
-        {/* 이름 + 추첨 버튼 */}
+        {/* Name + draw button */}
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <input
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value.slice(0, 20))}
-            placeholder="닉네임 (랭킹 등록용, 선택)"
+            placeholder="Nickname (optional, for leaderboard)"
             disabled={drawing || autoRunning}
             className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2.5 text-sm text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
           />
           {mode === 'auto' ? (
             autoRunning ? (
-              <button onClick={() => { autoStopRef.current = true }} className="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-red-500">정지</button>
+              <button onClick={() => { autoStopRef.current = true }} className="rounded-lg bg-red-600 px-6 py-2.5 text-sm font-bold text-white hover:bg-red-500">Stop</button>
             ) : (
-              <button onClick={runAuto} disabled={picked.length !== 6} className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-40">⚡ 1등까지 자동</button>
+              <button onClick={runAuto} disabled={picked.length !== 6} className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-40">⚡ Auto until 1st Prize</button>
             )
           ) : (
             <button onClick={submitDraw} disabled={!canDraw} className="rounded-lg bg-amber-500 px-6 py-2.5 text-sm font-bold text-black transition hover:bg-amber-400 disabled:opacity-40">
-              {drawing ? '추첨 중...' : '🎰 추첨하기'}
+              {drawing ? 'Drawing...' : '🎰 Draw'}
             </button>
           )}
         </div>
 
         {error && <p className="mb-4 rounded-lg border border-red-800 bg-red-950/40 px-4 py-2 text-sm text-red-300">{error}</p>}
 
-        {/* 결과 */}
+        {/* Result */}
         <AnimatePresence mode="wait">
           {result && mode !== 'auto' && (
             <motion.div
@@ -502,7 +502,7 @@ export default function LottoPageClient() {
               className="mb-8 rounded-2xl border border-slate-700 bg-slate-900/80 p-6"
             >
               {result.drawNo != null && (
-                <p className="mb-3 text-center text-xs font-semibold text-amber-400">제 {result.drawNo}회 당첨번호</p>
+                <p className="mb-3 text-center text-xs font-semibold text-amber-400">Draw #{result.drawNo} Winning Numbers</p>
               )}
               <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                 {result.drawn.map((n, i) => (
@@ -521,50 +521,50 @@ export default function LottoPageClient() {
                   <p className={`mb-1 text-2xl font-black ${result.rank === 1 ? 'text-amber-400' : result.rank > 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
                     {RANK_LABEL[result.rank]}
                   </p>
-                  <p className="text-sm text-slate-400">{result.matched}개 일치{picked.includes(result.bonus) ? ' + 보너스' : ''}</p>
-                  {result.prize > 0 && <p className="mt-2 text-lg font-bold text-amber-300">당첨금 {formatKRW(result.prize)}</p>}
+                  <p className="text-sm text-slate-400">{result.matched} matched{picked.includes(result.bonus) ? ' + bonus' : ''}</p>
+                  {result.prize > 0 && <p className="mt-2 text-lg font-bold text-amber-300">Prize {formatKRW(result.prize)}</p>}
                 </motion.div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* auto 결과 */}
+        {/* Auto result */}
         {autoStats && mode === 'auto' && (
           <div className="mb-8 rounded-2xl border border-slate-700 bg-slate-900/80 p-6 text-center">
-            <p className="mb-2 text-sm text-slate-400">구매한 복권</p>
-            <p className="mb-4 text-3xl font-black text-amber-400">{autoStats.tickets.toLocaleString()}장</p>
-            <p className="mb-4 text-sm text-slate-400">사용 금액 <span className="font-bold text-white">{formatKRW(autoStats.spent)}</span></p>
+            <p className="mb-2 text-sm text-slate-400">Tickets Purchased</p>
+            <p className="mb-4 text-3xl font-black text-amber-400">{autoStats.tickets.toLocaleString()}</p>
+            <p className="mb-4 text-sm text-slate-400">Amount Spent <span className="font-bold text-white">{formatKRW(autoStats.spent)}</span></p>
             <div className="grid grid-cols-5 gap-2 text-xs">
               {[1, 2, 3, 4, 5].map((r) => (
                 <div key={r} className="rounded-lg bg-slate-800 py-2">
-                  <p className="font-bold text-slate-300">{r}등</p>
+                  <p className="font-bold text-slate-300">{r}{r === 1 ? 'st' : r === 2 ? 'nd' : r === 3 ? 'rd' : 'th'}</p>
                   <p className="text-amber-400">{autoStats.counts[r] ?? 0}</p>
                 </div>
               ))}
             </div>
-            {autoStats.best === 1 && <p className="mt-4 font-bold text-amber-400">🎉 마침내 1등 당첨!</p>}
-            {autoRunning && <p className="mt-3 text-xs text-slate-500">추첨 중...</p>}
+            {autoStats.best === 1 && <p className="mt-4 font-bold text-amber-400">🎉 Finally won 1st prize!</p>}
+            {autoRunning && <p className="mt-3 text-xs text-slate-500">Drawing...</p>}
           </div>
         )}
 
-        {/* 누적 수익 (sim/history) */}
+        {/* Cumulative profit (sim/history) */}
         {mode !== 'auto' && (
           <div className="mb-10 flex items-center justify-center gap-2 text-sm">
-            <span className="text-slate-500">누적 수익</span>
+            <span className="text-slate-500">Cumulative Profit</span>
             <span className={`font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
               {profit >= 0 ? '+' : ''}{formatKRW(profit)}
             </span>
           </div>
         )}
 
-        {/* 리더보드 */}
+        {/* Leaderboard */}
         <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-          🏆 명예의 전당
+          🏆 Hall of Fame
           <button onClick={() => setRefreshKey((k) => k + 1)} className="text-slate-500 hover:text-amber-400"><FiRefreshCw size={14} /></button>
         </h2>
         <LottoLeaderboard refreshKey={refreshKey} />
-        <p className="mt-3 text-center text-[11px] text-slate-600">최고 등수 → 누적 당첨금 순 · 닉네임 입력 시 등록</p>
+        <p className="mt-3 text-center text-[11px] text-slate-600">Sorted by best rank → total winnings · Enter a nickname to register</p>
       </main>
     </div>
   )

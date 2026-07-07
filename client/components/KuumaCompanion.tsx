@@ -3,52 +3,52 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 
 const sectionMessages: Record<string, string[]> = {
   home: [
-    '안녕하세요! 포트폴리오를 둘러보고 계신가요? 🤖',
-    '궁금한 점이 있으시면 언제든 물어보세요.',
-    '저는 쿠마입니다. 무엇을 도와드릴까요?',
+    "Hi! Are you browsing the portfolio? 🤖",
+    "Feel free to ask if you have any questions.",
+    "I'm Kuuma. How can I help you?",
   ],
   about: [
-    '개발자에 대해 더 알고 싶으신가요?',
-    '직접 연락해보시는 건 어떨까요?',
-    '개발자 소개 섹션을 보고 계시네요!',
+    'Want to know more about the developer?',
+    'Why not reach out directly?',
+    "You're looking at the About section!",
   ],
   skills: [
-    'React와 Next.js가 주력 스택이에요.',
-    '풀스택 개발 경험이 있답니다.',
-    '다양한 기술 스택을 다루고 있어요.',
+    'React and Next.js are the main stack.',
+    'Full-stack development experience here.',
+    'A wide range of tech stacks are covered.',
   ],
   projects: [
-    '이 프로젝트들은 직접 만든 것들이에요.',
-    '데모가 궁금하시면 클릭해보세요!',
-    '어떤 프로젝트가 가장 흥미로우세요?',
+    'These projects were all built from scratch.',
+    'Click through if you want to see the demos!',
+    'Which project looks most interesting to you?',
   ],
   posts: [
-    '기술 블로그를 운영 중이에요.',
-    '어떤 주제가 궁금하신가요?',
-    '새로운 글이 자주 업데이트돼요!',
+    'Running a tech blog here.',
+    'What topic are you curious about?',
+    'New posts get published often!',
   ],
   games: [
-    '게임도 직접 개발했어요!',
-    '테트리스, 서바이브, 타워 디펜스가 있어요.',
-    '한번 플레이해보시겠어요?',
+    'Games were built from scratch too!',
+    'Tetris, Survive, and Tower Defense are here.',
+    'Want to give one a try?',
   ],
   food: [
-    '맛집 리스트를 Notion으로 관리해요.',
-    '추천 맛집이 필요하세요?',
-    '맛있는 곳들만 골라놨어요!',
+    'Restaurant list is managed in Notion.',
+    'Need a restaurant recommendation?',
+    'Only the good spots made the list!',
   ],
   contact: [
-    '프로젝트 협업을 원하시나요?',
-    '이메일로 연락주시면 답장드릴게요!',
-    '언제든지 연락해 주세요!',
+    'Looking for project collaboration?',
+    "Email me and I'll get back to you!",
+    'Feel free to reach out anytime!',
   ],
   admin: [
-    '관리자 페이지에 오셨군요.',
-    '무엇을 관리하시려고요?',
+    'Welcome to the admin page.',
+    'What would you like to manage?',
   ],
 }
 
-const chips = ['어떤 프로젝트가 있나요?', '연락 방법은?', '어떤 기술 써요?']
+const chips = ['What projects are there?', 'How can I contact you?', 'What tech do you use?']
 
 type Emotion = 'idle' | 'happy' | 'thinking' | 'surprised' | 'error'
 
@@ -78,7 +78,7 @@ export default function KuumaCompanion() {
     if (!ttsEnabled || typeof window === 'undefined') return
     window.speechSynthesis.cancel()
     const utter = new SpeechSynthesisUtterance(text)
-    utter.lang = 'ko-KR'
+    utter.lang = 'en-US'
     utter.rate = 1.1
     utter.pitch = 1.1
     window.speechSynthesis.speak(utter)
@@ -182,7 +182,7 @@ export default function KuumaCompanion() {
     const randomMsg = () => msgs[Math.floor(Math.random() * msgs.length)]
 
     const initialTimer = setTimeout(() => {
-      const bubbleText = randomMsg() + '  (J키로 대화하기)'
+      const bubbleText = randomMsg() + '  (Press J to chat)'
       showBubble(bubbleText)
       speak(bubbleText)
       sectionTimerRef.current = setInterval(
@@ -265,13 +265,13 @@ export default function KuumaCompanion() {
           }),
         })
         const data = await res.json()
-        const reply = data.reply || '죄송해요, 응답을 받지 못했어요.'
+        const reply = data.reply || "Sorry, I didn't get a response."
         setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
         speak(reply)
         if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
         emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 1000)
       } catch {
-        setMessages((prev) => [...prev, { role: 'assistant', content: '연결에 문제가 생겼어요. 다시 시도해주세요.' }])
+        setMessages((prev) => [...prev, { role: 'assistant', content: 'Connection issue occurred. Please try again.' }])
         setEmotion('error')
         if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
         emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 3000)
@@ -406,7 +406,7 @@ export default function KuumaCompanion() {
           alignItems: 'center',
           justifyContent: 'center',
         }}
-        aria-label="쿠마 채팅 열기"
+        aria-label="Open Kuuma chat"
       >
         <div
           className="w-8 h-8 rounded-full border border-cyan-500/60 bg-cyan-950/80 flex items-center justify-center"
@@ -430,12 +430,12 @@ export default function KuumaCompanion() {
         >
           {/* Header */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-cyan-500/20">
-            <span className="text-cyan-400 text-xs tracking-widest">쿠마</span>
+            <span className="text-cyan-400 text-xs tracking-widest">KUUMA</span>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setTtsEnabled(o => !o)}
                 className="text-cyan-600 hover:text-cyan-400 text-xs transition-colors"
-                title="음성 on/off"
+                title="Toggle voice"
               >
                 {ttsEnabled ? '🔊' : '🔇'}
               </button>
@@ -451,7 +451,7 @@ export default function KuumaCompanion() {
           {/* Messages */}
           <div className="h-48 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 && (
-              <div className="text-cyan-700 text-xs text-center mt-10">무엇이든 물어보세요</div>
+              <div className="text-cyan-700 text-xs text-center mt-10">Ask me anything</div>
             )}
             {messages.map((m, i) => (
               <div
@@ -471,7 +471,7 @@ export default function KuumaCompanion() {
               </div>
             ))}
             {loading && (
-              <div className="text-cyan-500 text-xs animate-pulse">생각 중...</div>
+              <div className="text-cyan-500 text-xs animate-pulse">Thinking...</div>
             )}
             <div ref={messagesEndRef} />
           </div>
@@ -482,7 +482,7 @@ export default function KuumaCompanion() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
-              placeholder="쿠마에게 물어보세요..."
+              placeholder="Ask Kuuma anything..."
               className="flex-1 bg-transparent text-xs text-cyan-300 placeholder-cyan-800 px-3 py-2 outline-none"
             />
             <button

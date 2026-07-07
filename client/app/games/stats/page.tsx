@@ -5,7 +5,7 @@ import type { GamesStatsResponse } from '@/app/api/games/stats/route'
 
 export const metadata: Metadata = {
   title: 'Stats',
-  description: '테트리스, 서바이브, 타워 디펜스 전체 누적 전적 통계.',
+  description: 'Overall cumulative stats for Tetris, Survive, and Tower Defense.',
 }
 
 function formatTime(totalSec: number): string {
@@ -60,7 +60,7 @@ function GameStatCard({ emoji, title, href, accentClass, rows }: GameStatCardPro
             href={href}
             className="text-xs text-neutral-500 underline-offset-2 hover:text-neutral-300 hover:underline"
           >
-            게임하기
+            Play
           </Link>
         </div>
       </div>
@@ -85,48 +85,48 @@ export default async function GamesStatsPage() {
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-neutral-100"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            게임 목록
+            Game List
           </Link>
-          <span className="text-sm font-semibold text-neutral-100">게임 전적</span>
+          <span className="text-sm font-semibold text-neutral-100">Game Stats</span>
         </div>
       </header>
 
       <main className="mx-auto max-w-4xl px-4 pt-10">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-neutral-100">게임 전적</h1>
-          <p className="text-sm text-neutral-400">전체 누적 스코어 통계입니다.</p>
+          <h1 className="mb-2 text-3xl font-bold text-neutral-100">Game Stats</h1>
+          <p className="text-sm text-neutral-400">Overall cumulative score statistics.</p>
         </div>
 
         {stats === null ? (
           <div className="rounded-2xl border border-neutral-800 bg-neutral-900 px-6 py-10 text-center">
-            <p className="text-sm text-neutral-400">통계를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.</p>
+            <p className="text-sm text-neutral-400">Unable to load stats. Please try again shortly.</p>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             <GameStatCard
               emoji="🧱"
-              title="테트리스"
+              title="Tetris"
               href="/tetris"
               accentClass="bg-indigo-900/50"
               rows={[
                 {
-                  label: '최고 점수',
+                  label: 'Best Score',
                   value:
                     stats.tetris.bestScore > 0
                       ? stats.tetris.bestScore.toLocaleString()
-                      : '기록 없음',
+                      : 'No record',
                 },
                 {
-                  label: '최고 스테이지',
+                  label: 'Best Stage',
                   value:
-                    stats.tetris.bestStage > 0 ? `${stats.tetris.bestStage}단계` : '기록 없음',
+                    stats.tetris.bestStage > 0 ? `Stage ${stats.tetris.bestStage}` : 'No record',
                 },
                 {
-                  label: '총 게임 수',
-                  value: `${stats.tetris.totalGames.toLocaleString()}판`,
+                  label: 'Total Games',
+                  value: `${stats.tetris.totalGames.toLocaleString()}`,
                 },
                 {
-                  label: '평균 점수',
+                  label: 'Average Score',
                   value:
                     stats.tetris.avgScore > 0
                       ? stats.tetris.avgScore.toLocaleString()
@@ -136,44 +136,44 @@ export default async function GamesStatsPage() {
             />
             <GameStatCard
               emoji="⚔️"
-              title="서바이브"
+              title="Survive"
               href="/survive"
               accentClass="bg-cyan-900/50"
               rows={[
                 {
-                  label: '최고 생존 시간',
+                  label: 'Best Survival Time',
                   value:
                     stats.survive.bestTimeSec > 0
                       ? formatTime(stats.survive.bestTimeSec)
-                      : '기록 없음',
+                      : 'No record',
                 },
                 {
-                  label: '최고 레벨',
+                  label: 'Best Level',
                   value:
-                    stats.survive.bestLevel > 0 ? `Lv.${stats.survive.bestLevel}` : '기록 없음',
+                    stats.survive.bestLevel > 0 ? `Lv.${stats.survive.bestLevel}` : 'No record',
                 },
                 {
-                  label: '총 게임 수',
-                  value: `${stats.survive.totalGames.toLocaleString()}판`,
+                  label: 'Total Games',
+                  value: `${stats.survive.totalGames.toLocaleString()}`,
                 },
               ]}
             />
             <GameStatCard
               emoji="🏰"
-              title="타워 디펜스"
+              title="Tower Defense"
               href="/tower-defense"
               accentClass="bg-amber-900/50"
               rows={[
                 {
-                  label: '최고 웨이브',
+                  label: 'Best Wave',
                   value:
                     stats.towerDefense.bestWave > 0
-                      ? `${stats.towerDefense.bestWave}웨이브`
-                      : '기록 없음',
+                      ? `Wave ${stats.towerDefense.bestWave}`
+                      : 'No record',
                 },
                 {
-                  label: '총 게임 수',
-                  value: `${stats.towerDefense.totalGames.toLocaleString()}판`,
+                  label: 'Total Games',
+                  value: `${stats.towerDefense.totalGames.toLocaleString()}`,
                 },
               ]}
             />

@@ -7,12 +7,12 @@ export default function TypingLeaderboard({ refreshKey = 0 }: { refreshKey?: num
     <GameLeaderboard
       apiPath="/api/typing-game/scores"
       refreshKey={refreshKey}
-      title="랭킹 TOP 10"
+      title="Top 10 Ranking"
       columns={[
         { key: 'wpm', label: 'WPM' },
-        { key: 'accuracy', label: '정확도', format: (v) => `${v}%` },
+        { key: 'accuracy', label: 'Accuracy', format: (v) => `${v}%` },
       ]}
-      emptyText="아직 기록이 없습니다"
+      emptyText="No records yet"
     />
   )
 }

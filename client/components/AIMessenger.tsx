@@ -47,10 +47,10 @@ function createSessionId(): string {
 }
 
 const PRESETS = [
-  { label: '코드 리뷰', labelEn: 'Code Review', prompt: 'Please review this code and suggest improvements:\n\n' },
-  { label: '번역', labelEn: 'Translate', prompt: 'Translate the following to English:\n\n' },
-  { label: '요약', labelEn: 'Summarize', prompt: 'Please summarize the following:\n\n' },
-  { label: '설명', labelEn: 'Explain', prompt: 'Please explain this in simple terms:\n\n' },
+  { label: 'Code Review', labelEn: 'Code Review', prompt: 'Please review this code and suggest improvements:\n\n' },
+  { label: 'Translate', labelEn: 'Translate', prompt: 'Translate the following to English:\n\n' },
+  { label: 'Summarize', labelEn: 'Summarize', prompt: 'Please summarize the following:\n\n' },
+  { label: 'Explain', labelEn: 'Explain', prompt: 'Please explain this in simple terms:\n\n' },
 ]
 
 interface AIMessengerProps {
@@ -67,7 +67,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const [selectedTone, setSelectedTone] = useState('친근하게')
+  const [selectedTone, setSelectedTone] = useState('Friendly')
   const [isRecording, setIsRecording] = useState(false)
   const [showAIFeatures, setShowAIFeatures] = useState(false)
   const [subscription, setSubscription] = useState<any>(null)
@@ -117,7 +117,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         setSubscription(data.subscription)
       }
     } catch (error) {
-      console.error('구독 상태 확인 오류:', error)
+      console.error('Failed to check subscription status:', error)
     }
   }
 
@@ -148,15 +148,15 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
       setMessages([{
         id: 'welcome',
-        content: '안녕하세요! 저는 AI 어시스턴트입니다. 메시지 작성, 번역, 톤 조절 등 다양한 기능을 도와드릴 수 있어요. 무엇을 도와드릴까요?',
+        content: "Hi! I'm your AI assistant. I can help with writing messages, translation, tone adjustment, and more. How can I help you?",
         isUser: false,
         timestamp: new Date()
       }])
     } catch (error) {
-      console.error('대화 히스토리 로드 오류:', error)
+      console.error('Failed to load conversation history:', error)
       setMessages([{
         id: 'welcome',
-        content: '안녕하세요! 저는 AI 어시스턴트입니다. 메시지 작성, 번역, 톤 조절 등 다양한 기능을 도와드릴 수 있어요. 무엇을 도와드릴까요?',
+        content: "Hi! I'm your AI assistant. I can help with writing messages, translation, tone adjustment, and more. How can I help you?",
         isUser: false,
         timestamp: new Date()
       }])
@@ -166,10 +166,10 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   }
 
   const tones = [
-    { value: '친근하게', label: '친근하게', icon: '😊' },
-    { value: '공식적으로', label: '공식적으로', icon: '👔' },
-    { value: '간단하게', label: '간단하게', icon: '⚡' },
-    { value: '전문적으로', label: '전문적으로', icon: '🎓' }
+    { value: 'Friendly', label: 'Friendly', icon: '😊' },
+    { value: 'Formal', label: 'Formal', icon: '👔' },
+    { value: 'Concise', label: 'Concise', icon: '⚡' },
+    { value: 'Professional', label: 'Professional', icon: '🎓' }
   ]
 
   const handleSendMessage = async () => {
@@ -215,7 +215,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         if (errorData.errorCode === 'DAILY_LIMIT_EXCEEDED') {
           const limitMessage: ChatMessage = {
             id: (Date.now() + 1).toString(),
-            content: `일일 무료 메시지 한도(${errorData.limit}개)를 모두 사용하셨습니다. 프리미엄 구독으로 업그레이드하여 무제한으로 사용하세요!`,
+            content: `You've used up your daily free message limit (${errorData.limit}). Upgrade to Premium for unlimited access!`,
             isUser: false,
             timestamp: new Date()
           }
@@ -224,7 +224,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         } else {
           const fallbackResponse: ChatMessage = {
             id: (Date.now() + 1).toString(),
-            content: '죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.',
+            content: 'Sorry, the AI service is currently experiencing issues. Please try again shortly.',
             isUser: false,
             timestamp: new Date()
           }
@@ -264,10 +264,10 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         await checkSubscription(sessionId)
       }
     } catch (error) {
-      console.error('AI 응답 오류:', error)
+      console.error('AI response error:', error)
       const errorResponse: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        content: 'AI 응답을 받는 중 오류가 발생했습니다. 다시 시도해주세요.',
+        content: 'An error occurred while getting the AI response. Please try again.',
         isUser: false,
         timestamp: new Date()
       }
@@ -279,37 +279,37 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
   const generateAIResponse = (input: string, tone: string): string => {
     const responses = {
-      '친근하게': [
-        `안녕하세요! "${input}"에 대해 말씀해주셨네요. 더 자세히 알려드릴게요! 😊`,
-        `좋은 질문이에요! "${input}"에 대해서는 이렇게 생각해봐요...`,
-        `와, 정말 흥미로운 주제네요! "${input}"에 대해 함께 알아봐요!`
+      'Friendly': [
+        `Hi! You mentioned "${input}". Let me tell you more about it! 😊`,
+        `Great question! Here's what I think about "${input}"...`,
+        `Wow, that's a really interesting topic! Let's explore "${input}" together!`
       ],
-      '공식적으로': [
-        `안녕하십니까. "${input}"에 대한 문의를 주셔서 감사합니다. 관련하여 다음과 같이 안내드립니다.`,
-        `귀하께서 문의하신 "${input}"에 대해 공식적으로 답변드리겠습니다.`,
-        `말씀하신 "${input}"에 관하여 정확한 정보를 제공해드리겠습니다.`
+      'Formal': [
+        `Hello. Thank you for your inquiry regarding "${input}". Please find the following information.`,
+        `We will formally respond to your inquiry regarding "${input}".`,
+        `We will provide accurate information regarding "${input}".`
       ],
-      '간단하게': [
-        `"${input}"에 대해 간단히 설명드릴게요.`,
-        `"${input}" - 핵심만 말씀드리면...`,
-        `"${input}"에 대한 답변:`
+      'Concise': [
+        `Here's a brief explanation of "${input}".`,
+        `"${input}" - in short...`,
+        `Answer regarding "${input}":`
       ],
-      '전문적으로': [
-                `"${input}"에 대한 전문적 분석을 제공해드리겠습니다.`,
-        `해당 주제 "${input}"에 대해 기술적 관점에서 설명드리겠습니다.`,
-        `"${input}"에 대한 상세한 전문 정보를 공유해드리겠습니다.`
+      'Professional': [
+        `Here is a professional analysis of "${input}".`,
+        `Let me explain "${input}" from a technical perspective.`,
+        `Here is detailed professional information regarding "${input}".`
       ]
     }
     
-    const toneResponses = responses[tone as keyof typeof responses] || responses['친근하게']
+    const toneResponses = responses[tone as keyof typeof responses] || responses['Friendly']
     return toneResponses[Math.floor(Math.random() * toneResponses.length)]
   }
 
   const generateSuggestions = (input: string): string[] => {
     return [
-      '이 내용을 더 자세히 설명해주세요',
-      '다른 관점에서도 알려주세요',
-      '관련 예시를 들어주세요'
+      'Please explain this in more detail',
+      'Tell me from a different perspective',
+      'Give me a related example'
     ]
   }
 
@@ -319,7 +319,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
         ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition)) || null
 
     if (!SpeechRecognitionCtor) {
-      toast.warning('이 브라우저는 음성 인식을 지원하지 않습니다. Chrome 또는 Edge를 사용해주세요.')
+      toast.warning('This browser does not support voice recognition. Please use Chrome or Edge.')
       return
     }
 
@@ -331,7 +331,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     }
 
     const recognition = new SpeechRecognitionCtor()
-    recognition.lang = 'ko-KR'
+    recognition.lang = 'en-US'
     recognition.continuous = false
     recognition.interimResults = false
     recognitionRef.current = recognition
@@ -343,7 +343,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
     recognition.onerror = (event: any) => {
       if (event.error !== 'aborted') {
-        console.error('음성 인식 오류:', event.error)
+        console.error('Voice recognition error:', event.error)
       }
       setIsRecording(false)
       recognitionRef.current = null
@@ -369,7 +369,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
     const textToProcess = messageContent || inputText
     
     if (!textToProcess.trim()) {
-      toast.warning('처리할 텍스트가 없습니다.')
+      toast.warning('There is no text to process.')
       return
     }
 
@@ -380,7 +380,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           if (translationResponse.success) {
             const translationMessage: ChatMessage = {
               id: Date.now().toString(),
-              content: `번역 결과:\n\n원문: ${translationResponse.originalText}\n\n번역: ${translationResponse.translatedText}`,
+              content: `Translation result:\n\nOriginal: ${translationResponse.originalText}\n\nTranslated: ${translationResponse.translatedText}`,
               isUser: false,
               timestamp: new Date()
             }
@@ -393,7 +393,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           if (summaryResponse.success) {
             const summaryMessage: ChatMessage = {
               id: Date.now().toString(),
-              content: `요약 결과:\n\n${summaryResponse.summary}`,
+              content: `Summary result:\n\n${summaryResponse.summary}`,
               isUser: false,
               timestamp: new Date()
             }
@@ -406,7 +406,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           if (improvementResponse.success) {
             const improvementMessage: ChatMessage = {
               id: Date.now().toString(),
-              content: `개선된 텍스트:\n\n${improvementResponse.improvedText}`,
+              content: `Improved text:\n\n${improvementResponse.improvedText}`,
               isUser: false,
               timestamp: new Date()
             }
@@ -415,10 +415,10 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           break
       }
     } catch (error) {
-      console.error(`${feature} 기능 오류:`, error)
+      console.error(`${feature} feature error:`, error)
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
-        content: `${feature} 기능 처리 중 오류가 발생했습니다.`,
+        content: `An error occurred while processing the ${feature} feature.`,
         isUser: false,
         timestamp: new Date()
       }
@@ -427,7 +427,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
   }
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('ko-KR', {
+    return date.toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit'
     })
@@ -459,14 +459,14 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
           isMinimized ? 'w-80 h-14' : 'w-[95vw] sm:w-[420px] md:w-[460px] h-[80vh] max-h-[90vh]'
         } bg-neutral-950 rounded-2xl shadow-2xl border border-neutral-800 overflow-hidden flex flex-col`}
       >
-        {/* 헤더 */}
+        {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-800">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center">
               <FiZap className="w-3.5 h-3.5 text-cyan-400" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-neutral-100 font-mono">AI 어시스턴트</span>
+              <span className="text-sm font-semibold text-neutral-100 font-mono">AI Assistant</span>
               {subscription?.isPremium && (
                 <span className="ml-2 text-[10px] bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 px-1.5 py-0.5 rounded font-mono">PRO</span>
               )}
@@ -478,7 +478,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 onClick={() => window.open('/subscription', '_blank')}
                 className="px-2 py-1 text-[10px] font-mono border border-neutral-700 text-neutral-400 rounded hover:border-neutral-500 hover:text-neutral-200 transition-colors"
               >
-                업그레이드
+                Upgrade
               </button>
             )}
             <button
@@ -490,7 +490,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 localStorage.setItem(SESSION_STORAGE_KEY, newSessionId)
               }}
               className="p-1.5 text-neutral-600 hover:text-neutral-400 transition-colors rounded"
-              title="대화 지우기"
+              title="Clear conversation"
             >
               <FiX className="w-3 h-3" />
             </button>
@@ -511,10 +511,10 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
 
         {!isMinimized && (
           <>
-            {/* 톤 선택 및 사용량 */}
+            {/* Tone selection and usage */}
             <div className="px-4 py-2.5 border-b border-neutral-800/60 space-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">톤</span>
+                <span className="text-[10px] font-mono text-neutral-600 uppercase tracking-widest">Tone</span>
                 <div className="flex gap-1">
                   {tones.map((tone) => (
                     <button
@@ -535,7 +535,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               {quotaLimit > 0 && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-[10px] font-mono text-neutral-700">
-                    <span>쿼터</span>
+                    <span>Quota</span>
                     <span>{quotaUsed} / {quotaLimit}</span>
                   </div>
                   <div className="w-full h-1 bg-neutral-800 rounded-full overflow-hidden">
@@ -548,7 +548,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               )}
             </div>
 
-            {/* 메시지 영역 */}
+            {/* Message area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
               {messages.map((message) => (
                 <motion.div
@@ -572,7 +572,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                       </span>
                       <button
                         onClick={() => handleCopy(message.id, message.content)}
-                        title="복사"
+                        title="Copy"
                         className="text-neutral-700 hover:text-neutral-400 transition-colors"
                       >
                         {copiedId === message.id
@@ -581,26 +581,26 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                         }
                       </button>
                     </div>
-                    {/* AI 기능 버튼들 */}
+                    {/* AI feature buttons */}
                     {!message.isUser && message.aiFeatures && (
                       <div className="mt-2 flex flex-wrap gap-1 pt-1.5 border-t border-neutral-800">
                         <button
                           onClick={() => handleAIFeature('translate', message.content)}
                           className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiGlobe className="w-3 h-3 inline mr-1" />번역
+                          <FiGlobe className="w-3 h-3 inline mr-1" />Translate
                         </button>
                         <button
                           onClick={() => handleAIFeature('summarize', message.content)}
                           className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiEdit3 className="w-3 h-3 inline mr-1" />요약
+                          <FiEdit3 className="w-3 h-3 inline mr-1" />Summarize
                         </button>
                         <button
                           onClick={() => handleAIFeature('improve', message.content)}
                           className="px-2 py-0.5 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                         >
-                          <FiEdit3 className="w-3 h-3 inline mr-1" />개선
+                          <FiEdit3 className="w-3 h-3 inline mr-1" />Improve
                         </button>
                       </div>
                     )}
@@ -626,7 +626,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
               <div ref={messagesEndRef} />
             </div>
 
-            {/* 입력 영역 */}
+            {/* Input area */}
             <div className="p-3 border-t border-neutral-800 flex-shrink-0">
               {/* Quick prompt presets */}
               <div className="flex flex-wrap gap-1 mb-2">
@@ -647,14 +647,14 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="메시지 입력... (Shift+Enter 줄바꿈)"
+                    placeholder="Type a message... (Shift+Enter for new line)"
                     className="w-full px-3 py-2.5 pr-10 border border-neutral-800 rounded-xl resize-none focus:outline-none focus:border-neutral-600 bg-neutral-900 text-neutral-200 placeholder-neutral-700 text-sm font-mono"
                     rows={1}
                     style={{ minHeight: '42px', maxHeight: '120px' }}
                   />
                   <button
                     onClick={handleMicClick}
-                    title={isRecording ? '음성 인식 중지' : '음성으로 입력'}
+                    title={isRecording ? 'Stop voice recognition' : 'Input by voice'}
                     className={`absolute right-2 bottom-2 p-1.5 rounded transition-colors ${
                       isRecording
                         ? 'text-red-500 animate-pulse'
@@ -673,7 +673,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                 </button>
               </div>
 
-              {/* AI 기능 토글 및 버튼들 */}
+              {/* AI feature toggle and buttons */}
               <div className="mt-2 flex flex-wrap gap-1.5">
                 <button
                   onClick={() => setShowAIFeatures(!showAIFeatures)}
@@ -683,7 +683,7 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                       : 'border-neutral-800 text-neutral-600 hover:border-neutral-700 hover:text-neutral-400'
                   }`}
                 >
-                  <FiZap className="w-3 h-3 inline mr-1" />AI 기능
+                  <FiZap className="w-3 h-3 inline mr-1" />AI Features
                 </button>
                 {showAIFeatures && (
                   <>
@@ -691,19 +691,19 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
                       onClick={() => handleAIFeature('summarize')}
                       className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiEdit3 className="w-3 h-3 inline mr-1" />요약
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />Summarize
                     </button>
                     <button
                       onClick={() => handleAIFeature('improve')}
                       className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiEdit3 className="w-3 h-3 inline mr-1" />개선
+                      <FiEdit3 className="w-3 h-3 inline mr-1" />Improve
                     </button>
                     <button
                       onClick={() => handleAIFeature('translate')}
                       className="px-2.5 py-1 text-[10px] font-mono border border-neutral-800 text-neutral-600 rounded hover:border-neutral-700 hover:text-neutral-400 transition-colors"
                     >
-                      <FiGlobe className="w-3 h-3 inline mr-1" />번역
+                      <FiGlobe className="w-3 h-3 inline mr-1" />Translate
                     </button>
                   </>
                 )}

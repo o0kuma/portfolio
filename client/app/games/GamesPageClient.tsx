@@ -27,8 +27,8 @@ const GAMES: GameInfo[] = [
   {
     href: '/tower-defense',
     title: 'Tower Defense',
-    description: '전략적으로 타워를 배치해 몰려오는 적을 막아라. 자원 관리와 업그레이드가 핵심!',
-    genre: '전략',
+    description: 'Strategically place towers to stop the incoming waves of enemies. Resource management and upgrades are key!',
+    genre: 'Strategy',
     difficulty: 3,
     techStack: ['React', 'Canvas'],
     emoji: '🏰',
@@ -39,8 +39,8 @@ const GAMES: GameInfo[] = [
   {
     href: '/survive',
     title: 'Survive',
-    description: '탑다운 슈터로 밀려오는 적들을 피하며 최대한 오래 생존하라. 온라인 대전 지원!',
-    genre: '액션',
+    description: 'Dodge waves of enemies in this top-down shooter and survive as long as possible. Online multiplayer supported!',
+    genre: 'Action',
     difficulty: 4,
     techStack: ['React', 'Canvas', 'WebSocket'],
     emoji: '⚔️',
@@ -51,8 +51,8 @@ const GAMES: GameInfo[] = [
   {
     href: '/typing-game',
     title: 'Typing Game',
-    description: '코드 스니펫을 타이핑해 WPM과 정확도를 측정하세요. 개발자를 위한 타이핑 훈련!',
-    genre: '퍼즐',
+    description: 'Type code snippets to measure your WPM and accuracy. Typing practice built for developers!',
+    genre: 'Puzzle',
     difficulty: 2,
     techStack: ['React', 'TypeScript'],
     emoji: '⌨️',
@@ -63,8 +63,8 @@ const GAMES: GameInfo[] = [
   {
     href: '/tetris',
     title: 'Tetris',
-    description: '클래식 테트리스! 블록을 쌓고 라인을 지워 최고 점수에 도전하세요.',
-    genre: '퍼즐',
+    description: 'Classic Tetris! Stack blocks and clear lines to chase the highest score.',
+    genre: 'Puzzle',
     difficulty: 2,
     techStack: ['React', 'Canvas'],
     emoji: '🧱',
@@ -74,9 +74,9 @@ const GAMES: GameInfo[] = [
   },
   {
     href: '/lotto',
-    title: '로또 6/45',
-    description: '번호를 고르고 추첨에 도전! 역대 실제 회차와 비교하거나 1등 나올 때까지 무한 자동 구매.',
-    genre: '운/시뮬',
+    title: 'Lotto 6/45',
+    description: 'Pick numbers and try the draw! Compare against real past draws, or run infinite auto-purchases until you win 1st prize.',
+    genre: 'Luck/Sim',
     difficulty: 1,
     techStack: ['Next.js', 'API'],
     emoji: '🎰',
@@ -86,9 +86,9 @@ const GAMES: GameInfo[] = [
   },
   {
     href: '/arcade',
-    title: '포켓 아케이드',
-    description: '한 손으로 즐기는 초단타 미니게임 모음. 코인을 모으고 최고 기록에 도전하세요.',
-    genre: '아케이드',
+    title: 'Pocket Arcade',
+    description: 'A collection of quick one-handed mini games. Collect coins and chase the high score.',
+    genre: 'Arcade',
     difficulty: 2,
     techStack: ['Canvas', 'PWA'],
     emoji: '🕹️',
@@ -99,14 +99,14 @@ const GAMES: GameInfo[] = [
 ]
 
 const STATS = [
-  { label: '9개 게임', icon: '🎮' },
-  { label: '브라우저 기반', icon: '🌐' },
-  { label: '무료 플레이', icon: '🆓' },
+  { label: '9 Games', icon: '🎮' },
+  { label: 'Browser-based', icon: '🌐' },
+  { label: 'Free to Play', icon: '🆓' },
 ]
 
 function DifficultyStars({ count }: { count: number }) {
   return (
-    <div className="flex items-center gap-0.5" aria-label={`난이도 ${count}점`}>
+    <div className="flex items-center gap-0.5" aria-label={`Difficulty ${count} points`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <span key={i} className={i < count ? 'text-amber-400' : 'text-slate-700'} aria-hidden>
           ★
@@ -163,7 +163,7 @@ function GameCard({ game, index }: { game: GameInfo; index: number }) {
           className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-5 py-2 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/20 active:scale-95"
         >
           <FiPlay className="h-3.5 w-3.5" aria-hidden />
-          플레이하기
+          Play
         </Link>
       </div>
     </motion.div>
@@ -191,13 +191,13 @@ export default function GamesPageClient() {
               href="/games/stats"
               className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:border-slate-500 hover:text-white"
             >
-              전적 보기
+              View Stats
             </Link>
             <Link
               href="/achievements"
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition hover:border-amber-600 hover:text-amber-300"
             >
-              🏆 업적
+              🏆 Achievements
             </Link>
           </div>
         </div>
@@ -214,7 +214,7 @@ export default function GamesPageClient() {
           <h1 className="font-display mb-3 text-5xl font-bold tracking-tight">
             🎮 Game Hub
           </h1>
-          <p className="text-lg text-slate-400">브라우저에서 바로 즐기는 미니 게임</p>
+          <p className="text-lg text-slate-400">Mini games you can play right in your browser</p>
         </motion.div>
 
         {/* Stat chips */}
@@ -258,11 +258,11 @@ export default function GamesPageClient() {
             <TowerDefenseLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">⌨️ 타이핑 게임</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">⌨️ Typing Game</p>
             <TypingLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">🎰 로또 6/45</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">🎰 Lotto 6/45</p>
             <LottoLeaderboard />
           </div>
         </div>
