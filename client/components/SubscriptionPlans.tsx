@@ -9,10 +9,13 @@ import { useLanguage } from '@/lib/LanguageContext'
 interface SubscriptionPlan {
   id: string
   name: string
+  nameEn: string
   price: number
   period: 'monthly' | 'yearly'
   description: string
+  descriptionEn: string
   features: string[]
+  featuresEn: string[]
   popular?: boolean
   stripePriceId?: string
 }
@@ -21,23 +24,34 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'free',
     name: '무료',
+    nameEn: 'Free',
     price: 0,
     period: 'monthly',
     description: '기본 AI 기능을 제한적으로 사용',
+    descriptionEn: 'Limited access to basic AI features',
     features: [
       '일일 10개 메시지',
       '기본 AI 챗봇',
       '텍스트 개선 5회/일',
       '번역 5회/일',
       '요약 3회/일'
+    ],
+    featuresEn: [
+      '10 messages per day',
+      'Basic AI chatbot',
+      'Text improvement 5x/day',
+      'Translation 5x/day',
+      'Summarization 3x/day'
     ]
   },
   {
     id: 'premium_monthly',
     name: '프리미엄 월간',
+    nameEn: 'Premium Monthly',
     price: 9900,
     period: 'monthly',
     description: '무제한 AI 기능과 고급 기능',
+    descriptionEn: 'Unlimited AI plus advanced features',
     popular: true,
     features: [
       '무제한 AI 메시지',
@@ -48,14 +62,25 @@ const plans: SubscriptionPlan[] = [
       '우선 지원',
       '광고 없음'
     ],
+    featuresEn: [
+      'Unlimited AI messages',
+      'Advanced AI chatbot (GPT-4)',
+      'Unlimited text improvement',
+      'Unlimited translation',
+      'Unlimited summarization',
+      'Priority support',
+      'No ads'
+    ],
     stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_MONTHLY || 'price_monthly'
   },
   {
     id: 'premium_yearly',
     name: '프리미엄 연간',
+    nameEn: 'Premium Yearly',
     price: 99000,
     period: 'yearly',
     description: '연간 구독으로 17% 할인',
+    descriptionEn: 'Save 17% with an annual subscription',
     features: [
       '무제한 AI 메시지',
       '고급 AI 챗봇 (GPT-4)',
@@ -66,12 +91,22 @@ const plans: SubscriptionPlan[] = [
       '광고 없음',
       '연간 17% 할인'
     ],
+    featuresEn: [
+      'Unlimited AI messages',
+      'Advanced AI chatbot (GPT-4)',
+      'Unlimited text improvement',
+      'Unlimited translation',
+      'Unlimited summarization',
+      'Priority support',
+      'No ads',
+      '17% annual discount'
+    ],
     stripePriceId: process.env.NEXT_PUBLIC_STRIPE_PRICE_YEARLY || 'price_yearly'
   }
 ]
 
 export default function SubscriptionPlans() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
   const stripeReady = isStripeConfigured()
   const [user, setUser] = useState<any>(null)
   const [currentSubscription, setCurrentSubscription] = useState<any>(null)
@@ -111,7 +146,7 @@ export default function SubscriptionPlans() {
     }
 
     if (!user) {
-      toast.warning('구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
+      toast.warning(locale === 'en' ? 'Subscribing requires portfolio_user_id to be set in localStorage.' : '구독을 위해 localStorage의 portfolio_user_id 설정이 필요합니다.')
       return
     }
 
@@ -133,11 +168,11 @@ export default function SubscriptionPlans() {
         // Stripe Checkout으로 리다이렉트
         window.location.href = data.url
       } else {
-        toast.error('결제 세션 생성에 실패했습니다.')
+        toast.error(locale === 'en' ? 'Failed to create a checkout session.' : '결제 세션 생성에 실패했습니다.')
       }
     } catch (error) {
       console.error('구독 오류:', error)
-      toast.error('구독 처리 중 오류가 발생했습니다.')
+      toast.error(locale === 'en' ? 'An error occurred while processing the subscription.' : '구독 처리 중 오류가 발생했습니다.')
     }
   }
 
@@ -154,10 +189,10 @@ export default function SubscriptionPlans() {
       <div className="page-shell max-w-6xl">
         <div className="text-center mb-12">
           <h1 className="mb-4 font-display text-4xl font-bold">
-            프리미엄 구독 플랜
+            {locale === 'en' ? 'Premium Subscription Plans' : '프리미엄 구독 플랜'}
           </h1>
           <p className="text-xl text-textMuted">
-            ChatGPT를 활용한 고급 AI 기능을 무제한으로 사용하세요
+            {locale === 'en' ? 'Use advanced ChatGPT-powered AI features without limits' : 'ChatGPT를 활용한 고급 AI 기능을 무제한으로 사용하세요'}
           </p>
           {!stripeReady && (
             <div className="mt-6 mx-auto max-w-lg rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-amber-200">
@@ -183,32 +218,32 @@ export default function SubscriptionPlans() {
                   <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                     <span className="bg-blue-500 text-white px-4 py-1 rounded-full text-sm font-semibold flex items-center gap-1">
                       <FiStar className="w-4 h-4" />
-                      인기
+                      {locale === 'en' ? 'Popular' : '인기'}
                     </span>
                   </div>
                 )}
 
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                    {plan.name}
+                    {locale === 'en' ? plan.nameEn : plan.name}
                   </h3>
                   <div className="flex items-baseline justify-center gap-1">
                     <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                      {plan.price === 0 ? '무료' : `₩${plan.price.toLocaleString()}`}
+                      {plan.price === 0 ? (locale === 'en' ? 'Free' : '무료') : `₩${plan.price.toLocaleString()}`}
                     </span>
                     {plan.price > 0 && (
                       <span className="text-gray-600 dark:text-gray-400">
-                        /{plan.period === 'monthly' ? '월' : '년'}
+                        /{plan.period === 'monthly' ? (locale === 'en' ? 'mo' : '월') : (locale === 'en' ? 'yr' : '년')}
                       </span>
                     )}
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 mt-2">
-                    {plan.description}
+                    {locale === 'en' ? plan.descriptionEn : plan.description}
                   </p>
                 </div>
 
                 <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, idx) => (
+                  {(locale === 'en' ? plan.featuresEn : plan.features).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-3">
                       <FiCheck className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
                       <span className="text-gray-700 dark:text-gray-300">{feature}</span>
@@ -221,7 +256,7 @@ export default function SubscriptionPlans() {
                     disabled
                     className="w-full py-3 px-6 bg-green-500 text-white rounded-lg font-semibold cursor-not-allowed"
                   >
-                    현재 플랜
+                    {locale === 'en' ? 'Current plan' : '현재 플랜'}
                   </button>
                 ) : (
                   <button
@@ -238,10 +273,10 @@ export default function SubscriptionPlans() {
                     }`}
                   >
                     {plan.id === 'free'
-                      ? '현재 플랜'
+                      ? (locale === 'en' ? 'Current plan' : '현재 플랜')
                       : !stripeReady
-                      ? '준비 중'
-                      : '구독하기'}
+                      ? (locale === 'en' ? 'Coming soon' : '준비 중')
+                      : (locale === 'en' ? 'Subscribe' : '구독하기')}
                   </button>
                 )}
               </div>
@@ -254,11 +289,11 @@ export default function SubscriptionPlans() {
             <div className="flex items-center gap-3 mb-2">
               <FiStar className="w-6 h-6 text-yellow-500 fill-yellow-500" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-                프리미엄 멤버십 활성화됨
+                {locale === 'en' ? 'Premium membership active' : '프리미엄 멤버십 활성화됨'}
               </h3>
             </div>
             <p className="text-gray-600 dark:text-gray-400">
-              구독 만료일: {new Date(currentSubscription.currentPeriodEnd).toLocaleDateString('ko-KR')}
+              {locale === 'en' ? 'Renews/expires: ' : '구독 만료일: '}{new Date(currentSubscription.currentPeriodEnd).toLocaleDateString(locale === 'en' ? 'en-US' : 'ko-KR')}
             </p>
           </div>
         )}

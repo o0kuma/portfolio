@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { FiArrowLeft, FiBookOpen, FiCalendar } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
+import LocaleText from '@/components/LocaleText'
 
 interface SeriesItem {
   name: string
@@ -46,9 +47,9 @@ export default async function SeriesPage() {
               className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
             >
               <FiArrowLeft size={16} />
-              <span>글 목록</span>
+              <span><LocaleText ko="글 목록" en="Posts" /></span>
             </Link>
-            <h1 className="text-2xl font-black text-neutral-50 font-mono">시리즈</h1>
+            <h1 className="text-2xl font-black text-neutral-50 font-mono"><LocaleText ko="시리즈" en="Series" /></h1>
           </div>
         </div>
       </header>
@@ -57,7 +58,7 @@ export default async function SeriesPage() {
         {series.length === 0 ? (
           <div className="text-center py-20 text-neutral-600 font-mono">
             <FiBookOpen size={48} className="mx-auto mb-4 opacity-40" />
-            <p>아직 시리즈가 없습니다.</p>
+            <p><LocaleText ko="아직 시리즈가 없습니다." en="No series yet." /></p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -70,7 +71,7 @@ export default async function SeriesPage() {
                 <div className="flex items-start justify-between mb-3">
                   <FiBookOpen className="text-cyan-400 mt-0.5" size={20} />
                   <span className="bg-neutral-800 text-neutral-400 text-xs font-mono px-2 py-0.5 rounded">
-                    {s.count}편
+                    <LocaleText ko={`${s.count}편`} en={`${s.count} posts`} />
                   </span>
                 </div>
                 <h2 className="text-neutral-100 font-bold text-lg leading-snug mb-3 line-clamp-2">
@@ -78,7 +79,7 @@ export default async function SeriesPage() {
                 </h2>
                 <div className="flex items-center gap-1 text-neutral-600 text-xs font-mono">
                   <FiCalendar size={11} />
-                  <span>최근 {formatDate(s.latest)}</span>
+                  <span><LocaleText ko={`최근 ${formatDate(s.latest)}`} en={`Recent ${formatDate(s.latest)}`} /></span>
                 </div>
               </Link>
             ))}

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FiArrowLeft, FiCalendar } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
+import LocaleText from '@/components/LocaleText'
 
 interface Post {
   id: number
@@ -72,7 +73,7 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ n
               className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
             >
               <FiArrowLeft size={16} />
-              <span>시리즈 목록</span>
+              <span><LocaleText ko="시리즈 목록" en="All series" /></span>
             </Link>
             <h1 className="text-2xl font-black text-neutral-50 font-mono">{decoded}</h1>
           </div>
@@ -81,7 +82,7 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ n
 
       <div className="page-shell py-12">
         <div className="mb-8">
-          <p className="text-neutral-500 font-mono text-sm">총 {sorted.length}편</p>
+          <p className="text-neutral-500 font-mono text-sm"><LocaleText ko={`총 ${sorted.length}편`} en={`${sorted.length} posts total`} /></p>
         </div>
 
         <ol className="space-y-3">

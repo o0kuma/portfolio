@@ -4,6 +4,7 @@ import Link from 'next/link'
 import type { HomePost } from '@/components/home/post-types'
 import BlogPostsCarousel3D from '@/components/home/BlogPostsCarousel3D'
 import { FiArrowRight } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type Props = {
   posts: HomePost[]
@@ -33,6 +34,7 @@ export default function BlogPostsAtmosphere({
   formatNumber,
   categoryLabel,
 }: Props) {
+  const { locale } = useLanguage()
   return (
     <section
       className="relative min-h-screen overflow-hidden bg-[#030014] text-white"
@@ -59,7 +61,7 @@ export default function BlogPostsAtmosphere({
             <br />
             looking for?
           </p>
-          <nav className="mt-10 space-y-4 font-mono text-[11px] tracking-[0.12em] text-white/55" aria-label="블로그 빠른 이동">
+          <nav className="mt-10 space-y-4 font-mono text-[11px] tracking-[0.12em] text-white/55" aria-label={locale === 'en' ? 'Quick blog navigation' : '블로그 빠른 이동'}>
             <Link
               href="/posts"
               className="flex items-baseline gap-2 transition-colors hover:text-white"
@@ -115,7 +117,7 @@ export default function BlogPostsAtmosphere({
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.03] px-8 py-20 text-center backdrop-blur-sm">
               <p className="font-mono text-xs tracking-widest text-white/40">NO ENTRIES FOUND</p>
               <p className="mt-4 text-sm text-white/45">
-                API 서버를 확인하거나 게시판에서 글을 작성해 보세요.
+                {locale === 'en' ? 'Check the API server or try writing a post on the board.' : 'API 서버를 확인하거나 게시판에서 글을 작성해 보세요.'}
               </p>
               <Link
                 href="/posts"

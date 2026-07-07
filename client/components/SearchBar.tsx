@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiSearch, FiX, FiFilter } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface SearchBarProps {
   onSearch: (query: string) => void
@@ -19,10 +20,12 @@ interface SearchBarProps {
 export default function SearchBar({ 
   onSearch, 
   onFilterChange, 
-  placeholder = "검색어를 입력하세요...",
+  placeholder,
   filters = {},
   className = ""
 }: SearchBarProps) {
+  const { locale } = useLanguage()
+  const resolvedPlaceholder = placeholder ?? (locale === 'en' ? 'Type to search...' : '검색어를 입력하세요...')
   const [searchQuery, setSearchQuery] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
@@ -105,7 +108,7 @@ export default function SearchBar({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsExpanded(true)}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               className="w-full pl-10 pr-12 py-3 bg-white dark:bg-dark-700 border border-gray-300 dark:border-dark-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white transition-all duration-200"
             />
             
@@ -149,13 +152,13 @@ export default function SearchBar({
             >
               <div className="p-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">필터</h3>
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">{locale === 'en' ? 'Filters' : '필터'}</h3>
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
                       className="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
                     >
-                      필터 초기화
+                      {locale === 'en' ? 'Reset filters' : '필터 초기화'}
                     </button>
                   )}
                 </div>
@@ -164,53 +167,53 @@ export default function SearchBar({
                   {/* 카테고리 필터 */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      카테고리
+                      {locale === 'en' ? 'Category' : '카테고리'}
                     </label>
                     <select
                       value={localFilters.category || 'all'}
                       onChange={(e) => handleFilterChange('category', e.target.value)}
                       className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white"
                     >
-                      <option value="all">전체</option>
-                      <option value="web">웹</option>
-                      <option value="mobile">모바일</option>
-                      <option value="desktop">데스크톱</option>
-                      <option value="other">기타</option>
+                      <option value="all">{locale === 'en' ? 'All' : '전체'}</option>
+                      <option value="web">{locale === 'en' ? 'Web' : '웹'}</option>
+                      <option value="mobile">{locale === 'en' ? 'Mobile' : '모바일'}</option>
+                      <option value="desktop">{locale === 'en' ? 'Desktop' : '데스크톱'}</option>
+                      <option value="other">{locale === 'en' ? 'Other' : '기타'}</option>
                     </select>
                   </div>
 
                   {/* 상태 필터 */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      상태
+                      {locale === 'en' ? 'Status' : '상태'}
                     </label>
                     <select
                       value={localFilters.status || 'all'}
                       onChange={(e) => handleFilterChange('status', e.target.value)}
                       className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white"
                     >
-                      <option value="all">전체</option>
-                      <option value="completed">완료</option>
-                      <option value="in-progress">진행중</option>
-                      <option value="planned">계획</option>
+                      <option value="all">{locale === 'en' ? 'All' : '전체'}</option>
+                      <option value="completed">{locale === 'en' ? 'Done' : '완료'}</option>
+                      <option value="in-progress">{locale === 'en' ? 'In progress' : '진행중'}</option>
+                      <option value="planned">{locale === 'en' ? 'Planned' : '계획'}</option>
                     </select>
                   </div>
 
                   {/* 날짜 범위 필터 */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-2">
-                      날짜 범위
+                      {locale === 'en' ? 'Date range' : '날짜 범위'}
                     </label>
                     <select
                       value={localFilters.dateRange || 'all'}
                       onChange={(e) => handleFilterChange('dateRange', e.target.value)}
                       className="w-full px-3 py-2 text-sm bg-gray-50 dark:bg-dark-600 border border-gray-200 dark:border-dark-500 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:text-white"
                     >
-                      <option value="all">전체 기간</option>
-                      <option value="this-year">올해</option>
-                      <option value="last-year">작년</option>
-                      <option value="this-month">이번 달</option>
-                      <option value="last-month">지난 달</option>
+                      <option value="all">{locale === 'en' ? 'All time' : '전체 기간'}</option>
+                      <option value="this-year">{locale === 'en' ? 'This year' : '올해'}</option>
+                      <option value="last-year">{locale === 'en' ? 'Last year' : '작년'}</option>
+                      <option value="this-month">{locale === 'en' ? 'This month' : '이번 달'}</option>
+                      <option value="last-month">{locale === 'en' ? 'Last month' : '지난 달'}</option>
                     </select>
                   </div>
                 </div>

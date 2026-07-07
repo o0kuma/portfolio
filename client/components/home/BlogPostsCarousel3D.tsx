@@ -21,6 +21,7 @@ import {
   useState,
 } from 'react'
 import { usePrefersReducedMotion } from '@/components/home/useHomeScrollProgress'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type Props = {
   posts: HomePost[]
@@ -46,6 +47,7 @@ export default function BlogPostsCarousel3D({
   formatNumber,
   categoryLabel,
 }: Props) {
+  const { locale } = useLanguage()
   const reduced = usePrefersReducedMotion()
   const wrapRef = useRef<HTMLDivElement>(null)
   const sceneRef = useRef<HTMLDivElement>(null)
@@ -187,7 +189,7 @@ export default function BlogPostsCarousel3D({
         tabIndex={0}
         role="region"
         aria-roledescription="carousel"
-        aria-label="블로그 포스트 3D 캐러셀"
+        aria-label={locale === 'en' ? 'Blog posts 3D carousel' : '블로그 포스트 3D 캐러셀'}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -247,7 +249,7 @@ export default function BlogPostsCarousel3D({
             type="button"
             onClick={goPrev}
             className="rounded-full border border-white/15 bg-white/[0.06] p-3 text-white/70 backdrop-blur-sm transition hover:border-white/30 hover:text-white"
-            aria-label="이전 글"
+            aria-label={locale === 'en' ? 'Previous post' : '이전 글'}
           >
             <FiChevronLeft size={22} />
           </button>
@@ -262,7 +264,7 @@ export default function BlogPostsCarousel3D({
                     ? 'w-8 bg-fuchsia-400/90'
                     : 'w-2 bg-white/25 hover:bg-white/45'
                 }`}
-                aria-label={`${i + 1}번째 글`}
+                aria-label={locale === 'en' ? `Post ${i + 1}` : `${i + 1}번째 글`}
                 aria-current={i === activeIndex}
               />
             ))}
@@ -271,7 +273,7 @@ export default function BlogPostsCarousel3D({
             type="button"
             onClick={goNext}
             className="rounded-full border border-white/15 bg-white/[0.06] p-3 text-white/70 backdrop-blur-sm transition hover:border-white/30 hover:text-white"
-            aria-label="다음 글"
+            aria-label={locale === 'en' ? 'Next post' : '다음 글'}
           >
             <FiChevronRight size={22} />
           </button>
