@@ -63,11 +63,13 @@ interface TopPost {
 }
 
 function NewsletterSendButton({ postId, sent }: { postId: number; sent: boolean }) {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [loading, setLoading] = React.useState(false)
   const [done, setDone] = React.useState(sent)
 
   const handleSend = async () => {
-    if (!confirm('Send this post\'s newsletter to subscribers?')) return
+    if (!confirm(en ? "Send this post's newsletter to subscribers?" : '이 글의 뉴스레터를 구독자에게 발송하시겠습니까?')) return
     setLoading(true)
     try {
       const res = await fetch('/api/admin/newsletter/send', {
@@ -79,19 +81,19 @@ function NewsletterSendButton({ postId, sent }: { postId: number; sent: boolean 
       const data = await res.json()
       if (data.success) {
         setDone(true)
-        alert(`Sent to ${data.sent} subscriber(s)`)
+        alert(en ? `Sent to ${data.sent} subscriber(s)` : `발송 완료: ${data.sent}명`)
       } else {
-        alert('Send failed: ' + (data.error ?? ''))
+        alert((en ? 'Send failed: ' : '발송 실패: ') + (data.error ?? ''))
       }
     } catch {
-      alert('An error occurred while sending.')
+      alert(en ? 'An error occurred while sending.' : '발송 중 오류가 발생했습니다.')
     } finally {
       setLoading(false)
     }
   }
 
   if (done) {
-    return <span className="text-xs text-green-500 font-mono">Sent</span>
+    return <span className="text-xs text-green-500 font-mono">{en ? 'Sent' : '발송됨'}</span>
   }
 
   return (
@@ -101,13 +103,14 @@ function NewsletterSendButton({ postId, sent }: { postId: number; sent: boolean 
       disabled={loading}
       className="text-xs text-cyan-400 hover:text-cyan-300 font-mono transition-colors disabled:opacity-50"
     >
-      {loading ? 'Sending...' : 'Send Newsletter'}
+      {loading ? (en ? 'Sending...' : '발송중...') : (en ? 'Send Newsletter' : '뉴스레터 발송')}
     </button>
   )
 }
 
 export default function AdminDashboardPage() {
-  const { t } = useLanguage()
+  const { t, locale } = useLanguage()
+  const en = locale === 'en'
   const [stats, setStats] = useState<SiteStats | null>(null)
   const [aiStats, setAiStats] = useState<{ totalRequests: number; requestsToday: number } | null>(null)
   const [topPosts, setTopPosts] = useState<TopPost[]>([])
@@ -300,7 +303,7 @@ export default function AdminDashboardPage() {
                 color="text-pink-500"
               />
               <StatCard
-                label="Restaurants"
+                label={en ? "Restaurants" : "맛집 등록수"}
                 value={stats?.totalRestaurants ?? 0}
                 icon={<span className="text-3xl leading-none">🍽️</span>}
                 color="text-orange-400"
@@ -321,7 +324,7 @@ export default function AdminDashboardPage() {
                 {aiStats?.totalRequests ?? '–'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                {t.adminDashboard.aiUsageNote} (Today: {aiStats?.requestsToday ?? '–'})
+                {t.adminDashboard.aiUsageNote} ({en ? 'Today' : '오늘'}: {aiStats?.requestsToday ?? '–'})
               </p>
             </div>
           </div>
@@ -330,24 +333,24 @@ export default function AdminDashboardPage() {
         {/* Game Stats */}
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Game Records
+            {en ? 'Game Records' : '게임 전적'}
           </h2>
           <div className="card rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl">🎮</span>
-              <span className="font-semibold text-gray-900 dark:text-white text-lg">Game Records</span>
+              <span className="font-semibold text-gray-900 dark:text-white text-lg">{en ? 'Game Records' : '게임 전적'}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tetris High Score</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{en ? 'Tetris High Score' : '테트리스 최고점'}</p>
                 <p className="text-2xl font-bold text-blue-500">{stats?.gameStats?.tetrisBestScore ?? 0}</p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Survive Best Level</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{en ? 'Survive Best Level' : '서바이브 최고 레벨'}</p>
                 <p className="text-2xl font-bold text-green-500">{stats?.gameStats?.surviveBestWave ?? 0}</p>
               </div>
               <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Tower Defense Best Wave</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{en ? 'Tower Defense Best Wave' : '타워 디펜스 최고 웨이브'}</p>
                 <p className="text-2xl font-bold text-purple-500">{stats?.gameStats?.towerBestWave ?? 0}</p>
               </div>
             </div>
@@ -357,11 +360,11 @@ export default function AdminDashboardPage() {
         {/* Top Posts */}
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Top 5 Posts
+            {en ? 'Top 5 Posts' : '인기 글 TOP 5'}
           </h2>
           <div className="card rounded-xl p-6">
             {topPosts.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400">No data</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{en ? 'No data' : '데이터 없음'}</p>
             ) : (
               <ol className="space-y-3">
                 {topPosts.map((post, idx) => (
@@ -387,12 +390,14 @@ export default function AdminDashboardPage() {
         {/* Newsletter Section */}
         <section className="mb-10">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
-            Newsletter
+            {en ? 'Newsletter' : '뉴스레터'}
           </h2>
           <div className="card rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                Automatically sends posts published within the last 24 hours to subscribers.
+                {en
+                  ? 'Automatically sends posts published within the last 24 hours to subscribers.'
+                  : '최근 24시간 내 발행된 글을 구독자에게 자동 발송합니다.'}
               </p>
             </div>
             <button
@@ -407,7 +412,7 @@ export default function AdminDashboardPage() {
               }}
               className="flex-shrink-0 bg-cyan-700 hover:bg-cyan-600 text-white text-sm px-4 py-2 rounded-lg transition-colors"
             >
-              Send Now
+              {en ? 'Send Now' : '지금 발송 실행'}
             </button>
           </div>
         </section>
@@ -448,7 +453,7 @@ export default function AdminDashboardPage() {
             >
               <div className="flex items-center gap-3">
                 <FiUsers className="w-6 h-6 text-pink-500" />
-                <span className="font-medium text-gray-900 dark:text-white">Visitor Stats</span>
+                <span className="font-medium text-gray-900 dark:text-white">{en ? 'Visitor Stats' : '방문자 현황'}</span>
               </div>
               <FiArrowRight className="w-5 h-5 text-gray-400 group-hover:text-pink-500 transition" />
             </Link>
