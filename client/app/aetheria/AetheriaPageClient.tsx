@@ -127,7 +127,7 @@ export default function AetheriaPageClient() {
       setTokenInput('')
       load()
     } else {
-      setTokenError('토큰이 올바르지 않습니다.')
+      setTokenError('Invalid token.')
       setStoredAdminToken('')
     }
   }
@@ -146,19 +146,19 @@ export default function AetheriaPageClient() {
     }
   }
 
-  // 인증 확인 중
+  // Verifying authentication
   if (checking) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#05070d] text-sm text-slate-500">확인 중...</div>
+    return <div className="flex min-h-screen items-center justify-center bg-[#05070d] text-sm text-slate-500">Checking...</div>
   }
 
-  // 비공개 — 관리자만 접근 가능
+  // Private — admin access only
   if (!isAdmin) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#05070d] px-4 text-white">
         <FiLock className="text-3xl text-slate-600" />
         <h1 className="text-lg font-bold">Project Aetheria</h1>
         <p className="text-center text-xs text-slate-500">
-          이 페이지는 비공개입니다. 관리자만 접근할 수 있습니다.
+          This page is private. Admin access only.
         </p>
         <div className="flex w-full max-w-xs flex-col gap-2">
           <input
@@ -166,27 +166,27 @@ export default function AetheriaPageClient() {
             value={tokenInput}
             onChange={(e) => setTokenInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && submitToken()}
-            placeholder="관리자 토큰"
+            placeholder="Admin token"
             autoFocus
             className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder-slate-600 focus:border-cyan-500 focus:outline-none"
           />
           <button onClick={submitToken} className="rounded-lg bg-cyan-600 px-3 py-2 text-sm font-bold hover:bg-cyan-500">
-            확인
+            Confirm
           </button>
           {tokenError && <p className="text-center text-[11px] text-red-400">{tokenError}</p>}
         </div>
 
         <div className="mt-2 flex items-center gap-2 text-[11px] text-slate-600">
-          <span className="h-px w-10 bg-slate-800" /> 또는 <span className="h-px w-10 bg-slate-800" />
+          <span className="h-px w-10 bg-slate-800" /> or <span className="h-px w-10 bg-slate-800" />
         </div>
         <Link
           href={`/admin/login?redirect=${encodeURIComponent('/aetheria')}`}
           className="text-xs font-semibold text-cyan-400 hover:text-cyan-300"
         >
-          관리자 비밀번호로 로그인 →
+          Log in with admin password →
         </Link>
 
-        <Link href="/" className="mt-4 text-xs text-slate-600 hover:text-slate-400">← 메인으로</Link>
+        <Link href="/" className="mt-4 text-xs text-slate-600 hover:text-slate-400">← Back to home</Link>
       </div>
     )
   }
@@ -196,14 +196,14 @@ export default function AetheriaPageClient() {
       <header className="sticky top-0 z-30 border-b border-cyan-900/40 bg-[#05070d]/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
-            <FiArrowLeft className="h-4 w-4" /> 메인
+            <FiArrowLeft className="h-4 w-4" /> Home
           </Link>
           <span className="text-sm font-bold text-cyan-300">Project Aetheria</span>
-          <span className="rounded-full bg-cyan-900/40 px-2 py-0.5 text-[10px] text-cyan-300">🔒 비공개</span>
+          <span className="rounded-full bg-cyan-900/40 px-2 py-0.5 text-[10px] text-cyan-300">🔒 Private</span>
           <div className="ml-auto flex items-center gap-2">
             <span className={`h-2 w-2 rounded-full ${running ? 'bg-emerald-400' : 'bg-slate-600'}`} />
-            <span className="text-xs text-slate-400">{running ? '진행 중' : '정지됨'}</span>
-            <button onClick={load} className="text-slate-500 hover:text-cyan-300" aria-label="새로고침">
+            <span className="text-xs text-slate-400">{running ? 'Running' : 'Stopped'}</span>
+            <button onClick={load} className="text-slate-500 hover:text-cyan-300" aria-label="Refresh">
               <FiRefreshCw size={14} />
             </button>
           </div>
@@ -213,16 +213,16 @@ export default function AetheriaPageClient() {
       <main className="mx-auto max-w-4xl px-4 pt-8">
         <div className="mb-6 text-center">
           <h1 className="mb-2 text-3xl font-black">🧠 Project Aetheria</h1>
-          <p className="text-sm text-slate-400">GPT-4o vs Gemini — 자율 에이전트 샌드박스 시뮬레이션</p>
+          <p className="text-sm text-slate-400">GPT-4o vs Gemini — Autonomous Agent Sandbox Simulation</p>
         </div>
 
         {agents.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-1 text-xs text-slate-400">
-            <span>🕐 {currentTick}틱째 진행</span>
-            <span>💚 생존 {agents.filter((a) => a.status === 'alive').length}/{agents.length}</span>
+            <span>🕐 Tick {currentTick}</span>
+            <span>💚 Alive {agents.filter((a) => a.status === 'alive').length}/{agents.length}</span>
             {agents.some((a) => a.gold > 0) && (
               <span>
-                👑 최고 부자: {[...agents].sort((a, b) => b.gold - a.gold)[0]?.name} (🪙{[...agents].sort((a, b) => b.gold - a.gold)[0]?.gold})
+                👑 Richest: {[...agents].sort((a, b) => b.gold - a.gold)[0]?.name} (🪙{[...agents].sort((a, b) => b.gold - a.gold)[0]?.gold})
               </span>
             )}
           </div>
@@ -231,15 +231,15 @@ export default function AetheriaPageClient() {
         {!running && (
           <p className="mb-6 rounded-lg border border-amber-800/40 bg-amber-950/10 px-4 py-2 text-center text-xs text-amber-300">
             {agents.length === 0
-              ? '시뮬레이션이 아직 시작되지 않았습니다. 시작하면 다음 크론 실행 시각에 첫 데이터가 생성됩니다.'
-              : '시뮬레이션이 정지된 상태입니다. 마지막으로 기록된 상태를 보고 있습니다.'}
+              ? 'The simulation has not started yet. Once started, the first data will be generated at the next cron run.'
+              : 'The simulation is stopped. You are viewing the last recorded state.'}
           </p>
         )}
 
         <div className="mb-6 rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-400">
-              관리자 제어 · 오늘 사용 {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
+              Admin Controls · Today's usage {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
             </div>
             <button
               onClick={toggleRunning}
@@ -248,29 +248,29 @@ export default function AetheriaPageClient() {
                 running ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
               }`}
             >
-              {running ? '정지' : '시작'}
+              {running ? 'Stop' : 'Start'}
             </button>
           </div>
           <p className="mt-1 text-[10px] text-slate-600">
-            8시간마다(하루 3회) 자동으로 진행됩니다 — 수동 실행은 없습니다. 예산 초과 시 자동 정지.
+            Runs automatically every 8 hours (3 times/day) — no manual runs. Auto-stops if the budget is exceeded.
           </p>
 
           {envStatus && (
             <div className="mt-3 flex gap-4 border-t border-cyan-900/30 pt-2 text-[11px]">
               <span className={envStatus.openai.present ? 'text-emerald-400' : 'text-red-400'}>
-                {envStatus.openai.present ? '✅' : '❌'} OPENAI_API_KEY {envStatus.openai.present ? `(${envStatus.openai.length}자)` : '미설정'}
+                {envStatus.openai.present ? '✅' : '❌'} OPENAI_API_KEY {envStatus.openai.present ? `(${envStatus.openai.length} chars)` : 'not set'}
               </span>
               <span className={envStatus.gemini.present ? 'text-emerald-400' : 'text-red-400'}>
-                {envStatus.gemini.present ? '✅' : '❌'} GEMINI_API_KEY {envStatus.gemini.present ? `(${envStatus.gemini.length}자)` : '미설정'}
+                {envStatus.gemini.present ? '✅' : '❌'} GEMINI_API_KEY {envStatus.gemini.present ? `(${envStatus.gemini.length} chars)` : 'not set'}
               </span>
             </div>
           )}
         </div>
 
-        {/* 모델 비교 — "어떤 지능이 생태계를 지배하는가?" */}
+        {/* Model comparison — "which intelligence dominates the ecosystem?" */}
         {modelStats.length > 0 && (
           <div className="mb-8 rounded-xl border border-purple-800/30 bg-purple-950/5 p-4">
-            <h2 className="mb-3 text-sm font-bold text-purple-300">🧬 모델 비교</h2>
+            <h2 className="mb-3 text-sm font-bold text-purple-300">🧬 Model Comparison</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {modelStats.map((s) => (
                 <div key={s.model} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
@@ -279,31 +279,31 @@ export default function AetheriaPageClient() {
                     <span className="text-sm font-bold text-white">{MODEL_LABEL[s.model] ?? s.model}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-slate-400">
-                    <span>생존/사망</span><span className="text-right text-slate-200">{s.alive} / {s.dead}</span>
-                    <span>평균 골드</span><span className="text-right text-amber-300">🪙 {s.avgGold}</span>
-                    <span>평균 체력</span><span className="text-right text-slate-200">{s.avgStamina}</span>
-                    <span>총 보유 골드</span><span className="text-right text-amber-300">🪙 {s.totalGold}</span>
-                    <span>사냥 횟수</span><span className="text-right text-slate-200">{s.huntCount}회</span>
-                    <span>사냥 수익</span><span className="text-right text-amber-300">🪙 {s.huntGoldEarned}</span>
-                    <span>거래 시도</span><span className="text-right text-slate-200">{s.tradeCount}회</span>
-                    <span>협력 시도</span><span className="text-right text-slate-200">{s.partyCount}회</span>
+                    <span>Alive/Dead</span><span className="text-right text-slate-200">{s.alive} / {s.dead}</span>
+                    <span>Avg. Gold</span><span className="text-right text-amber-300">🪙 {s.avgGold}</span>
+                    <span>Avg. Stamina</span><span className="text-right text-slate-200">{s.avgStamina}</span>
+                    <span>Total Gold</span><span className="text-right text-amber-300">🪙 {s.totalGold}</span>
+                    <span>Hunts</span><span className="text-right text-slate-200">{s.huntCount}x</span>
+                    <span>Hunt Earnings</span><span className="text-right text-amber-300">🪙 {s.huntGoldEarned}</span>
+                    <span>Trade Attempts</span><span className="text-right text-slate-200">{s.tradeCount}x</span>
+                    <span>Party Attempts</span><span className="text-right text-slate-200">{s.partyCount}x</span>
                   </div>
                 </div>
               ))}
             </div>
             <p className="mt-3 text-[10px] text-slate-600">
-              에이전트 3개씩의 작은 표본이라 참고용입니다. 틱이 쌓일수록 통계적 의미가 커집니다.
+              This is a small sample of 3 agents per model, for reference only. Statistical significance grows as more ticks accumulate.
             </p>
           </div>
         )}
 
-        {/* 그리드 월드 */}
+        {/* Grid world */}
         <WorldGrid agents={agents} />
 
-        {/* 순위표 */}
+        {/* Leaderboard */}
         {agents.length > 0 && (
           <div className="mb-8 rounded-xl border border-amber-800/30 bg-amber-950/5 p-4">
-            <h2 className="mb-3 text-sm font-bold text-amber-300">🏆 골드 순위</h2>
+            <h2 className="mb-3 text-sm font-bold text-amber-300">🏆 Gold Ranking</h2>
             <div className="space-y-1.5">
               {[...agents]
                 .sort((a, b) => b.gold - a.gold)
@@ -325,7 +325,7 @@ export default function AetheriaPageClient() {
           </div>
         )}
 
-        {/* 에이전트 카드 */}
+        {/* Agent cards */}
         <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3">
           {agents.map((a) => {
             const dead = a.status !== 'alive'
@@ -346,23 +346,23 @@ export default function AetheriaPageClient() {
                     <div className="h-1.5 overflow-hidden rounded-full bg-slate-800">
                       <div className="h-full rounded-full" style={{ width: `${a.stamina}%`, backgroundColor: staminaColor }} />
                     </div>
-                    <p className="mt-0.5 text-[9px] text-slate-600">체력 {a.stamina}</p>
+                    <p className="mt-0.5 text-[9px] text-slate-600">Stamina {a.stamina}</p>
                   </div>
                 )}
-                <p className="mt-1 text-[10px] text-slate-600">({a.x}, {a.y}) · {dead ? '사망' : '생존'}</p>
-                {a.last_action && <p className="mt-1 text-[10px] text-slate-500">최근: {a.last_action}</p>}
+                <p className="mt-1 text-[10px] text-slate-600">({a.x}, {a.y}) · {dead ? 'Dead' : 'Alive'}</p>
+                {a.last_action && <p className="mt-1 text-[10px] text-slate-500">Recent: {a.last_action}</p>}
               </div>
             )
           })}
           {agents.length === 0 && (
-            <p className="col-span-full text-center text-sm text-slate-600">에이전트 데이터가 아직 없습니다.</p>
+            <p className="col-span-full text-center text-sm text-slate-600">No agent data yet.</p>
           )}
         </div>
 
-        {/* 로그 스트림 */}
-        <h2 className="mb-3 text-sm font-bold text-slate-300">📜 이벤트 로그</h2>
+        {/* Log stream */}
+        <h2 className="mb-3 text-sm font-bold text-slate-300">📜 Event Log</h2>
         <div className="max-h-96 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900/40 p-4">
-          {events.length === 0 && <p className="text-center text-xs text-slate-600">아직 기록된 이벤트가 없습니다.</p>}
+          {events.length === 0 && <p className="text-center text-xs text-slate-600">No events recorded yet.</p>}
           {events.map((e, i) => (
             <div key={i} className="flex items-start gap-2 text-xs">
               <span className="h-1.5 w-1.5 flex-shrink-0 translate-y-1 rounded-full" style={{ backgroundColor: MODEL_COLOR[e.model] }} />
@@ -376,7 +376,7 @@ export default function AetheriaPageClient() {
         </div>
 
         <p className="mt-6 text-center text-[11px] text-slate-600">
-          8시간마다(하루 3회) 자동으로 진행됩니다 (방문으로는 진행되지 않음) · 예산 초과 시 자동 정지 · 이 에이전트들은 <Link href="/rpg" className="underline hover:text-cyan-400">/rpg</Link>에서도 살아 움직입니다
+          Runs automatically every 8 hours (3 times/day, not triggered by visits) · Auto-stops if budget is exceeded · These agents are also alive in <Link href="/rpg" className="underline hover:text-cyan-400">/rpg</Link>
         </p>
       </main>
     </div>

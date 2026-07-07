@@ -32,9 +32,9 @@ export default function AdminContactsPage() {
       const res = await fetch('/api/contact', { headers: adminAuthHeaders() })
       const data = await res.json()
       if (data.success) setContacts(data.contacts)
-      else setError(data.error || '불러오기 실패')
+      else setError(data.error || 'Failed to load')
     } catch {
-      setError('네트워크 오류')
+      setError('Network error')
     } finally {
       setLoading(false)
     }
@@ -58,10 +58,10 @@ export default function AdminContactsPage() {
         setReplyModal(null)
         fetchContacts()
       } else {
-        setReplyError(data.error || '전송 실패')
+        setReplyError(data.error || 'Send failed')
       }
     } catch {
-      setReplyError('네트워크 오류')
+      setReplyError('Network error')
     } finally {
       setReplying(false)
     }
@@ -69,8 +69,8 @@ export default function AdminContactsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold text-neutral-100 mb-6">연락처 관리</h1>
-      {loading && <p className="text-neutral-500 font-mono text-sm">불러오는 중...</p>}
+      <h1 className="text-2xl font-bold text-neutral-100 mb-6">Contact Management</h1>
+      {loading && <p className="text-neutral-500 font-mono text-sm">Loading...</p>}
       {error && <p className="text-red-400 font-mono text-sm">{error}</p>}
       {!loading && !error && (
         <div className="space-y-3">
@@ -92,7 +92,7 @@ export default function AdminContactsPage() {
                   <p className="text-xs font-semibold text-neutral-300 mb-1">{c.subject}</p>
                   <p className="text-xs text-neutral-500 line-clamp-2">{c.message}</p>
                   <p className="text-[10px] text-neutral-700 mt-1 font-mono">
-                    {new Date(c.created_at).toLocaleString('ko-KR')}
+                    {new Date(c.created_at).toLocaleString('en-US')}
                   </p>
                 </div>
                 <button
@@ -100,13 +100,13 @@ export default function AdminContactsPage() {
                   onClick={() => setReplyModal({ contact: c, body: '' })}
                   className="shrink-0 px-3 py-1.5 text-xs font-mono bg-neutral-800 hover:bg-neutral-700 text-neutral-200 border border-neutral-700 rounded-lg transition-colors"
                 >
-                  답장
+                  Reply
                 </button>
               </div>
             </div>
           ))}
           {contacts.length === 0 && (
-            <p className="text-neutral-600 font-mono text-sm text-center py-12">연락처가 없습니다.</p>
+            <p className="text-neutral-600 font-mono text-sm text-center py-12">No contacts found.</p>
           )}
         </div>
       )}
@@ -116,7 +116,7 @@ export default function AdminContactsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-neutral-900 border border-neutral-700 rounded-2xl w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between p-5 border-b border-neutral-800">
-              <h2 className="font-semibold text-neutral-100">답장 보내기</h2>
+              <h2 className="font-semibold text-neutral-100">Send Reply</h2>
               <button
                 type="button"
                 onClick={() => setReplyModal(null)}
@@ -139,13 +139,13 @@ export default function AdminContactsPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-mono text-neutral-500 mb-1">내용</label>
+                <label className="block text-xs font-mono text-neutral-500 mb-1">Message</label>
                 <textarea
                   value={replyModal.body}
                   onChange={(e) => setReplyModal({ ...replyModal, body: e.target.value })}
                   rows={6}
                   className="w-full bg-neutral-800 border border-neutral-700 text-neutral-100 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-neutral-500 resize-none"
-                  placeholder={`안녕하세요 ${replyModal.contact.name}님,\n\n`}
+                  placeholder={`Hi ${replyModal.contact.name},\n\n`}
                   required
                 />
               </div>
@@ -156,14 +156,14 @@ export default function AdminContactsPage() {
                   onClick={() => setReplyModal(null)}
                   className="px-4 py-2 text-sm text-neutral-400 hover:text-neutral-200 transition-colors"
                 >
-                  취소
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={replying}
                   className="px-5 py-2 text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-50"
                 >
-                  {replying ? '전송 중...' : '답장 전송'}
+                  {replying ? 'Sending...' : 'Send Reply'}
                 </button>
               </div>
             </form>

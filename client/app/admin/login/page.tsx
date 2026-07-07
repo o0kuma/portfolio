@@ -9,7 +9,7 @@ function AdminLoginForm() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
-  // 오픈 리다이렉트 방지 — 사이트 내부 경로만 허용
+  // Prevent open redirect — only allow internal site paths
   const rawRedirect = searchParams.get('redirect') ?? '/admin'
   const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/admin'
 
@@ -30,10 +30,10 @@ function AdminLoginForm() {
         router.refresh()
       } else {
         const data = await res.json()
-        setError(data.error ?? '로그인 실패')
+        setError(data.error ?? 'Login failed')
       }
     } catch {
-      setError('서버 오류가 발생했습니다.')
+      setError('A server error occurred.')
     } finally {
       setLoading(false)
     }
@@ -44,7 +44,7 @@ function AdminLoginForm() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <p className="text-xs font-mono text-neutral-600 tracking-[0.3em] uppercase mb-2">Admin</p>
-          <h1 className="text-2xl font-bold text-neutral-100">로그인</h1>
+          <h1 className="text-2xl font-bold text-neutral-100">Login</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -53,7 +53,7 @@ function AdminLoginForm() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호"
+              placeholder="Password"
               autoFocus
               required
               className="w-full bg-neutral-900 border border-neutral-800 text-neutral-100 rounded-lg px-4 py-3 font-mono text-sm placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
@@ -69,7 +69,7 @@ function AdminLoginForm() {
             disabled={loading}
             className="w-full bg-neutral-100 text-neutral-950 font-semibold text-sm py-3 rounded-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? '로그인 중...' : '로그인'}
+            {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>

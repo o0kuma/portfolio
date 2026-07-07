@@ -45,24 +45,24 @@ function countryFlag(code: string): string {
 }
 
 function relativeTime(dateStr: string | null): string {
-  if (!dateStr) return '알 수 없음'
+  if (!dateStr) return 'Unknown'
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return '방금 전'
-  if (mins < 60) return `${mins}분 전`
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return `${mins}m ago`
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours}시간 전`
+  if (hours < 24) return `${hours}h ago`
   const days = Math.floor(hours / 24)
-  return `${days}일 전`
+  return `${days}d ago`
 }
 
 type Period = 'today' | 'week' | 'month' | 'all'
 
 const periodLabels: { value: Period; label: string }[] = [
-  { value: 'today', label: '오늘' },
-  { value: 'week', label: '이번주' },
-  { value: 'month', label: '이번달' },
-  { value: 'all', label: '전체' },
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
+  { value: 'all', label: 'All' },
 ]
 
 interface HeatmapStat {
@@ -123,7 +123,7 @@ export default function AdminVisitorsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-950">
-        <p className="text-neutral-400">로딩 중...</p>
+        <p className="text-neutral-400">Loading...</p>
       </div>
     )
   }
@@ -131,7 +131,7 @@ export default function AdminVisitorsPage() {
   return (
     <div className="min-h-screen bg-neutral-950 p-6 text-white">
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-white">방문자 현황</h1>
+        <h1 className="text-2xl font-bold text-white">Visitor Stats</h1>
         {/* Period filter tabs */}
         <div className="flex gap-1 rounded-lg bg-neutral-900 p-1">
           {periodLabels.map(({ value, label }) => (
@@ -154,25 +154,25 @@ export default function AdminVisitorsPage() {
       <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-4">
         <StatCard
           icon={<FiUsers className="h-5 w-5" />}
-          label="총 방문자"
+          label="Total Visitors"
           value={data?.total ?? 0}
           color="text-blue-400"
         />
         <StatCard
           icon={<FiCalendar className="h-5 w-5" />}
-          label="오늘"
+          label="Today"
           value={todayCount}
           color="text-green-400"
         />
         <StatCard
           icon={<FiGlobe className="h-5 w-5" />}
-          label="국가 수"
+          label="Countries"
           value={countryCount}
           color="text-purple-400"
         />
         <StatCard
           icon={<FiMapPin className="h-5 w-5" />}
-          label="도시 수"
+          label="Cities"
           value={citySet.size}
           color="text-orange-400"
         />
@@ -180,7 +180,7 @@ export default function AdminVisitorsPage() {
 
       {/* 세계 지도 */}
       <div className="mb-6 rounded-xl border border-neutral-800 p-4">
-        <h2 className="mb-3 text-sm font-semibold text-neutral-400">방문자 위치</h2>
+        <h2 className="mb-3 text-sm font-semibold text-neutral-400">Visitor Locations</h2>
         <VisitorMap mapPoints={data?.mapPoints ?? []} />
       </div>
 
@@ -188,9 +188,9 @@ export default function AdminVisitorsPage() {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* 국가별 순위 */}
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-neutral-400">국가별 방문자</h2>
+          <h2 className="mb-3 text-sm font-semibold text-neutral-400">Visitors by Country</h2>
           {(data?.countries.length ?? 0) === 0 ? (
-            <p className="text-sm text-neutral-500">데이터 없음</p>
+            <p className="text-sm text-neutral-500">No data</p>
           ) : (
             <ul className="space-y-2">
               {data?.countries.map((c) => (
@@ -208,15 +208,15 @@ export default function AdminVisitorsPage() {
 
         {/* 최근 방문자 */}
         <div className="rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-          <h2 className="mb-3 text-sm font-semibold text-neutral-400">최근 방문자</h2>
+          <h2 className="mb-3 text-sm font-semibold text-neutral-400">Recent Visitors</h2>
           {(data?.recentVisitors.length ?? 0) === 0 ? (
-            <p className="text-sm text-neutral-500">데이터 없음</p>
+            <p className="text-sm text-neutral-500">No data</p>
           ) : (
             <ul className="space-y-2">
               {data?.recentVisitors.map((v) => (
                 <li key={v.session_id} className="flex items-center justify-between">
                   <span className="text-sm text-neutral-200">
-                    {[v.city, v.country].filter(Boolean).join(' · ') || '알 수 없음'}
+                    {[v.city, v.country].filter(Boolean).join(' · ') || 'Unknown'}
                   </span>
                   <span className="text-xs text-neutral-500">{relativeTime(v.visited_at)}</span>
                 </li>
@@ -228,9 +228,9 @@ export default function AdminVisitorsPage() {
 
       {/* 섹션 히트맵 — 어떤 섹션이 가장 많이 읽혔는지 */}
       <div className="mt-4 rounded-xl border border-neutral-800 bg-neutral-900 p-4">
-        <h2 className="mb-3 text-sm font-semibold text-neutral-400">섹션 히트맵 (조회수 · 평균 체류)</h2>
+        <h2 className="mb-3 text-sm font-semibold text-neutral-400">Section Heatmap (Views · Avg. Duration)</h2>
         {heatmap.length === 0 ? (
-          <p className="text-sm text-neutral-500">아직 기록된 데이터가 없습니다.</p>
+          <p className="text-sm text-neutral-500">No data recorded yet.</p>
         ) : (
           <div className="space-y-2">
             {(() => {
@@ -244,9 +244,9 @@ export default function AdminVisitorsPage() {
                       style={{ width: `${(h.views / max) * 100}%` }}
                     />
                   </div>
-                  <span className="w-12 shrink-0 text-right font-mono text-neutral-400">{h.views}회</span>
+                  <span className="w-12 shrink-0 text-right font-mono text-neutral-400">{h.views}x</span>
                   <span className="w-16 shrink-0 text-right font-mono text-neutral-500">
-                    {(h.avgDuration / 1000).toFixed(1)}초
+                    {(h.avgDuration / 1000).toFixed(1)}s
                   </span>
                 </div>
               ))

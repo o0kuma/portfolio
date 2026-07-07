@@ -76,10 +76,10 @@ export default function AdsManagementPage() {
         headers: { Authorization: `Bearer ${localStorage.getItem('admin_token') ?? adminToken}` },
       })
       const data = await response.json()
-      if (!data.success) throw new Error(data.error || '광고 조회 실패')
+      if (!data.success) throw new Error(data.error || 'Failed to load ads')
       setAds(data.ads || [])
     } catch (error) {
-      console.error('광고 조회 오류:', error)
+      console.error('Ad fetch error:', error)
     } finally {
       setIsLoading(false)
     }
@@ -196,7 +196,7 @@ export default function AdsManagementPage() {
       if (result.success) await fetchAds()
       else toast.error(result.error || t.adminAds.errorDeleteFailed)
     } catch (err) {
-      console.error('삭제 오류:', err)
+      console.error('Delete error:', err)
     }
   }
 
@@ -386,14 +386,14 @@ export default function AdsManagementPage() {
                       <button
                         onClick={() => openEditForm(ad)}
                         className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
-                        title="수정"
+                        title="Edit"
                       >
                         <FiEdit className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => handleDelete(ad)}
                         className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                        title="삭제"
+                        title="Delete"
                       >
                         <FiTrash2 className="w-5 h-5" />
                       </button>

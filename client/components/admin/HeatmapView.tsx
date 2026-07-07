@@ -56,7 +56,7 @@ export default function HeatmapView() {
   if (loading) {
     return (
       <div className="p-6 text-neutral-400 text-sm animate-pulse">
-        히트맵 데이터 로딩 중...
+        Loading heatmap data...
       </div>
     )
   }
@@ -64,7 +64,7 @@ export default function HeatmapView() {
   if (stats.length === 0) {
     return (
       <div className="p-6 text-neutral-500 text-sm">
-        아직 수집된 섹션 데이터가 없습니다.
+        No section data collected yet.
       </div>
     )
   }
@@ -72,10 +72,10 @@ export default function HeatmapView() {
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-100">섹션 히트맵</h2>
+        <h2 className="text-lg font-semibold text-neutral-100">Section Heatmap</h2>
         {lastUpdated && (
           <span className="text-xs text-neutral-500">
-            마지막 갱신: {lastUpdated.toLocaleTimeString()} (30초마다 자동 갱신)
+            Last updated: {lastUpdated.toLocaleTimeString()} (auto-refreshes every 30s)
           </span>
         )}
       </div>
@@ -93,7 +93,7 @@ export default function HeatmapView() {
                   {stat.section}
                 </span>
                 <span className="text-neutral-400 text-xs">
-                  {stat.views}회 · 평균 {formatSeconds(stat.avgDuration)}
+                  {stat.views}x · avg {formatSeconds(stat.avgDuration)}
                 </span>
               </div>
               <div className="w-full bg-neutral-800 rounded-full h-5 overflow-hidden">
@@ -115,14 +115,14 @@ export default function HeatmapView() {
 
       {/* Legend */}
       <div className="flex items-center gap-2 pt-2">
-        <span className="text-xs text-neutral-500">낮음</span>
+        <span className="text-xs text-neutral-500">Low</span>
         <div
           className="h-3 flex-1 rounded"
           style={{
             background: 'linear-gradient(to right, hsl(240,70%,55%), hsl(120,85%,45%), hsl(0,100%,40%))',
           }}
         />
-        <span className="text-xs text-neutral-500">높음</span>
+        <span className="text-xs text-neutral-500">High</span>
       </div>
     </div>
   )

@@ -128,9 +128,9 @@ export default function VisitorMap({ mapPoints }: VisitorMapProps) {
           style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}
         >
           <p className="font-semibold text-white">
-            {[tooltip.city, tooltip.country].filter(Boolean).join(', ') || '알 수 없음'}
+            {[tooltip.city, tooltip.country].filter(Boolean).join(', ') || 'Unknown'}
           </p>
-          <p className="text-neutral-400">방문자 {tooltip.count}명</p>
+          <p className="text-neutral-400">{tooltip.count} visitor(s)</p>
         </div>
       )}
     </div>
