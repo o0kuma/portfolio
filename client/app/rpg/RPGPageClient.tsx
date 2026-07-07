@@ -524,6 +524,13 @@ function AetheriaPanel({ data }: { data: { agents: NpcAgent[]; events: AetheriaE
         🗓️ 시즌 {season} · 🕐 {tick}일차 · 💚 생존 {alive}/{agents.length}
       </p>
 
+      <Link
+        href="/aetheria/history"
+        className="inline-flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[11px] text-amber-300 transition hover:bg-amber-500/20"
+      >
+        🏛️ 연대기 · 명예의 전당 보기 →
+      </Link>
+
       {/* 에이전트 현황 */}
       <div className="space-y-1">
         {sorted.map((a) => {

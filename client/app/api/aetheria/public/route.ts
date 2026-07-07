@@ -36,6 +36,20 @@ const fetchPublicState = unstable_cache(
       `SELECT name, model, role, season, survived_days, final_gold
        FROM aetheria_hall_of_fame ORDER BY final_gold DESC, survived_days DESC LIMIT 5`,
     )
+    // Season boundary markers — each 'season' event logs the start of a new era.
+    const seasonHistoryRes = await dbQuery(
+      `SELECT display_text, payload, created_at
+       FROM aetheria_events WHERE event_type = 'season'
+       ORDER BY created_at DESC LIMIT 12`,
+    )
+    // Aggregate stats per season for the timeline (population, top gold).
+    const perSeasonRes = await dbQuery(
+      `SELECT season,
+              COUNT(*)::int AS residents,
+              MAX(final_gold)::int AS top_gold,
+              MAX(survived_days)::int AS longest_days
+       FROM aetheria_hall_of_fame GROUP BY season ORDER BY season DESC LIMIT 12`,
+    )
 
     return {
       agents: agentsRes.rows,
@@ -43,6 +57,8 @@ const fetchPublicState = unstable_cache(
       currentTick: tickRes.rows[0]?.last_tick_id ?? 0,
       season: tickRes.rows[0]?.season ?? 1,
       hallOfFame: { longest: longestRes.rows, richest: richestRes.rows },
+      seasonHistory: seasonHistoryRes.rows,
+      seasonStats: perSeasonRes.rows,
     }
   },
   ['aetheria-public-state'],
@@ -56,6 +72,17 @@ export async function GET() {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
     console.error('[/api/aetheria/public GET]', msg)
-    return NextResponse.json({ agents: [], recentEvents: [], currentTick: 0 }, { status: 200 })
+    return NextResponse.json(
+      {
+        agents: [],
+        recentEvents: [],
+        currentTick: 0,
+        season: 1,
+        hallOfFame: { longest: [], richest: [] },
+        seasonHistory: [],
+        seasonStats: [],
+      },
+      { status: 200 },
+    )
   }
 }
