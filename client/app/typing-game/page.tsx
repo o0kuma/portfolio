@@ -6,6 +6,7 @@ import { FiArrowLeft } from 'react-icons/fi'
 import { checkAchievements } from '@/lib/achievements'
 import AchievementToast from '@/components/AchievementToast'
 import type { Achievement } from '@/lib/achievements'
+import { useLanguage } from '@/lib/LanguageContext'
 
 const snippets = [
   { id: 1, code: `const greet = (name: string) => \`Hello, \${name}!\`` },
@@ -32,6 +33,8 @@ function pickRandom() {
 }
 
 export default function TypingGamePage() {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [gameState, setGameState] = useState<GameState>('idle')
   const [snippet, setSnippet] = useState(snippets[0])
   const [typed, setTyped] = useState('')
@@ -170,9 +173,9 @@ export default function TypingGamePage() {
             className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
           >
             <FiArrowLeft className="h-4 w-4" aria-hidden />
-            게임 목록
+            {en ? 'Game List' : '게임 목록'}
           </Link>
-          <span className="text-sm font-semibold">타이핑 게임</span>
+          <span className="text-sm font-semibold">{en ? 'Typing Game' : '타이핑 게임'}</span>
         </div>
       </header>
 
@@ -181,13 +184,15 @@ export default function TypingGamePage() {
         {gameState === 'idle' && (
           <div className="flex flex-col items-center gap-6 text-center">
             <div className="text-6xl">⌨️</div>
-            <h1 className="text-3xl font-bold">타이핑 게임</h1>
-            <p className="text-neutral-400">코드 스니펫을 얼마나 빠르고 정확하게 타이핑할 수 있을까요?</p>
+            <h1 className="text-3xl font-bold">{en ? 'Typing Game' : '타이핑 게임'}</h1>
+            <p className="text-neutral-400">
+              {en ? 'How fast and accurately can you type code snippets?' : '코드 스니펫을 얼마나 빠르고 정확하게 타이핑할 수 있을까요?'}
+            </p>
             <button
               onClick={handleStart}
               className="rounded-xl bg-neutral-100 px-8 py-3 text-sm font-bold text-neutral-950 transition hover:bg-white"
             >
-              시작하기
+              {en ? 'Start' : '시작하기'}
             </button>
           </div>
         )}
@@ -195,7 +200,7 @@ export default function TypingGamePage() {
         {/* COUNTDOWN */}
         {gameState === 'countdown' && (
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-neutral-400 text-sm">준비하세요...</p>
+            <p className="text-neutral-400 text-sm">{en ? 'Get ready...' : '준비하세요...'}</p>
             <div className="text-8xl font-bold text-white tabular-nums">{countdown}</div>
           </div>
         )}
@@ -242,7 +247,7 @@ export default function TypingGamePage() {
               onClick={() => inputRef.current?.focus()}
               className="mb-6 w-full rounded-lg border border-dashed border-neutral-700 py-2 text-center text-xs text-neutral-500 hover:border-neutral-500"
             >
-              클릭하여 타이핑 시작
+              {en ? 'Click to start typing' : '클릭하여 타이핑 시작'}
             </button>
 
             {/* Stats bar */}
@@ -252,11 +257,11 @@ export default function TypingGamePage() {
                 <p className="text-xl font-bold tabular-nums">{wpm}</p>
               </div>
               <div className="flex-1 rounded-lg bg-neutral-800 p-3 text-center">
-                <p className="text-xs text-neutral-400">정확도</p>
+                <p className="text-xs text-neutral-400">{en ? 'Accuracy' : '정확도'}</p>
                 <p className="text-xl font-bold tabular-nums">{accuracy}%</p>
               </div>
               <div className="flex-1 rounded-lg bg-neutral-800 p-3 text-center">
-                <p className="text-xs text-neutral-400">시간</p>
+                <p className="text-xs text-neutral-400">{en ? 'Time' : '시간'}</p>
                 <p className="text-xl font-bold tabular-nums">{elapsed.toFixed(1)}s</p>
               </div>
             </div>
@@ -268,18 +273,18 @@ export default function TypingGamePage() {
           <div className="w-full">
             <div className="mb-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-8 text-center">
               <div className="mb-4 text-5xl">🎉</div>
-              <h2 className="mb-6 text-2xl font-bold">완료!</h2>
+              <h2 className="mb-6 text-2xl font-bold">{en ? 'Done!' : '완료!'}</h2>
               <div className="mb-6 flex justify-center gap-4">
                 <div className="rounded-lg bg-neutral-800 px-6 py-3">
                   <p className="text-xs text-neutral-400">WPM</p>
                   <p className="text-3xl font-bold tabular-nums">{finalWpm}</p>
                 </div>
                 <div className="rounded-lg bg-neutral-800 px-6 py-3">
-                  <p className="text-xs text-neutral-400">정확도</p>
+                  <p className="text-xs text-neutral-400">{en ? 'Accuracy' : '정확도'}</p>
                   <p className="text-3xl font-bold tabular-nums">{finalAcc}%</p>
                 </div>
                 <div className="rounded-lg bg-neutral-800 px-6 py-3">
-                  <p className="text-xs text-neutral-400">시간</p>
+                  <p className="text-xs text-neutral-400">{en ? 'Time' : '시간'}</p>
                   <p className="text-3xl font-bold tabular-nums">{elapsed.toFixed(1)}s</p>
                 </div>
               </div>
@@ -290,7 +295,7 @@ export default function TypingGamePage() {
                   type="text"
                   value={playerName}
                   onChange={e => setPlayerName(e.target.value)}
-                  placeholder="이름 입력"
+                  placeholder={en ? 'Enter your name' : '이름 입력'}
                   maxLength={50}
                   className="flex-1 rounded-lg border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm placeholder-neutral-500 focus:outline-none focus:ring-1 focus:ring-neutral-500"
                 />
@@ -299,7 +304,11 @@ export default function TypingGamePage() {
                   disabled={saveStatus !== 'idle' || !playerName.trim()}
                   className="rounded-lg bg-amber-500 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-400 disabled:opacity-50"
                 >
-                  {saveStatus === 'saved' ? '저장됨' : saveStatus === 'saving' ? '저장 중...' : '저장'}
+                  {saveStatus === 'saved'
+                    ? (en ? 'Saved' : '저장됨')
+                    : saveStatus === 'saving'
+                      ? (en ? 'Saving...' : '저장 중...')
+                      : (en ? 'Save' : '저장')}
                 </button>
               </div>
 
@@ -307,7 +316,7 @@ export default function TypingGamePage() {
                 onClick={handleStart}
                 className="rounded-xl bg-neutral-100 px-8 py-3 text-sm font-bold text-neutral-950 transition hover:bg-white"
               >
-                다시하기
+                {en ? 'Play Again' : '다시하기'}
               </button>
             </div>
           </div>
@@ -315,18 +324,18 @@ export default function TypingGamePage() {
 
         {/* Leaderboard */}
         <div className="mt-14 w-full">
-          <h2 className="mb-4 text-lg font-bold">리더보드 Top 10</h2>
+          <h2 className="mb-4 text-lg font-bold">{en ? 'Leaderboard Top 10' : '리더보드 Top 10'}</h2>
           {scores.length === 0 ? (
-            <p className="text-sm text-neutral-500">아직 기록이 없습니다.</p>
+            <p className="text-sm text-neutral-500">{en ? 'No records yet.' : '아직 기록이 없습니다.'}</p>
           ) : (
             <div className="rounded-xl border border-neutral-800 bg-neutral-900 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-neutral-800 text-neutral-400 text-xs">
                     <th className="px-4 py-2 text-left">#</th>
-                    <th className="px-4 py-2 text-left">이름</th>
+                    <th className="px-4 py-2 text-left">{en ? 'Name' : '이름'}</th>
                     <th className="px-4 py-2 text-right">WPM</th>
-                    <th className="px-4 py-2 text-right">정확도</th>
+                    <th className="px-4 py-2 text-right">{en ? 'Accuracy' : '정확도'}</th>
                   </tr>
                 </thead>
                 <tbody>
