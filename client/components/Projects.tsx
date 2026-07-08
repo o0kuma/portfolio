@@ -639,31 +639,22 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
 
   if (projects.length === 0) return null
 
-  // Not enough cards to overflow: plain static row, no pinning.
-  // overflow-x-hidden here is a safety net — until the effect below measures
-  // the real scrollWidth, this branch renders first with overflow still 0,
-  // and the track's own width is `w-max` (as wide as all cards combined).
-  // Without clipping, that first paint pushes the whole page into
-  // horizontal overflow instead of just this row.
-  if (overflow === 0) {
-    return (
-      <div ref={sectionRef} className="overflow-x-hidden">
-        <div ref={trackRef} className="flex w-max gap-5 md:gap-6 px-4 md:px-6">
-          {projects.map((project) => (
-            <div key={project.id} className="shrink-0">
-              <ProjectCard project={project} layout="track" onClick={() => onCardClick(project)} />
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
+  // IMPORTANT: always render the same DOM structure regardless of `overflow`.
+  // This used to branch into two entirely different JSX trees (a plain row
+  // vs. the pinned/scroll-jacked version), which meant sectionRef/trackRef
+  // pointed at different DOM nodes depending on state. Framer Motion's
+  // useScroll binds its scroll observer to whatever node the ref held when
+  // its effect first ran — swapping the underlying node later (via the
+  // branch switch) left it tracking stale layout, so the horizontal scroll
+  // silently stopped working once real project data measured in. Keeping
+  // one persistent tree and only varying height/x by data fixes that, and
+  // overflow-x-hidden on the sticky viewport keeps any transient
+  // mismeasurement from ever breaking the page-level layout.
   return (
     <div
       ref={sectionRef}
       className="-mx-4 md:-mx-6"
-      style={{ height: `calc(100vh + ${overflow}px)` }}
+      style={{ height: overflow > 0 ? `calc(100vh + ${overflow}px)` : undefined }}
     >
       <div className="sticky top-0 flex h-screen items-center overflow-hidden">
         <motion.div
@@ -840,16 +831,18 @@ export default function Projects() {
             </motion.div>
             <div className="overflow-hidden mb-4">
               <motion.h2 variants={maskReveal} className="text-4xl md:text-5xl font-black text-neutral-50 leading-tight">
-                프로젝트
-                <span className="text-neutral-500"> 경험</span>
+                {locale === 'en' ? 'Project' : '프로젝트'}
+                <span className="text-neutral-500">{locale === 'en' ? ' Experience' : ' 경험'}</span>
               </motion.h2>
             </div>
             <p className="text-neutral-500 text-base leading-relaxed">
-              퍼블리싱부터 React, Next.js, Svelte까지 — 다양한 기술로 완성한 작업물입니다.
+              {locale === 'en'
+                ? 'From markup to React, Next.js, and Svelte — work built with a wide range of technologies.'
+                : '퍼블리싱부터 React, Next.js, Svelte까지 — 다양한 기술로 완성한 작업물입니다.'}
             </p>
             {useHorizontalTrack && (
               <p className="mt-3 text-neutral-500 text-xs font-mono">
-                ↓ 스크롤하면 카드가 옆으로 흐릅니다 →
+                {locale === 'en' ? '↓ Scroll and cards glide sideways →' : '↓ 스크롤하면 카드가 옆으로 흐릅니다 →'}
               </p>
             )}
           </motion.div>
@@ -860,7 +853,7 @@ export default function Projects() {
           <SearchBar
             onSearch={(q) => setSearchQuery(q)}
             onFilterChange={(f) => setActiveFilters(f)}
-            placeholder="프로젝트, 기술 스택 검색..."
+            placeholder={locale === 'en' ? 'Search projects, tech stack...' : '프로젝트, 기술 스택 검색...'}
             filters={activeFilters}
           />
         </div>
