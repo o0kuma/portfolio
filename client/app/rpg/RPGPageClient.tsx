@@ -826,9 +826,13 @@ export default function RPGPageClient() {
     new Map<string, { baseX: number; baseY: number; visX: number; visY: number; dir: number; name: string }>()
   )
 
-  // NPC 배회 애니메이션 상태 — 실제 틱(하루 3회) 위치는 그대로 두고, 그 주변을 계속 서성이게 만든다
+  // NPC 배회 애니메이션 상태 — 실제 틱(하루 3회) 위치는 그대로 두고, 그 주변을 순찰하듯
+  // 걸어다니게 만든다. 랜덤 목적지로 걸어갔다가 잠시 멈추고 또 다른 곳으로 향하는 방식.
   const npcVisualRef = useRef(
-    new Map<string, { visX: number; visY: number; baseX: number; baseY: number; seedX: number; seedY: number; freqX: number; freqY: number }>()
+    new Map<string, {
+      visX: number; visY: number; baseX: number; baseY: number
+      targetX: number; targetY: number; nextTargetAt: number
+    }>()
   )
 
   const getBuildingAtPlayer = useCallback((px: number, py: number): string | null => {
@@ -1046,10 +1050,16 @@ export default function RPGPageClient() {
       sorted.forEach(b => drawBuilding(ctx, b, camX, camY, s.nearId, localeRef.current))
 
       // Draw Aetheria NPC agents (마을 광장을 돌아다니는 실제 AI 에이전트)
-      // 실제 위치는 하루 3번만 바뀌므로, 그 지점 주변을 계속 서성이는 시각 전용
+      // 실제 위치는 하루 3번만 바뀌므로, 그 지점 주변을 순찰하듯 걸어다니는 시각 전용
       // 배회 애니메이션을 얹는다 — 논리적 위치가 바뀌면 순간이동 대신 부드럽게 이동한다.
+      // 랜덤한 목적지로 걸어갔다가 도착하면 잠시 머물고 또 다른 곳으로 향한다(순찰형).
       const bob = Math.sin(s.frame * 0.08) * 2
       const nowMs = now
+      const plazaMinX = PLAZA_TX * TILE + PW / 2
+      const plazaMaxX = (PLAZA_TX + PLAZA_TW) * TILE - PW / 2
+      const plazaMinY = PLAZA_TY * TILE + PH / 2
+      const plazaMaxY = (PLAZA_TY + PLAZA_TH) * TILE - PH / 2
+      const WANDER_RADIUS = TILE * 2.2
       const seenNpcIds = new Set<string>()
       for (const npc of s.npcAgents) {
         seenNpcIds.add(npc.id)
@@ -1057,11 +1067,7 @@ export default function RPGPageClient() {
         const baseY = (PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH) * TILE
         let v = npcVisualRef.current.get(npc.id)
         if (!v) {
-          v = {
-            visX: baseX, visY: baseY, baseX, baseY,
-            seedX: Math.random() * Math.PI * 2, seedY: Math.random() * Math.PI * 2,
-            freqX: 0.35 + Math.random() * 0.25, freqY: 0.3 + Math.random() * 0.25,
-          }
+          v = { visX: baseX, visY: baseY, baseX, baseY, targetX: baseX, targetY: baseY, nextTargetAt: 0 }
           npcVisualRef.current.set(npc.id, v)
         }
         v.baseX = baseX
@@ -1074,15 +1080,19 @@ export default function RPGPageClient() {
           v.visX = baseX
           v.visY = baseY
         } else {
-          const t = nowMs / 1000
-          const wanderRadius = TILE * 0.55
-          const wx = Math.sin(t * v.freqX + v.seedX) * wanderRadius
-          const wy = Math.cos(t * v.freqY + v.seedY) * wanderRadius * 0.6
-          const targetX = baseX + wx
-          const targetY = baseY + wy
-          // Smooth glide toward the (moving) wander target rather than snapping.
-          v.visX += (targetX - v.visX) * 0.03
-          v.visY += (targetY - v.visY) * 0.03
+          if (nowMs >= v.nextTargetAt) {
+            // Pick a fresh patrol point around the logical spot, clamped to the plaza
+            // so nobody wanders into the surrounding buildings.
+            const angle = Math.random() * Math.PI * 2
+            const dist = Math.random() * WANDER_RADIUS
+            v.targetX = Math.min(plazaMaxX, Math.max(plazaMinX, baseX + Math.cos(angle) * dist))
+            v.targetY = Math.min(plazaMaxY, Math.max(plazaMinY, baseY + Math.sin(angle) * dist * 0.6))
+            // Walk takes a few seconds; the remaining time reads as a natural pause on arrival.
+            v.nextTargetAt = nowMs + 4000 + Math.random() * 5000
+          }
+          // Smooth glide toward the patrol target rather than snapping.
+          v.visX += (v.targetX - v.visX) * 0.035
+          v.visY += (v.targetY - v.visY) * 0.035
         }
 
         const facingLeft = v.visX < prevVisX - 0.05
