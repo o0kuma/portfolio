@@ -6,7 +6,7 @@ import FoodClient from './FoodClient'
 
 export const metadata = {
   title: 'Food',
-  description: "Seungil Oh's restaurant list",
+  description: "okuma's restaurant list",
 }
 
 export default async function FoodPage() {

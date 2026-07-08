@@ -6,7 +6,7 @@ const siteUrl = getSiteUrl()
 
 export const metadata: Metadata = {
   title: 'kuuuma',
-  description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+  description: 'okuma의 포트폴리오 · 블로그 · 프로젝트',
   alternates: { canonical: '/' },
   openGraph: {
     title: 'kuuuma',
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'kuuuma',
-    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+    description: 'okuma의 포트폴리오 · 블로그 · 프로젝트',
     images: [OG_IMAGE_PATH],
   },
 }

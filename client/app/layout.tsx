@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    '오승일(Seungil Oh)의 포트폴리오와 블로그 — React, Next.js, TypeScript 기반 웹 개발 프로젝트와 기술 글.',
+    'okuma의 포트폴리오와 블로그 — React, Next.js, TypeScript 기반 웹 개발 프로젝트와 기술 글.',
   keywords: [
     'kuuuma',
     '포트폴리오',
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     locale: 'ko_KR',
     url: siteUrl,
     title: SITE_NAME,
-    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+    description: 'okuma의 포트폴리오 · 블로그 · 프로젝트',
     siteName: SITE_NAME,
     images: [
       {
@@ -84,7 +84,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: SITE_NAME,
-    description: '오승일의 포트폴리오 · 블로그 · 프로젝트',
+    description: 'okuma의 포트폴리오 · 블로그 · 프로젝트',
     images: [`/api/og?title=${encodeURIComponent(SITE_NAME)}`],
   },
   robots: {
@@ -117,7 +117,7 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Person',
               name: SITE_AUTHOR,
-              alternateName: 'Seungil Oh',
+              alternateName: 'okuma',
               jobTitle: '프론트엔드 / 풀스택 개발자',
               description: 'React, Next.js, Node.js, PostgreSQL을 활용한 웹 개발자',
               url: siteUrl,

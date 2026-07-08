@@ -71,7 +71,7 @@ export async function POST(
             ${replyBody.replace(/\n/g, '<br>')}
           </div>
           <div style="margin-top: 30px; padding: 15px; background-color: #f8f9fa; border-radius: 8px;">
-            <p style="margin: 0; color: #555;"><strong>오승일</strong><br>프론트엔드 개발자<br>${smtpUser}</p>
+            <p style="margin: 0; color: #555;"><strong>okuma</strong><br>프론트엔드 개발자<br>${smtpUser}</p>
           </div>
         </div>
       `,

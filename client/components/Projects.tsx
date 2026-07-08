@@ -639,10 +639,15 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
 
   if (projects.length === 0) return null
 
-  // Not enough cards to overflow: plain static row, no pinning
+  // Not enough cards to overflow: plain static row, no pinning.
+  // overflow-x-hidden here is a safety net — until the effect below measures
+  // the real scrollWidth, this branch renders first with overflow still 0,
+  // and the track's own width is `w-max` (as wide as all cards combined).
+  // Without clipping, that first paint pushes the whole page into
+  // horizontal overflow instead of just this row.
   if (overflow === 0) {
     return (
-      <div ref={sectionRef}>
+      <div ref={sectionRef} className="overflow-x-hidden">
         <div ref={trackRef} className="flex w-max gap-5 md:gap-6 px-4 md:px-6">
           {projects.map((project) => (
             <div key={project.id} className="shrink-0">

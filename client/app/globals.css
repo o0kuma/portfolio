@@ -62,6 +62,15 @@
     scroll-behavior: smooth;
   }
 
+  /* Safety net: a single mis-measured or momentarily-too-wide element
+     anywhere on the page (e.g. a horizontal-scroll track before its width
+     is measured) should never push the whole document into horizontal
+     scroll. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   body {
     @apply bg-canvas text-textPrimary antialiased;
   }

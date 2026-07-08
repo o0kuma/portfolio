@@ -177,7 +177,7 @@ export async function sendContactEmail(contactData: {
     const autoReplyOptions = {
       from: smtpUser,
       to: contactData.email,
-      subject: '메시지가 성공적으로 전송되었습니다 - 오승일 포트폴리오',
+      subject: '메시지가 성공적으로 전송되었습니다 - okuma 포트폴리오',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #333; border-bottom: 2px solid #3b82f6; padding-bottom: 10px;">
@@ -201,7 +201,7 @@ export async function sendContactEmail(contactData: {
           
           <div style="margin-top: 30px; padding: 20px; background-color: #e8f5e8; border-radius: 8px; text-align: center;">
             <p style="margin: 0; color: #2e7d32;">
-              <strong>오승일</strong><br>
+              <strong>okuma</strong><br>
               프론트엔드 개발자<br>
               <a href="mailto:${smtpUser}" style="color: #2e7d32;">${smtpUser}</a>
             </p>
