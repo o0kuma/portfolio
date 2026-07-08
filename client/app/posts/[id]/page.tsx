@@ -18,6 +18,7 @@ import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
 import { FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi'
 import { savePostOffline, removeOfflinePost, isPostSavedOffline } from '@/lib/offlineStorage'
+import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -262,12 +263,12 @@ export default function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-50">
+      <SpaceAtmosphere className="min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-neutral-800 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
                 <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-xl font-mono text-neutral-400 mb-2">
@@ -276,13 +277,13 @@ export default function PostDetailPage() {
             </div>
           </div>
         </div>
-      </div>
+      </SpaceAtmosphere>
     )
   }
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-50">
+      <SpaceAtmosphere className="min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-neutral-100 mb-4">
@@ -300,7 +301,7 @@ export default function PostDetailPage() {
             </Link>
           </div>
         </div>
-      </div>
+      </SpaceAtmosphere>
     )
   }
 
@@ -327,8 +328,8 @@ export default function PostDetailPage() {
   const tocItems = parseHeadings(post.content)
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-50">
-      <div className="border-b border-neutral-800 bg-neutral-950/90 backdrop-blur-sm sticky top-0 z-40">
+    <SpaceAtmosphere className="min-h-screen text-neutral-50">
+      <div className="border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="page-shell py-4">
           <div className="flex items-center justify-between">
             <Link
@@ -603,6 +604,6 @@ export default function PostDetailPage() {
           editPost={post}
         />
       )}
-    </div>
+    </SpaceAtmosphere>
   )
 }

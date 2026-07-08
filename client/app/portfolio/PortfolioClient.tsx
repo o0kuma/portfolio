@@ -12,42 +12,45 @@ import PortfolioScrollProgress from '../../components/portfolio/PortfolioScrollP
 import StatsCounter from '../../components/portfolio/StatsCounter'
 import CareerTimeline from '../../components/portfolio/CareerTimeline'
 import SectionWrapper from '../../components/SectionWrapper'
+import SpaceAtmosphere from '../../components/SpaceAtmosphere'
 
 const AIInterviewer = dynamic(() => import('../../components/AIInterviewer'), { ssr: false })
 
 export default function PortfolioClient() {
   return (
-    <main className="portfolio-page min-h-screen bg-neutral-950 text-neutral-100 antialiased">
-      <PortfolioScrollProgress />
-      <Header />
-      <Hero />
-      <StatsCounter />
+    <SpaceAtmosphere className="portfolio-page min-h-screen text-neutral-100 antialiased">
+      <main>
+        <PortfolioScrollProgress />
+        <Header />
+        <Hero />
+        <StatsCounter />
 
-      <SectionWrapper id="about" className="relative border-b border-neutral-800 bg-neutral-950">
-        <About />
-      </SectionWrapper>
+        <SectionWrapper id="about" className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-950 dark:bg-transparent">
+          <About />
+        </SectionWrapper>
 
-      <SectionWrapper id="skills" className="relative border-b border-neutral-800 bg-neutral-900">
-        <Skills />
-      </SectionWrapper>
+        <SectionWrapper id="skills" className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-900 dark:bg-white/[0.02]">
+          <Skills />
+        </SectionWrapper>
 
-      <SectionWrapper className="relative border-b border-neutral-800 bg-neutral-900">
-        <CareerTimeline />
-      </SectionWrapper>
+        <SectionWrapper className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-900 dark:bg-white/[0.02]">
+          <CareerTimeline />
+        </SectionWrapper>
 
-      <SectionWrapper id="projects" fadeOnly className="relative border-b border-neutral-800 bg-neutral-950">
-        <Projects />
-      </SectionWrapper>
+        <SectionWrapper id="projects" fadeOnly className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-950 dark:bg-transparent">
+          <Projects />
+        </SectionWrapper>
 
-      <SectionWrapper id="ai-interviewer" className="relative border-b border-neutral-800 bg-neutral-950">
-        <AIInterviewer />
-      </SectionWrapper>
+        <SectionWrapper id="ai-interviewer" className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-950 dark:bg-transparent">
+          <AIInterviewer />
+        </SectionWrapper>
 
-      <SectionWrapper id="contact" className="relative border-b border-neutral-800 bg-neutral-900">
-        <Contact />
-      </SectionWrapper>
+        <SectionWrapper id="contact" className="relative border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-900 dark:bg-white/[0.02]">
+          <Contact />
+        </SectionWrapper>
 
-      <Footer />
-    </main>
+        <Footer />
+      </main>
+    </SpaceAtmosphere>
   )
 }

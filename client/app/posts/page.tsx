@@ -13,6 +13,7 @@ import { adminAuthHeaders } from '@/lib/admin-token'
 import { hasAdminAccess } from '@/lib/admin-access'
 import { useLanguage } from '@/lib/LanguageContext'
 import { POST_CATEGORIES, getCategoryLabel } from '@/lib/post-categories'
+import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
 const API_BASE_URL = getApiBaseUrl()
 const PAGE_LIMIT = 12
@@ -260,12 +261,12 @@ export default function PostsPage() {
 
   if (isInitialLoad) {
     return (
-      <div className="min-h-screen bg-neutral-950 text-neutral-50">
+      <SpaceAtmosphere className="min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
               <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-neutral-800 rounded-full"></div>
+                <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
                 <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
               </div>
               <h3 className="text-xl font-mono text-neutral-400 mb-2">
@@ -279,13 +280,13 @@ export default function PostsPage() {
             </div>
           </div>
         </div>
-      </div>
+      </SpaceAtmosphere>
     )
   }
 
   return (
-    <div className="relative min-h-screen bg-neutral-950 text-neutral-50">
-      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-800">
+    <SpaceAtmosphere className="relative min-h-screen text-neutral-50">
+      <header className="sticky top-0 z-40 bg-[#030014]/80 backdrop-blur-sm border-b border-white/[0.08]">
         <div className="page-shell py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -524,6 +525,6 @@ export default function PostsPage() {
         onSuccess={handleCreateSuccess}
         editPost={editingPost}
       />
-    </div>
+    </SpaceAtmosphere>
   )
 }

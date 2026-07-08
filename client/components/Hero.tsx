@@ -26,7 +26,7 @@ export default function Hero() {
       ref={sectionRef}
       id="hero"
       style={{ opacity: heroOpacity }}
-      className="relative min-h-screen flex items-center border-b border-neutral-800 bg-neutral-950"
+      className="relative min-h-screen flex items-center border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-950 dark:bg-transparent"
     >
       <div className="container-custom relative z-10 w-full">
         <div className="grid lg:grid-cols-2 gap-16 items-center min-h-screen py-28">

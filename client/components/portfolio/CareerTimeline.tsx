@@ -90,7 +90,7 @@ export default function CareerTimeline() {
   const { locale } = useLanguage()
 
   return (
-    <div className="py-32 border-b border-neutral-800 bg-neutral-900">
+    <div className="py-32 border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-900 dark:bg-transparent">
       <div className="container-custom">
         {/* Header */}
         <motion.div
