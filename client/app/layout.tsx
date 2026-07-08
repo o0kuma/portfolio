@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     template: `%s | ${SITE_NAME}`,
   },
   description:
-    'okuma의 포트폴리오와 블로그 — React, Next.js, TypeScript 기반 웹 개발 프로젝트와 기술 글.',
+    'okuma(Seungil Oh)의 포트폴리오와 블로그 — React, Next.js, TypeScript 기반 웹 개발 프로젝트와 기술 글.',
   keywords: [
     'kuuuma',
     '포트폴리오',
@@ -117,7 +117,7 @@ export default function RootLayout({
               '@context': 'https://schema.org',
               '@type': 'Person',
               name: SITE_AUTHOR,
-              alternateName: 'okuma',
+              alternateName: 'Seungil Oh',
               jobTitle: '프론트엔드 / 풀스택 개발자',
               description: 'React, Next.js, Node.js, PostgreSQL을 활용한 웹 개발자',
               url: siteUrl,

@@ -15,7 +15,7 @@ export const translations = {
     hero: {
       badge: 'Frontend Developer',
       nameMain: 'okuma',
-      nameSub: 'okuma',
+      nameSub: 'Seungil Oh',
       description:
         'React, Next.js, Svelte로 프론트엔드를 설계하고,\nNode.js 백엔드까지 다루는 {years}년 차 풀스택 개발자입니다.',
       viewProjects: '프로젝트 보기',
@@ -527,7 +527,7 @@ export const translations = {
     },
     hero: {
       badge: 'Frontend Developer',
-      nameMain: 'okuma',
+      nameMain: 'Seungil Oh',
       nameSub: 'okuma',
       description:
         'Designing frontend with React, Next.js, and Svelte,\na {years}-year full-stack developer who handles Node.js backend too.',
@@ -606,7 +606,7 @@ export const translations = {
       hours: 'Weekdays 9:00 – 18:00',
     },
     footer: {
-      copyright: '© {year} okuma. All rights reserved.',
+      copyright: '© {year} Seungil Oh. All rights reserved.',
       scrollToTop: 'Scroll to top',
     },
     home: {

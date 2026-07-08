@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useLanguage } from '@/lib/LanguageContext'
 
 const FILES_KO = {
-  'about.txt': `이름: okuma
+  'about.txt': `이름: okuma (kuuuma)
 직업: 프론트엔드 / 풀스택 개발자
 기술: React, Next.js, TypeScript, Node.js, PostgreSQL
 특기: 웹 게임 개발, UI/UX 설계
@@ -29,7 +29,7 @@ GitHub: github.com/kuuuma
 }
 
 const FILES_EN = {
-  'about.txt': `Name: okuma
+  'about.txt': `Name: Seungil Oh (kuuuma)
 Role: Frontend / Full-stack Developer
 Tech: React, Next.js, TypeScript, Node.js, PostgreSQL
 Specialty: Web game development, UI/UX design

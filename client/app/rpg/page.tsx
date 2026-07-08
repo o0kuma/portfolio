@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'A pixel-art RPG portfolio you can explore. Walk between buildings to see About, Skills, Projects, and Career.',
   openGraph: {
     title: 'kuuuma World | Portfolio',
-    description: "okuma's portfolio, explored RPG-style",
+    description: "Seungil Oh's portfolio, explored RPG-style",
   },
 }
 

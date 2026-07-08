@@ -34,7 +34,7 @@ const BUILDINGS: Bld[] = [
     tx: 3, ty: 4, tw: 10, th: 8,
     wall: '#8b6914', roof: '#c0522d',
     lines: [
-      '[ okuma ]',
+      '[ okuma / Seungil Oh ]',
       '',
       '프론트엔드 개발자 · 개발경력 7년+',
       '',
@@ -51,7 +51,7 @@ const BUILDINGS: Bld[] = [
       '반응형 화면을 정확하게 구현합니다.',
     ],
     linesEn: [
-      '[ okuma ]',
+      '[ Seungil Oh ]',
       '',
       'Frontend Developer · 7+ years of experience',
       '',
