@@ -618,17 +618,36 @@ function ProjectCard({
  */
 function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[]; onCardClick: (p: Project) => void }) {
   const sectionRef = useRef<HTMLDivElement>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
   const [overflow, setOverflow] = useState(0)
 
   useEffect(() => {
+    // Measure against the actual clipping viewport's clientWidth, not
+    // window.innerWidth — those can differ (scrollbar width, the section's
+    // own -mx-4/-mx-6 bleed), and that gap was enough that scrolling all
+    // the way to the end of the page still left the last card's edge
+    // outside the viewport with no way to reach it. Re-measure via
+    // ResizeObserver (not just a window 'resize' listener) so late layout
+    // shifts — web fonts swapping in, images loading, earlier sections'
+    // reveal animations changing height — can't leave a stale, too-small
+    // overflow baked in.
     const measure = () => {
-      if (!trackRef.current) return
-      setOverflow(Math.max(0, trackRef.current.scrollWidth - window.innerWidth))
+      if (!trackRef.current || !viewportRef.current) return
+      // +8px buffer guards against sub-pixel rounding so the last card's
+      // edge is never left just outside the clipped viewport.
+      const next = Math.max(0, trackRef.current.scrollWidth - viewportRef.current.clientWidth + 8)
+      setOverflow((prev) => (prev === next ? prev : next))
     }
     measure()
+    const ro = new ResizeObserver(measure)
+    if (trackRef.current) ro.observe(trackRef.current)
+    if (viewportRef.current) ro.observe(viewportRef.current)
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', measure)
+    }
   }, [projects])
 
   const { scrollYProgress } = useScroll({
@@ -656,7 +675,7 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
       className="-mx-4 md:-mx-6"
       style={{ height: overflow > 0 ? `calc(100vh + ${overflow}px)` : undefined }}
     >
-      <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+      <div ref={viewportRef} className="sticky top-0 flex h-screen items-center overflow-hidden">
         <motion.div
           ref={trackRef}
           style={{ x }}
