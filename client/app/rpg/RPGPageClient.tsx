@@ -356,6 +356,20 @@ function actionBubble(action: string | null): string | null {
   return ACTION_BUBBLE[action] ?? null
 }
 
+// 실시간 방문자 유령에게 붙일 랜덤 닉네임
+const GUEST_NAMES_KO = ['나그네', '여행자', '방랑자', '모험가', '방문객', '떠돌이']
+const GUEST_NAMES_EN = ['Traveler', 'Wanderer', 'Explorer', 'Adventurer', 'Visitor', 'Drifter']
+
+function getMyPresenceId(): string {
+  if (typeof window === 'undefined') return ''
+  let id = sessionStorage.getItem('rpg-presence-id')
+  if (!id) {
+    id = Math.random().toString(36).slice(2, 10)
+    sessionStorage.setItem('rpg-presence-id', id)
+  }
+  return id
+}
+
 // ── Tile map (0=grass,1=path,2=tree,3=water) ──────────────────────────────────
 function buildMap(): number[][] {
   const m: number[][] = Array.from({ length: MAP_H }, () => Array(MAP_W).fill(0))
@@ -553,7 +567,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, px: number, py: number, dir: 
 }
 
 // Project Aetheria 에이전트 NPC — 플레이어보다 살짝 작고, 모델별 색상 + 이름표
-function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: number, bob: number) {
+function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: number, bob: number, facingLeft = false) {
   const w = PW * 0.85
   const h = PH * 0.85
   const x = px - w / 2
@@ -569,6 +583,14 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
   ctx.ellipse(px, py + 2, 9, 3.5, 0, 0, Math.PI * 2)
   ctx.fill()
 
+  // Body + head mirror horizontally to face the walking direction
+  ctx.save()
+  if (facingLeft) {
+    ctx.translate(px, 0)
+    ctx.scale(-1, 1)
+    ctx.translate(-px, 0)
+  }
+
   // Body
   ctx.fillStyle = bodyColor
   ctx.fillRect(x + 3, y + 10, w - 6, h - 12)
@@ -580,6 +602,7 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
   // Hair
   ctx.fillStyle = '#2a1a0a'
   ctx.fillRect(x + 3, y, w - 6, 3)
+  ctx.restore()
 
   // Nameplate
   ctx.fillStyle = 'rgba(0,0,0,0.65)'
@@ -620,6 +643,48 @@ function drawNpc(ctx: CanvasRenderingContext2D, npc: NpcAgent, px: number, py: n
     ctx.fillText(bubble, px, by + 12)
   }
 
+  ctx.globalAlpha = 1
+}
+
+// 실시간 접속 중인 다른 방문자 — 반투명 유령 실루엣 (플레이어 스프라이트 재사용, 보라 톤)
+function drawVisitorGhost(ctx: CanvasRenderingContext2D, px: number, py: number, dir: number, frame: number, name: string) {
+  const x = px - PW / 2
+  const y = py - PH
+
+  ctx.save()
+  ctx.globalAlpha = 0.55
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.2)'
+  ctx.beginPath()
+  ctx.ellipse(px, py + 2, 10, 4, 0, 0, Math.PI * 2)
+  ctx.fill()
+
+  // Body (violet tint distinguishes ghosts from the player/NPCs)
+  ctx.fillStyle = '#8b5cf6'
+  ctx.fillRect(x + 3, y + 12, PW - 6, PH - 14)
+
+  // Head
+  ctx.fillStyle = '#c4b5fd'
+  ctx.fillRect(x + 4, y, PW - 8, 14)
+
+  // Legs
+  const legOff = Math.sin(frame * 0.3) * 3
+  ctx.fillStyle = '#4c1d95'
+  ctx.fillRect(x + 4, y + PH - 10, 6, 10 + (dir === 0 ? legOff : 0))
+  ctx.fillRect(x + PW - 12, y + PH - 10, 6, 10 - (dir === 0 ? legOff : 0))
+
+  // Nameplate
+  ctx.globalAlpha = 0.8
+  ctx.font = '9px monospace'
+  const tw = ctx.measureText(name).width
+  ctx.fillStyle = 'rgba(76,29,149,0.7)'
+  ctx.fillRect(px - tw / 2 - 3, y - 14, tw + 6, 12)
+  ctx.fillStyle = '#e9d5ff'
+  ctx.textAlign = 'center'
+  ctx.fillText(name, px, y - 5)
+
+  ctx.restore()
   ctx.globalAlpha = 1
 }
 
@@ -754,6 +819,18 @@ export default function RPGPageClient() {
   const dialogRef = useRef(dialog)
   dialogRef.current = dialog
 
+  // 실시간 방문자 유령 — 서버가 보내는 목표 좌표(base)로 부드럽게 보간해서 렌더링
+  const myPresenceId = useRef(getMyPresenceId())
+  const myGuestName = useRef('')
+  const visitorsRef = useRef(
+    new Map<string, { baseX: number; baseY: number; visX: number; visY: number; dir: number; name: string }>()
+  )
+
+  // NPC 배회 애니메이션 상태 — 실제 틱(하루 3회) 위치는 그대로 두고, 그 주변을 계속 서성이게 만든다
+  const npcVisualRef = useRef(
+    new Map<string, { visX: number; visY: number; baseX: number; baseY: number; seedX: number; seedY: number; freqX: number; freqY: number }>()
+  )
+
   const getBuildingAtPlayer = useCallback((px: number, py: number): string | null => {
     const tx = Math.floor(px / TILE)
     const ty = Math.floor(py / TILE)
@@ -810,6 +887,73 @@ export default function RPGPageClient() {
     return () => {
       cancelled = true
       clearInterval(interval)
+    }
+  }, [started])
+
+  // 실시간 방문자 presence — 내 위치를 주기적으로 보내고, 다른 접속자 목록을 받아온다 (LiveCursors와 동일한 폴링 패턴)
+  useEffect(() => {
+    if (!started) return
+    if (!myGuestName.current) {
+      const pool = localeRef.current === 'en' ? GUEST_NAMES_EN : GUEST_NAMES_KO
+      myGuestName.current = pool[Math.floor(Math.random() * pool.length)]
+    }
+
+    const push = async () => {
+      const s = stateRef.current
+      try {
+        await fetch('/api/rpg-presence', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: myPresenceId.current,
+            x: s.px,
+            y: s.py,
+            dir: s.dir,
+            name: myGuestName.current,
+          }),
+        })
+      } catch {
+        // ignore — retried on next interval
+      }
+    }
+
+    const pull = async () => {
+      try {
+        const res = await fetch('/api/rpg-presence', { cache: 'no-store' })
+        if (!res.ok) return
+        const data = await res.json() as {
+          visitors: { id: string; x: number; y: number; dir: number; name: string }[]
+        }
+        const seen = new Set<string>()
+        for (const v of data.visitors ?? []) {
+          if (v.id === myPresenceId.current) continue
+          seen.add(v.id)
+          const prev = visitorsRef.current.get(v.id)
+          visitorsRef.current.set(v.id, {
+            baseX: v.x,
+            baseY: v.y,
+            dir: v.dir,
+            name: v.name,
+            visX: prev?.visX ?? v.x,
+            visY: prev?.visY ?? v.y,
+          })
+        }
+        // Drop anyone no longer in the server's live list (they left or timed out)
+        for (const id of visitorsRef.current.keys()) {
+          if (!seen.has(id)) visitorsRef.current.delete(id)
+        }
+      } catch {
+        // ignore — retried on next interval
+      }
+    }
+
+    push()
+    pull()
+    const pushTimer = setInterval(push, 2000)
+    const pullTimer = setInterval(pull, 2000)
+    return () => {
+      clearInterval(pushTimer)
+      clearInterval(pullTimer)
     }
   }, [started])
 
@@ -902,11 +1046,58 @@ export default function RPGPageClient() {
       sorted.forEach(b => drawBuilding(ctx, b, camX, camY, s.nearId, localeRef.current))
 
       // Draw Aetheria NPC agents (마을 광장을 돌아다니는 실제 AI 에이전트)
+      // 실제 위치는 하루 3번만 바뀌므로, 그 지점 주변을 계속 서성이는 시각 전용
+      // 배회 애니메이션을 얹는다 — 논리적 위치가 바뀌면 순간이동 대신 부드럽게 이동한다.
       const bob = Math.sin(s.frame * 0.08) * 2
+      const nowMs = now
+      const seenNpcIds = new Set<string>()
       for (const npc of s.npcAgents) {
-        const worldX = (PLAZA_TX + (npc.x / (AGENT_GRID - 1)) * PLAZA_TW) * TILE
-        const worldY = (PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH) * TILE
-        drawNpc(ctx, npc, worldX - camX, worldY - camY, bob)
+        seenNpcIds.add(npc.id)
+        const baseX = (PLAZA_TX + (npc.x / (AGENT_GRID - 1)) * PLAZA_TW) * TILE
+        const baseY = (PLAZA_TY + (npc.y / (AGENT_GRID - 1)) * PLAZA_TH) * TILE
+        let v = npcVisualRef.current.get(npc.id)
+        if (!v) {
+          v = {
+            visX: baseX, visY: baseY, baseX, baseY,
+            seedX: Math.random() * Math.PI * 2, seedY: Math.random() * Math.PI * 2,
+            freqX: 0.35 + Math.random() * 0.25, freqY: 0.3 + Math.random() * 0.25,
+          }
+          npcVisualRef.current.set(npc.id, v)
+        }
+        v.baseX = baseX
+        v.baseY = baseY
+
+        const dead = npc.status !== 'alive'
+        const prevVisX = v.visX
+        if (dead) {
+          // Dead agents freeze in place — no wandering.
+          v.visX = baseX
+          v.visY = baseY
+        } else {
+          const t = nowMs / 1000
+          const wanderRadius = TILE * 0.55
+          const wx = Math.sin(t * v.freqX + v.seedX) * wanderRadius
+          const wy = Math.cos(t * v.freqY + v.seedY) * wanderRadius * 0.6
+          const targetX = baseX + wx
+          const targetY = baseY + wy
+          // Smooth glide toward the (moving) wander target rather than snapping.
+          v.visX += (targetX - v.visX) * 0.03
+          v.visY += (targetY - v.visY) * 0.03
+        }
+
+        const facingLeft = v.visX < prevVisX - 0.05
+        drawNpc(ctx, npc, v.visX - camX, v.visY - camY, bob, facingLeft)
+      }
+      // Forget wander state for NPCs no longer in the roster (e.g. wiped/reset season)
+      for (const id of npcVisualRef.current.keys()) {
+        if (!seenNpcIds.has(id)) npcVisualRef.current.delete(id)
+      }
+
+      // Draw other visitors currently exploring the town (real-time presence, no chat)
+      for (const visitor of visitorsRef.current.values()) {
+        visitor.visX += (visitor.baseX - visitor.visX) * 0.08
+        visitor.visY += (visitor.baseY - visitor.visY) * 0.08
+        drawVisitorGhost(ctx, visitor.visX - camX, visitor.visY - camY, visitor.dir, s.frame, visitor.name)
       }
 
       // Draw player
@@ -953,6 +1144,17 @@ export default function RPGPageClient() {
       ctx.font = 'bold 12px sans-serif'
       ctx.textAlign = 'left'
       ctx.fillText(timeLabel, 18, 27)
+
+      // Live visitor count — shown only when someone else is actually around
+      if (visitorsRef.current.size > 0) {
+        const label = localeRef.current === 'en' ? `🧍 ${visitorsRef.current.size} here` : `🧍 ${visitorsRef.current.size}명 접속 중`
+        ctx.fillStyle = 'rgba(76,29,149,0.55)'
+        ctx.font = 'bold 11px sans-serif'
+        const bw = ctx.measureText(label).width + 16
+        ctx.fillRect(10, 38, bw, 22)
+        ctx.fillStyle = '#e9d5ff'
+        ctx.fillText(label, 18, 53)
+      }
 
       // Minimap
       const mm = 120, ms = mm / MAP_W
