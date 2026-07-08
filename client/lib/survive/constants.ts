@@ -19,25 +19,24 @@ export function xpForLevel(level: number): number {
 
 /** Enemy spawn cadence shrinks over time (ms between spawns). */
 export function spawnIntervalMs(elapsedSec: number): number {
-  // Warm-up: the first ~18s spawn slowly so a fresh run can grab its first
-  // couple of upgrades before the swarm ramps up.
-  if (elapsedSec < 18) return 1700 - elapsedSec * 22 // 1700ms → ~1300ms
-  return Math.max(220, 1300 - (elapsedSec - 18) * 9)
+  // Shorter warm-up (12s) than before — just enough to grab the first
+  // upgrade before the swarm starts ramping.
+  if (elapsedSec < 12) return 1500 - elapsedSec * 20 // 1500ms → ~1260ms
+  return Math.max(180, 1260 - (elapsedSec - 12) * 10)
 }
 
 /** Enemy count spawned per wave grows slowly. */
 export function spawnBatch(elapsedSec: number): number {
-  // Stay at a single enemy per wave through the opening so it never feels
-  // like a wall on spawn.
-  if (elapsedSec < 45) return 1
-  return 1 + Math.floor((elapsedSec - 45) / 35)
+  // Single enemy per wave only through the first 30s, then ramps faster.
+  if (elapsedSec < 30) return 1
+  return 1 + Math.floor((elapsedSec - 30) / 28)
 }
 
-/** Enemy HP scales gently with time so late game stays tense. */
+/** Enemy HP scales with time so mid/late game stays tense. */
 export function enemyHpScale(elapsedSec: number): number {
-  // Softer early scaling so opening enemies die in ~2 hits, then ramps in.
-  if (elapsedSec < 20) return 1 + elapsedSec / 120
-  return 1 + elapsedSec / 60
+  // Soft only through the first 12s, then a steadier climb.
+  if (elapsedSec < 12) return 1 + elapsedSec / 100
+  return 1 + elapsedSec / 48
 }
 
 export const HIGH_SCORE_KEY = 'survive-best'

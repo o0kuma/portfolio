@@ -209,11 +209,11 @@ export class SurviveEngine implements Upgradable {
     const scale = enemyHpScale(t)
     let base: Omit<Enemy, 'x' | 'y' | 'hitCooldownMs'>
     if (kind === 'fast') {
-      base = { radius: 10, hp: 14 * scale, maxHp: 14 * scale, speed: 118, damage: 8, kind }
+      base = { radius: 10, hp: 14 * scale, maxHp: 14 * scale, speed: 118, damage: 10, kind }
     } else if (kind === 'tank') {
-      base = { radius: 22, hp: 90 * scale, maxHp: 90 * scale, speed: 48, damage: 18, kind }
+      base = { radius: 22, hp: 90 * scale, maxHp: 90 * scale, speed: 48, damage: 22, kind }
     } else {
-      base = { radius: 14, hp: 30 * scale, maxHp: 30 * scale, speed: 66, damage: 10, kind }
+      base = { radius: 14, hp: 30 * scale, maxHp: 30 * scale, speed: 66, damage: 12, kind }
     }
     this.enemies.push({ ...base, x, y, hitCooldownMs: 0 })
   }
@@ -260,7 +260,7 @@ export class SurviveEngine implements Upgradable {
       hp: baseHp,
       maxHp: baseHp,
       speed: 52,
-      damage: 25,
+      damage: 28,
       kind: 'tank',
       hitCooldownMs: 0,
       isBoss: true,
