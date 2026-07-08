@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/LanguageContext'
+import { ensureRefPresenceId } from '@/lib/rpg-presence'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TILE = 40
@@ -365,16 +366,6 @@ function actionBubble(action: string | null): string | null {
 // 실시간 방문자 유령에게 붙일 랜덤 닉네임
 const GUEST_NAMES_KO = ['나그네', '여행자', '방랑자', '모험가', '방문객', '떠돌이']
 const GUEST_NAMES_EN = ['Traveler', 'Wanderer', 'Explorer', 'Adventurer', 'Visitor', 'Drifter']
-
-function getMyPresenceId(): string {
-  if (typeof window === 'undefined') return ''
-  let id = sessionStorage.getItem('rpg-presence-id')
-  if (!id) {
-    id = Math.random().toString(36).slice(2, 10)
-    sessionStorage.setItem('rpg-presence-id', id)
-  }
-  return id
-}
 
 // ── Tile map (0=grass,1=path,2=tree,3=water) ──────────────────────────────────
 function buildMap(): number[][] {
@@ -947,7 +938,7 @@ export default function RPGPageClient() {
   dialogRef.current = dialog
 
   // 실시간 방문자 유령 — 서버가 보내는 목표 좌표(base)로 부드럽게 보간해서 렌더링
-  const myPresenceId = useRef(getMyPresenceId())
+  const myPresenceId = useRef('')
   const myGuestName = useRef('')
   const visitorsRef = useRef(
     new Map<string, { baseX: number; baseY: number; visX: number; visY: number; dir: number; name: string }>()
@@ -1024,6 +1015,9 @@ export default function RPGPageClient() {
   // 실시간 방문자 presence — 내 위치를 주기적으로 보내고, 다른 접속자 목록을 받아온다 (LiveCursors와 동일한 폴링 패턴)
   useEffect(() => {
     if (!started) return
+    // sessionStorage is unavailable during SSR; useRef('') stays empty until we init on mount.
+    // LiveCursors avoids this via dynamic(..., { ssr: false }).
+    ensureRefPresenceId(myPresenceId, sessionStorage)
     if (!myGuestName.current) {
       const pool = localeRef.current === 'en' ? GUEST_NAMES_EN : GUEST_NAMES_KO
       myGuestName.current = pool[Math.floor(Math.random() * pool.length)]
