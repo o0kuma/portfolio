@@ -55,9 +55,16 @@ export default function BlogPostsCarousel3D({
   const [rotation, setRotation] = useState(0)
   const [draggingUi, setDraggingUi] = useState(false)
   const dragging = useRef(false)
+  const pendingDrag = useRef(false)
   const startX = useRef(0)
   const startRot = useRef(0)
   const pointerId = useRef<number | null>(null)
+  const dragEl = useRef<HTMLElement | null>(null)
+
+  // Below this many px of movement, a press reads as a click/tap, not a drag —
+  // so links inside the active card stay clickable even if the press landed
+  // a pixel outside their hit box.
+  const DRAG_THRESHOLD = 6
 
   const count = posts.length
   const step = useMemo(() => (count > 0 ? 360 / count : 360), [count])
@@ -117,26 +124,39 @@ export default function BlogPostsCarousel3D({
     const t = e.target as HTMLElement
     if (t.closest('a, button')) return
     if (reduced || count <= 1) return
-    dragging.current = true
-    setDraggingUi(true)
+    // Don't capture the pointer yet — only arm a *pending* drag. Capturing
+    // immediately would retarget the eventual click away from whatever link
+    // sits under the cursor at release, even for a near-stationary press.
+    pendingDrag.current = true
     pointerId.current = e.pointerId
     startX.current = e.clientX
     startRot.current = rotation
-    ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+    dragEl.current = e.currentTarget as HTMLElement
   }
 
   const onPointerMove = (e: React.PointerEvent) => {
-    if (!dragging.current) return
     if (pointerId.current !== e.pointerId) return
+    if (!pendingDrag.current && !dragging.current) return
     const dx = e.clientX - startX.current
+
+    if (!dragging.current) {
+      if (Math.abs(dx) < DRAG_THRESHOLD) return
+      // Movement just crossed the threshold — commit to an actual drag now.
+      dragging.current = true
+      setDraggingUi(true)
+      dragEl.current?.setPointerCapture?.(e.pointerId)
+    }
+
     setRotation(startRot.current + dx * DRAG_SENS)
   }
 
   const endDrag = (e: React.PointerEvent) => {
     if (pointerId.current !== null && e.pointerId !== pointerId.current) return
-    if (!dragging.current) return
+    const wasDragging = dragging.current
+    pendingDrag.current = false
     dragging.current = false
     pointerId.current = null
+    if (!wasDragging) return
     setDraggingUi(false)
     snap()
     try {
