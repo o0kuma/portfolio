@@ -88,9 +88,6 @@ function ImmersiveHomeInner() {
             <Link href="/food" className="hidden sm:block transition-colors hover:text-white">
               {t.home.navFood}
             </Link>
-            <Link href="/guestbook" className="hidden sm:block transition-colors hover:text-white">
-              {locale === 'en' ? 'Guestbook' : '방명록'}
-            </Link>
 
             {/* 더보기 서브 메뉴 */}
             <div ref={moreRef} className="relative">

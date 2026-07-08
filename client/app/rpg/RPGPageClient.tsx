@@ -302,6 +302,12 @@ const BUILDINGS: Bld[] = [
       'Go to the plaza and watch them yourself.',
     ],
   },
+  {
+    id: 'wall', label: '낙서 벽', labelEn: 'Message Wall', emoji: '📌',
+    tx: 32, ty: 29, tw: 7, th: 5,
+    wall: '#6b5a3a', roof: '#4a3d28',
+    lines: [], linesEn: [], // rendered by the dedicated WallBoard component instead
+  },
 ]
 
 // 게임 아케이드 건물에서 바로 갈 수 있는 게임 목록
@@ -784,6 +790,127 @@ function AetheriaPanel({ data, locale }: { data: { agents: NpcAgent[]; events: A
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+interface WallNote {
+  id: number
+  name: string
+  message: string
+  emoji: string
+  created_at: string
+}
+
+const WALL_EMOJIS = ['📌', '👋', '🎉', '😊', '🔥', '💻', '✨', '🚀', '❤️', '🐾']
+
+// 마을 광장 낙서 벽 — 방문자가 짧은 쪽지를 남기고, 다른 방문자들이 지나가며 읽는다.
+function WallBoard({ locale }: { locale: string }) {
+  const en = locale === 'en'
+  const [notes, setNotes] = useState<WallNote[]>([])
+  const [loading, setLoading] = useState(true)
+  const [name, setName] = useState('')
+  const [message, setMessage] = useState('')
+  const [emoji, setEmoji] = useState(WALL_EMOJIS[0])
+  const [error, setError] = useState<string | null>(null)
+  const [posting, setPosting] = useState(false)
+
+  const fetchNotes = useCallback(async () => {
+    try {
+      const res = await fetch('/api/rpg-wall', { cache: 'no-store' })
+      const data = await res.json()
+      setNotes(data.notes ?? [])
+    } catch {
+      // ignore — wall stays empty until the next open
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchNotes() }, [fetchNotes])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (posting) return
+    setError(null)
+    setPosting(true)
+    try {
+      const res = await fetch('/api/rpg-wall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name.trim(), message: message.trim(), emoji }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? (en ? 'Something went wrong.' : '문제가 발생했습니다.'))
+        return
+      }
+      setNotes((prev) => [data.note, ...prev])
+      setMessage('')
+    } catch {
+      setError(en ? 'A network error occurred.' : '네트워크 오류가 발생했습니다.')
+    } finally {
+      setPosting(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3 font-mono text-sm">
+      <p className="text-amber-300">
+        {en ? '📌 Pin a short note for other travelers to find.' : '📌 다른 방문자들이 볼 수 있도록 짧은 쪽지를 남겨보세요.'}
+      </p>
+
+      <form onSubmit={handleSubmit} className="space-y-2 rounded-lg border border-[#4a8a5a]/30 bg-black/20 p-3">
+        <div className="flex gap-2">
+          <select
+            value={emoji}
+            onChange={(e) => setEmoji(e.target.value)}
+            className="rounded border border-[#4a8a5a]/40 bg-[#0f1a0f] px-2 py-1.5 text-sm text-green-200"
+          >
+            {WALL_EMOJIS.map((em) => <option key={em} value={em}>{em}</option>)}
+          </select>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value.slice(0, 20))}
+            placeholder={en ? 'Your name' : '이름'}
+            maxLength={20}
+            className="w-24 rounded border border-[#4a8a5a]/40 bg-[#0f1a0f] px-2 py-1.5 text-xs text-green-200 placeholder-green-800"
+          />
+          <input
+            value={message}
+            onChange={(e) => setMessage(e.target.value.slice(0, 120))}
+            placeholder={en ? 'Leave a short note...' : '짧은 메시지를 남겨보세요...'}
+            maxLength={120}
+            className="flex-1 rounded border border-[#4a8a5a]/40 bg-[#0f1a0f] px-2 py-1.5 text-xs text-green-200 placeholder-green-800"
+          />
+        </div>
+        {error && <p className="text-xs text-red-400">{error}</p>}
+        <button
+          type="submit"
+          disabled={posting || !name.trim() || !message.trim()}
+          className="w-full rounded bg-amber-500 py-1.5 text-xs font-bold text-black transition hover:bg-amber-400 disabled:opacity-40"
+        >
+          {posting ? (en ? 'Posting...' : '게시 중...') : (en ? 'Pin it' : '쪽지 붙이기')}
+        </button>
+      </form>
+
+      <div className="max-h-[40vh] space-y-1.5 overflow-y-auto">
+        {loading ? (
+          <p className="text-xs text-green-700">{en ? 'Loading...' : '불러오는 중...'}</p>
+        ) : notes.length === 0 ? (
+          <p className="text-xs text-green-700">{en ? 'No notes yet — be the first!' : '아직 쪽지가 없어요 — 첫 번째로 남겨보세요!'}</p>
+        ) : (
+          notes.map((n) => (
+            <div key={n.id} className="rounded-lg border border-[#4a8a5a]/25 bg-black/20 px-3 py-2">
+              <div className="flex items-center gap-1.5 text-xs">
+                <span>{n.emoji}</span>
+                <span className="font-bold text-green-300">{n.name}</span>
+              </div>
+              <p className="mt-0.5 text-xs text-green-100/75">{n.message}</p>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   )
 }
@@ -1317,6 +1444,8 @@ export default function RPGPageClient() {
               <div className="max-h-[60vh] overflow-y-auto">
               {dialog.bld.id === 'aetheria' ? (
                 <AetheriaPanel data={aetheriaData} locale={locale} />
+              ) : dialog.bld.id === 'wall' ? (
+                <WallBoard locale={locale} />
               ) : dialog.bld.id === 'games' ? (
                 <div>
                   <p className="mb-3 font-mono text-sm font-bold text-green-300">

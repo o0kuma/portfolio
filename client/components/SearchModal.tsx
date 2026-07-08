@@ -30,7 +30,6 @@ interface SearchModalProps {
 }
 
 const STATIC_PAGES: StaticItem[] = [
-  { title: '방명록', titleEn: 'Guestbook', url: '/guestbook', type: 'page', desc: '방문자 방명록', descEn: 'Visitor guestbook' },
   { title: '푸드맵', titleEn: 'Food Map', url: '/food', type: 'page', desc: '맛집 지도', descEn: 'Restaurant map' },
   { title: 'Tower Defense', titleEn: 'Tower Defense', url: '/tower-defense', type: 'game', desc: '전략 타워 디펜스 게임', descEn: 'Strategy tower-defense game' },
   { title: 'Survive', titleEn: 'Survive', url: '/survive', type: 'game', desc: '탑다운 슈터 게임', descEn: 'Top-down shooter game' },
