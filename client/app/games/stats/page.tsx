@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { FiArrowLeft } from 'react-icons/fi'
 import type { GamesStatsResponse } from '@/app/api/games/stats/route'
+import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
 export const metadata: Metadata = {
   title: 'Stats',
@@ -77,8 +78,8 @@ export default async function GamesStatsPage() {
   const stats = await fetchStats()
 
   return (
-    <div className="min-h-screen bg-neutral-950 pb-16 text-neutral-100">
-      <header className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
+    <SpaceAtmosphere className="min-h-screen pb-16 text-neutral-100">
+      <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
           <Link
             href="/games"
@@ -180,6 +181,6 @@ export default async function GamesStatsPage() {
           </div>
         )}
       </main>
-    </div>
+    </SpaceAtmosphere>
   )
 }

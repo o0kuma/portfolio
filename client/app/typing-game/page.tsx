@@ -7,6 +7,7 @@ import { checkAchievements } from '@/lib/achievements'
 import AchievementToast from '@/components/AchievementToast'
 import type { Achievement } from '@/lib/achievements'
 import { useLanguage } from '@/lib/LanguageContext'
+import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
 const snippets = [
   { id: 1, code: `const greet = (name: string) => \`Hello, \${name}!\`` },
@@ -165,8 +166,8 @@ export default function TypingGamePage() {
   const finalAcc = totalTyped > 0 ? Math.round(correctChars / totalTyped * 100) : 100
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white">
-      <header className="sticky top-0 z-30 border-b border-neutral-800 bg-neutral-950/90 backdrop-blur">
+    <SpaceAtmosphere className="min-h-screen text-white">
+      <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link
             href="/games"
@@ -361,6 +362,6 @@ export default function TypingGamePage() {
           onDone={() => setNewAchievements([])}
         />
       )}
-    </div>
+    </SpaceAtmosphere>
   )
 }

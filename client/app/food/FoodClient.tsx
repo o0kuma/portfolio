@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
+import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
 type ViewMode = 'list' | 'map'
 
@@ -258,9 +259,9 @@ export default function FoodClient({
     : ''
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-50">
+    <SpaceAtmosphere className="min-h-screen text-neutral-50">
       {/* Header */}
-      <div className="border-b border-neutral-800 py-12">
+      <div className="border-b border-white/[0.08] py-12">
         <div className="container-custom">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-px bg-neutral-700" />
@@ -614,6 +615,6 @@ export default function FoodClient({
           </div>
         )}
       </div>
-    </div>
+    </SpaceAtmosphere>
   )
 }
