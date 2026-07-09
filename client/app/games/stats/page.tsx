@@ -78,7 +78,7 @@ export default async function GamesStatsPage() {
   const stats = await fetchStats()
 
   return (
-    <SpaceAtmosphere className="min-h-screen pb-16 text-neutral-100">
+    <SpaceAtmosphere className="theme-locked-dark min-h-screen pb-16 text-neutral-100">
       <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
           <Link

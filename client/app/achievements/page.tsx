@@ -17,7 +17,7 @@ export default function AchievementsPage() {
   const count = earned.length
 
   return (
-    <SpaceAtmosphere className="min-h-screen pb-16 text-white">
+    <SpaceAtmosphere className="theme-locked-dark min-h-screen pb-16 text-white">
       <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
           <Link

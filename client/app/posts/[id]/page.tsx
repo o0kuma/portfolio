@@ -263,7 +263,7 @@ export default function PostDetailPage() {
 
   if (isLoading) {
     return (
-      <SpaceAtmosphere className="min-h-screen text-neutral-50">
+      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
@@ -283,7 +283,7 @@ export default function PostDetailPage() {
 
   if (!post) {
     return (
-      <SpaceAtmosphere className="min-h-screen text-neutral-50">
+      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <h2 className="text-2xl font-bold text-neutral-100 mb-4">
@@ -328,7 +328,7 @@ export default function PostDetailPage() {
   const tocItems = parseHeadings(post.content)
 
   return (
-    <SpaceAtmosphere className="min-h-screen text-neutral-50">
+    <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
       <div className="border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="page-shell py-4">
           <div className="flex items-center justify-between">

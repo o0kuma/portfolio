@@ -261,7 +261,7 @@ export default function PostsPage() {
 
   if (isInitialLoad) {
     return (
-      <SpaceAtmosphere className="min-h-screen text-neutral-50">
+      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
         <div className="page-shell py-16">
           <div className="text-center">
             <div className="inline-block">
@@ -285,7 +285,7 @@ export default function PostsPage() {
   }
 
   return (
-    <SpaceAtmosphere className="relative min-h-screen text-neutral-50">
+    <SpaceAtmosphere className="theme-locked-dark relative min-h-screen text-neutral-50">
       <header className="sticky top-0 z-40 bg-[#030014]/80 backdrop-blur-sm border-b border-white/[0.08]">
         <div className="page-shell py-4">
           <div className="flex items-center justify-between">

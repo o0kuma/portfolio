@@ -259,7 +259,7 @@ export default function FoodClient({
     : ''
 
   return (
-    <SpaceAtmosphere className="min-h-screen text-neutral-50">
+    <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
       {/* Header */}
       <div className="border-b border-white/[0.08] py-12">
         <div className="container-custom">
