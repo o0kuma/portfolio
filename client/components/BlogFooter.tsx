@@ -36,7 +36,7 @@ export default function BlogFooter() {
   }
 
   return (
-    <footer className="relative overflow-hidden border-t border-border bg-surfaceElevated/40 text-textPrimary backdrop-blur-sm">
+    <footer className="relative overflow-hidden border-t border-border bg-surfaceElevated/90 text-textPrimary backdrop-blur-sm">
       <div className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30">
         <div className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-purple-500/15 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-blue-500/15 blur-3xl" />
