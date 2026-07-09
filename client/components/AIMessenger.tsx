@@ -35,7 +35,6 @@ import {
   type SuggestionResponse
 } from '../utils/aiService'
 import { toast } from '@/lib/toast'
-import { isStripeConfigured } from '@/lib/stripe-config'
 
 // Message 인터페이스는 aiService에서 가져온 ChatMessage와 동일하므로 제거
 
@@ -60,7 +59,6 @@ interface AIMessengerProps {
 }
 
 export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: AIMessengerProps) {
-  const stripeReady = isStripeConfigured()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [sessionId, setSessionId] = useState<string>('')
   const [isLoadingHistory, setIsLoadingHistory] = useState(false)
@@ -473,14 +471,6 @@ export default function AIMessenger({ isOpen, onClose, context = 'portfolio' }: 
             </div>
           </div>
           <div className="flex items-center gap-1">
-            {!subscription?.isPremium && stripeReady && (
-              <button
-                onClick={() => window.open('/subscription', '_blank')}
-                className="px-2 py-1 text-[10px] font-mono border border-neutral-700 text-neutral-400 rounded hover:border-neutral-500 hover:text-neutral-200 transition-colors"
-              >
-                Upgrade
-              </button>
-            )}
             <button
               onClick={() => {
                 const newSessionId = createSessionId()

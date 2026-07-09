@@ -146,10 +146,6 @@ export const translations = {
         terms: '이용약관',
       },
     },
-    subscription: {
-      comingSoon: '프리미엄 구독 결제는 준비 중입니다.',
-      comingSoonDetail: 'Stripe 연동 후 이용할 수 있습니다.',
-    },
     tetrisGame: {
       stage: '단계',
       bestStage: '최고 단계',
@@ -658,10 +654,6 @@ export const translations = {
         privacy: 'Privacy Policy',
         terms: 'Terms of Service',
       },
-    },
-    subscription: {
-      comingSoon: 'Premium subscription checkout is coming soon.',
-      comingSoonDetail: 'Available after Stripe integration.',
     },
     tetrisGame: {
       stage: 'Stage',
