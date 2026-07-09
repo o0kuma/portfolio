@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { recordAiRequest } from '@/lib/aiStats'
 
 let client: Anthropic | null = null
 function getClient(): Anthropic {
@@ -82,6 +83,7 @@ export async function POST(request: NextRequest) {
     })
 
     const reply = msg.content[0].type === 'text' ? msg.content[0].text : ''
+    recordAiRequest()
 
     return NextResponse.json({ reply })
   } catch (e: unknown) {

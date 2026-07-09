@@ -3,8 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
-import { verifyAdminSessionToken } from '@/lib/admin-session'
-import { cookies } from 'next/headers'
+import { isAdminAuthenticated } from '@/lib/adminAuth'
 
 interface PostRow {
   id: number
@@ -15,10 +14,7 @@ interface PostRow {
 
 export async function GET(request: NextRequest) {
   void request
-  const cookieStore = await cookies()
-  const token = cookieStore.get('admin_token')?.value
-  const isValid = await verifyAdminSessionToken(token)
-  if (!isValid) {
+  if (!(await isAdminAuthenticated())) {
     return NextResponse.json({ success: false, error: '관리자 인증이 필요합니다.' }, { status: 401 })
   }
 

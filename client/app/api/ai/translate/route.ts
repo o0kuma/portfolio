@@ -6,6 +6,7 @@ import * as fs from 'fs'
 import * as path from 'path'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
 import { reserveAnonymousAiQuota, addAnonymousAiTokens } from '@/lib/ai-chat-quota'
+import { recordAiRequest } from '@/lib/aiStats'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
@@ -136,6 +137,7 @@ export async function POST(request: Request) {
     if (response.ok) {
       const data = await response.json()
       translatedText = data.choices?.[0]?.message?.content?.trim() || originalText
+      recordAiRequest()
     }
 
     await addAnonymousAiTokens(

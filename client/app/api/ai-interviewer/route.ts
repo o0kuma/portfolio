@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { recordAiRequest } from '@/lib/aiStats'
 
 const SYSTEM_PROMPT = `You are an AI interviewer assistant for okuma(Seungil Oh)'s portfolio.
 About: 프론트엔드 개발자 겸 웹퍼블리셔, 1990년생, 개발경력 7년+.
@@ -84,6 +85,7 @@ export async function POST(request: NextRequest) {
 
     const data = await res.json() as GeminiResponse
     const reply = data.choices?.[0]?.message?.content ?? '응답을 생성하지 못했습니다.'
+    recordAiRequest()
     return NextResponse.json({ reply })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'

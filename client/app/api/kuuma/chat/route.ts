@@ -2,6 +2,7 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
+import { recordAiRequest } from '@/lib/aiStats'
 
 const GEMINI_MODEL = process.env.GEMINI_MODEL?.trim() || 'gemini-2.5-flash'
 
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
 
     const data = await res.json() as { choices?: { message?: { content?: string } }[] }
     const reply = data.choices?.[0]?.message?.content?.trim() || '응답을 받지 못했어요.'
+    recordAiRequest()
     return NextResponse.json({ reply })
   } catch (e) {
     console.error('[kuuma/chat]', e)
