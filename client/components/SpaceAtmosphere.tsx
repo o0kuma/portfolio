@@ -1,3 +1,8 @@
+'use client'
+
+import { useTimeOfDay, type TimeOfDay } from '@/lib/useTimeOfDay'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+
 /**
  * Cinematic "deep space" background layer — the same recipe used behind the
  * home page's blog carousel (radial glow + bottom vignette + inset shadow
@@ -5,8 +10,35 @@
  * same atmosphere instead of a flat bg-neutral-950. Pure CSS, no canvas —
  * cheap enough to use on every page, including long-scroll reading pages.
  *
+ * The glow tint shifts with local time of day (dawn/day/dusk/night) so the
+ * background feels alive without any extra network or GPU cost.
+ *
  * Usage: wrap a section/page in this and give children `relative z-10`.
  */
+
+const PALETTES: Record<TimeOfDay, { base: string; glow: string; vignette: number }> = {
+  dawn: {
+    base: '#0c0a1f',
+    glow: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(120,70,90,0.32) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(0,0,0,0.8) 0%, transparent 50%)',
+    vignette: 0.5,
+  },
+  day: {
+    base: '#0a0f2b',
+    glow: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(45,70,120,0.32) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(0,0,0,0.75) 0%, transparent 50%)',
+    vignette: 0.45,
+  },
+  dusk: {
+    base: '#12081f',
+    glow: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(130,60,60,0.35) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(0,0,0,0.82) 0%, transparent 50%)',
+    vignette: 0.52,
+  },
+  night: {
+    base: '#030014',
+    glow: 'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(30,27,75,0.35) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(0,0,0,0.85) 0%, transparent 50%)',
+    vignette: 0.55,
+  },
+}
+
 export default function SpaceAtmosphere({
   children,
   className = '',
@@ -14,17 +46,27 @@ export default function SpaceAtmosphere({
   children: React.ReactNode
   className?: string
 }) {
+  const timeOfDay = useTimeOfDay()
+  const reduced = usePrefersReducedMotion()
+  const palette = PALETTES[timeOfDay]
+  const transition = reduced ? 'none' : 'background-color 3s ease, background-image 3s ease, box-shadow 3s ease'
+
   return (
     // Light mode keeps the site's existing light palette (bg-neutral-950 is
     // remapped to a warm light color by .portfolio-page's light overrides);
     // the space atmosphere is a dark-mode-only treatment.
-    <div className={`relative bg-neutral-950 dark:bg-[#030014] ${className}`}>
+    <div
+      className={`relative bg-neutral-950 dark:bg-[color:var(--space-base)] ${className}`}
+      style={{ '--space-base': palette.base, transition } as React.CSSProperties}
+    >
       <div
-        className="pointer-events-none fixed inset-0 z-0 hidden dark:block dark:bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(30,27,75,0.35)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,rgba(0,0,0,0.85)_0%,transparent_50%)]"
+        className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
+        style={{ backgroundImage: palette.glow, transition }}
         aria-hidden
       />
       <div
-        className="pointer-events-none fixed inset-0 z-0 hidden dark:block dark:shadow-[inset_0_0_160px_60px_rgba(0,0,0,0.55)]"
+        className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
+        style={{ boxShadow: `inset 0 0 160px 60px rgba(0,0,0,${palette.vignette})`, transition }}
         aria-hidden
       />
       <div
