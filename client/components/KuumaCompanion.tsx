@@ -99,6 +99,23 @@ const sectionMessagesEn: Record<string, string[]> = {
 const chipsKo = ['어떤 프로젝트가 있나요?', '연락 방법은?', '어떤 기술 써요?']
 const chipsEn = ['What projects are there?', 'How can I contact you?', 'What tech do you use?']
 
+const dwellMessagesKo: Record<string, string[]> = {
+  projects: ['이 프로젝트들, 자세히 보고 계시네요! 궁금한 거 있으면 클릭해보세요.', '마음에 드는 프로젝트 있으세요? 클릭하면 자세히 볼 수 있어요.'],
+  games: ['게임 목록 구경 중이시군요! 하나 직접 플레이해보세요.', '어떤 게임이 제일 재밌어 보이세요?'],
+  skills: ['기술 스택 꼼꼼히 보고 계시네요!', '이 정도면 웬만한 건 다 만들 수 있어요 :)'],
+  posts: ['글 목록 훑어보고 계시네요. 관심 있는 주제 있으세요?'],
+}
+const dwellMessagesEn: Record<string, string[]> = {
+  projects: ["Taking a close look at the projects? Click one if something catches your eye!", 'Got a favorite yet? Click to see the details.'],
+  games: ["Browsing the games? Try one out for real!", 'Which one looks the most fun to you?'],
+  skills: ['Studying the stack closely, huh?', "That's basically enough to build anything :)"],
+  posts: ['Skimming through the posts. Anything catch your interest?'],
+}
+
+const RETURNING_KEY = 'kuuma_visited'
+const returningMsgKo = '오, 다시 오셨네요! 반가워요 🤖'
+const returningMsgEn = 'Oh, welcome back! Good to see you 🤖'
+
 type Emotion = 'idle' | 'happy' | 'thinking' | 'surprised' | 'error'
 
 export default function KuumaCompanion() {
@@ -125,6 +142,8 @@ export default function KuumaCompanion() {
   const bubbleTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const emotionTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const dwellShownRef = useRef<Set<string>>(new Set())
+  const isReturningRef = useRef(false)
 
   function speak(text: string) {
     if (!ttsEnabled || typeof window === 'undefined') return
@@ -143,6 +162,14 @@ export default function KuumaCompanion() {
     emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 2000)
     if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current)
     bubbleTimeoutRef.current = setTimeout(() => setBubble(null), 5000)
+  }, [])
+
+  // Returning-visitor detection (checked once, before any bubble fires)
+  useEffect(() => {
+    try {
+      isReturningRef.current = localStorage.getItem(RETURNING_KEY) === '1'
+      localStorage.setItem(RETURNING_KEY, '1')
+    } catch {}
   }, [])
 
   // Smooth mouse follow with lerp
@@ -168,17 +195,32 @@ export default function KuumaCompanion() {
     }
   }, [])
 
-  // Idle wander behavior
+  // Idle wander behavior + behavior-based dwell nudge
   useEffect(() => {
     const checkIdle = setInterval(() => {
-      if (Date.now() - lastMoveRef.current > 10000) {
+      const idleMs = Date.now() - lastMoveRef.current
+      if (idleMs > 10000) {
         const x = Math.random() * (window.innerWidth - 100) + 50
         const y = Math.random() * (window.innerHeight - 100) + 50
         targetPos.current = { x, y }
       }
+      // If the visitor has lingered (mouse mostly still) on a content-heavy
+      // section for a while, nudge once per section-visit with a targeted
+      // comment instead of waiting for the generic rotating message.
+      if (idleMs > 20000 && !dwellShownRef.current.has(currentSection)) {
+        const dwellMessages = localeRef.current === 'en' ? dwellMessagesEn : dwellMessagesKo
+        const pool = dwellMessages[currentSection]
+        if (pool) {
+          dwellShownRef.current.add(currentSection)
+          const msg = pool[Math.floor(Math.random() * pool.length)]
+          showBubble(msg)
+          speak(msg)
+        }
+      }
     }, 5000)
     return () => clearInterval(checkIdle)
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSection, showBubble])
 
   // Section detection
   useEffect(() => {
@@ -229,6 +271,7 @@ export default function KuumaCompanion() {
   // Proactive messages on section change
   useEffect(() => {
     if (sectionTimerRef.current) clearInterval(sectionTimerRef.current)
+    dwellShownRef.current = new Set()
 
     const sectionMessages = localeRef.current === 'en' ? sectionMessagesEn : sectionMessagesKo
     const msgs = sectionMessages[currentSection] || sectionMessages.home
@@ -236,7 +279,9 @@ export default function KuumaCompanion() {
     const chatHint = localeRef.current === 'en' ? '  (Press J to chat)' : '  (J키로 대화하기)'
 
     const initialTimer = setTimeout(() => {
-      const bubbleText = randomMsg() + chatHint
+      const returningMsg = localeRef.current === 'en' ? returningMsgEn : returningMsgKo
+      const bubbleText = (isReturningRef.current ? returningMsg + '  ' : '') + randomMsg() + chatHint
+      isReturningRef.current = false
       showBubble(bubbleText)
       speak(bubbleText)
       sectionTimerRef.current = setInterval(
@@ -441,13 +486,13 @@ export default function KuumaCompanion() {
         </div>
       </div>
 
-      {/* Fixed chat toggle button — bottom-right, always accessible */}
+      {/* Fixed chat toggle button — bottom-left, always accessible (bottom-right is the Portfolio Assistant widget) */}
       <button
         onClick={() => setIsOpen((o) => !o)}
         style={{
           position: 'fixed',
           bottom: '24px',
-          right: '24px',
+          left: '24px',
           zIndex: 10001,
           pointerEvents: 'auto',
           outline: 'none',
@@ -470,13 +515,13 @@ export default function KuumaCompanion() {
         </div>
       </button>
 
-      {/* Chat panel — fixed bottom-right, independent of cursor position */}
+      {/* Chat panel — fixed bottom-left, independent of cursor position */}
       {isOpen && (
         <div
           style={{
             position: 'fixed',
             bottom: '24px',
-            right: '24px',
+            left: '24px',
             zIndex: 10000,
             pointerEvents: 'auto',
           }}

@@ -4,6 +4,8 @@ import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
 import ChatbotWidgetClient from '@/components/ChatbotWidgetClient'
+import KuumaCompanionClient from '@/components/KuumaCompanionClient'
+import AmbientSoundtrackClient from '@/components/AmbientSoundtrackClient'
 
 
 import LiveCursorsClient from '@/components/LiveCursorsClient'
@@ -167,6 +169,8 @@ export default function RootLayout({
         <Providers>{children}</Providers>
         <ToastContainer />
         <ChatbotWidgetClient />
+        <KuumaCompanionClient />
+        <AmbientSoundtrackClient />
         <LiveCursorsClient />
       </body>
     </html>
