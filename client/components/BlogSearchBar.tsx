@@ -152,15 +152,17 @@ export default function BlogSearchBar({
                   exit={{ opacity: 0, scale: 0.8 }}
                   type="button"
                   onClick={handleClear}
+                  aria-label="Clear search"
                   className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
                 >
                   <FiX size={18} />
                 </motion.button>
               )}
-              
+
               <motion.button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label="Toggle filters"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
                 className={`p-1.5 rounded-lg transition-all duration-300 ${

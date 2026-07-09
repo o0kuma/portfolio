@@ -120,15 +120,17 @@ export default function SearchBar({
                   exit={{ opacity: 0, scale: 0.8 }}
                   type="button"
                   onClick={handleClear}
+                  aria-label={locale === 'en' ? 'Clear search' : '검색어 지우기'}
                   className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   <FiX size={18} />
                 </motion.button>
               )}
-              
+
               <button
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
+                aria-label={locale === 'en' ? 'Toggle filters' : '필터 열기/닫기'}
                 className={`p-1 rounded transition-colors ${
                   showFilters || hasActiveFilters
                     ? 'text-primary-600 bg-primary-100 dark:bg-primary-900/20'

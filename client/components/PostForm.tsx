@@ -129,11 +129,13 @@ export default function PostForm({ isOpen, onClose, post, onSave }: PostFormProp
               onClick={() => setPreviewMode(!previewMode)}
               className="p-2 text-gray-400 hover:text-primary-600 transition-colors"
               title={previewMode ? '편집 모드' : '미리보기'}
+              aria-label={previewMode ? '편집 모드' : '미리보기'}
             >
               <FiEye size={20} />
             </button>
             <button
               onClick={onClose}
+              aria-label="닫기"
               className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <FiX size={24} />

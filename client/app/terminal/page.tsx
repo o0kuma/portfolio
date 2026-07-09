@@ -239,6 +239,7 @@ export default function TerminalPage() {
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
+            aria-label="Terminal command input"
             className="flex-1 bg-transparent text-green-300 outline-none caret-green-400"
             autoComplete="off"
             spellCheck={false}
