@@ -14,7 +14,8 @@ export async function GET(request: NextRequest) {
     const result = await dbQuery('SELECT * FROM advertisements ORDER BY created_at DESC')
     return NextResponse.json({ success: true, ads: result.rows })
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    console.error('[/api/admin/ads GET]', error.message)
+    return NextResponse.json({ success: false, error: '광고 목록을 불러오지 못했습니다.' }, { status: 500 })
   }
 }
 
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, ad: result.rows[0] }, { status: 201 })
   } catch (error: any) {
     console.error('[/api/admin/ads POST]', error.message)
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: '광고를 생성하지 못했습니다.' }, { status: 500 })
   }
 }
 

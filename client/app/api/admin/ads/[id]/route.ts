@@ -42,7 +42,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
     return NextResponse.json({ success: true, ad: result.rows[0] })
   } catch (error: any) {
     console.error('[/api/admin/ads/[id] PUT]', error.message)
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: '광고를 수정하지 못했습니다.' }, { status: 500 })
   }
 }
 
@@ -57,7 +57,7 @@ export async function DELETE(request: NextRequest, { params }: Ctx) {
     return NextResponse.json({ success: true })
   } catch (error: any) {
     console.error('[/api/admin/ads/[id] DELETE]', error.message)
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 })
+    return NextResponse.json({ success: false, error: '광고를 삭제하지 못했습니다.' }, { status: 500 })
   }
 }
 
