@@ -9,7 +9,7 @@
     --color-surface-elevated: 255 255 255;
     --color-border: 226 232 240;
     --color-text-primary: 15 23 42;
-    --color-text-muted: 100 116 139;
+    --color-text-muted: 71 85 105;
     --color-accent: 37 99 235;
     --color-accent-muted: 59 130 246;
     --section-padding-y: 4rem;
@@ -162,6 +162,23 @@
 .light .border-neutral-800 { border-color: #e5e5e5; }
 .light .border-neutral-700 { border-color: #d4d4d4; }
 .light .border-neutral-600 { border-color: #a3a3a3; }
+
+/* Pages with no light/dark toggle (always-dark reading/game pages) opt out of
+   the light-mode remap above by wrapping in .theme-locked-dark — otherwise
+   their neutral-* utility classes get inverted for a light theme they never
+   render, producing near-invisible text. Higher specificity wins without !important. */
+.light .theme-locked-dark .bg-neutral-950 { background-color: #0a0a0a; }
+.light .theme-locked-dark .bg-neutral-900 { background-color: #171717; }
+.light .theme-locked-dark .bg-neutral-800 { background-color: #262626; }
+.light .theme-locked-dark .text-neutral-50 { color: #fafafa; }
+.light .theme-locked-dark .text-neutral-100 { color: #f5f5f5; }
+.light .theme-locked-dark .text-neutral-200 { color: #e5e5e5; }
+.light .theme-locked-dark .text-neutral-300 { color: #d4d4d4; }
+.light .theme-locked-dark .text-neutral-400 { color: #a3a3a3; }
+.light .theme-locked-dark .text-neutral-500 { color: #737373; }
+.light .theme-locked-dark .border-neutral-800 { border-color: #262626; }
+.light .theme-locked-dark .border-neutral-700 { border-color: #404040; }
+.light .theme-locked-dark .border-neutral-600 { border-color: #525252; }
 
 /* ── Terminal theme overrides ──────────────────────────── */
 [data-theme="terminal"] body { background-color: #0a0f0a; color: #4ade80; }
@@ -336,9 +353,9 @@ html:not(.dark) .portfolio-page .text-neutral-50,
 html:not(.dark) .portfolio-page .text-neutral-100 { color: #3d3a36 !important; }
 html:not(.dark) .portfolio-page .text-neutral-200 { color: #524f4b !important; }
 html:not(.dark) .portfolio-page .text-neutral-300 { color: #706c67 !important; }
-html:not(.dark) .portfolio-page .text-neutral-400 { color: #928c84 !important; }
-html:not(.dark) .portfolio-page .text-neutral-500 { color: #a8a098 !important; }
-html:not(.dark) .portfolio-page .text-neutral-600 { color: #bfb9b0 !important; }
+html:not(.dark) .portfolio-page .text-neutral-400 { color: #6b655e !important; }
+html:not(.dark) .portfolio-page .text-neutral-500 { color: #5c5750 !important; }
+html:not(.dark) .portfolio-page .text-neutral-600 { color: #6e6860 !important; }
 
 /* Hover text */
 html:not(.dark) .portfolio-page .hover\:text-neutral-50:hover,
