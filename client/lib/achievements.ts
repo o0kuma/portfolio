@@ -29,6 +29,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   // Global
   { id: 'all_games', name: '게임 마니아', description: '모든 게임 플레이', game: 'all', icon: '🎮' },
   { id: 'first_game', name: '첫 도전', description: '첫 번째 게임 플레이', game: 'all', icon: '🌟' },
+  { id: 'site_explorer', name: '탐험가', description: '사이트 곳곳을 모두 둘러봄', game: 'all', icon: '🗺️' },
 ]
 
 const STORAGE_KEY = 'portfolio_achievements'
@@ -46,12 +47,14 @@ export function getEarnedIds(): string[] {
   return getEarned().map((e) => e.id)
 }
 
-export function markEarned(id: string): void {
-  if (typeof window === 'undefined') return
+/** Records an achievement as earned; returns true only the first time. */
+export function markEarned(id: string): boolean {
+  if (typeof window === 'undefined') return false
   const earned = getEarned()
-  if (earned.find((e) => e.id === id)) return
+  if (earned.find((e) => e.id === id)) return false
   earned.push({ id, earnedAt: new Date().toISOString() })
   localStorage.setItem(STORAGE_KEY, JSON.stringify(earned))
+  return true
 }
 
 function getPlayedGames(): string[] {

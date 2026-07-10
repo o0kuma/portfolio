@@ -6,6 +6,7 @@ import ToastContainer from '@/components/Toast'
 import ChatbotWidgetClient from '@/components/ChatbotWidgetClient'
 import KuumaCompanionClient from '@/components/KuumaCompanionClient'
 import AmbientSoundtrackClient from '@/components/AmbientSoundtrackClient'
+import ExplorationBadgeClient from '@/components/ExplorationBadgeClient'
 
 
 import LiveCursorsClient from '@/components/LiveCursorsClient'
@@ -171,6 +172,7 @@ export default function RootLayout({
         <ChatbotWidgetClient />
         <KuumaCompanionClient />
         <AmbientSoundtrackClient />
+        <ExplorationBadgeClient />
         <LiveCursorsClient />
       </body>
     </html>
