@@ -15,6 +15,7 @@ import {
   FiExternalLink,
 } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
+import TrendChart from '@/components/admin/TrendChart'
 
 interface GameStats {
   tetrisBestScore: number
@@ -114,6 +115,10 @@ export default function AdminDashboardPage() {
   const [stats, setStats] = useState<SiteStats | null>(null)
   const [aiStats, setAiStats] = useState<{ totalRequests: number; requestsToday: number } | null>(null)
   const [topPosts, setTopPosts] = useState<TopPost[]>([])
+  const [trends, setTrends] = useState<{
+    games: { tetris: { day: string; count: number }[]; survive: { day: string; count: number }[]; towerDefense: { day: string; count: number }[] }
+    aiUsage: { day: string; count: number }[]
+  } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -144,6 +149,16 @@ export default function AdminDashboardPage() {
     } catch {}
   }
 
+  const fetchTrends = async () => {
+    try {
+      const res = await fetch('/api/admin/trends', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.success) setTrends({ games: data.games, aiUsage: data.aiUsage })
+      }
+    } catch {}
+  }
+
   const fetchStats = async () => {
     try {
       setIsLoading(true)
@@ -158,6 +173,7 @@ export default function AdminDashboardPage() {
       setIsLoggedIn(true)
       setStats(data.stats as SiteStats)
       fetchTopPosts()
+      fetchTrends()
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t.adminDashboard.errorLoad)
     } finally {
@@ -353,6 +369,43 @@ export default function AdminDashboardPage() {
                 <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">{en ? 'Tower Defense Best Wave' : '타워 디펜스 최고 웨이브'}</p>
                 <p className="text-2xl font-bold text-purple-500">{stats?.gameStats?.towerBestWave ?? 0}</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Trends */}
+        <section className="mb-10">
+          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+            {en ? 'Trends (last 7 days)' : '추이 (최근 7일)'}
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="card rounded-xl p-6">
+              <p className="mb-3 font-semibold text-gray-900 dark:text-white text-sm">
+                {en ? 'Game plays per day' : '게임 플레이 수'}
+              </p>
+              {trends ? (
+                <TrendChart
+                  series={[
+                    { key: 'tetris', label: 'Tetris', color: '#2a78d6', points: trends.games.tetris },
+                    { key: 'survive', label: 'Survive', color: '#1baf7a', points: trends.games.survive },
+                    { key: 'tower', label: en ? 'Tower Defense' : '타워 디펜스', color: '#eda100', points: trends.games.towerDefense },
+                  ]}
+                />
+              ) : (
+                <div className="py-10 text-center text-sm text-gray-400">{en ? 'Loading...' : '불러오는 중...'}</div>
+              )}
+            </div>
+            <div className="card rounded-xl p-6">
+              <p className="mb-3 font-semibold text-gray-900 dark:text-white text-sm">
+                {en ? 'AI requests per day' : 'AI 요청 수'}
+              </p>
+              {trends ? (
+                <TrendChart
+                  series={[{ key: 'ai', label: en ? 'AI usage' : 'AI 사용량', color: '#2a78d6', points: trends.aiUsage }]}
+                />
+              ) : (
+                <div className="py-10 text-center text-sm text-gray-400">{en ? 'Loading...' : '불러오는 중...'}</div>
+              )}
             </div>
           </div>
         </section>
