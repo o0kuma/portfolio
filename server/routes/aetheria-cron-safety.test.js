@@ -11,14 +11,19 @@ describe('aetheria cron safety', () => {
     expect(source).toMatch(/status:\s*503/);
   });
 
-  test('tick engine uses advisory lock and per-agent transactions', () => {
+  test('tick engine holds one DB client for advisory lock and uses per-agent transactions', () => {
     const enginePath = path.resolve(__dirname, '../../client/lib/aetheria/engine.ts');
-    const source = fs.readFileSync(enginePath, 'utf8');
+    const neonPath = path.resolve(__dirname, '../../client/lib/neon-server.ts');
+    const engineSource = fs.readFileSync(enginePath, 'utf8');
+    const neonSource = fs.readFileSync(neonPath, 'utf8');
 
-    expect(source).toMatch(/pg_try_advisory_lock/);
-    expect(source).toMatch(/pg_advisory_unlock/);
-    expect(source).toMatch(/dbTransaction/);
-    expect(source).toMatch(/checkpointIndex/);
+    expect(engineSource).toMatch(/withHeldDbClient/);
+    expect(engineSource).toMatch(/pg_try_advisory_lock/);
+    expect(engineSource).toMatch(/pg_advisory_unlock/);
+    expect(engineSource).toMatch(/dbTransactionWithClient/);
+    expect(engineSource).toMatch(/UPDATE aetheria_tick_state SET last_tick_id/);
+    expect(neonSource).toMatch(/withHeldDbClient/);
+    expect(neonSource).toMatch(/dbTransactionWithClient/);
   });
 
   test('tick engine recovers from wipeout and stale batch cursor', () => {

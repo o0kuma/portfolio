@@ -1,4 +1,9 @@
-import { Pool, QueryResult, QueryResultRow } from 'pg'
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg'
+
+export type DbQueryFn = <T extends QueryResultRow = any>(
+  text: string,
+  params?: any[],
+) => Promise<QueryResult<T>>
 
 // Lazily initialized so missing DATABASE_URL produces a clear error at query time
 // rather than silently defaulting to 127.0.0.1:5432.
@@ -31,22 +36,51 @@ export async function dbQuery<T extends QueryResultRow = any>(
   return getPool().query<T>(text, params)
 }
 
-/** Run queries in a single transaction; rolls back on any thrown error. */
-export async function dbTransaction<T>(
-  fn: (query: typeof dbQuery) => Promise<T>,
+function makeQueryFn(client: PoolClient): DbQueryFn {
+  return <T extends QueryResultRow = any>(text: string, params: any[] = []) =>
+    client.query<T>(text, params)
+}
+
+/**
+ * Hold one pooled connection for the callback. Use for session-scoped advisory locks
+ * so lock/unlock run on the same PostgreSQL session.
+ */
+export async function withHeldDbClient<T>(
+  fn: (query: DbQueryFn, client: PoolClient) => Promise<T>,
 ): Promise<T> {
   const client = await getPool().connect()
-  const query = <R extends QueryResultRow = any>(text: string, params: any[] = []) =>
-    client.query<R>(text, params)
-
+  const query = makeQueryFn(client)
   try {
-    await client.query('BEGIN')
+    return await fn(query, client)
+  } finally {
+    client.release()
+  }
+}
+
+/** Run queries in a single transaction on an already-held client. */
+export async function dbTransactionWithClient<T>(
+  client: PoolClient,
+  fn: (query: DbQueryFn) => Promise<T>,
+): Promise<T> {
+  const query = makeQueryFn(client)
+  await client.query('BEGIN')
+  try {
     const result = await fn(query)
     await client.query('COMMIT')
     return result
   } catch (e) {
     await client.query('ROLLBACK')
     throw e
+  }
+}
+
+/** Run queries in a single transaction; rolls back on any thrown error. */
+export async function dbTransaction<T>(
+  fn: (query: DbQueryFn) => Promise<T>,
+): Promise<T> {
+  const client = await getPool().connect()
+  try {
+    return await dbTransactionWithClient(client, fn)
   } finally {
     client.release()
   }

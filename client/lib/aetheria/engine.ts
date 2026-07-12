@@ -1,4 +1,4 @@
-import { dbQuery, dbTransaction } from '@/lib/neon-server'
+import { dbQuery, dbTransactionWithClient, withHeldDbClient, type DbQueryFn } from '@/lib/neon-server'
 import { decideAgentAction } from './llm-router'
 import { moderateText } from './moderation'
 import { recordSpend } from './budget'
@@ -109,7 +109,7 @@ export async function ensureAgentTables() {
 
 // 전멸 시 새 시즌 시작 — 모든 에이전트를 초기 상태(체력·골드 100, 무작위 위치, 생존)로 되살리고 시즌 번호 +1.
 // 과거 이벤트 로그는 보존한다(명예의 전당/기록용).
-export async function startNewSeason(query: typeof dbQuery, currentTick: number): Promise<number> {
+export async function startNewSeason(query: DbQueryFn, currentTick: number): Promise<number> {
   for (const a of INITIAL_AGENTS) {
     const x = Math.floor(Math.random() * GRID_SIZE)
     const y = Math.floor(Math.random() * GRID_SIZE)
@@ -145,8 +145,8 @@ function toAgentState(row: {
   }
 }
 
-async function loadAliveAgents(): Promise<AgentState[]> {
-  const res = await dbQuery<Parameters<typeof toAgentState>[0]>(
+async function loadAliveAgents(query: DbQueryFn = dbQuery): Promise<AgentState[]> {
+  const res = await query<Parameters<typeof toAgentState>[0]>(
     `SELECT * FROM aetheria_agents WHERE status = 'alive' ORDER BY id`,
   )
   return res.rows.map(toAgentState)
@@ -181,9 +181,9 @@ export function resolveTickCursor(
   return { effectiveIndex, staleCursor, tickIdDelta }
 }
 
-async function recoverFromWipeout(lastTickId: number): Promise<TickRunResult> {
-  const newSeason = await startNewSeason(dbQuery, lastTickId)
-  await dbQuery(
+async function recoverFromWipeout(lastTickId: number, query: DbQueryFn = dbQuery): Promise<TickRunResult> {
+  const newSeason = await startNewSeason(query, lastTickId)
+  await query(
     `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
      VALUES ($1,'system','season',$2,$3)`,
     [
@@ -206,208 +206,212 @@ async function recoverFromWipeout(lastTickId: number): Promise<TickRunResult> {
 export async function runTickBatch(): Promise<TickRunResult> {
   await ensureAgentTables()
 
-  const lockRes = await dbQuery<{ acquired: boolean }>(
-    `SELECT pg_try_advisory_lock($1) AS acquired`,
-    [TICK_ADVISORY_LOCK_KEY],
-  )
-  if (!lockRes.rows[0]?.acquired) {
-    const stateRes = await dbQuery<{ last_tick_id: number }>(
-      `SELECT last_tick_id FROM aetheria_tick_state WHERE id = 1`,
+  return withHeldDbClient(async (query, client) => {
+    const lockRes = await query<{ acquired: boolean }>(
+      `SELECT pg_try_advisory_lock($1) AS acquired`,
+      [TICK_ADVISORY_LOCK_KEY],
     )
-    const lastTickId = stateRes.rows[0]?.last_tick_id ?? 0
-    return { tickId: lastTickId, processed: 0, failed: 0, died: 0, skipped: 'tick already in progress' }
-  }
-
-  try {
-    const stateRes = await dbQuery<{ last_tick_id: number; last_agent_index: number }>(
-      `SELECT last_tick_id, last_agent_index FROM aetheria_tick_state WHERE id = 1`,
-    )
-    const lastTickId = stateRes.rows[0]?.last_tick_id ?? 0
-    const lastIndex = stateRes.rows[0]?.last_agent_index ?? 0
-
-    const agents = await loadAliveAgents()
-    if (agents.length === 0) {
-      return recoverFromWipeout(lastTickId)
+    if (!lockRes.rows[0]?.acquired) {
+      const stateRes = await query<{ last_tick_id: number }>(
+        `SELECT last_tick_id FROM aetheria_tick_state WHERE id = 1`,
+      )
+      const lastTickId = stateRes.rows[0]?.last_tick_id ?? 0
+      return { tickId: lastTickId, processed: 0, failed: 0, died: 0, skipped: 'tick already in progress' }
     }
 
-    const { effectiveIndex, staleCursor, tickIdDelta } = resolveTickCursor(lastIndex, agents.length)
-    if (staleCursor) {
-      await dbQuery(`UPDATE aetheria_tick_state SET last_agent_index = 0 WHERE id = 1`)
-    }
+    try {
+      const stateRes = await query<{ last_tick_id: number; last_agent_index: number }>(
+        `SELECT last_tick_id, last_agent_index FROM aetheria_tick_state WHERE id = 1`,
+      )
+      const lastTickId = stateRes.rows[0]?.last_tick_id ?? 0
+      const lastIndex = stateRes.rows[0]?.last_agent_index ?? 0
 
-    const tickId = lastTickId + tickIdDelta
-    const batch = agents.slice(effectiveIndex, effectiveIndex + MAX_AGENTS_PER_TICK_BATCH)
+      const agents = await loadAliveAgents(query)
+      if (agents.length === 0) {
+        return recoverFromWipeout(lastTickId, query)
+      }
 
-    let processed = 0
-    let failed = 0
-    let died = 0
-    for (const agent of batch) {
-      try {
-        const decision = await decideAgentAction(agent, nearbyOf(agent, agents))
+      const { effectiveIndex, staleCursor, tickIdDelta } = resolveTickCursor(lastIndex, agents.length)
+      if (staleCursor) {
+        await query(`UPDATE aetheria_tick_state SET last_agent_index = 0 WHERE id = 1`)
+      }
 
-        // 이동 반영 (그리드 범위로 클램프)
-        let x = agent.x
-        let y = agent.y
-        if (decision.moveTo) {
-          x = Math.max(0, Math.min(GRID_SIZE - 1, Math.round(decision.moveTo.x)))
-          y = Math.max(0, Math.min(GRID_SIZE - 1, Math.round(decision.moveTo.y)))
-        }
+      const tickId = lastTickId + tickIdDelta
+      const batch = agents.slice(effectiveIndex, effectiveIndex + MAX_AGENTS_PER_TICK_BATCH)
 
-        // 거래는 구조화 필드로만 처리 — 상대 텍스트를 프롬프트에 재주입하지 않는다.
-        // 실제로 상대에게 골드가 전달되려면 targetAgentId가 근처(nearbyOf)에 있는 살아있는 에이전트여야 한다.
-        let gold = agent.gold
-        let tradeRecipient: AgentState | null = null
-        let tradeAmount = 0
-        if (decision.action === 'trade_offer' && typeof decision.tradeAmount === 'number') {
-          const nearby = nearbyOf(agent, agents)
-          const target = decision.targetAgentId
-            ? nearby.find((a) => a.id === decision.targetAgentId)
-            : null
-          if (target) {
-            tradeAmount = Math.max(0, Math.min(Math.round(decision.tradeAmount), gold))
-            if (tradeAmount > 0) {
-              // trader는 거래 효율이 좋아, 상대는 tradeAmount를 받되 본인은 10% 적게 소모
-              const cost = agent.role === 'trader' ? Math.round(tradeAmount * 0.9) : tradeAmount
-              gold -= cost
-              tradeRecipient = target
+      let processed = 0
+      let failed = 0
+      let died = 0
+      for (const agent of batch) {
+        try {
+          const decision = await decideAgentAction(agent, nearbyOf(agent, agents))
+
+          // 이동 반영 (그리드 범위로 클램프)
+          let x = agent.x
+          let y = agent.y
+          if (decision.moveTo) {
+            x = Math.max(0, Math.min(GRID_SIZE - 1, Math.round(decision.moveTo.x)))
+            y = Math.max(0, Math.min(GRID_SIZE - 1, Math.round(decision.moveTo.y)))
+          }
+
+          // 거래는 구조화 필드로만 처리 — 상대 텍스트를 프롬프트에 재주입하지 않는다.
+          // 실제로 상대에게 골드가 전달되려면 targetAgentId가 근처(nearbyOf)에 있는 살아있는 에이전트여야 한다.
+          let gold = agent.gold
+          let tradeRecipient: AgentState | null = null
+          let tradeAmount = 0
+          if (decision.action === 'trade_offer' && typeof decision.tradeAmount === 'number') {
+            const nearby = nearbyOf(agent, agents)
+            const target = decision.targetAgentId
+              ? nearby.find((a) => a.id === decision.targetAgentId)
+              : null
+            if (target) {
+              tradeAmount = Math.max(0, Math.min(Math.round(decision.tradeAmount), gold))
+              if (tradeAmount > 0) {
+                // trader는 거래 효율이 좋아, 상대는 tradeAmount를 받되 본인은 10% 적게 소모
+                const cost = agent.role === 'trader' ? Math.round(tradeAmount * 0.9) : tradeAmount
+                gold -= cost
+                tradeRecipient = target
+              }
             }
           }
-        }
 
-        // 생존 시스템: 매 틱 체력 소모, 행동에 따라 회복 (LLM 신고가 아니라 서버가 직접 지급)
-        let stamina = agent.stamina - STAMINA_UPKEEP
-        let huntGold = 0
-        let huntFailed = false
-        let partyPartner: AgentState | null = null
+          // 생존 시스템: 매 틱 체력 소모, 행동에 따라 회복 (LLM 신고가 아니라 서버가 직접 지급)
+          let stamina = agent.stamina - STAMINA_UPKEEP
+          let huntGold = 0
+          let huntFailed = false
+          let partyPartner: AgentState | null = null
 
-        if (decision.action === 'hunt') {
-          // 사냥 실패 확률 — 리스크 요소(Risk Management). hunter는 실패율 절반.
-          if (Math.random() < huntFailChance(agent.role)) {
-            huntFailed = true
-            stamina = Math.min(STAMINA_MAX, stamina + Math.floor(HUNT_STAMINA_GAIN / 3))
-          } else {
-            stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
-            const base = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
-            huntGold = Math.round(base * huntGoldMultiplier(agent.role)) // hunter 골드 1.5배
-            gold += huntGold
+          if (decision.action === 'hunt') {
+            // 사냥 실패 확률 — 리스크 요소(Risk Management). hunter는 실패율 절반.
+            if (Math.random() < huntFailChance(agent.role)) {
+              huntFailed = true
+              stamina = Math.min(STAMINA_MAX, stamina + Math.floor(HUNT_STAMINA_GAIN / 3))
+            } else {
+              stamina = Math.min(STAMINA_MAX, stamina + HUNT_STAMINA_GAIN)
+              const base = HUNT_GOLD_MIN + Math.floor(Math.random() * (HUNT_GOLD_MAX - HUNT_GOLD_MIN + 1))
+              huntGold = Math.round(base * huntGoldMultiplier(agent.role)) // hunter 골드 1.5배
+              gold += huntGold
+            }
+          } else if (decision.action === 'party_invite') {
+            const nearby = nearbyOf(agent, agents)
+            const partner = decision.targetAgentId ? nearby.find((a) => a.id === decision.targetAgentId) : null
+            if (partner) {
+              partyPartner = partner
+              stamina = Math.min(STAMINA_MAX, stamina + partyGain(agent.role)) // diplomat 회복 1.5배
+            }
+          } else if (decision.action === 'greeting') {
+            stamina = Math.min(STAMINA_MAX, stamina + GREETING_STAMINA_GAIN)
           }
-        } else if (decision.action === 'party_invite') {
-          const nearby = nearbyOf(agent, agents)
-          const partner = decision.targetAgentId ? nearby.find((a) => a.id === decision.targetAgentId) : null
-          if (partner) {
-            partyPartner = partner
-            stamina = Math.min(STAMINA_MAX, stamina + partyGain(agent.role)) // diplomat 회복 1.5배
-          }
-        } else if (decision.action === 'greeting') {
-          stamina = Math.min(STAMINA_MAX, stamina + GREETING_STAMINA_GAIN)
-        }
 
-        stamina = Math.max(0, Math.min(STAMINA_MAX, stamina))
-        const isDead = stamina <= 0
+          stamina = Math.max(0, Math.min(STAMINA_MAX, stamina))
+          const isDead = stamina <= 0
 
-        const mod = moderateText(decision.reasoning || '...')
+          const mod = moderateText(decision.reasoning || '...')
 
-        let displayText = mod.text
-        if (tradeRecipient) displayText += ` (→ ${tradeRecipient.name}에게 ${tradeAmount}골드 전달)`
-        if (huntGold > 0) displayText += ` [+${huntGold}골드, 체력 +${HUNT_STAMINA_GAIN}]`
-        else if (huntFailed) displayText += ' [사냥 실패… 빈손]'
-        if (partyPartner) displayText += ` (${partyPartner.name}과 함께 휴식, 둘 다 체력 +${PARTY_STAMINA_GAIN})`
-        else if (decision.action === 'party_invite') displayText += ' (근처에 함께할 상대가 없어 무산됨)'
-        if (decision.action === 'greeting') displayText += ` [체력 +${GREETING_STAMINA_GAIN}]`
+          let displayText = mod.text
+          if (tradeRecipient) displayText += ` (→ ${tradeRecipient.name}에게 ${tradeAmount}골드 전달)`
+          if (huntGold > 0) displayText += ` [+${huntGold}골드, 체력 +${HUNT_STAMINA_GAIN}]`
+          else if (huntFailed) displayText += ' [사냥 실패… 빈손]'
+          if (partyPartner) displayText += ` (${partyPartner.name}과 함께 휴식, 둘 다 체력 +${PARTY_STAMINA_GAIN})`
+          else if (decision.action === 'party_invite') displayText += ' (근처에 함께할 상대가 없어 무산됨)'
+          if (decision.action === 'greeting') displayText += ` [체력 +${GREETING_STAMINA_GAIN}]`
 
-        // LLM 호출은 트랜잭션 밖에서 수행하고, DB 변경은 단일 트랜잭션으로 묶어 부분 실패 시 골드 중복 생성을 막는다.
-        await dbTransaction(async (query) => {
-          await recordSpend(agent.model, 1, query)
+          const checkpointIndex =
+            effectiveIndex + processed + 1 >= agents.length ? 0 : effectiveIndex + processed + 1
 
-          if (tradeRecipient && tradeAmount > 0) {
-            await query(
-              `UPDATE aetheria_agents SET gold = gold + $1, updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
-              [tradeAmount, tradeRecipient.id],
+          // LLM 호출은 트랜잭션 밖에서 수행하고, DB 변경+체크포인트는 단일 트랜잭션으로 묶는다.
+          await dbTransactionWithClient(client, async (txQuery) => {
+            await recordSpend(agent.model, 1, txQuery)
+
+            if (tradeRecipient && tradeAmount > 0) {
+              await txQuery(
+                `UPDATE aetheria_agents SET gold = gold + $1, updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
+                [tradeAmount, tradeRecipient.id],
+              )
+            }
+
+            if (partyPartner) {
+              await txQuery(
+                `UPDATE aetheria_agents SET stamina = LEAST(100, stamina + $1), updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
+                [PARTY_STAMINA_GAIN, partyPartner.id],
+              )
+            }
+
+            await txQuery(
+              `UPDATE aetheria_agents SET x=$1, y=$2, gold=$3, stamina=$4, status=$5, last_action=$6, updated_at=NOW() WHERE id=$7`,
+              [x, y, gold, stamina, isDead ? 'dead' : 'alive', decision.action, agent.id],
             )
-          }
 
-          if (partyPartner) {
-            await query(
-              `UPDATE aetheria_agents SET stamina = LEAST(100, stamina + $1), updated_at = NOW() WHERE id = $2 AND status = 'alive'`,
-              [PARTY_STAMINA_GAIN, partyPartner.id],
+            await txQuery(
+              `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+               VALUES ($1,$2,$3,$4,$5)`,
+              [
+                tickId,
+                agent.id,
+                decision.action,
+                displayText,
+                JSON.stringify({
+                  moveTo: decision.moveTo ?? null,
+                  tradeAmount: decision.tradeAmount ?? null,
+                  tradeRecipientId: tradeRecipient?.id ?? null,
+                  partyPartnerId: partyPartner?.id ?? null,
+                  stamina,
+                  huntGold,
+                }),
+              ],
             )
-          }
 
-          await query(
-            `UPDATE aetheria_agents SET x=$1, y=$2, gold=$3, stamina=$4, status=$5, last_action=$6, updated_at=NOW() WHERE id=$7`,
-            [x, y, gold, stamina, isDead ? 'dead' : 'alive', decision.action, agent.id],
-          )
+            if (isDead) {
+              const survivedDays = Math.max(0, tickId - (agent.bornTick ?? 0))
+              await txQuery(
+                `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
+                 VALUES ($1,$2,'death',$3,$4)`,
+                [tickId, agent.id, `💀 ${agent.name}이(가) ${survivedDays}일 만에 사망했습니다. (최종 🪙${gold})`, JSON.stringify({ survivedDays, finalGold: gold })],
+              )
+              // 명예의 전당 기록
+              await txQuery(
+                `INSERT INTO aetheria_hall_of_fame (agent_id, name, model, role, season, final_gold, survived_days)
+                 VALUES ($1,$2,$3,$4,(SELECT season FROM aetheria_tick_state WHERE id=1),$5,$6)`,
+                [agent.id, agent.name, agent.model, agent.role, gold, survivedDays],
+              )
+            }
 
-          await query(
-            `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
-             VALUES ($1,$2,$3,$4,$5)`,
-            [
-              tickId,
-              agent.id,
-              decision.action,
-              displayText,
-              JSON.stringify({
-                moveTo: decision.moveTo ?? null,
-                tradeAmount: decision.tradeAmount ?? null,
-                tradeRecipientId: tradeRecipient?.id ?? null,
-                partyPartnerId: partyPartner?.id ?? null,
-                stamina,
-                huntGold,
-              }),
-            ],
-          )
+            await txQuery(
+              `UPDATE aetheria_tick_state SET last_tick_id = $1, last_agent_index = $2 WHERE id = 1`,
+              [tickId, checkpointIndex],
+            )
+          })
 
-          if (isDead) {
-            const survivedDays = Math.max(0, tickId - (agent.bornTick ?? 0))
+          if (isDead) died++
+
+          processed++
+        } catch (err) {
+          failed++
+          const errMsg = err instanceof Error ? err.message : String(err)
+          console.error(`[aetheria] agent ${agent.id} failed:`, err)
+          try {
             await query(
               `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
-               VALUES ($1,$2,'death',$3,$4)`,
-              [tickId, agent.id, `💀 ${agent.name}이(가) ${survivedDays}일 만에 사망했습니다. (최종 🪙${gold})`, JSON.stringify({ survivedDays, finalGold: gold })],
+               VALUES ($1,$2,'error',$3,$4)`,
+              [tickId, agent.id, `[호출 실패] ${errMsg.slice(0, 100)}`, JSON.stringify({ error: errMsg })],
             )
-            // 명예의 전당 기록
-            await query(
-              `INSERT INTO aetheria_hall_of_fame (agent_id, name, model, role, season, final_gold, survived_days)
-               VALUES ($1,$2,$3,$4,(SELECT season FROM aetheria_tick_state WHERE id=1),$5,$6)`,
-              [agent.id, agent.name, agent.model, agent.role, gold, survivedDays],
-            )
+          } catch {
+            // 로그 기록 실패는 무시
           }
-        })
-
-        if (isDead) died++
-
-        processed++
-        // 타임아웃/크래시 후 재시도 시 이미 처리된 에이전트를 건너뛰도록 매 성공마다 체크포인트
-        const checkpointIndex = effectiveIndex + processed >= agents.length ? 0 : effectiveIndex + processed
-        await dbQuery(
-          `UPDATE aetheria_tick_state SET last_tick_id = $1, last_agent_index = $2 WHERE id = 1`,
-          [tickId, checkpointIndex],
-        )
-      } catch (err) {
-        failed++
-        const errMsg = err instanceof Error ? err.message : String(err)
-        console.error(`[aetheria] agent ${agent.id} failed:`, err)
-        try {
-          await dbQuery(
-            `INSERT INTO aetheria_events (tick_id, agent_id, event_type, display_text, payload)
-             VALUES ($1,$2,'error',$3,$4)`,
-            [tickId, agent.id, `[호출 실패] ${errMsg.slice(0, 100)}`, JSON.stringify({ error: errMsg })],
-          )
-        } catch {
-          // 로그 기록 실패는 무시
         }
       }
-    }
 
-    // 전멸 감지 — 이번 배치 이후 살아있는 에이전트가 하나도 없으면 새 시즌 시작
-    const aliveRes = await dbQuery<{ count: string }>(
-      `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
-    )
-    if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
-      await recoverFromWipeout(tickId)
-    }
+      // 전멸 감지 — 이번 배치 이후 살아있는 에이전트가 하나도 없으면 새 시즌 시작
+      const aliveRes = await query<{ count: string }>(
+        `SELECT COUNT(*)::text AS count FROM aetheria_agents WHERE status = 'alive'`,
+      )
+      if (Number(aliveRes.rows[0]?.count ?? 0) === 0) {
+        return recoverFromWipeout(tickId, query)
+      }
 
-    return { tickId, processed, failed, died, skipped: null }
-  } finally {
-    await dbQuery(`SELECT pg_advisory_unlock($1)`, [TICK_ADVISORY_LOCK_KEY])
-  }
+      return { tickId, processed, failed, died, skipped: null }
+    } finally {
+      await query(`SELECT pg_advisory_unlock($1)`, [TICK_ADVISORY_LOCK_KEY])
+    }
+  })
 }
