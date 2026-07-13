@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
-import { portfolioViewport, staggerContainer, staggerItem, maskReveal, lineReveal } from '@/lib/portfolioMotion'
+import { portfolioViewport, staggerContainer, staggerItem, maskReveal, lineReveal, EASE_OUT } from '@/lib/portfolioMotion'
 
 type TimelineItem = {
   year: string
@@ -127,7 +127,7 @@ export default function CareerTimeline() {
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={portfolioViewport}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease: EASE_OUT }}
                 className={`relative flex gap-8 md:gap-0 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
               >
                 {/* Content */}

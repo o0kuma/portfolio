@@ -1,5 +1,9 @@
 /** Shared Framer Motion presets for /portfolio scroll reveals. */
 
+/** The repo's shared ease-out curve — cite this, never retype the four numbers. */
+export const EASE_OUT = [0.22, 1, 0.36, 1] as const
+export const EASE_OUT_CSS = 'cubic-bezier(0.22, 1, 0.36, 1)'
+
 export const portfolioViewport = {
   once: true,
   amount: 0.12,
@@ -12,7 +16,7 @@ export const sectionReveal = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.8, ease: EASE_OUT },
   },
 } as const
 
@@ -24,7 +28,7 @@ export const maskReveal = {
   hidden: { y: '110%' },
   visible: {
     y: '0%',
-    transition: { duration: 0.9, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.9, ease: EASE_OUT },
   },
 } as const
 
@@ -33,7 +37,7 @@ export const lineReveal = {
   hidden: { scaleX: 0 },
   visible: {
     scaleX: 1,
-    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.8, ease: EASE_OUT },
   },
 } as const
 
@@ -50,6 +54,6 @@ export const staggerItem = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.65, ease: EASE_OUT },
   },
 } as const

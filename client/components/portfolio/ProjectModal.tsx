@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FiX, FiGithub, FiExternalLink, FiCalendar, FiUsers } from 'react-icons/fi'
+import { EASE_OUT } from '@/lib/portfolioMotion'
 
 interface Project {
   id: string
@@ -54,7 +55,7 @@ export default function ProjectModal({ project, onClose }: Props) {
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.25, ease: EASE_OUT }}
           className="relative w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-2xl border border-neutral-700 bg-neutral-900 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
