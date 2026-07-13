@@ -6,6 +6,22 @@ import { dbQuery } from '@/lib/neon-server'
 
 type Ctx = { params: Promise<{ id: string }> }
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const MAX_COMMENTS_PER_WINDOW = 5
+const WINDOW_MS = 10 * 60 * 1000
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + WINDOW_MS })
+    return true
+  }
+  if (entry.count >= MAX_COMMENTS_PER_WINDOW) return false
+  entry.count++
+  return true
+}
+
 export async function GET(_req: NextRequest, { params }: Ctx) {
   const { id } = await params
   await dbQuery(`
@@ -29,6 +45,14 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 
 export async function POST(req: NextRequest, { params }: Ctx) {
   try {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown'
+    if (!checkRateLimit(ip)) {
+      return NextResponse.json(
+        { message: '댓글을 너무 많이 작성했습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 429 },
+      )
+    }
+
     const { id } = await params
     const body = await req.json() as {
       author_name?: string
@@ -54,6 +78,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
     console.error('[/api/posts/[id]/comments POST]', msg)
-    return NextResponse.json({ message: msg }, { status: 500 })
+    return NextResponse.json({ message: '댓글을 저장하지 못했습니다.' }, { status: 500 })
   }
 }
