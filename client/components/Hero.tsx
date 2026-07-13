@@ -1,11 +1,11 @@
 'use client'
 
 import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useMotionTemplate } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowDown } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { portfolioViewport, maskReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import { portfolioViewport, maskReveal, staggerContainer, staggerItem, EASE_OUT } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 import TypingText from '@/components/portfolio/TypingText'
 
@@ -19,6 +19,7 @@ export default function Hero() {
     offset: ['start start', 'end start'],
   })
   const heroParallaxY = useTransform(scrollYProgress, [0, 1], [0, reduced ? 0 : 72])
+  const heroParallaxTransform = useMotionTemplate`translateY(${heroParallaxY}px)`
   const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, reduced ? 1 : 0.35])
 
   return (
@@ -126,10 +127,10 @@ export default function Hero() {
           </motion.div>
 
           <motion.div
-            style={{ y: heroParallaxY }}
+            style={{ transform: heroParallaxTransform }}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1, delay: 0.4, ease: EASE_OUT }}
             className="hidden lg:flex items-center justify-center"
             aria-hidden="true"
           >
@@ -170,7 +171,7 @@ export default function Hero() {
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
       >
         <motion.button
-          animate={{ y: [0, 6, 0] }}
+          animate={{ transform: ['translateY(0px)', 'translateY(6px)', 'translateY(0px)'] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' as const }}
           className="text-neutral-600 hover:text-neutral-300 transition-colors cursor-pointer"
           onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
