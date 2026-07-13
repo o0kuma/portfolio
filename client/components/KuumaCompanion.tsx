@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 const sectionMessagesKo: Record<string, string[]> = {
   home: [
@@ -122,6 +124,7 @@ export default function KuumaCompanion() {
   const { locale } = useLanguage()
   const localeRef = useRef(locale)
   localeRef.current = locale
+  const reduced = usePrefersReducedMotion()
   const [pos, setPos] = useState({ x: -100, y: -100 })
   const targetPos = useRef({ x: -100, y: -100 })
   const currentPos = useRef({ x: -100, y: -100 })
@@ -155,9 +158,9 @@ export default function KuumaCompanion() {
     window.speechSynthesis.speak(utter)
   }
 
-  const showBubble = useCallback((text: string) => {
+  const showBubble = useCallback((text: string, flashEmotion: Emotion = 'happy') => {
     setBubble(text)
-    setEmotion('surprised')
+    setEmotion(flashEmotion)
     if (emotionTimerRef.current) clearTimeout(emotionTimerRef.current)
     emotionTimerRef.current = setTimeout(() => setEmotion('idle'), 2000)
     if (bubbleTimeoutRef.current) clearTimeout(bubbleTimeoutRef.current)
@@ -172,8 +175,15 @@ export default function KuumaCompanion() {
     } catch {}
   }, [])
 
-  // Smooth mouse follow with lerp
+  // Smooth mouse follow with lerp — skipped entirely when reduced
   useEffect(() => {
+    if (reduced) {
+      // Pin at a fixed spot instead of chasing the cursor.
+      currentPos.current = { x: 24, y: 24 }
+      targetPos.current = { x: 24, y: 24 }
+      setPos({ x: 24, y: 24 })
+      return
+    }
     const onMove = (e: MouseEvent) => {
       targetPos.current = { x: e.clientX + 20, y: e.clientY - 20 }
       lastMoveRef.current = Date.now()
@@ -193,13 +203,13 @@ export default function KuumaCompanion() {
       window.removeEventListener('mousemove', onMove)
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
     }
-  }, [])
+  }, [reduced])
 
   // Idle wander behavior + behavior-based dwell nudge
   useEffect(() => {
     const checkIdle = setInterval(() => {
       const idleMs = Date.now() - lastMoveRef.current
-      if (idleMs > 10000) {
+      if (!reduced && idleMs > 10000) {
         const x = Math.random() * (window.innerWidth - 100) + 50
         const y = Math.random() * (window.innerHeight - 100) + 50
         targetPos.current = { x, y }
@@ -213,14 +223,14 @@ export default function KuumaCompanion() {
         if (pool) {
           dwellShownRef.current.add(currentSection)
           const msg = pool[Math.floor(Math.random() * pool.length)]
-          showBubble(msg)
+          showBubble(msg, 'surprised')
           speak(msg)
         }
       }
     }, 5000)
     return () => clearInterval(checkIdle)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSection, showBubble])
+  }, [currentSection, showBubble, reduced])
 
   // Section detection
   useEffect(() => {
@@ -282,7 +292,7 @@ export default function KuumaCompanion() {
       const returningMsg = localeRef.current === 'en' ? returningMsgEn : returningMsgKo
       const bubbleText = (isReturningRef.current ? returningMsg + '  ' : '') + randomMsg() + chatHint
       isReturningRef.current = false
-      showBubble(bubbleText)
+      showBubble(bubbleText, 'surprised')
       speak(bubbleText)
       sectionTimerRef.current = setInterval(
         () => {
@@ -428,35 +438,56 @@ export default function KuumaCompanion() {
           0%,100% { box-shadow: 0 0 8px rgb(239 68 68), 0 0 20px rgb(239 68 68 / 0.5); }
           50% { box-shadow: 0 0 20px rgb(239 68 68), 0 0 40px rgb(239 68 68 / 0.8); }
         }
+        @media (prefers-reduced-motion: reduce) {
+          .kuuma-spin,
+          .kuuma-pulse-core,
+          .kuuma-breathe,
+          .kuuma-emotion-happy,
+          .kuuma-emotion-thinking,
+          .kuuma-emotion-surprised,
+          .kuuma-emotion-error {
+            animation: none;
+          }
+        }
       `}</style>
 
       {/* Speech bubble — separate fixed element to avoid width constraints */}
-      {bubble && !isOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            left: pos.x,
-            top: pos.y - 52,
-            zIndex: 9998,
-            transform: 'translateX(-50%)',
-            pointerEvents: 'none',
-          }}
-        >
-          <div
-            className="bg-black/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono px-3 py-1.5 rounded-sm"
+      <AnimatePresence>
+        {bubble && !isOpen && (
+          <motion.div
+            key="kuuma-bubble"
+            initial={{ opacity: 0, scale: 0.92, y: 4 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.92, y: 4 }}
+            transition={{ duration: 0.16, ease: 'easeOut' }}
             style={{
-              boxShadow: '0 0 10px rgb(34 211 238 / 0.2)',
-              whiteSpace: 'nowrap',
-              maxWidth: '260px',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
+              position: 'fixed',
+              left: pos.x,
+              top: pos.y - 52,
+              zIndex: 9998,
+              pointerEvents: 'none',
             }}
           >
-            {bubble}
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-cyan-500/50 rotate-45" />
-          </div>
-        </div>
-      )}
+            <div
+              style={{ transform: 'translateX(-50%)' }}
+              className="bg-black/90 border border-cyan-500/50 text-cyan-300 text-xs font-mono px-3 py-1.5 rounded-sm"
+            >
+              <div
+                style={{
+                  boxShadow: '0 0 10px rgb(34 211 238 / 0.2)',
+                  whiteSpace: 'nowrap',
+                  maxWidth: '260px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {bubble}
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-2 h-2 bg-black border-r border-b border-cyan-500/50 rotate-45" />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div
         style={{
@@ -516,14 +547,21 @@ export default function KuumaCompanion() {
       </button>
 
       {/* Chat panel — fixed bottom-left, independent of cursor position */}
-      {isOpen && (
-        <div
+      <AnimatePresence>
+        {isOpen && (
+        <motion.div
+          key="kuuma-panel"
+          initial={{ opacity: 0, scale: 0.95, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 8 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
           style={{
             position: 'fixed',
             bottom: '24px',
             left: '24px',
             zIndex: 10000,
             pointerEvents: 'auto',
+            transformOrigin: 'bottom left',
           }}
           className="w-72 bg-black/95 border border-cyan-500/30 rounded-sm font-mono"
         >
@@ -552,23 +590,28 @@ export default function KuumaCompanion() {
             {messages.length === 0 && (
               <div className="text-cyan-700 text-xs text-center mt-10">{locale === 'en' ? 'Ask me anything' : '무엇이든 물어보세요'}</div>
             )}
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`text-xs ${m.role === 'user' ? 'text-right text-neutral-300' : 'text-left text-cyan-300'}`}
-              >
-                <span
-                  className={`inline-block px-2 py-1 max-w-[220px] text-left ${
-                    m.role === 'user'
-                      ? 'bg-neutral-800'
-                      : 'bg-cyan-950/50 border border-cyan-500/20'
-                  } rounded-sm`}
-                  style={{ wordBreak: 'break-word' }}
+            <AnimatePresence initial={false}>
+              {messages.map((m, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className={`text-xs ${m.role === 'user' ? 'text-right text-neutral-300' : 'text-left text-cyan-300'}`}
                 >
-                  {m.content}
-                </span>
-              </div>
-            ))}
+                  <span
+                    className={`inline-block px-2 py-1 max-w-[220px] text-left ${
+                      m.role === 'user'
+                        ? 'bg-neutral-800'
+                        : 'bg-cyan-950/50 border border-cyan-500/20'
+                    } rounded-sm`}
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {m.content}
+                  </span>
+                </motion.div>
+              ))}
+            </AnimatePresence>
             {loading && (
               <div className="text-cyan-500 text-xs animate-pulse">{locale === 'en' ? 'Thinking...' : '생각 중...'}</div>
             )}
@@ -591,8 +634,9 @@ export default function KuumaCompanion() {
               ▶
             </button>
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }
