@@ -1,7 +1,7 @@
-const CACHE_NAME = 'portfolio-v2'
+const CACHE_NAME = 'portfolio-v3'
 const STATIC_ASSETS = [
   '/',
-  '/manifest.json',
+  '/site.webmanifest',
   '/arcade',
   '/arcade-manifest.json',
 ]
