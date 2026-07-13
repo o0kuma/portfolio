@@ -13,7 +13,7 @@ import { hasAdminAccess } from '@/lib/admin-access'
 
 export default function Header() {
   const router = useRouter()
-  const { t, toggleLocale } = useLanguage()
+  const { t, toggleLocale, locale } = useLanguage()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -132,7 +132,7 @@ export default function Header() {
                 type="button"
                 onClick={toggleLocale}
                 className="px-2.5 py-1 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
-                aria-label="언어 전환"
+                aria-label={locale === 'en' ? 'Switch language' : '언어 전환'}
               >
                 {t.nav.langToggle}
               </button>

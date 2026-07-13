@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface PostShareBarProps {
   title: string
 }
 
 export default function PostShareBar({ title }: PostShareBarProps) {
+  const { locale } = useLanguage()
   const [copied, setCopied] = useState(false)
 
   const handleCopyLink = async () => {
@@ -45,7 +47,7 @@ export default function PostShareBar({ title }: PostShareBarProps) {
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
-            Copied!
+            {locale === 'en' ? 'Copied!' : '복사됨!'}
           </>
         ) : (
           <>
@@ -53,7 +55,7 @@ export default function PostShareBar({ title }: PostShareBarProps) {
               <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
               <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
             </svg>
-            Copy link
+            {locale === 'en' ? 'Copy link' : '링크 복사'}
           </>
         )}
       </button>
@@ -65,7 +67,7 @@ export default function PostShareBar({ title }: PostShareBarProps) {
         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
           <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
         </svg>
-        Share on X
+        {locale === 'en' ? 'Share on X' : 'X에 공유'}
       </button>
     </div>
   )

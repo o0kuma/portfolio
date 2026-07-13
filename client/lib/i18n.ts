@@ -91,6 +91,8 @@ export const translations = {
       newMessage: '새 메시지 작성',
       location: '서울 · 송파구',
       hours: 'Weekdays 9:00 – 18:00',
+      sendError: '메시지 전송에 실패했습니다.',
+      sendErrorRetry: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
     },
     footer: {
       copyright: '© {year} okuma. All rights reserved.',
@@ -600,6 +602,8 @@ export const translations = {
       newMessage: 'Write New Message',
       location: 'Seoul · Songpa-gu',
       hours: 'Weekdays 9:00 – 18:00',
+      sendError: 'Failed to send message.',
+      sendErrorRetry: 'Failed to send message. Please try again.',
     },
     footer: {
       copyright: '© {year} Seungil Oh. All rights reserved.',

@@ -45,11 +45,11 @@ export default function Contact() {
         setEmailDelivered(!!result.emailSent)
         setFormData({ name: '', email: '', subject: '', message: '' })
       } else {
-        throw new Error(result.message || '메시지 전송에 실패했습니다.')
+        throw new Error(result.message || t.contact.sendError)
       }
     } catch (error) {
       console.error('메시지 전송 실패:', error)
-      toast.error('메시지 전송에 실패했습니다. 다시 시도해주세요.')
+      toast.error(t.contact.sendErrorRetry)
     } finally {
       setIsSubmitting(false)
     }
