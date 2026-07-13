@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     if (!(await isAdminAuthorized(request))) {
-      return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
+      return NextResponse.json({ message: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
     const body = await request.json()

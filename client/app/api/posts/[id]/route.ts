@@ -68,7 +68,7 @@ async function fetchPostComments(postId: string) {
 export async function PUT(request: NextRequest, { params }: Ctx) {
   try {
     if (!(await isAdminRequest(request))) {
-      return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
+      return NextResponse.json({ message: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
     const { id } = await params
@@ -101,7 +101,7 @@ export async function PUT(request: NextRequest, { params }: Ctx) {
 export async function DELETE(request: NextRequest, { params }: Ctx) {
   try {
     if (!(await isAdminRequest(request))) {
-      return NextResponse.json({ error: '관리자 인증이 필요합니다.' }, { status: 401 })
+      return NextResponse.json({ message: '관리자 인증이 필요합니다.' }, { status: 401 })
     }
 
     const { id } = await params
