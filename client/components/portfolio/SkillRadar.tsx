@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
-import { portfolioViewport, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import { portfolioViewport, staggerContainer, staggerItem, EASE_OUT } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 type Axis = { label: string; labelKo: string; value: number }  // value 0-100
@@ -159,10 +159,10 @@ export default function SkillRadar({ animated = true }: Props) {
             <div className="h-1.5 flex-1 rounded-full bg-neutral-800 overflow-hidden">
               <motion.div
                 className="h-full rounded-full bg-indigo-500"
-                initial={{ width: 0 }}
+                initial={{ width: reduced ? `${axis.value}%` : 0 }}
                 whileInView={{ width: `${axis.value}%` }}
                 viewport={{ once: true }}
-                transition={{ duration: 1, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ duration: 1, delay: reduced ? 0 : 0.5, ease: EASE_OUT }}
               />
             </div>
             <span className="text-[10px] font-mono text-neutral-600 shrink-0 w-6 text-right">{axis.value}</span>

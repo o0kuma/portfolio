@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, staggerContainer, staggerItem, maskReveal, lineReveal, EASE_OUT } from '@/lib/portfolioMotion'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 type TimelineItem = {
   year: string
@@ -88,6 +89,7 @@ const TIMELINE: TimelineItem[] = [
 
 export default function CareerTimeline() {
   const { locale } = useLanguage()
+  const reduced = usePrefersReducedMotion()
 
   return (
     <div className="py-32 border-b border-neutral-800 dark:border-white/[0.08] bg-neutral-900 dark:bg-transparent">
@@ -95,7 +97,7 @@ export default function CareerTimeline() {
         {/* Header */}
         <motion.div
           variants={staggerContainer}
-          initial="hidden"
+          initial={reduced ? 'visible' : 'hidden'}
           whileInView="visible"
           viewport={portfolioViewport}
           className="mb-20"
@@ -124,10 +126,10 @@ export default function CareerTimeline() {
             {TIMELINE.map((item, i) => (
               <motion.div
                 key={i}
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: reduced ? 0 : 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={portfolioViewport}
-                transition={{ duration: 0.6, delay: i * 0.1, ease: EASE_OUT }}
+                transition={{ duration: 0.6, delay: reduced ? 0 : i * 0.1, ease: EASE_OUT }}
                 className={`relative flex gap-8 md:gap-0 ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
               >
                 {/* Content */}

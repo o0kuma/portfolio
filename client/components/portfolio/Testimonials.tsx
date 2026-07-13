@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
-import { portfolioViewport, staggerContainer, staggerItem, maskReveal, lineReveal } from '@/lib/portfolioMotion'
+import { portfolioViewport, staggerContainer, staggerItem, maskReveal, lineReveal, EASE_OUT } from '@/lib/portfolioMotion'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 type Testimonial = {
   quote: string
@@ -44,6 +45,7 @@ const TESTIMONIALS: Testimonial[] = [
 export default function Testimonials() {
   const { locale } = useLanguage()
   const [current, setCurrent] = useState(0)
+  const reduced = usePrefersReducedMotion()
 
   return (
     <div className="py-32 border-b border-neutral-800 bg-neutral-950">
@@ -51,7 +53,7 @@ export default function Testimonials() {
         {/* Header */}
         <motion.div
           variants={staggerContainer}
-          initial="hidden"
+          initial={reduced ? 'visible' : 'hidden'}
           whileInView="visible"
           viewport={portfolioViewport}
           className="mb-16"
@@ -80,10 +82,10 @@ export default function Testimonials() {
           <AnimatePresence mode="wait">
             <motion.div
               key={current}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: reduced ? 0 : 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: reduced ? 0 : -20 }}
+              transition={{ duration: 0.4, ease: EASE_OUT }}
               className="mb-10"
             >
               <p className="text-2xl md:text-3xl font-light text-neutral-300 leading-relaxed mb-8">
