@@ -16,6 +16,8 @@ import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
  * Usage: wrap a section/page in this and give children `relative z-10`.
  */
 
+const TIME_ORDER: TimeOfDay[] = ['dawn', 'day', 'dusk', 'night']
+
 const PALETTES: Record<TimeOfDay, { base: string; glow: string; vignette: number }> = {
   dawn: {
     base: '#0c0a1f',
@@ -39,6 +41,9 @@ const PALETTES: Record<TimeOfDay, { base: string; glow: string; vignette: number
   },
 }
 
+const GRAIN_URL =
+  `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+
 export default function SpaceAtmosphere({
   children,
   className = '',
@@ -48,33 +53,39 @@ export default function SpaceAtmosphere({
 }) {
   const timeOfDay = useTimeOfDay()
   const reduced = usePrefersReducedMotion()
-  const palette = PALETTES[timeOfDay]
-  const transition = reduced ? 'none' : 'background-color 3s ease, background-image 3s ease, box-shadow 3s ease'
+  const opacityTransition = reduced ? 'none' : 'opacity 3s ease-in-out'
+  const activePalette = PALETTES[timeOfDay]
 
   return (
     // Light mode keeps the site's existing light palette (bg-neutral-950 is
     // remapped to a warm light color by .portfolio-page's light overrides);
     // the space atmosphere is a dark-mode-only treatment.
-    <div
-      className={`relative bg-neutral-950 dark:bg-[color:var(--space-base)] ${className}`}
-      style={{ '--space-base': palette.base, transition } as React.CSSProperties}
-    >
-      <div
-        className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
-        style={{ backgroundImage: palette.glow, transition }}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
-        style={{ boxShadow: `inset 0 0 160px 60px rgba(0,0,0,${palette.vignette})`, transition }}
-        aria-hidden
-      />
+    //
+    // Glow/vignette per time-of-day are rendered as separate always-mounted
+    // layers crossfaded via opacity (transform/opacity are compositor-only —
+    // animating background-image/box-shadow directly repaints the whole
+    // fixed viewport every frame for the 3s transition).
+    <div className={`relative bg-neutral-950 dark:bg-[color:var(--space-base)] ${className}`} style={{ '--space-base': activePalette.base } as React.CSSProperties}>
+      {TIME_ORDER.map((key) => {
+        const palette = PALETTES[key]
+        return (
+          <div
+            key={key}
+            className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
+            aria-hidden
+            style={{
+              backgroundImage: palette.glow,
+              boxShadow: `inset 0 0 160px 60px rgba(0,0,0,${palette.vignette})`,
+              opacity: key === timeOfDay ? 1 : 0,
+              transition: opacityTransition,
+            }}
+          />
+        )
+      })}
       <div
         className="pointer-events-none fixed inset-0 z-0 hidden dark:block dark:opacity-[0.09] mix-blend-overlay"
         aria-hidden
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        }}
+        style={{ backgroundImage: GRAIN_URL }}
       />
       <div className="relative z-10">{children}</div>
     </div>
