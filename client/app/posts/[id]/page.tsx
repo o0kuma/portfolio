@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { dbQuery } from '@/lib/neon-server'
 import { getSiteUrl, SITE_NAME } from '@/lib/site'
+import { plainTextExcerpt } from '@/lib/textExcerpt'
 import PostDetailClient from './PostDetailClient'
 
 interface PostRow {
@@ -9,16 +10,6 @@ interface PostRow {
   category: string | null
   created_at: string | Date
   updated_at: string | Date | null
-}
-
-function plainTextExcerpt(content: string, maxLen = 160): string {
-  const stripped = content
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/[#*_>`~[\]()]/g, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  return stripped.length > maxLen ? `${stripped.slice(0, maxLen - 1)}…` : stripped
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
