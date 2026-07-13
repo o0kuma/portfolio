@@ -22,6 +22,7 @@ import {
 } from 'react'
 import { usePrefersReducedMotion } from '@/components/home/useHomeScrollProgress'
 import { useLanguage } from '@/lib/LanguageContext'
+import { EASE_OUT_CSS } from '@/lib/portfolioMotion'
 
 type Props = {
   posts: HomePost[]
@@ -60,6 +61,14 @@ export default function BlogPostsCarousel3D({
   const startRot = useRef(0)
   const pointerId = useRef<number | null>(null)
   const dragEl = useRef<HTMLElement | null>(null)
+  const lastMoveTime = useRef(0)
+  const lastMoveX = useRef(0)
+  const velocityRef = useRef(0) // deg per ms, signed
+  const [settleMs, setSettleMs] = useState(550)
+
+  const VELOCITY_FLICK_THRESHOLD = 0.15 // deg/ms — carousel-specific feel tuning, not from AUDIT.md
+  const MIN_SETTLE_MS = 300
+  const MAX_SETTLE_MS = 550
 
   // Below this many px of movement, a press reads as a click/tap, not a drag —
   // so links inside the active card stay clickable even if the press landed
@@ -88,14 +97,21 @@ export default function BlogPostsCarousel3D({
 
   const snap = useCallback(() => {
     if (count <= 1 || reduced) return
-    setRotation((r) => Math.round(r / step) * step)
+    const v = velocityRef.current
+    const flickBias = Math.abs(v) > VELOCITY_FLICK_THRESHOLD ? Math.sign(-v) : 0
+    setRotation((r) => Math.round(r / step + flickBias) * step)
+    const speed = Math.min(Math.abs(v) / VELOCITY_FLICK_THRESHOLD, 1)
+    setSettleMs(Math.round(MAX_SETTLE_MS - speed * (MAX_SETTLE_MS - MIN_SETTLE_MS)))
+    velocityRef.current = 0
   }, [count, step, reduced])
 
   const goPrev = useCallback(() => {
+    setSettleMs(MAX_SETTLE_MS)
     setRotation((r) => r + step)
   }, [step])
 
   const goNext = useCallback(() => {
+    setSettleMs(MAX_SETTLE_MS)
     setRotation((r) => r - step)
   }, [step])
 
@@ -145,7 +161,18 @@ export default function BlogPostsCarousel3D({
       dragging.current = true
       setDraggingUi(true)
       dragEl.current?.setPointerCapture?.(e.pointerId)
+      lastMoveTime.current = performance.now()
+      lastMoveX.current = e.clientX
     }
+
+    const now = performance.now()
+    const dt = now - lastMoveTime.current
+    if (dt > 0) {
+      const dxSinceLast = e.clientX - lastMoveX.current
+      velocityRef.current = (dxSinceLast * DRAG_SENS) / dt
+    }
+    lastMoveTime.current = now
+    lastMoveX.current = e.clientX
 
     setRotation(startRot.current + dx * DRAG_SENS)
   }
@@ -228,7 +255,7 @@ export default function BlogPostsCarousel3D({
                   ? 'none'
                   : reduced
                     ? 'none'
-                    : 'transform 0.55s cubic-bezier(0.22, 1, 0.36, 1)',
+                    : `transform ${settleMs}ms ${EASE_OUT_CSS}`,
               }}
             >
               {posts.map((post, i) => (
@@ -240,7 +267,7 @@ export default function BlogPostsCarousel3D({
                     transformStyle: 'preserve-3d',
                     backfaceVisibility: 'hidden',
                     opacity: i === activeIndex ? 1 : 0.25,
-                    transition: 'opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1)',
+                    transition: `opacity 0.45s ${EASE_OUT_CSS}`,
                     willChange: 'opacity, transform',
                   }}
                   aria-hidden={i !== activeIndex}
