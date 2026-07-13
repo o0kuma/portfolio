@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
+import { motion, useScroll, useTransform, useMotionTemplate } from 'framer-motion'
 import { FiGithub, FiExternalLink, FiFolder, FiUser, FiCode, FiCalendar } from 'react-icons/fi'
 import Link from 'next/link'
 import SearchBar from './SearchBar'
 import ProjectModal from './portfolio/ProjectModal'
 import { useLanguage } from '@/lib/LanguageContext'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 import {
   portfolioViewport,
   sectionReveal,
@@ -650,11 +651,14 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
     }
   }, [projects])
 
+  const reduced = usePrefersReducedMotion()
   const { scrollYProgress } = useScroll({
     target: sectionRef,
     offset: ['start start', 'end end'],
   })
-  const x = useTransform(scrollYProgress, [0, 1], [0, -overflow])
+  const x = useTransform(scrollYProgress, [0, 1], [0, reduced ? 0 : -overflow])
+  const trackTransform = useMotionTemplate`translateX(${x}px)`
+  const effectiveOverflow = reduced ? 0 : overflow
 
   if (projects.length === 0) return null
 
@@ -673,12 +677,19 @@ function StickyHorizontalTrack({ projects, onCardClick }: { projects: Project[];
     <div
       ref={sectionRef}
       className="-mx-4 md:-mx-6"
-      style={{ height: overflow > 0 ? `calc(100vh + ${overflow}px)` : undefined }}
+      style={{ height: effectiveOverflow > 0 ? `calc(100vh + ${effectiveOverflow}px)` : undefined }}
     >
-      <div ref={viewportRef} className="sticky top-0 flex h-screen items-center overflow-hidden">
+      <div
+        ref={viewportRef}
+        className={
+          reduced
+            ? 'flex items-center overflow-x-auto'
+            : 'sticky top-0 flex h-screen items-center overflow-hidden'
+        }
+      >
         <motion.div
           ref={trackRef}
-          style={{ x }}
+          style={{ transform: trackTransform }}
           className="flex w-max gap-5 md:gap-6 px-4 md:px-6"
         >
           {projects.map((project) => (
