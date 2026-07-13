@@ -43,7 +43,7 @@ export default function ThemePicker() {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-neutral-800 transition-colors"
+        className="flex items-center gap-1.5 px-2 py-2.5 rounded-lg hover:bg-neutral-800 transition-colors"
         title={locale === 'en' ? 'Choose theme' : '테마 선택'}
       >
         <span

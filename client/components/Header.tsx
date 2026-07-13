@@ -131,7 +131,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={toggleLocale}
-                className="px-2.5 py-1 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
+                className="px-2.5 py-2 text-neutral-500 hover:text-neutral-100 transition-colors rounded-lg text-xs font-bold tracking-wider border border-current/20 hover:border-current/50"
                 aria-label={locale === 'en' ? 'Switch language' : '언어 전환'}
               >
                 {t.nav.langToggle}

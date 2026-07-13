@@ -153,7 +153,7 @@ export default function BlogSearchBar({
                   type="button"
                   onClick={handleClear}
                   aria-label="Clear search"
-                  className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
+                  className="flex h-10 w-10 items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
                 >
                   <FiX size={18} />
                 </motion.button>
@@ -165,7 +165,7 @@ export default function BlogSearchBar({
                 aria-label="Toggle filters"
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
-                className={`p-1.5 rounded-lg transition-all duration-300 ${
+                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 ${
                   showFilters || hasActiveFilters
                     ? 'text-purple-600 dark:text-purple-400 bg-purple-100/50 dark:bg-purple-900/30'
                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10'

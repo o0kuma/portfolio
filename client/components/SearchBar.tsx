@@ -121,7 +121,7 @@ export default function SearchBar({
                   type="button"
                   onClick={handleClear}
                   aria-label={locale === 'en' ? 'Clear search' : '검색어 지우기'}
-                  className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                  className="flex h-10 w-10 items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                   <FiX size={18} />
                 </motion.button>
@@ -131,7 +131,7 @@ export default function SearchBar({
                 type="button"
                 onClick={() => setShowFilters(!showFilters)}
                 aria-label={locale === 'en' ? 'Toggle filters' : '필터 열기/닫기'}
-                className={`p-1 rounded transition-colors ${
+                className={`flex h-10 w-10 items-center justify-center rounded transition-colors ${
                   showFilters || hasActiveFilters
                     ? 'text-primary-600 bg-primary-100 dark:bg-primary-900/20'
                     : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
