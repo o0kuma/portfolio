@@ -36,14 +36,29 @@ export async function POST(req: NextRequest) {
         webpush.sendNotification(
           { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
           payload
-        )
+        ).catch(err => {
+          throw Object.assign(err, { endpoint: row.endpoint })
+        })
       )
     )
 
     const sent = results.filter(r => r.status === 'fulfilled').length
-    const failed = results.filter(r => r.status === 'rejected').length
 
-    return NextResponse.json({ success: true, sent, failed })
+    // Gone/expired subscriptions (404/410) never become valid again — prune
+    // them so they stop accumulating and being retried on every send.
+    const staleEndpoints = results
+      .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+      .map(r => r.reason)
+      .filter(err => err?.statusCode === 404 || err?.statusCode === 410)
+      .map(err => err.endpoint)
+
+    if (staleEndpoints.length > 0) {
+      await dbQuery('DELETE FROM push_subscriptions WHERE endpoint = ANY($1)', [staleEndpoints])
+    }
+
+    const failed = results.length - sent
+
+    return NextResponse.json({ success: true, sent, failed, pruned: staleEndpoints.length })
   } catch (error) {
     console.error('Push send error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
