@@ -5,7 +5,7 @@ import { motion, useScroll, useTransform, useMotionTemplate } from 'framer-motio
 import { FiGithub, FiMail, FiArrowDown } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
-import { portfolioViewport, maskReveal, staggerContainer, staggerItem, EASE_OUT } from '@/lib/portfolioMotion'
+import { maskReveal, staggerContainer, staggerItem, EASE_OUT } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 import TypingText from '@/components/portfolio/TypingText'
 
