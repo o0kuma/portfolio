@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { LANDMARKS, getVisited, markVisited, pathToLandmark } from '@/lib/exploration'
 import { markEarned, ACHIEVEMENTS } from '@/lib/achievements'
@@ -97,6 +98,7 @@ export default function ExplorationBadge() {
             strokeDashoffset={circumference - (pct / 100) * circumference}
             strokeLinecap="round"
             transform="rotate(-90 17 17)"
+            style={{ transition: 'stroke-dashoffset 0.4s ease-out, stroke 0.4s ease-out' }}
           />
           <text x="17" y="19" textAnchor="middle" fontSize="9" fill="white" fontFamily="monospace">
             {pct}
@@ -130,11 +132,18 @@ export default function ExplorationBadge() {
               )
             })}
           </ul>
-          {pct === 100 && (
-            <p className="mt-2 text-amber-400">
-              {locale === 'en' ? '🎉 You explored the whole site!' : '🎉 사이트를 전부 둘러보셨어요!'}
-            </p>
-          )}
+          <AnimatePresence>
+            {pct === 100 && (
+              <motion.p
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+                className="mt-2 text-amber-400"
+              >
+                {locale === 'en' ? '🎉 You explored the whole site!' : '🎉 사이트를 전부 둘러보셨어요!'}
+              </motion.p>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </>
