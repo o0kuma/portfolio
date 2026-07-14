@@ -34,7 +34,7 @@ type StatItem = {
 function StatCard({ value, suffix, label, description, animate }: StatItem & { animate: boolean }) {
   const count = useCountUp(value, 1600, animate)
   return (
-    <div className="relative p-8 border border-neutral-800 bg-neutral-950/50 hover:border-neutral-700 transition-colors group">
+    <div className="relative h-full p-8 bg-neutral-950 hover:bg-neutral-900/60 transition-colors group">
       <div className="mb-4">
         <span className="text-5xl md:text-6xl font-black text-neutral-50 tabular-nums">
           {count}
@@ -88,7 +88,7 @@ export default function StatsCounter() {
         >
           — Numbers
         </motion.p>
-        <div className="grid grid-cols-2 md:grid-cols-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-neutral-800">
           {stats.map((s, i) => (
             <motion.div key={i} variants={staggerItem}>
               <StatCard {...s} animate={inView} />
