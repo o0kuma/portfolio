@@ -33,6 +33,36 @@ export function useHomeScrollProgress() {
   return progress
 }
 
+/**
+ * 0 until the last ~1.3 viewport heights of the page, ramping to 1 at the
+ * true bottom — drives the "descending toward Earth" WebGL treatment near
+ * the footer. Uses remaining-scroll-distance (not a % of total height) so
+ * it behaves the same regardless of how long the blog feed above the
+ * footer grows.
+ */
+export function useFooterApproach() {
+  const [approach, setApproach] = useState(0)
+
+  useEffect(() => {
+    const update = () => {
+      const vh = window.innerHeight || 1
+      const maxScroll = Math.max(1, document.documentElement.scrollHeight - vh)
+      const remaining = maxScroll - window.scrollY
+      const p = 1 - Math.min(1, Math.max(0, remaining / (vh * 1.3)))
+      setApproach(p)
+    }
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update)
+      window.removeEventListener('resize', update)
+    }
+  }, [])
+
+  return approach
+}
+
 export function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false)
 

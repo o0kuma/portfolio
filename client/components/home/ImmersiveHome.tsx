@@ -14,6 +14,7 @@ import {
   HomeMotionProvider,
   useHomeMotion,
   useHomeScrollProgress,
+  useFooterApproach,
 } from '@/components/home/useHomeScrollProgress'
 
 const HomeScene = dynamic(() => import('./HomeScene'), {
@@ -40,6 +41,7 @@ const MORE_ITEMS: Array<{ label: string; labelEn: string; href: string }> = [
  */
 function ImmersiveHomeInner() {
   const scrollProgress = useHomeScrollProgress()
+  const footerApproach = useFooterApproach()
   const { tilt, reduced } = useHomeMotion()
   const { t, locale } = useLanguage()
   const [isMoreOpen, setIsMoreOpen] = useState(false)
@@ -60,7 +62,7 @@ function ImmersiveHomeInner() {
       {/* Fixed canvas: stays visible behind hero; posts section uses opaque bg */}
       <div className="fixed inset-0 z-0">
         <Suspense fallback={<div className="h-full w-full bg-[#030014]" aria-hidden />}>
-          <HomeScene scrollProgress={scrollProgress} />
+          <HomeScene scrollProgress={scrollProgress} approach={footerApproach} />
         </Suspense>
       </div>
 

@@ -1,7 +1,5 @@
 'use client'
 
-import { useRef } from 'react'
-import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowUp, FiBook, FiCode, FiUser } from 'react-icons/fi'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -10,6 +8,7 @@ import { interpolate } from '@/lib/i18n'
 import { POST_CATEGORIES } from '@/lib/post-categories'
 import { PORTFOLIO_PUBLIC, SITE_AUTHOR, SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import { useFooterApproach } from '@/components/home/useHomeScrollProgress'
 
 const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
   ssr: false,
@@ -19,17 +18,15 @@ export default function BlogFooter() {
   const { locale, t, toggleLocale } = useLanguage()
   const currentYear = new Date().getFullYear()
   const reduced = usePrefersReducedMotion()
-  const footerRef = useRef<HTMLElement>(null)
-
-  // 0 as the footer's top edge first touches the viewport bottom (deep space),
-  // 1 once it's fully scrolled into view (atmosphere/horizon) — reads as
-  // "descending toward Earth" as you scroll into the footer.
-  const { scrollYProgress } = useScroll({
-    target: footerRef,
-    offset: ['start end', 'start start'],
-  })
-  const atmosphereOpacity = useTransform(scrollYProgress, [0, 1], [0, 1])
-  const limbOpacity = useTransform(scrollYProgress, [0.3, 1], [0, 1])
+  // 0 until the last ~1.3 viewport heights of the whole page, ramping to 1 at
+  // the true bottom — shared with HomeScene's WebGL "approach" treatment so
+  // the footer's own panel fades toward transparent in lockstep with the
+  // canvas brightening behind it, instead of just tinting a static gradient.
+  const rawApproach = useFooterApproach()
+  const approach = reduced ? 1 : rawApproach
+  const atmosphereOpacity = approach
+  const limbOpacity = Math.max(0, (approach - 0.3) / 0.7)
+  const panelOpacity = 0.9 - approach * 0.55
 
   const socialLinks = [
     { icon: FiGithub, href: SITE_GITHUB, label: 'GitHub' },
@@ -51,26 +48,35 @@ export default function BlogFooter() {
   }
 
   return (
-    <footer ref={footerRef} className="relative overflow-hidden border-t border-border bg-surfaceElevated/90 text-textPrimary backdrop-blur-sm">
-      {/* Atmosphere approach — dark-mode only, crossfades in as the footer
-          scrolls into view so the page reads as descending from deep space
-          toward Earth's horizon by the time you reach the bottom. */}
-      <motion.div
+    <footer className="relative overflow-hidden border-t border-border bg-surfaceElevated/90 dark:bg-transparent text-textPrimary backdrop-blur-sm">
+      {/* Dark-mode base panel — fades toward transparent as the page nears
+          the bottom, revealing the home page's fixed WebGL starfield/
+          "approach" scene (see HomeScene.tsx's `approach` prop) behind it
+          instead of just tinting a static gradient over an opaque panel. */}
+      <div
+        className="pointer-events-none absolute inset-0 hidden dark:block"
+        style={{ backgroundColor: '#0a1420', opacity: panelOpacity }}
+        aria-hidden
+      />
+      {/* Atmosphere tint — crossfades in as the footer scrolls into view so
+          the page reads as descending from deep space toward Earth's
+          horizon by the time you reach the bottom. */}
+      <div
         className="pointer-events-none absolute inset-0 hidden dark:block"
         style={{
-          opacity: reduced ? 1 : atmosphereOpacity,
+          opacity: atmosphereOpacity,
           backgroundImage:
-            'linear-gradient(to bottom, transparent 0%, rgba(10,22,40,0.7) 40%, rgba(37,72,120,0.75) 72%, rgba(251,146,60,0.32) 100%)',
+            'linear-gradient(to bottom, transparent 0%, rgba(10,22,40,0.5) 40%, rgba(37,72,120,0.55) 72%, rgba(251,146,60,0.28) 100%)',
         }}
         aria-hidden
       />
-      <motion.div
+      <div
         className="pointer-events-none absolute inset-x-0 bottom-0 hidden dark:block"
         style={{
-          opacity: reduced ? 1 : limbOpacity,
+          opacity: limbOpacity,
           height: '60%',
           backgroundImage:
-            'radial-gradient(ellipse 90% 70% at 50% 120%, rgba(129,180,255,0.45) 0%, rgba(96,165,250,0.18) 35%, transparent 65%)',
+            'radial-gradient(ellipse 90% 70% at 50% 120%, rgba(129,180,255,0.4) 0%, rgba(96,165,250,0.16) 35%, transparent 65%)',
         }}
         aria-hidden
       />
