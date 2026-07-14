@@ -95,15 +95,6 @@ export default function Hero() {
               >
                 {t.hero.contactMe}
               </motion.a>
-              <motion.a
-                href="/cv.pdf"
-                download
-                whileHover={{ y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-neutral-700 text-neutral-500 font-semibold text-sm hover:border-neutral-500 hover:text-neutral-300 transition-colors"
-              >
-                ↓ CV
-              </motion.a>
             </motion.div>
 
             <motion.div variants={staggerItem} className="flex items-center gap-6">

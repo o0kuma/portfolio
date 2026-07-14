@@ -8,6 +8,7 @@ import SearchBar from './SearchBar'
 import ProjectModal from './portfolio/ProjectModal'
 import { useLanguage } from '@/lib/LanguageContext'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
+import { PORTFOLIO_PROJECTS } from '@/lib/portfolio-projects'
 import {
   portfolioViewport,
   sectionReveal,
@@ -37,26 +38,6 @@ interface Project {
 }
 
 const SAMPLE_PROJECTS: Project[] = [
-  {
-    id: 'tetris-web',
-    title: '테트리스 (웹 데모)',
-    description: '브라우저에서 플레이하는 테트리스 — SRS 회전, 홀드, 모바일 제스처',
-    content:
-      'Next.js와 순수 TypeScript 게임 로직으로 구현했습니다. 7-bag 랜덤, 고스트 블록, 레벨별 중력, 로컬 하이스코어를 지원하며 데스크톱 키보드와 모바일 스와이프·버튼 입력을 모두 제공합니다.',
-    technologies: ['Next.js', 'TypeScript', 'Tailwind CSS'],
-    images: ['/images/placeholder.svg'],
-    githubUrl: '',
-    liveUrl: '/tetris',
-    featured: true,
-    category: 'web',
-    startDate: '2026-04-01',
-    endDate: '',
-    status: 'completed',
-    participants: '개인',
-    role: '기획·구현',
-    retrospective:
-      '게임 로직을 UI와 완전히 분리해 순수 함수로 만든 덕에 테스트와 리팩터링이 쉬웠습니다. 모바일 스와이프 입력을 다루며 터치 이벤트와 키보드 입력을 하나의 상태 모델로 통합하는 법을 배웠습니다.',
-  },
   {
     id: '1',
     title: '바바옵션',
@@ -301,16 +282,6 @@ const SAMPLE_PROJECTS: Project[] = [
 // DB-sourced projects have no entry and fall back to their stored (Korean) text.
 type ProjectEn = Partial<Pick<Project, 'title' | 'description' | 'content' | 'participants' | 'role' | 'retrospective'>>
 const PROJECT_EN: Record<string, ProjectEn> = {
-  'tetris-web': {
-    title: 'Tetris (Web Demo)',
-    description: 'Browser-playable Tetris — SRS rotation, hold, mobile gestures',
-    content:
-      'Built with Next.js and pure TypeScript game logic. Supports 7-bag randomization, ghost piece, per-level gravity and local high scores, with both desktop keyboard and mobile swipe/button input.',
-    participants: 'Solo',
-    role: 'Design & implementation',
-    retrospective:
-      'Keeping the game logic fully separate from the UI as pure functions made testing and refactoring easy. Handling mobile swipe input taught me to unify touch and keyboard into a single state model.',
-  },
   '1': {
     title: 'BabaOption',
     description: 'Easytros / binary-option brand site',
@@ -953,6 +924,40 @@ export default function Projects() {
             <FiGithub size={18} />
             더 많은 프로젝트 보기
           </a>
+        </motion.div>
+
+        {/* Demo Projects — self-built games/tools showcased separately from
+            real client/company work above, since they're personal demos not
+            freelance history. */}
+        <motion.div
+          variants={sectionReveal}
+          initial="hidden"
+          whileInView="visible"
+          viewport={portfolioViewport}
+          className="mt-20"
+        >
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-8 h-px bg-neutral-700" />
+            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">
+              {locale === 'en' ? 'Demo Projects' : '데모 프로젝트'}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PORTFOLIO_PROJECTS.map((demo) => (
+              <Link
+                key={demo.slug}
+                href={`/portfolio/${demo.slug}`}
+                className="group rounded-xl border border-neutral-800 bg-neutral-950 p-5 hover:border-neutral-600 transition-colors"
+              >
+                <h3 className="font-semibold text-neutral-100 text-sm mb-1.5 group-hover:text-white transition-colors">
+                  {locale === 'en' ? demo.title : demo.titleKo}
+                </h3>
+                <p className="text-neutral-500 text-xs leading-relaxed line-clamp-2">
+                  {locale === 'en' ? demo.tagline : demo.taglineKo}
+                </p>
+              </Link>
+            ))}
+          </div>
         </motion.div>
       </div>
     </div>
