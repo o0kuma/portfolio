@@ -1,10 +1,20 @@
-const CACHE_NAME = 'portfolio-v3'
+const CACHE_NAME = 'portfolio-v4'
 const STATIC_ASSETS = [
   '/',
   '/site.webmanifest',
   '/arcade',
   '/arcade-manifest.json',
 ]
+
+// A cache miss must still resolve to a real Response — respondWith() throws
+// "Failed to convert value to 'Response'" if a fetch handler's promise ever
+// resolves to undefined (e.g. caches.match() finding nothing), which used to
+// take down the whole navigation request whenever the network fetch also
+// failed. Every branch below now falls through to this instead of a bare
+// caches.match().
+function offlineFallback() {
+  return new Response('Offline', { status: 503, statusText: 'Offline' })
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -40,11 +50,13 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(request).then((cached) => {
         if (cached) return cached
-        return fetch(request).then((res) => {
-          const clone = res.clone()
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
-          return res
-        })
+        return fetch(request)
+          .then((res) => {
+            const clone = res.clone()
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, clone))
+            return res
+          })
+          .catch(() => caches.match(request).then((c) => c ?? offlineFallback()))
       })
     )
     return
@@ -52,17 +64,32 @@ self.addEventListener('fetch', (event) => {
 
   if (request.destination === 'image' || request.destination === 'font') {
     event.respondWith(
-      caches.match(request).then(cached => cached ?? fetch(request).then(res => {
-        const clone = res.clone()
-        caches.open(CACHE_NAME).then(cache => cache.put(request, clone))
-        return res
-      }))
+      caches.match(request).then(cached => cached ?? fetch(request)
+        .then(res => {
+          const clone = res.clone()
+          caches.open(CACHE_NAME).then(cache => cache.put(request, clone))
+          return res
+        })
+        .catch(() => offlineFallback())
+      )
+    )
+    return
+  }
+
+  // Navigations (the page document itself) get a network-first strategy with
+  // an actual offline page as the last resort, instead of an unhandled
+  // cache-miss resolving to undefined.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() =>
+        caches.match(request).then((cached) => cached ?? caches.match('/').then((shell) => shell ?? offlineFallback()))
+      )
     )
     return
   }
 
   event.respondWith(
-    fetch(request).catch(() => caches.match(request))
+    fetch(request).catch(() => caches.match(request).then((cached) => cached ?? offlineFallback()))
   )
 })
 
