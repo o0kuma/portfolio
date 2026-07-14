@@ -83,7 +83,7 @@ const SAMPLE_PROJECTS: Project[] = [
     title: '이지트로스 (옵션)',
     description: '코인 또는 통화로 게임을 할 수 있는 WTS',
     content:
-      '옵션을 통해 코인 또는 통화로 게임을 할 수 있는 웹 트레이딩 시스템입니다. PixiJS를 활용한 인터랙티브한 게임 요소와 Svelte를 통한 상태 관리를 구현했습니다.',
+      '옵션을 통해 코인 또는 통화로 게임을 할 수 있는 웹 트레이딩 시스템입니다. PixiJS를 활용해 인터랙티브한 게임 요소를 구현했습니다.',
     technologies: ['HTML5', 'PixiJS', 'JavaScript'],
     images: ['/images/placeholder.svg'],
     githubUrl: '',
@@ -95,6 +95,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '팀 프로젝트(회사)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '실시간 시세와 게임 애니메이션이 잦아 DOM 렌더링 대신 PixiJS 캔버스 렌더링을 택해 프레임 드랍을 줄였습니다.',
   },
   {
     id: '4',
@@ -113,6 +115,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '개인 프로젝트(외주)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '유아 대상 서비스라 복잡한 조작 없이 큰 터치 영역과 직관적인 흐름에 집중했고, React 컴포넌트를 재사용 가능한 단위로 쪼개 화면 추가 요청에 빠르게 대응했습니다.',
   },
   {
     id: '4-1',
@@ -131,6 +135,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '개인 프로젝트(외주)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '예약 단계별 폼 상태가 복잡해 React state로 관리했고, 모바일에서 먼저 확인하는 사용자가 많아 모바일 퍼스트로 반응형을 설계했습니다.',
   },
   {
     id: '5',
@@ -149,6 +155,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '팀 프로젝트(회사)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '관리자 페이지에 반복되는 테이블/필터 UI를 컴포넌트로 분리해 재사용했고, 반응형으로 구현해 다양한 화면에서 확인할 수 있게 했습니다.',
   },
   {
     id: '6',
@@ -167,6 +175,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '팀 프로젝트(회사)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '이력서·문의 폼 제출이 핵심이라 EJS 서버사이드 렌더링으로 폼 처리와 SEO를 단순하게 가져갔습니다.',
   },
   {
     id: '7',
@@ -185,6 +195,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '팀 프로젝트(회사)',
     role: '퍼블리싱 및 프론트엔드 개발',
+    retrospective:
+      '사내 브랜드 가이드에 맞춰 Semantic UI 그리드로 빠르게 반응형 퍼블리싱을 완료했습니다.',
   },
   {
     id: '8',
@@ -203,6 +215,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '외주 프로젝트',
     role: '퍼블리싱 작업 담당',
+    retrospective:
+      '순수 퍼블리싱 작업으로, 시멘틱 마크업과 크로스 브라우저 호환성에 집중했습니다.',
   },
   {
     id: '9',
@@ -221,6 +235,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '외주 프로젝트',
     role: '퍼블리싱 작업 담당',
+    retrospective:
+      '여러 대학 사이트에 반복되는 구조를 jQuery로 모듈화해 유지보수하기 쉽게 만들었습니다.',
   },
   {
     id: '10',
@@ -239,6 +255,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '외주 프로젝트',
     role: '전 퍼블리싱 담당',
+    retrospective:
+      '공공기관 사이트 특성상 스크린 리더 대응 등 웹 접근성을 신경 써서 시멘틱 마크업을 작성했습니다.',
   },
   {
     id: '11',
@@ -257,6 +275,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '2명 (외주)',
     role: '전 퍼블리싱 작업 담당',
+    retrospective:
+      '외주로 받은 프로젝트라 2인 협업 중 CSS 네이밍 컨벤션을 맞춰 충돌 없이 작업했고, jQuery로 폼 인터랙션을 처리했습니다.',
   },
   {
     id: '12',
@@ -275,6 +295,8 @@ const SAMPLE_PROJECTS: Project[] = [
     status: 'completed',
     participants: '2명',
     role: '전 퍼블리싱 담당',
+    retrospective:
+      '예약 캘린더 UI를 PHP 템플릿과 연동되는 구조로 퍼블리싱했습니다.',
   },
 ]
 
@@ -306,9 +328,11 @@ const PROJECT_EN: Record<string, ProjectEn> = {
     title: 'Easytros (Options)',
     description: 'A WTS to trade with coins or currency',
     content:
-      'A web trading system for playing options with coins or currency. Implemented interactive game elements with PixiJS and state management with Svelte.',
+      'A web trading system for playing options with coins or currency. Implemented interactive game elements with PixiJS.',
     participants: 'Team project (company)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'Real-time prices and game animations updated constantly, so I chose PixiJS canvas rendering over the DOM to avoid dropped frames.',
   },
   '4': {
     title: 'Lalla',
@@ -317,6 +341,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A web app that uses AI to help kindergartens and parents raise young children more conveniently and effectively. Built a responsive, user-friendly UI on React.',
     participants: 'Solo (freelance)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'Since this served young children, I focused on large touch targets and simple flows over complex controls, and split React components into reusable units to move fast on new screen requests.',
   },
   '4-1': {
     title: 'tzzim',
@@ -325,6 +351,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A golf tee-time website that introduces courses and lets users make reservations. Built a responsive, user-friendly UI on React.',
     participants: 'Solo (freelance)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'The multi-step reservation form had complex state, so I managed it with React state, and designed mobile-first since most users checked bookings from their phones.',
   },
   '5': {
     title: 'mytradinginfo / admin',
@@ -333,6 +361,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A crypto information site built for advertising and customer acquisition around company projects. Developed the responsive design and the admin panel.',
     participants: 'Team project (company)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'Split the admin panel\'s repeated table/filter UI into reusable components, and made it responsive so it worked across different screens.',
   },
   '6': {
     title: 'mysoftwiz / admin',
@@ -341,6 +371,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A company introduction site that accepts resumes and inquiries, plus an admin panel to manage them. Implemented server-side rendering with the EJS template engine.',
     participants: 'Team project (company)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'Since resume and inquiry submissions were the core flow, I kept form handling and SEO simple with EJS server-side rendering.',
   },
   '7': {
     title: 'babaglobal',
@@ -349,6 +381,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'An in-house company introduction homepage for the baba brand. Handled responsive page publishing and frontend work with Semantic UI.',
     participants: 'Team project (company)',
     role: 'Publishing & frontend development',
+    retrospective:
+      'Followed the in-house brand guide and used Semantic UI\'s grid to ship responsive publishing quickly.',
   },
   '8': {
     title: 'Shoretech',
@@ -357,6 +391,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A swimming-pool introduction site delivered as a freelance markup-only job. Introduced the pool facilities and services with a clean, intuitive design.',
     participants: 'Freelance project',
     role: 'Markup/publishing',
+    retrospective:
+      'A pure markup job, so I focused on semantic markup and cross-browser compatibility.',
   },
   '9': {
     title: 'Daejin University Family Companies',
@@ -365,6 +401,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A freelance markup project for Daejin University family companies. Like other universities, built a family-company site for the assigned school.',
     participants: 'Freelance project',
     role: 'Markup/publishing',
+    retrospective:
+      'Modularized the structure repeated across multiple university sites with jQuery to keep it maintainable.',
   },
   '10': {
     title: 'Daejeon Mobility Support Center',
@@ -373,6 +411,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A freelance markup project for a mobility support center serving people with reduced mobility.',
     participants: 'Freelance project',
     role: 'Full markup/publishing',
+    retrospective:
+      'Being a public-sector site, I paid close attention to web accessibility — screen reader support and semantic markup.',
   },
   '11': {
     title: 'Study PT',
@@ -381,6 +421,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'A personalized study-training project delivered as freelance work by two people. Handled all the markup to make studying more convenient for students.',
     participants: '2 people (freelance)',
     role: 'Full markup/publishing',
+    retrospective:
+      'A freelance project done with one other person, so we agreed on a CSS naming convention to avoid conflicts, and I handled form interactions with jQuery.',
   },
   '12': {
     title: 'kmuseum',
@@ -389,6 +431,8 @@ const PROJECT_EN: Record<string, ProjectEn> = {
       'Worked on kmuseum with two people, handling all the markup. A site to reserve performances, exhibitions and events at museums nationwide, built to make things convenient for visitors.',
     participants: '2 people',
     role: 'Full markup/publishing',
+    retrospective:
+      'Built the reservation calendar UI as markup wired into the PHP templates.',
   },
 }
 
