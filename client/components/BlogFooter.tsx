@@ -1,5 +1,7 @@
 'use client'
 
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { FiGithub, FiMail, FiArrowUp, FiBook, FiCode, FiUser } from 'react-icons/fi'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -7,6 +9,7 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import { POST_CATEGORIES } from '@/lib/post-categories'
 import { PORTFOLIO_PUBLIC, SITE_AUTHOR, SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
   ssr: false,
@@ -15,6 +18,18 @@ const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), {
 export default function BlogFooter() {
   const { locale, t, toggleLocale } = useLanguage()
   const currentYear = new Date().getFullYear()
+  const reduced = usePrefersReducedMotion()
+  const footerRef = useRef<HTMLElement>(null)
+
+  // 0 as the footer's top edge first touches the viewport bottom (deep space),
+  // 1 once it's fully scrolled into view (atmosphere/horizon) — reads as
+  // "descending toward Earth" as you scroll into the footer.
+  const { scrollYProgress } = useScroll({
+    target: footerRef,
+    offset: ['start end', 'start start'],
+  })
+  const atmosphereOpacity = useTransform(scrollYProgress, [0, 1], [0, 1])
+  const limbOpacity = useTransform(scrollYProgress, [0.3, 1], [0, 1])
 
   const socialLinks = [
     { icon: FiGithub, href: SITE_GITHUB, label: 'GitHub' },
@@ -36,7 +51,29 @@ export default function BlogFooter() {
   }
 
   return (
-    <footer className="relative overflow-hidden border-t border-border bg-surfaceElevated/90 text-textPrimary backdrop-blur-sm">
+    <footer ref={footerRef} className="relative overflow-hidden border-t border-border bg-surfaceElevated/90 text-textPrimary backdrop-blur-sm">
+      {/* Atmosphere approach — dark-mode only, crossfades in as the footer
+          scrolls into view so the page reads as descending from deep space
+          toward Earth's horizon by the time you reach the bottom. */}
+      <motion.div
+        className="pointer-events-none absolute inset-0 hidden dark:block"
+        style={{
+          opacity: reduced ? 1 : atmosphereOpacity,
+          backgroundImage:
+            'linear-gradient(to bottom, transparent 0%, rgba(10,22,40,0.7) 40%, rgba(37,72,120,0.75) 72%, rgba(251,146,60,0.32) 100%)',
+        }}
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute inset-x-0 bottom-0 hidden dark:block"
+        style={{
+          opacity: reduced ? 1 : limbOpacity,
+          height: '60%',
+          backgroundImage:
+            'radial-gradient(ellipse 90% 70% at 50% 120%, rgba(129,180,255,0.45) 0%, rgba(96,165,250,0.18) 35%, transparent 65%)',
+        }}
+        aria-hidden
+      />
       <div className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30">
         <div className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-purple-500/15 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-blue-500/15 blur-3xl" />
