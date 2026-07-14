@@ -153,6 +153,7 @@ export default function AdBanner({
           onClick={handleClick}
           className="block"
         >
+          {/* eslint-disable-next-line @next/next/no-img-element -- ad.image_url is an arbitrary admin-entered URL; next/image would require allow-listing every possible ad host */}
           <img
             src={ad.image_url}
             alt={ad.title}

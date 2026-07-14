@@ -451,6 +451,7 @@ function ProjectCard({
       onClick={onClick}
     >
       <div className="relative h-36 bg-neutral-900 border-b border-neutral-800 overflow-hidden shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element -- project.images[0] is an arbitrary admin-entered URL with a runtime onError fallback swap; next/image would need allow-listing every host and a state-based fallback instead of mutating currentTarget.src */}
         <img
           src={project.images[0] || '/images/placeholder.svg'}
           alt={title}

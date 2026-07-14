@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { useLanguage } from '@/lib/LanguageContext'
 
 const FILES_KO = {
@@ -216,7 +217,7 @@ export default function TerminalPage() {
           <div className="w-3 h-3 rounded-full bg-yellow-500" />
           <div className="w-3 h-3 rounded-full bg-green-500" />
           <span className="ml-3 text-green-600 text-xs">kuuuma@portfolio ~ terminal</span>
-          <a href="/" className="ml-auto text-green-700 hover:text-green-500 text-xs transition-colors">{en ? '← Exit' : '← 나가기'}</a>
+          <Link href="/" className="ml-auto text-green-700 hover:text-green-500 text-xs transition-colors">{en ? '← Exit' : '← 나가기'}</Link>
         </div>
 
         {/* Output lines */}

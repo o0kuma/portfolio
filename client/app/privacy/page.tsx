@@ -13,7 +13,7 @@ function PrivacyPolicyKo() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. 개인정보의 처리 목적</h2>
         <p className="text-gray-700 leading-relaxed">
-          okuma 포트폴리오 웹사이트(이하 "서비스")는 다음의 목적을 위하여 개인정보를 처리합니다:
+          okuma 포트폴리오 웹사이트(이하 &quot;서비스&quot;)는 다음의 목적을 위하여 개인정보를 처리합니다:
         </p>
         <ul className="list-disc pl-6 mt-4 text-gray-700">
           <li>연락처 문의 처리 및 답변</li>
@@ -141,7 +141,7 @@ function PrivacyPolicyEn() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">1. Purpose of Processing Personal Information</h2>
         <p className="text-gray-700 leading-relaxed">
-          The okuma portfolio website (hereinafter "Service") processes personal information for the following purposes:
+          The okuma portfolio website (hereinafter &quot;Service&quot;) processes personal information for the following purposes:
         </p>
         <ul className="list-disc pl-6 mt-4 text-gray-700">
           <li>Processing and responding to contact inquiries</li>

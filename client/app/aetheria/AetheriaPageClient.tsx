@@ -239,7 +239,7 @@ export default function AetheriaPageClient() {
         <div className="mb-6 rounded-xl border border-cyan-800/40 bg-cyan-950/10 px-4 py-3">
           <div className="flex items-center justify-between">
             <div className="text-xs text-slate-400">
-              Admin Controls · Today's usage {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
+              Admin Controls · Today&apos;s usage {budget ? (budget.spentCents / 100).toFixed(4) : '0.0000'}$ / {budget ? (budget.capCents / 100).toFixed(2) : '0.00'}$
             </div>
             <button
               onClick={toggleRunning}

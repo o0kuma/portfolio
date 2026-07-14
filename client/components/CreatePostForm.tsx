@@ -83,7 +83,6 @@ export default function CreatePostForm({ isOpen, onClose, onSuccess, editPost }:
     setTagInput('')
     setError('')
     setAutosaveStatus('idle')
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editPost, isOpen])
 
   // Debounced autosave to localStorage (create mode only)

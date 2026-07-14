@@ -72,7 +72,7 @@ export default function ArcadeMenuClient() {
         >
           <span className="text-2xl">{claimed ? '✅' : '🎯'}</span>
           <div className="flex-1">
-            <p className="text-xs font-bold text-amber-300">Today's Challenge</p>
+            <p className="text-xs font-bold text-amber-300">Today&apos;s Challenge</p>
             <p className="text-sm text-white">{challenge.emoji} {challenge.gameTitle} — {challenge.target}+ points</p>
           </div>
           <div className="text-right text-xs font-bold text-amber-300">

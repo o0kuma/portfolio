@@ -130,7 +130,7 @@ export default function BookmarksPage() {
         setLoading(false)
       })
       .catch(() => setLoading(false))
-  }, [bookmarks]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [bookmarks])
 
   const filteredResources =
     categoryFilter === '전체'

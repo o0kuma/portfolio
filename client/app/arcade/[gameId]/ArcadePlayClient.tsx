@@ -133,7 +133,7 @@ export default function ArcadePlayClient({ gameId }: { gameId: string }) {
                 <p className="mb-3 text-4xl font-black" style={{ color: game.accentColor }}>{result.score}</p>
                 {result.isNew && <p className="mb-2 text-xs font-bold text-amber-400">🏆 New Record!</p>}
                 {result.challengeBonus > 0 && (
-                  <p className="mb-2 text-xs font-bold text-emerald-400">🎯 Today's Challenge complete! +{result.challengeBonus} bonus</p>
+                  <p className="mb-2 text-xs font-bold text-emerald-400">🎯 Today&apos;s Challenge complete! +{result.challengeBonus} bonus</p>
                 )}
                 <p className="mb-4 text-sm text-slate-300">🪙 +{result.coins} coins earned</p>
 

@@ -13,7 +13,7 @@ function TermsKo() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">제1조 (목적)</h2>
         <p className="text-gray-700 leading-relaxed">
-          이 약관은 okuma 포트폴리오 웹사이트(이하 "서비스")의 이용과 관련하여 서비스 제공자와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
+          이 약관은 okuma 포트폴리오 웹사이트(이하 &quot;서비스&quot;)의 이용과 관련하여 서비스 제공자와 이용자 간의 권리, 의무 및 책임사항을 규정함을 목적으로 합니다.
         </p>
       </section>
 
@@ -21,9 +21,9 @@ function TermsKo() {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">제2조 (정의)</h2>
         <p className="text-gray-700 leading-relaxed mb-4">이 약관에서 사용하는 용어의 정의는 다음과 같습니다:</p>
         <ul className="list-disc pl-6 text-gray-700">
-          <li><strong>"서비스"</strong>란 okuma의 포트폴리오를 소개하는 웹사이트를 의미합니다.</li>
-          <li><strong>"이용자"</strong>란 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
-          <li><strong>"콘텐츠"</strong>란 이용자가 서비스를 이용하면서 생성한 정보, 텍스트, 이미지 등을 의미합니다.</li>
+          <li><strong>&quot;서비스&quot;</strong>란 okuma의 포트폴리오를 소개하는 웹사이트를 의미합니다.</li>
+          <li><strong>&quot;이용자&quot;</strong>란 서비스에 접속하여 이 약관에 따라 서비스를 이용하는 회원 및 비회원을 의미합니다.</li>
+          <li><strong>&quot;콘텐츠&quot;</strong>란 이용자가 서비스를 이용하면서 생성한 정보, 텍스트, 이미지 등을 의미합니다.</li>
         </ul>
       </section>
 
@@ -133,7 +133,7 @@ function TermsEn() {
       <section className="mb-8">
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Article 1 (Purpose)</h2>
         <p className="text-gray-700 leading-relaxed">
-          These Terms of Service govern the rights, obligations, and responsibilities between the service provider and users in connection with the use of the okuma portfolio website (hereinafter "Service").
+          These Terms of Service govern the rights, obligations, and responsibilities between the service provider and users in connection with the use of the okuma portfolio website (hereinafter &quot;Service&quot;).
         </p>
       </section>
 
@@ -141,9 +141,9 @@ function TermsEn() {
         <h2 className="text-2xl font-semibold text-gray-800 mb-4">Article 2 (Definitions)</h2>
         <p className="text-gray-700 leading-relaxed mb-4">Terms used in these Terms of Service are defined as follows:</p>
         <ul className="list-disc pl-6 text-gray-700">
-          <li><strong>"Service"</strong> means the website that introduces okuma's portfolio.</li>
-          <li><strong>"User"</strong> means any person who accesses the Service and uses it under these Terms.</li>
-          <li><strong>"Content"</strong> means information, text, images, etc. created by users while using the Service.</li>
+          <li><strong>&quot;Service&quot;</strong> means the website that introduces okuma&apos;s portfolio.</li>
+          <li><strong>&quot;User&quot;</strong> means any person who accesses the Service and uses it under these Terms.</li>
+          <li><strong>&quot;Content&quot;</strong> means information, text, images, etc. created by users while using the Service.</li>
         </ul>
       </section>
 
@@ -180,7 +180,7 @@ function TermsEn() {
         <p className="text-gray-700 leading-relaxed mb-4">Users must not:</p>
         <ul className="list-disc pl-6 text-gray-700">
           <li>Register false information when applying or making changes</li>
-          <li>Steal another person's information</li>
+          <li>Steal another person&apos;s information</li>
           <li>Alter information posted on the Service</li>
           <li>Send or post information other than what the Service prescribes (e.g., computer programs)</li>
           <li>Infringe on the intellectual property rights of the Service or third parties</li>
@@ -205,7 +205,7 @@ function TermsEn() {
           1. The Service is exempt from liability for service provision failures due to force majeure such as natural disasters or equivalent circumstances.
         </p>
         <p className="text-gray-700 leading-relaxed mb-4">
-          2. The Service is not liable for service disruptions caused by the user's own fault.
+          2. The Service is not liable for service disruptions caused by the user&apos;s own fault.
         </p>
         <p className="text-gray-700 leading-relaxed">
           3. The Service is not liable for loss of expected revenue from using the Service or for damage caused by data obtained through the Service.
