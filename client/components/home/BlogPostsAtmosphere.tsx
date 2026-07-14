@@ -1,10 +1,13 @@
 'use client'
 
+import { useRef } from 'react'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import Link from 'next/link'
 import type { HomePost } from '@/components/home/post-types'
 import BlogPostsCarousel3D from '@/components/home/BlogPostsCarousel3D'
 import { FiArrowRight } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
+import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 
 type Props = {
   posts: HomePost[]
@@ -35,17 +38,59 @@ export default function BlogPostsAtmosphere({
   categoryLabel,
 }: Props) {
   const { locale } = useLanguage()
+  const reduced = usePrefersReducedMotion()
+  const sectionRef = useRef<HTMLElement>(null)
+
+  // 0 as this section starts entering the viewport → 1 as it finishes
+  // scrolling past — lets the "deep space" tone warm very slightly across
+  // the whole feed instead of sitting frozen at the same color the entire
+  // time, so the middle of the page reads as a continuation of the journey
+  // (hero → this → footer) rather than a flat black gap between the two
+  // sections that actually do animate.
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ['start end', 'end start'],
+  })
+  const glow = useTransform(
+    scrollYProgress,
+    [0, 1],
+    [
+      'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(30,27,75,0.35) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(0,0,0,0.85) 0%, transparent 50%)',
+      'radial-gradient(ellipse 80% 60% at 50% 40%, rgba(45,40,95,0.4) 0%, transparent 55%), radial-gradient(ellipse at bottom, rgba(20,30,55,0.7) 0%, transparent 50%)',
+    ],
+  )
+
   return (
     <section
-      className="relative min-h-screen overflow-hidden bg-[#030014] text-white"
+      ref={sectionRef}
+      className="relative min-h-screen overflow-hidden text-white"
       aria-labelledby="posts-feed-heading"
     >
+      {/* Base fill starts transparent at the very top so the fixed WebGL
+          starfield canvas behind the page shows through, then becomes fully
+          opaque a short distance down — this hands off into the section's
+          own background gradually instead of a hard seam against the hero. */}
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(30,27,75,0.35)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,rgba(0,0,0,0.85)_0%,transparent_50%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-transparent to-[#030014]"
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-0 shadow-[inset_0_0_160px_60px_rgba(0,0,0,0.55)]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 top-40 bg-[#030014]"
+        aria-hidden
+      />
+      <motion.div
+        className="pointer-events-none absolute inset-0"
+        style={{ backgroundImage: reduced ? undefined : glow }}
+        aria-hidden
+      />
+      {reduced && (
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_40%,rgba(30,27,75,0.35)_0%,transparent_55%),radial-gradient(ellipse_at_bottom,rgba(0,0,0,0.85)_0%,transparent_50%)]"
+          aria-hidden
+        />
+      )}
+      <div
+        className="pointer-events-none absolute inset-0 shadow-[inset_0_0_160px_60px_rgba(0,0,0,0.32)]"
         aria-hidden
       />
       <GrainOverlay />
