@@ -33,7 +33,6 @@ export const translations = {
       statYearsSuffix: '년 경력',
       statProjectsSuffix: '프로젝트',
       statBirthSuffix: '년생',
-      location: '서울 · 송파구',
       role: '프론트엔드 / 풀스택 개발자',
       works: [
         { label: 'BTB 사이트 유지보수 / Scale-up', status: '' },
@@ -89,7 +88,6 @@ export const translations = {
       emailWarning:
         '메시지는 저장되었습니다. 이메일 알림은 잠시 후 전달될 수 있습니다.',
       newMessage: '새 메시지 작성',
-      location: '서울 · 송파구',
       hours: 'Weekdays 9:00 – 18:00',
       sendError: '메시지 전송에 실패했습니다.',
       sendErrorRetry: '메시지 전송에 실패했습니다. 다시 시도해주세요.',
@@ -544,7 +542,6 @@ export const translations = {
       statYearsSuffix: 'yrs exp',
       statProjectsSuffix: 'projects',
       statBirthSuffix: 'born',
-      location: 'Seoul · Songpa-gu',
       role: 'Frontend / Full-stack Developer',
       works: [
         { label: 'BTB Site Maintenance / Scale-up', status: '' },
@@ -600,7 +597,6 @@ export const translations = {
       emailWarning:
         'Your message was saved. Email notification may be delivered shortly.',
       newMessage: 'Write New Message',
-      location: 'Seoul · Songpa-gu',
       hours: 'Weekdays 9:00 – 18:00',
       sendError: 'Failed to send message.',
       sendErrorRetry: 'Failed to send message. Please try again.',

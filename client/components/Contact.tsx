@@ -58,7 +58,6 @@ export default function Contact() {
   const contactItems = [
     { label: 'Email', value: 'c8c8c81828@gmail.com', href: 'mailto:c8c8c81828@gmail.com' },
     { label: 'Phone', value: '050-6679-1577', href: 'tel:+8205066791577' },
-    { label: 'Location', value: t.contact.location, href: null },
     { label: 'Hours', value: t.contact.hours, href: null },
   ]
 
