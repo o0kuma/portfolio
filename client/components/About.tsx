@@ -57,36 +57,6 @@ export default function About() {
               <p>{t.about.p3}</p>
             </motion.div>
 
-            <motion.div variants={staggerItem} className="mt-12">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="overflow-hidden w-5 h-px">
-                  <motion.span
-                    variants={lineReveal}
-                    className="block w-full h-full bg-neutral-700"
-                    style={{ originX: 0 }}
-                  />
-                </div>
-                <span className="text-neutral-500 text-xs font-mono tracking-[0.18em] uppercase">
-                  {t.about.recentWork}
-                </span>
-              </div>
-              <ul className="space-y-3">
-                {t.about.works.map((work) => (
-                  <li key={work.label} className="flex items-start gap-3">
-                    <span className="mt-[0.55rem] w-1 h-1 rounded-full bg-neutral-600 shrink-0" />
-                    <span className="text-neutral-500 text-sm leading-relaxed">
-                      {work.label}
-                      {work.status && (
-                        <span className="ml-2 px-2 py-0.5 rounded-full text-[0.65rem] font-mono border border-neutral-700 text-neutral-400 align-middle">
-                          {work.status}
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-
             <motion.div variants={staggerItem} className="mt-12 flex flex-wrap gap-10">
               {stats.map((stat) => (
                 <div key={stat.label}>

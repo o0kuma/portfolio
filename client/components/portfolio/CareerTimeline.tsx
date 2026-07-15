@@ -17,6 +17,11 @@ type TimelineItem = {
   highlights: string[]
   highlightsEn: string[]
   tech?: string[]
+  /** One-line "why/how" reflection on the role — mirrors the per-project
+   *  tech retrospectives in Projects.tsx so career history isn't just a
+   *  task list. */
+  note?: string
+  noteEn?: string
 }
 
 const TIMELINE: TimelineItem[] = [
@@ -40,6 +45,9 @@ const TIMELINE: TimelineItem[] = [
       'UI/UX planning and markup',
     ],
     tech: ['Next.js', 'TypeScript', 'React', 'Tailwind CSS'],
+    note: '프론트엔드 아키텍처를 처음부터 설계하는 역할을 맡아, Next.js와 TypeScript 기반으로 기준을 잡아가는 중입니다.',
+    noteEn:
+      "Taking on frontend architecture from the ground up, establishing conventions with Next.js and TypeScript.",
   },
   {
     year: '2020',
@@ -63,6 +71,9 @@ const TIMELINE: TimelineItem[] = [
       'Developed an internal management system with MySQL',
     ],
     tech: ['HTML5', 'CSS3', 'JavaScript', 'Svelte', 'PixiJS', 'MySQL'],
+    note: 'SSR이 필요한 브랜드 사이트엔 Next.js, 반복되는 관리자 UI엔 프레임워크 독립적인 Web Components, 실시간 렌더링이 잦은 화면엔 PixiJS 캔버스를 쓰는 식으로 상황에 맞는 기술을 골라 프론트엔드를 이끌었습니다.',
+    noteEn:
+      'Picked the tool to fit the situation — Next.js for SSR-heavy brand sites, framework-agnostic Web Components for repeated admin UI, and PixiJS canvas rendering for screens updating in real time.',
   },
   {
     year: '2018',
@@ -84,6 +95,9 @@ const TIMELINE: TimelineItem[] = [
       'jQuery-based interactions and Gnuboard tuning',
     ],
     tech: ['HTML5', 'CSS3', 'JavaScript', 'jQuery', 'PHP'],
+    note: '여러 외주 프로젝트를 거치며 크로스 브라우저 호환성과 웹 접근성을 지키는 시멘틱 마크업 습관을 다졌습니다.',
+    noteEn:
+      'Working across many freelance projects built the habit of writing semantic markup that holds up cross-browser and stays accessible.',
   },
 ]
 
@@ -161,6 +175,11 @@ export default function CareerTimeline() {
                           </span>
                         ))}
                       </div>
+                    )}
+                    {(item.note || item.noteEn) && (
+                      <p className="mt-4 pt-4 border-t border-neutral-900 text-sm leading-relaxed text-neutral-500">
+                        {locale === 'en' ? item.noteEn : item.note}
+                      </p>
                     )}
                   </div>
                 </div>

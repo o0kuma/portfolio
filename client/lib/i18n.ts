@@ -29,20 +29,10 @@ export const translations = {
       p1: '프론트엔드가 주 영역이지만, 서버와 DB도 직접 만들어야 할 때 뒤로 물러서지 않습니다. UI 컴포넌트를 설계하고 API를 연동하며, 필요하다면 백엔드 로직까지 끝까지 구현합니다.',
       p2: '{years}년 동안 금융 플랫폼, 트레이딩 시스템, 앱 서비스, 회사 사이트 등 다양한 프로젝트를 거쳐왔습니다. 요즘은 Next.js와 Svelte를 주로 쓰고 있고, TypeScript로 더 단단한 코드를 만드는 데 집중합니다.',
       p3: '화면의 완성도와 코드의 품질, 두 가지 모두를 놓치지 않으려 꾸준히 파고듭니다.',
-      recentWork: 'Recent Work',
       statYearsSuffix: '년 경력',
       statProjectsSuffix: '프로젝트',
       statBirthSuffix: '년생',
       role: '프론트엔드 / 풀스택 개발자',
-      works: [
-        { label: 'BTB 사이트 유지보수 / Scale-up', status: '' },
-        {
-          label:
-            'scaleup_tip 논문·특허 데이터 수집 — JSON 메타데이터 추출 및 서버 저장 관리',
-          status: '',
-        },
-        { label: 'B2B 오픈마켓', status: '진행 중' },
-      ],
     },
     skills: {
       label: 'Skills',
@@ -538,20 +528,10 @@ export const translations = {
       p1: "Frontend is my main domain, but I don't step back when servers and DBs need to be built from scratch. I design UI components, integrate APIs, and implement backend logic end-to-end when needed.",
       p2: "Over {years} years I've worked on financial platforms, trading systems, app services, and corporate sites. Currently I mainly use Next.js and Svelte, focused on writing stronger code with TypeScript.",
       p3: 'I strive to deliver both pixel-perfect UI and quality code — never sacrificing one for the other.',
-      recentWork: 'Recent Work',
       statYearsSuffix: 'yrs exp',
       statProjectsSuffix: 'projects',
       statBirthSuffix: 'born',
       role: 'Frontend / Full-stack Developer',
-      works: [
-        { label: 'BTB Site Maintenance / Scale-up', status: '' },
-        {
-          label:
-            'scaleup_tip Paper & Patent Data Collection — JSON metadata extraction & server management',
-          status: '',
-        },
-        { label: 'B2B Open Market', status: 'In Progress' },
-      ],
     },
     skills: {
       label: 'Skills',
