@@ -142,7 +142,10 @@ type CardProps = {
 }
 
 function SkillCard({ cat, locale, index }: CardProps) {
-  const [hovered, setHovered] = useState(false)
+  // Toggled by click/tap (not just hover) so touch devices — where
+  // hover never fires — can still reach the proficiency bars instead of
+  // being stuck on the chip view forever.
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <motion.div
@@ -150,11 +153,20 @@ function SkillCard({ cat, locale, index }: CardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={portfolioViewport}
       transition={{ duration: 0.55, delay: index * 0.07, ease: [0.22, 1, 0.36, 1] }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
-      className="group relative rounded-xl border border-neutral-800 bg-neutral-950/50 p-5 transition-colors hover:border-neutral-700 overflow-hidden cursor-default"
+      onMouseEnter={() => setExpanded(true)}
+      onMouseLeave={() => setExpanded(false)}
+      onClick={() => setExpanded((v) => !v)}
+      onFocus={() => setExpanded(true)}
+      onBlur={() => setExpanded(false)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          setExpanded((v) => !v)
+        }
+      }}
+      className="group relative rounded-xl border border-neutral-800 bg-neutral-950/50 p-5 transition-colors hover:border-neutral-700 overflow-hidden cursor-pointer"
     >
       {/* Subtle glow on hover */}
       <motion.div
@@ -175,7 +187,7 @@ function SkillCard({ cat, locale, index }: CardProps) {
 
       {/* Default: chips */}
       <AnimatePresence initial={false} mode="wait">
-        {!hovered ? (
+        {!expanded ? (
           <motion.div
             key="chips"
             initial={{ opacity: 0 }}
@@ -223,25 +235,41 @@ function SkillCard({ cat, locale, index }: CardProps) {
         )}
       </AnimatePresence>
 
-      {/* Hover hint — visible only when not hovered */}
+      {/* Interaction hint — visible only while collapsed */}
       <motion.p
-        animate={{ opacity: hovered ? 0 : 1 }}
+        animate={{ opacity: expanded ? 0 : 1 }}
         transition={{ duration: 0.15 }}
         className="mt-3 text-[10px] font-mono text-neutral-800 pointer-events-none"
       >
-        hover to see levels
+        {locale === 'ko' ? '탭하면 숙련도 표시' : 'tap to see levels'}
       </motion.p>
     </motion.div>
   )
 }
 
+// Levels here must stay derived from SKILL_CATEGORIES above (not
+// hand-typed separately) — this section used to keep its own copy of
+// each number and they drifted out of sync with the category cards
+// (e.g. Node.js showed 85 there but 70 here), which reads as sloppy
+// when both are visible on the same page.
+function levelOf(skillName: string): number {
+  for (const cat of SKILL_CATEGORIES) {
+    const found = cat.skills.find((s) => s.name === skillName)
+    if (found) return found.level
+  }
+  return 0
+}
+function avgLevel(...skillNames: string[]): number {
+  return Math.round(skillNames.reduce((sum, n) => sum + levelOf(n), 0) / skillNames.length)
+}
+
 const skillBars = [
-  { name: 'React / Next.js', level: 90, color: 'bg-blue-500' },
-  { name: 'TypeScript', level: 85, color: 'bg-blue-400' },
-  { name: 'TailwindCSS', level: 88, color: 'bg-cyan-500' },
-  { name: 'Node.js', level: 70, color: 'bg-green-500' },
-  { name: 'PostgreSQL', level: 65, color: 'bg-green-400' },
-  { name: 'Git / GitHub', level: 85, color: 'bg-purple-500' },
+  { name: 'React / Next.js', level: avgLevel('React', 'Next.js'), color: 'bg-blue-500' },
+  { name: 'TypeScript', level: levelOf('TypeScript'), color: 'bg-blue-400' },
+  { name: 'TailwindCSS', level: levelOf('Tailwind CSS'), color: 'bg-cyan-500' },
+  { name: 'Node.js', level: levelOf('Node.js'), color: 'bg-green-500' },
+  { name: 'PostgreSQL', level: levelOf('PostgreSQL'), color: 'bg-green-400' },
+  { name: 'Git / GitHub', level: avgLevel('Git', 'GitHub'), color: 'bg-purple-500' },
 ]
 
 function SkillBarItem({ skill, index }: { skill: typeof skillBars[number]; index: number }) {
