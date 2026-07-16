@@ -8,6 +8,7 @@ import { interpolate } from '@/lib/i18n'
 import { maskReveal, staggerContainer, staggerItem, EASE_OUT } from '@/lib/portfolioMotion'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 import TypingText from '@/components/portfolio/TypingText'
+import { SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 
 export default function Hero() {
   const { t } = useLanguage()
@@ -99,7 +100,7 @@ export default function Hero() {
 
             <motion.div variants={staggerItem} className="flex items-center gap-6">
               <a
-                href="https://github.com/oikikomori/"
+                href={SITE_GITHUB}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors text-sm"
@@ -108,7 +109,7 @@ export default function Hero() {
                 <span>GitHub</span>
               </a>
               <a
-                href="mailto:c8c8c81828@gmail.com"
+                href={`mailto:${SITE_EMAIL}`}
                 className="flex items-center gap-2 text-neutral-500 hover:text-neutral-200 transition-colors text-sm"
               >
                 <FiMail size={17} />

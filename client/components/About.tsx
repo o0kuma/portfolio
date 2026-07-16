@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
+import { SITE_EMAIL } from '@/lib/site'
 
 export default function About() {
   const { t, locale } = useLanguage()
@@ -71,7 +72,7 @@ export default function About() {
             </motion.div>
 
             <motion.div variants={staggerItem} className="mt-10 flex flex-wrap gap-2.5">
-              {[t.about.role, 'c8c8c81828@gmail.com'].map((chip) => (
+              {[t.about.role, SITE_EMAIL].map((chip) => (
                 <span
                   key={chip}
                   className="px-4 py-1.5 rounded-full border border-neutral-800 bg-neutral-900/80 text-neutral-500 text-sm"

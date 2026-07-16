@@ -9,6 +9,7 @@ import ProjectModal from './portfolio/ProjectModal'
 import { useLanguage } from '@/lib/LanguageContext'
 import { usePrefersReducedMotion } from '@/lib/usePrefersReducedMotion'
 import { PORTFOLIO_PROJECTS } from '@/lib/portfolio-projects'
+import { SITE_GITHUB } from '@/lib/site'
 import {
   portfolioViewport,
   sectionReveal,
@@ -961,7 +962,7 @@ export default function Projects() {
           className="mt-14"
         >
           <a
-            href="https://github.com/oikikomori/"
+            href={SITE_GITHUB}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-lg border border-neutral-700 text-neutral-300 text-sm font-medium hover:border-neutral-500 hover:text-neutral-100 transition-colors"

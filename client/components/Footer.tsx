@@ -3,6 +3,7 @@
 import { FiGithub, FiMail, FiArrowUp } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
+import { SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 
 export default function Footer() {
   const { t } = useLanguage()
@@ -22,7 +23,7 @@ export default function Footer() {
 
           <div className="flex items-center gap-5 order-1 sm:order-2">
             <a
-              href="https://github.com/oikikomori/"
+              href={SITE_GITHUB}
               target="_blank"
               rel="noopener noreferrer"
               className="text-neutral-500 hover:text-neutral-200 transition-colors"
@@ -31,7 +32,7 @@ export default function Footer() {
               <FiGithub size={17} />
             </a>
             <a
-              href="mailto:c8c8c81828@gmail.com"
+              href={`mailto:${SITE_EMAIL}`}
               className="text-neutral-500 hover:text-neutral-200 transition-colors"
               aria-label="Email"
             >

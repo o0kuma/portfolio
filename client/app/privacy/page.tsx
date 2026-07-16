@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useLanguage } from '@/lib/LanguageContext'
+import { SITE_EMAIL } from '@/lib/site'
 
 function PrivacyPolicyKo() {
   return (
@@ -110,7 +111,7 @@ function PrivacyPolicyKo() {
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-gray-700">
             <strong>성명:</strong> okuma<br />
-            <strong>연락처:</strong> c8c8c81828@gmail.com<br />
+            <strong>연락처:</strong> {SITE_EMAIL}<br />
             <strong>직책:</strong> 개인정보보호책임자
           </p>
         </div>
@@ -232,7 +233,7 @@ function PrivacyPolicyEn() {
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-gray-700">
             <strong>Name:</strong> okuma<br />
-            <strong>Contact:</strong> c8c8c81828@gmail.com<br />
+            <strong>Contact:</strong> {SITE_EMAIL}<br />
             <strong>Title:</strong> Privacy Officer
           </p>
         </div>

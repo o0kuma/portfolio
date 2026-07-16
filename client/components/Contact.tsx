@@ -9,6 +9,7 @@ import { portfolioViewport, sectionReveal, maskReveal, lineReveal, staggerContai
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Textarea from '@/components/ui/Textarea'
+import { SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
 
 export default function Contact() {
   const { t } = useLanguage()
@@ -56,7 +57,7 @@ export default function Contact() {
   }
 
   const contactItems = [
-    { label: 'Email', value: 'c8c8c81828@gmail.com', href: 'mailto:c8c8c81828@gmail.com' },
+    { label: 'Email', value: SITE_EMAIL, href: `mailto:${SITE_EMAIL}` },
     { label: 'Phone', value: '050-6679-1577', href: 'tel:+8205066791577' },
     { label: 'Hours', value: t.contact.hours, href: null },
   ]
@@ -92,9 +93,9 @@ export default function Contact() {
             </motion.h2>
           </div>
 
-          <a href="mailto:c8c8c81828@gmail.com" className="group inline-block">
+          <a href={`mailto:${SITE_EMAIL}`} className="group inline-block">
             <p className="text-base md:text-lg text-neutral-500 font-mono group-hover:text-neutral-200 transition-colors">
-              c8c8c81828@gmail.com
+              {SITE_EMAIL}
             </p>
             <div className="h-px w-full bg-neutral-800 group-hover:bg-neutral-600 transition-colors mt-1" />
           </a>
@@ -130,7 +131,7 @@ export default function Contact() {
             </div>
 
             <a
-              href="https://github.com/oikikomori/"
+              href={SITE_GITHUB}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-neutral-700 text-neutral-400 hover:border-neutral-500 hover:text-neutral-200 transition-colors text-sm"

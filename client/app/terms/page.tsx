@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { useLanguage } from '@/lib/LanguageContext'
+import { SITE_EMAIL } from '@/lib/site'
 
 function TermsKo() {
   return (
@@ -110,7 +111,7 @@ function TermsKo() {
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-gray-700">서비스 이용약관에 대한 문의사항이 있으시면 아래로 연락해 주시기 바랍니다.</p>
           <p className="text-gray-700 mt-2">
-            <strong>이메일:</strong> c8c8c81828@gmail.com<br />
+            <strong>이메일:</strong> {SITE_EMAIL}<br />
             <strong>개발자:</strong> okuma
           </p>
         </div>
@@ -227,7 +228,7 @@ function TermsEn() {
         <div className="bg-gray-50 p-4 rounded-lg">
           <p className="text-gray-700">If you have any questions about these Terms, please contact us:</p>
           <p className="text-gray-700 mt-2">
-            <strong>Email:</strong> c8c8c81828@gmail.com<br />
+            <strong>Email:</strong> {SITE_EMAIL}<br />
             <strong>Developer:</strong> okuma
           </p>
         </div>

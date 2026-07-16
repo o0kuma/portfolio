@@ -4,6 +4,9 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { useLanguage } from '@/lib/LanguageContext'
 import { ensureRefPresenceId } from '@/lib/rpg-presence'
+import { SITE_EMAIL, SITE_GITHUB } from '@/lib/site'
+
+const GITHUB_HANDLE = SITE_GITHUB.replace(/^https?:\/\//, '')
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 const TILE = 40
@@ -229,9 +232,9 @@ const BUILDINGS: Bld[] = [
     lines: [
       '[ 연락처 ]',
       '',
-      '📧  c8c8c81828@gmail.com',
+      `📧  ${SITE_EMAIL}`,
       '📱  050-6679-1577',
-      '🐙  github.com/oikikomori',
+      `🐙  ${GITHUB_HANDLE}`,
       '🌐  kuuuma.com',
       '',
       '언제든지 연락 주세요!',
@@ -239,9 +242,9 @@ const BUILDINGS: Bld[] = [
     linesEn: [
       '[ Contact ]',
       '',
-      '📧  c8c8c81828@gmail.com',
+      `📧  ${SITE_EMAIL}`,
       '📱  050-6679-1577',
-      '🐙  github.com/oikikomori',
+      `🐙  ${GITHUB_HANDLE}`,
       '🌐  kuuuma.com',
       '',
       'Feel free to reach out anytime!',
