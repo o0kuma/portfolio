@@ -4,9 +4,19 @@
 export const EASE_OUT = [0.22, 1, 0.36, 1] as const
 export const EASE_OUT_CSS = 'cubic-bezier(0.22, 1, 0.36, 1)'
 
+/**
+ * `amount` used to be a fraction (0.12) of the target's OWN height. That's
+ * fine for normal-sized sections, but for very tall ones — e.g. Projects,
+ * whose StickyHorizontalTrack pins for the entire horizontal-scroll
+ * distance — 12% of the element's height can exceed the viewport height
+ * itself, making the threshold physically unreachable and leaving the
+ * section stuck at its `hidden` (opacity: 0) state forever. 'some' fires
+ * as soon as any part intersects, so it can't fail this way regardless of
+ * how tall the content grows.
+ */
 export const portfolioViewport = {
   once: true,
-  amount: 0.12,
+  amount: 'some',
   margin: '-30px 0px -50px 0px',
 } as const
 
