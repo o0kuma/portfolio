@@ -14,7 +14,18 @@ import CareerTimeline from '../../components/portfolio/CareerTimeline'
 import SectionWrapper from '../../components/SectionWrapper'
 import SpaceAtmosphere from '../../components/SpaceAtmosphere'
 
-const AIInterviewer = dynamic(() => import('../../components/AIInterviewer'), { ssr: false })
+// Without `loading`, this section renders nothing at all while the chunk
+// is still in flight (same failure mode fixed for SkillSphere) — a
+// same-sized placeholder keeps the section from going fully blank on a
+// cold load.
+const AIInterviewer = dynamic(() => import('../../components/AIInterviewer'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex min-h-[420px] w-full max-w-3xl mx-auto items-center justify-center px-4 py-24">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-400" />
+    </div>
+  ),
+})
 
 export default function PortfolioClient() {
   return (
