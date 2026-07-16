@@ -1,7 +1,6 @@
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { dbQuery } from '@/lib/neon-server'
 import { applyAnonymousQuotaCookie, getAnonymousQuotaIdentity } from '@/lib/anonymous-quota'
@@ -12,7 +11,7 @@ import * as path from 'path'
 
 const MAX_MESSAGE_LENGTH = 4000
 
-type FallbackReason = 'missing_api_key' | `anthropic_http_${number}` | 'anthropic_error' | null
+type FallbackReason = 'missing_api_key' | `gemini_http_${number}` | 'gemini_error' | null
 
 type ConversationMessage = {
   id: string
@@ -22,16 +21,20 @@ type ConversationMessage = {
   aiFeatures: Record<string, unknown>
 }
 
-// Anthropic API 키를 가져오는 헬퍼 함수
-function getAnthropicApiKey(): string | null {
-  const key = process.env.ANTHROPIC_API_KEY?.trim()
+interface GeminiStreamChunk {
+  choices?: Array<{ delta?: { content?: string } }>
+}
+
+// Gemini API 키를 가져오는 헬퍼 함수
+function getGeminiApiKey(): string | null {
+  const key = process.env.GEMINI_API_KEY?.trim()
   if (key && key.length >= 10) {
     return key
   }
   return null
 }
 
-// server/.env 파일에서 ANTHROPIC_API_KEY 로드 (개발 환경 전용)
+// server/.env 파일에서 GEMINI_API_KEY 로드 (개발 환경 전용)
 function loadServerEnv() {
   if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
     return
@@ -55,14 +58,14 @@ function loadServerEnv() {
             if (match) {
               const key = match[1].trim()
               const value = match[2].trim().replace(/^["']|["']$/g, '')
-              if (key === 'ANTHROPIC_API_KEY' && value && !process.env.ANTHROPIC_API_KEY) {
-                process.env.ANTHROPIC_API_KEY = value
+              if (key === 'GEMINI_API_KEY' && value && !process.env.GEMINI_API_KEY) {
+                process.env.GEMINI_API_KEY = value
                 return
               }
             }
           }
         })
-        if (process.env.ANTHROPIC_API_KEY) break
+        if (process.env.GEMINI_API_KEY) break
       }
     }
   } catch (error) {
@@ -378,11 +381,11 @@ export async function POST(request: Request) {
       console.error('사용자 메시지 저장 오류:', error)
     }
 
-    // 4. Anthropic API 키 확인
-    if (!process.env.ANTHROPIC_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    // 4. Gemini API 키 확인
+    if (!process.env.GEMINI_API_KEY && process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       loadServerEnv()
     }
-    const apiKey = getAnthropicApiKey()
+    const apiKey = getGeminiApiKey()
 
     const cookieHeader = buildCookieHeader(quotaIdentity)
     const streamHeaders: Record<string, string> = {
@@ -394,7 +397,7 @@ export async function POST(request: Request) {
 
     if (!apiKey) {
       if (process.env.NODE_ENV === 'development') {
-        console.warn('⚠️ ANTHROPIC_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
+        console.warn('⚠️ GEMINI_API_KEY가 설정되지 않았습니다. 기본 응답을 사용합니다.')
       }
       const fallback = generateFallbackResponse(normalizedMessage, safeTone, 'missing_api_key')
       const responseTime = Date.now() - startTime
@@ -418,7 +421,7 @@ export async function POST(request: Request) {
       return new Response(fallbackStream, { headers: streamHeaders })
     }
 
-    // 5. Build Anthropic messages
+    // 5. Build Gemini messages
     const systemPrompt = safeContext === 'blog'
       ? `You are a helpful assistant for a blog website called "iykyk blog". The blog covers topics like Tech, Economy, Coin, Travel, Food, and Lottery. Always respond in Korean. Respond in a ${safeTone} tone. Keep responses concise and helpful.`
       : `You are a helpful assistant for a portfolio website. The portfolio showcases web development projects by 승짱(Okuma). Always respond in Korean. Respond in a ${safeTone} tone. Keep responses concise and helpful.`
@@ -438,25 +441,58 @@ export async function POST(request: Request) {
     const intent = analyzeIntent(normalizedMessage)
 
     try {
-      const anthropic = new Anthropic({ apiKey })
-      const stream = await anthropic.messages.stream({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
-        messages: conversationMessages,
-        system: systemPrompt,
-      })
+      const geminiRes = await fetch(
+        'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: 'gemini-2.5-flash',
+            messages: [{ role: 'system', content: systemPrompt }, ...conversationMessages],
+            max_tokens: 1024,
+            temperature: 0.7,
+            stream: true,
+          }),
+        }
+      )
+
+      if (!geminiRes.ok || !geminiRes.body) {
+        throw new Error(`gemini_http_${geminiRes.status}`)
+      }
 
       let fullResponse = ''
       const responseTime = Date.now() - startTime
+      const reader = geminiRes.body.getReader()
+      const decoder = new TextDecoder()
 
       const readableStream = new ReadableStream({
         async start(controller) {
+          let buffer = ''
           try {
-            for await (const chunk of stream) {
-              if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-                const text = chunk.delta.text
-                fullResponse += text
-                controller.enqueue(new TextEncoder().encode(text))
+            while (true) {
+              const { done, value } = await reader.read()
+              if (done) break
+              buffer += decoder.decode(value, { stream: true })
+              const lines = buffer.split('\n')
+              buffer = lines.pop() ?? ''
+              for (const line of lines) {
+                const trimmed = line.trim()
+                if (!trimmed.startsWith('data:')) continue
+                const payload = trimmed.slice(5).trim()
+                if (payload === '[DONE]') continue
+                try {
+                  const json = JSON.parse(payload) as GeminiStreamChunk
+                  const delta = json.choices?.[0]?.delta?.content
+                  if (delta) {
+                    fullResponse += delta
+                    controller.enqueue(new TextEncoder().encode(delta))
+                  }
+                } catch {
+                  // Partial/malformed SSE chunk — skip, next read() will complete it
+                }
               }
             }
           } finally {
@@ -478,9 +514,9 @@ export async function POST(request: Request) {
       return new Response(readableStream, { headers: streamHeaders })
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error)
-      console.error('Anthropic API 호출 오류로 fallback 응답 사용:', errMsg)
+      console.error('Gemini API 호출 오류로 fallback 응답 사용:', errMsg)
 
-      const fallback = generateFallbackResponse(normalizedMessage, safeTone, 'anthropic_error')
+      const fallback = generateFallbackResponse(normalizedMessage, safeTone, 'gemini_error')
       const responseTime = Date.now() - startTime
       await addAnonymousChatTokens(quotaIdentity.sessionId, estimateTokensUsed(fallback.text)).catch(() => {})
       await addMessage(sessionId, {

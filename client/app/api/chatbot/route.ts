@@ -2,14 +2,10 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
 import { recordAiRequest } from '@/lib/aiStats'
 
-let client: Anthropic | null = null
-function getClient(): Anthropic {
-  if (!process.env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured')
-  if (!client) client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
-  return client
+interface GeminiResponse {
+  choices?: Array<{ message?: { content?: string } }>
 }
 
 // Kept in sync with the AI Interviewer's system prompt
@@ -80,23 +76,45 @@ export async function POST(request: NextRequest) {
     // Keep only last 10 messages
     const recentMessages = messages.slice(-10)
 
-    const msg = await getClient().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      system: SYSTEM_PROMPT,
-      messages: recentMessages,
-    })
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) {
+      return NextResponse.json({ reply: '현재 AI 기능이 설정되지 않았습니다. 문의는 Contact 페이지를 이용해주세요.' }, { status: 200 })
+    }
 
-    const reply = msg.content[0].type === 'text' ? msg.content[0].text : ''
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            ...recentMessages,
+          ],
+          max_tokens: 500,
+          temperature: 0.7,
+        }),
+      }
+    )
+
+    if (!res.ok) {
+      const errBody = await res.text()
+      console.error('[/api/chatbot] Gemini error:', res.status, errBody)
+      return NextResponse.json({ message: `API 오류 (${res.status})` }, { status: 502 })
+    }
+
+    const data = await res.json() as GeminiResponse
+    const reply = data.choices?.[0]?.message?.content ?? '응답을 생성하지 못했습니다.'
     recordAiRequest()
 
     return NextResponse.json({ reply })
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : 'unknown'
     console.error('[/api/chatbot POST]', msg)
-    if (msg.includes('ANTHROPIC_API_KEY')) {
-      return NextResponse.json({ reply: '현재 AI 기능이 설정되지 않았습니다. 문의는 Contact 페이지를 이용해주세요.' }, { status: 200 })
-    }
     return NextResponse.json({ message: 'Internal server error' }, { status: 500 })
   }
 }
