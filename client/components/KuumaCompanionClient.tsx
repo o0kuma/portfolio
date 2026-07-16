@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useIdleMount } from '@/lib/useIdleMount'
+import { useHideCornerWidgets } from '@/lib/useHideCornerWidgets'
 
 // Mouse-following mascot with proactive speech bubbles — deferred to the
 // client so it never ships in the SSR bundle, and its fetch/hydration is
@@ -10,6 +11,7 @@ const KuumaCompanion = dynamic(() => import('@/components/KuumaCompanion'), { ss
 
 export default function KuumaCompanionClient() {
   const ready = useIdleMount()
-  if (!ready) return null
+  const hidden = useHideCornerWidgets()
+  if (!ready || hidden) return null
   return <KuumaCompanion />
 }

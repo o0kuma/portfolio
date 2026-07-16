@@ -83,7 +83,7 @@ export default function ExplorationBadge() {
         aria-label={locale === 'en' ? `Exploration progress: ${pct}%` : `탐험 진행도: ${pct}%`}
         title={locale === 'en' ? `Exploration progress: ${pct}%` : `탐험 진행도: ${pct}%`}
         style={{ position: 'fixed', bottom: '128px', left: '24px', zIndex: 10001 }}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/70 hover:text-white transition-colors"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/90 text-white/70 hover:text-white transition-colors"
       >
         <svg width="30" height="30" viewBox="0 0 34 34">
           <circle cx="17" cy="17" r={r} fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="3" />

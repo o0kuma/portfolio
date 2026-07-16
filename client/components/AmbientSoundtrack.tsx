@@ -174,8 +174,8 @@ export default function AmbientSoundtrack() {
       style={{ position: 'fixed', bottom: '76px', left: '24px', zIndex: 10001 }}
       className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
         on
-          ? 'border-cyan-400/60 bg-cyan-950/80 text-cyan-300'
-          : 'border-white/15 bg-black/60 text-white/50 hover:text-white/80'
+          ? 'border-cyan-400/60 bg-cyan-950/95 text-cyan-300'
+          : 'border-white/15 bg-black/90 text-white/50 hover:text-white/80'
       }`}
     >
       <span className="text-sm">{on ? '🎧' : '🔈'}</span>
