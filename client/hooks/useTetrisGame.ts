@@ -20,7 +20,34 @@ import {
   type GameEngineState,
 } from '@/lib/tetris/game'
 import { submitTetrisScore } from '@/lib/tetris/leaderboardClient'
+import { emptyBoard } from '@/lib/tetris/tetrominoes'
 import type { GameSnapshot } from '@/lib/tetris/types'
+
+/**
+ * `createInitialState()` shuffles a random piece bag as a side effect of
+ * spawning the first piece, and `toSnapshot()` peeks the bag for the "next"
+ * preview — both non-deterministic. Using either as this hook's initial
+ * render output means the server-rendered board/piece/next-preview and the
+ * client's own independently-random first render disagree, which trips a
+ * React hydration mismatch on every load. Render this static placeholder
+ * (paused, so the gravity-tick effect below is a no-op) for the render that
+ * gets sent over the wire, then swap in the real random state client-side
+ * inside a mount effect, after hydration has already reconciled.
+ */
+const PLACEHOLDER_SNAPSHOT: GameSnapshot = {
+  board: emptyBoard(),
+  piece: null,
+  ghostY: null,
+  next: [],
+  hold: null,
+  holdLocked: false,
+  score: 0,
+  level: 1,
+  lines: 0,
+  stage: 1,
+  gameOver: false,
+  paused: true,
+}
 
 function readHighScore(): number {
   if (typeof window === 'undefined') return 0
@@ -57,10 +84,11 @@ function maybePersistBestStage(stage: number): number {
 }
 
 export function useTetrisGame() {
-  const stateRef = useRef<GameEngineState>(createInitialState())
-  const [snapshot, setSnapshot] = useState<GameSnapshot>(() =>
-    toSnapshot(stateRef.current)
-  )
+  // Starts as `null` (rather than eagerly calling createInitialState()) so
+  // the random bag shuffle only ever runs client-side, in the mount effect
+  // below — never during a render that could also happen on the server.
+  const stateRef = useRef<GameEngineState | null>(null)
+  const [snapshot, setSnapshot] = useState<GameSnapshot>(PLACEHOLDER_SNAPSHOT)
   const [highScore, setHighScore] = useState(0)
   const [bestStage, setBestStage] = useState(1)
   const [leaderboardRefreshKey, setLeaderboardRefreshKey] = useState(0)
@@ -72,10 +100,13 @@ export function useTetrisGame() {
   useEffect(() => {
     setHighScore(readHighScore())
     setBestStage(readBestStage())
+    const initial = createInitialState()
+    stateRef.current = initial
+    setSnapshot(toSnapshot(initial))
   }, [])
 
   const setState = useCallback((next: GameEngineState) => {
-    if (next.gameOver && !stateRef.current.gameOver) {
+    if (next.gameOver && !stateRef.current?.gameOver) {
       const hs = maybePersistHighScore(next.score)
       setHighScore(hs)
       const stage = stageFromLines(next.lines)
@@ -103,6 +134,11 @@ export function useTetrisGame() {
 
   const apply = useCallback(
     (fn: (s: GameEngineState) => GameEngineState) => {
+      // stateRef is only null in the brief window before the mount effect
+      // above has run (i.e. before hydration completes) — nothing should
+      // be dispatching game actions yet at that point, but guard anyway
+      // rather than assume it.
+      if (!stateRef.current) return
       setState(fn(stateRef.current))
     },
     [setState]
