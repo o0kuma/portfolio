@@ -13,6 +13,67 @@ export type RestaurantPage = {
   isDatabase: boolean
 }
 
+export type DevResourceCategory = '레퍼런스' | '프레임워크' | '도구'
+
+export type DevResource = {
+  id: string
+  name: string
+  description: string
+  descriptionEn: string
+  url: string
+  category: DevResourceCategory
+  icon: string
+}
+
+/**
+ * Reads a database with columns: title (name), 설명/Description (rich_text,
+ * Korean), 영문설명/DescriptionEn (rich_text, optional English), URL (url),
+ * 카테고리/Category (select: 레퍼런스/프레임워크/도구). Unset or unrecognized
+ * category values fall back to '도구' rather than being dropped, so a
+ * miscategorized row still shows up (just possibly in the wrong filter tab).
+ */
+export async function getDevResources(): Promise<DevResource[]> {
+  const databaseId = process.env.NOTION_DEV_RESOURCES_DB_ID
+  if (!databaseId) return []
+
+  const res = await notion.databases.query({
+    database_id: databaseId,
+    page_size: 100,
+  })
+
+  const KNOWN_CATEGORIES: DevResourceCategory[] = ['레퍼런스', '프레임워크', '도구']
+
+  return res.results.map((page: any) => {
+    const props = page.properties
+    const entries = Object.entries(props) as [string, any][]
+
+    const titleProp = entries.find(([, p]) => p.type === 'title')?.[1]
+    const name = (titleProp?.title?.map((t: any) => t.plain_text).join('') ?? '').trim()
+
+    const urlProp = entries.find(([, p]) => p.type === 'url')?.[1]
+    const url = urlProp?.url ?? ''
+
+    const descKeys = ['설명', 'Description', '한글설명']
+    const descProp = entries.find(([k, p]) => p.type === 'rich_text' && descKeys.includes(k))?.[1]
+      ?? entries.find(([, p]) => p.type === 'rich_text')?.[1]
+    const description = getRichText(descProp)
+
+    const descEnKeys = ['영문설명', 'DescriptionEn', 'Description (EN)', 'English']
+    const descEnProp = entries.find(([k, p]) => p.type === 'rich_text' && descEnKeys.includes(k))?.[1]
+    const descriptionEn = getRichText(descEnProp) || description
+
+    const categoryProp = entries.find(([, p]) => p.type === 'select')?.[1]
+    const rawCategory = getSelect(categoryProp)
+    const category = (KNOWN_CATEGORIES as string[]).includes(rawCategory)
+      ? (rawCategory as DevResourceCategory)
+      : '도구'
+
+    const icon = page.icon?.emoji ?? extractEmoji(name) ?? '🔗'
+
+    return { id: page.id, name: stripEmoji(name), description, descriptionEn, url, category, icon }
+  }).filter((r) => r.name && r.url)
+}
+
 export type RestaurantItem = {
   id: string
   name: string

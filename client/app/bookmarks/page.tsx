@@ -28,7 +28,9 @@ interface DevResource {
   icon: string
 }
 
-const DEV_RESOURCES: DevResource[] = [
+// Fallback shown until /api/dev-resources resolves, and permanently if the
+// Notion database isn't configured — so the tab never renders empty.
+const FALLBACK_DEV_RESOURCES: DevResource[] = [
   {
     name: 'MDN Web Docs',
     description: 'HTML, CSS, JavaScript의 공식 웹 기술 레퍼런스',
@@ -119,6 +121,7 @@ export default function BookmarksPage() {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<TabType>('posts')
   const [categoryFilter, setCategoryFilter] = useState<ResourceCategory>('전체')
+  const [devResources, setDevResources] = useState<DevResource[]>(FALLBACK_DEV_RESOURCES)
 
   useEffect(() => {
     if (bookmarks.length === 0) { setLoading(false); return }
@@ -132,10 +135,21 @@ export default function BookmarksPage() {
       .catch(() => setLoading(false))
   }, [bookmarks])
 
+  useEffect(() => {
+    fetch('/api/dev-resources')
+      .then(r => r.json())
+      .then((data: { resources?: DevResource[] }) => {
+        if (Array.isArray(data.resources) && data.resources.length > 0) {
+          setDevResources(data.resources)
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   const filteredResources =
     categoryFilter === '전체'
-      ? DEV_RESOURCES
-      : DEV_RESOURCES.filter(r => r.category === categoryFilter)
+      ? devResources
+      : devResources.filter(r => r.category === categoryFilter)
 
   return (
     <main className="min-h-screen bg-canvas text-textPrimary">
