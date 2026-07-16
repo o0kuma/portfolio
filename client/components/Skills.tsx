@@ -7,7 +7,20 @@ import { useLanguage } from '@/lib/LanguageContext'
 import { portfolioViewport, maskReveal, lineReveal, staggerContainer, staggerItem } from '@/lib/portfolioMotion'
 import SkillRadar from '@/components/portfolio/SkillRadar'
 
-const SkillSphere = dynamic(() => import('./SkillSphere'), { ssr: false })
+// `loading` matters here: without it, the dynamic import renders nothing
+// at all while its chunk is still in flight, so on a cold/uncached load
+// the whileInView fade above completes on schedule but the sphere's own
+// area sits fully blank (or, mid-fetch, briefly shows an empty h-80 gap)
+// until the network request resolves — which reads as "broken" and only
+// "fixes itself" once the browser has the chunk cached from a prior load.
+const SkillSphere = dynamic(() => import('./SkillSphere'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-80 w-full items-center justify-center">
+      <div className="h-10 w-10 animate-spin rounded-full border-2 border-neutral-700 border-t-neutral-400" />
+    </div>
+  ),
+})
 
 type Skill = { name: string; level: number }  // level 0-100
 
