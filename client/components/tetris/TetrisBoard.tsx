@@ -59,7 +59,16 @@ export default function TetrisBoard({ snapshot }: TetrisBoardProps) {
       className="grid rounded-lg bg-slate-900 p-2 shadow-2xl ring-1 ring-slate-700"
       style={{
         gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`,
-        width: 'min(92vw, 380px)',
+        // Board is a fixed 1:2 width:height ratio (10 visible cols, 20
+        // visible rows of aspect-square cells). Sizing purely off viewport
+        // *width* — as this used to — ignores height entirely, so on a
+        // typical phone the board alone renders taller than the whole
+        // viewport and pushes the touch controls below it hundreds of px
+        // off-screen, unreachable without scrolling away from the board
+        // mid-game. Capping width by a height-derived term too (260px is
+        // this page's header + touchpad + gaps) keeps board+controls
+        // within one screen.
+        width: 'min(92vw, 380px, calc((100dvh - 260px) / 2))',
       }}
       aria-label="Tetris board"
     >
