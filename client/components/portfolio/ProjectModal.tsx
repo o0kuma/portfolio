@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FiX, FiGithub, FiExternalLink, FiCalendar, FiUsers } from 'react-icons/fi'
+import { FiX, FiGithub, FiExternalLink, FiCalendar, FiUsers, FiCode } from 'react-icons/fi'
 import { EASE_OUT } from '@/lib/portfolioMotion'
 
 interface Project {
@@ -21,6 +21,7 @@ interface Project {
   status: string
   participants?: string
   role?: string
+  retrospective?: string
 }
 
 type Props = {
@@ -84,10 +85,28 @@ export default function ProjectModal({ project, onClose }: Props) {
             </button>
           </div>
 
+          {/* Screenshot(s) */}
+          {project.images?.[0] && project.images[0] !== '/images/placeholder.svg' && (
+            <div className="flex gap-3 overflow-x-auto border-b border-neutral-800 bg-neutral-950 p-4">
+              {project.images.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element -- arbitrary admin-entered URLs, same as the card thumbnail
+                <img
+                  key={src}
+                  src={src}
+                  alt={project.title}
+                  className="h-40 w-auto shrink-0 rounded-lg border border-neutral-800 object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none'
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Body */}
           <div className="p-6 space-y-6">
             {/* Description */}
-            <p className="text-neutral-300 leading-relaxed">{project.description}</p>
+            <p className="text-neutral-300 leading-relaxed">{project.content || project.description}</p>
 
             {/* Meta grid */}
             <div className="grid grid-cols-2 gap-4 text-sm">
@@ -122,6 +141,16 @@ export default function ProjectModal({ project, onClose }: Props) {
                     </span>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Tech retrospective */}
+            {project.retrospective && (
+              <div className="rounded-lg border border-neutral-800 bg-neutral-950/60 p-4">
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-mono uppercase tracking-widest text-neutral-600">
+                  <FiCode size={12} /> Tech retrospective
+                </p>
+                <p className="text-sm leading-relaxed text-neutral-300">{project.retrospective}</p>
               </div>
             )}
 

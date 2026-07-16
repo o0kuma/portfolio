@@ -126,7 +126,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       '골프 티찜 웹사이트로, 골프 티찜을 소개하고 예약을 할 수 있는 웹사이트입니다. React를 기반으로 한 반응형 UI와 사용자 친화적인 인터페이스를 구현했습니다.',
     technologies: ['HTML5', 'CSS 3', 'React', 'JavaScript'],
-    images: ['/images/placeholder.svg'],
+    images: ['/images/tzzim.png'],
     githubUrl: '',
     liveUrl: 'https://apkpure.net/kr/%ED%8B%B0%EC%B0%9C/com.mnemosyne.teezzim_op',
     featured: false,
@@ -246,7 +246,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       '교통약자 이동 지원 센터 사이트로 외주를 받아 퍼블리싱 작업을 진행했습니다. 다른 대학들과 마찬가지로 담당 대학에 대한 가족회사 사이트를 제작했습니다.',
     technologies: ['HTML5', 'CSS 3', 'JavaScript'],
-    images: ['/images/placeholder.svg'],
+    images: ['/images/dj_1.jpg'],
     githubUrl: '',
     liveUrl: 'https://djcall.or.kr/',
     featured: false,
@@ -286,7 +286,7 @@ const SAMPLE_PROJECTS: Project[] = [
     content:
       'kmuseum 프로젝트에 총 두 명이 참여하였고, 전 퍼블리싱을 담당했습니다. 전국 모든 박물관에 공연, 전시, 이벤트 등 예약을 할 수 있는 사이트로 고객들에게 편의를 제공하기 위해 작업했던 프로젝트입니다.',
     technologies: ['HTML5', 'CSS 3', 'PHP'],
-    images: ['/images/placeholder.svg'],
+    images: ['/images/kmuseum_1.jpg', '/images/kmuseum_2.jpg', '/images/kmuseum_3.jpg'],
     githubUrl: '',
     liveUrl: '',
     featured: false,
