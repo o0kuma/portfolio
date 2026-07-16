@@ -11,7 +11,7 @@ import { usePathname } from 'next/navigation'
  * decorative stack on these routes avoids that; none of them are core to
  * actually playing the game.
  */
-const TOUCH_CONTROL_ROUTES = ['/tetris', '/survive', '/tower-defense', '/lotto', '/arcade', '/games']
+const TOUCH_CONTROL_ROUTES = ['/tetris', '/survive', '/tower-defense', '/lotto', '/arcade', '/games', '/rpg']
 
 export function useHideCornerWidgets(): boolean {
   const pathname = usePathname()
