@@ -7,6 +7,7 @@ import ChatbotWidgetClient from '@/components/ChatbotWidgetClient'
 import KuumaCompanionClient from '@/components/KuumaCompanionClient'
 import AmbientSoundtrackClient from '@/components/AmbientSoundtrackClient'
 import ExplorationBadgeClient from '@/components/ExplorationBadgeClient'
+import NightOwlClubClient from '@/components/NightOwlClubClient'
 
 
 import LiveCursorsClient from '@/components/LiveCursorsClient'
@@ -173,6 +174,7 @@ export default function RootLayout({
         <KuumaCompanionClient />
         <AmbientSoundtrackClient />
         <ExplorationBadgeClient />
+        <NightOwlClubClient />
         <LiveCursorsClient />
       </body>
     </html>
