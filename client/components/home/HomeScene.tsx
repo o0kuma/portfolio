@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, Sparkles, Stars, Trail } from '@react-three/drei'
+import { Float, MeshDistortMaterial, Sparkles, Stars, Trail, type MeshLineGeometry } from '@react-three/drei'
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import type { Group } from 'three'
@@ -121,6 +121,9 @@ const STAR_FLIGHT_SECONDS = 1.6
 function ShootingStar({ onCatch }: { onCatch?: () => void }) {
   const group = useRef<Group>(null)
   const material = useRef<THREE.MeshBasicMaterial>(null)
+  const glowMaterial = useRef<THREE.MeshBasicMaterial>(null)
+  const haloMaterial = useRef<THREE.MeshBasicMaterial>(null)
+  const trailRef = useRef<MeshLineGeometry>(null)
   const startRef = useRef<THREE.Vector3>(new THREE.Vector3())
   const endRef = useRef<THREE.Vector3>(new THREE.Vector3())
   const flightStartRef = useRef<number | null>(null)
@@ -128,6 +131,19 @@ function ShootingStar({ onCatch }: { onCatch?: () => void }) {
     STAR_MIN_DELAY + Math.random() * (STAR_MAX_DELAY - STAR_MIN_DELAY)
   )
   const caughtRef = useRef(false)
+
+  // Trail (drei) renders its ribbon with a flat, non-additive material by
+  // default, which reads as a dim gray line against the dark starfield —
+  // force additive blending imperatively once mounted so it actually glows.
+  useEffect(() => {
+    const mesh = trailRef.current
+    const mat = mesh?.material
+    if (!mat || Array.isArray(mat)) return
+    mat.blending = THREE.AdditiveBlending
+    mat.depthWrite = false
+    mat.transparent = true
+    mat.needsUpdate = true
+  }, [])
 
   const spawn = (t: number) => {
     const side = Math.random() > 0.5 ? 1 : -1
@@ -162,12 +178,15 @@ function ShootingStar({ onCatch }: { onCatch?: () => void }) {
     g.visible = true
     g.position.lerpVectors(startRef.current, endRef.current, progress)
     // Fade in over the first 10% and out over the last 25% of the flight.
-    mat.opacity = Math.min(1, progress / 0.1) * Math.min(1, (1 - progress) / 0.25)
+    const fade = Math.min(1, progress / 0.1) * Math.min(1, (1 - progress) / 0.25)
+    mat.opacity = fade
+    if (glowMaterial.current) glowMaterial.current.opacity = fade * 0.85
+    if (haloMaterial.current) haloMaterial.current.opacity = fade * 0.5
   })
 
   return (
     <group ref={group} visible={false}>
-      <Trail width={2.5} length={7} color="#c7d2fe" attenuation={(t) => t * t} decay={2}>
+      <Trail ref={trailRef} width={5} length={10} color="#eef2ff" attenuation={(t) => Math.pow(t, 1.6)} decay={2}>
         <mesh
           onClick={(e) => {
             e.stopPropagation()
@@ -178,8 +197,39 @@ function ShootingStar({ onCatch }: { onCatch?: () => void }) {
           onPointerOver={() => { document.body.style.cursor = 'pointer' }}
           onPointerOut={() => { document.body.style.cursor = 'auto' }}
         >
-          <sphereGeometry args={[0.22, 8, 8]} />
-          <meshBasicMaterial ref={material} color="#e0e7ff" transparent opacity={0} />
+          {/* Wide, near-invisible hit target so a fast-moving 0.22-radius
+              glow is actually clickable, not just its visible core. */}
+          <sphereGeometry args={[0.55, 8, 8]} />
+          <meshBasicMaterial visible={false} />
+          {/* Outer halo */}
+          <mesh>
+            <sphereGeometry args={[0.5, 12, 12]} />
+            <meshBasicMaterial
+              ref={haloMaterial}
+              color="#c7d2fe"
+              transparent
+              opacity={0}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+          {/* Mid glow */}
+          <mesh>
+            <sphereGeometry args={[0.32, 12, 12]} />
+            <meshBasicMaterial
+              ref={glowMaterial}
+              color="#e0e7ff"
+              transparent
+              opacity={0}
+              blending={THREE.AdditiveBlending}
+              depthWrite={false}
+            />
+          </mesh>
+          {/* Bright core */}
+          <mesh>
+            <sphereGeometry args={[0.16, 12, 12]} />
+            <meshBasicMaterial ref={material} color="#ffffff" transparent opacity={0} depthWrite={false} />
+          </mesh>
         </mesh>
       </Trail>
     </group>
