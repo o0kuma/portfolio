@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { FiArrowDown, FiChevronDown } from 'react-icons/fi'
 import BlogFooter from '@/components/BlogFooter'
@@ -46,6 +47,7 @@ function ImmersiveHomeInner() {
   const { t, locale } = useLanguage()
   const [isMoreOpen, setIsMoreOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
+  const [starCaught, setStarCaught] = useState(false)
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -57,14 +59,43 @@ function ImmersiveHomeInner() {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  useEffect(() => {
+    if (!starCaught) return
+    const id = setTimeout(() => setStarCaught(false), 4000)
+    return () => clearTimeout(id)
+  }, [starCaught])
+
   return (
     <div className="relative w-full bg-[#030014]">
       {/* Fixed canvas: stays visible behind hero; posts section uses opaque bg */}
       <div className="fixed inset-0 z-0">
         <Suspense fallback={<div className="h-full w-full bg-[#030014]" aria-hidden />}>
-          <HomeScene scrollProgress={scrollProgress} approach={footerApproach} />
+          <HomeScene
+            scrollProgress={scrollProgress}
+            approach={footerApproach}
+            onCatchStar={() => setStarCaught(true)}
+          />
         </Suspense>
       </div>
+
+      {/* Shooting-star catch toast — the star itself is never announced anywhere */}
+      <AnimatePresence>
+        {starCaught && (
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.4 }}
+            className="pointer-events-none fixed inset-x-0 top-6 z-[10000] flex justify-center px-4"
+            aria-live="polite"
+          >
+            <div className="flex items-center gap-2 rounded-full border border-indigo-400/30 bg-[#0a0f24]/90 px-4 py-2 text-sm text-indigo-200 shadow-[0_0_24px_rgba(99,102,241,0.3)] backdrop-blur-sm">
+              <span aria-hidden>✨</span>
+              <span>{locale === 'en' ? 'You caught a shooting star. Make a wish.' : '유성을 잡으셨네요. 소원을 빌어보세요.'}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero: full viewport; pointer-events only where needed */}
       <section className="relative z-10 flex min-h-[100dvh] flex-col pointer-events-none">

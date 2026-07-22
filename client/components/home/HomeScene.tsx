@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, Sparkles, Stars } from '@react-three/drei'
+import { Float, MeshDistortMaterial, Sparkles, Stars, Trail } from '@react-three/drei'
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import type { Group } from 'three'
@@ -11,6 +11,8 @@ type Props = {
   scrollProgress?: number
   /** 0 until the last ~1.3vh of the page → 1 at the true bottom — shifts the scene toward a warm "atmosphere" palette near the footer */
   approach?: number
+  /** Fired when a visitor manages to click the shooting star before it fades. */
+  onCatchStar?: () => void
 }
 
 const SPACE_FOG_COLOR = new THREE.Color('#030014')
@@ -107,11 +109,88 @@ function DistortedCore({ scrollRef }: { scrollRef: MutableRefObject<number> }) {
   )
 }
 
+const STAR_MIN_DELAY = 25 // seconds between streaks, min
+const STAR_MAX_DELAY = 55 // seconds between streaks, max
+const STAR_FLIGHT_SECONDS = 1.6
+
+/**
+ * A rare, clickable streak across the starfield — most visitors will just
+ * see it pass by, but clicking it while it's still flying fires onCatch.
+ * Deliberately not announced anywhere in the UI; it's meant to be found.
+ */
+function ShootingStar({ onCatch }: { onCatch?: () => void }) {
+  const group = useRef<Group>(null)
+  const material = useRef<THREE.MeshBasicMaterial>(null)
+  const startRef = useRef<THREE.Vector3>(new THREE.Vector3())
+  const endRef = useRef<THREE.Vector3>(new THREE.Vector3())
+  const flightStartRef = useRef<number | null>(null)
+  const nextSpawnRef = useRef<number>(
+    STAR_MIN_DELAY + Math.random() * (STAR_MAX_DELAY - STAR_MIN_DELAY)
+  )
+  const caughtRef = useRef(false)
+
+  const spawn = (t: number) => {
+    const side = Math.random() > 0.5 ? 1 : -1
+    startRef.current.set(-9 * side, 4.5 + Math.random() * 2, -4 - Math.random() * 4)
+    endRef.current.set(9 * side, -3.5 - Math.random() * 2, -2 - Math.random() * 4)
+    flightStartRef.current = t
+    caughtRef.current = false
+  }
+
+  useFrame((state) => {
+    const g = group.current
+    const mat = material.current
+    if (!g || !mat) return
+    const t = state.clock.elapsedTime
+
+    if (flightStartRef.current === null) {
+      if (t >= nextSpawnRef.current) spawn(t)
+      g.visible = false
+      return
+    }
+
+    const elapsed = t - flightStartRef.current
+    const progress = elapsed / STAR_FLIGHT_SECONDS
+
+    if (progress >= 1 || caughtRef.current) {
+      flightStartRef.current = null
+      nextSpawnRef.current = t + STAR_MIN_DELAY + Math.random() * (STAR_MAX_DELAY - STAR_MIN_DELAY)
+      g.visible = false
+      return
+    }
+
+    g.visible = true
+    g.position.lerpVectors(startRef.current, endRef.current, progress)
+    // Fade in over the first 10% and out over the last 25% of the flight.
+    mat.opacity = Math.min(1, progress / 0.1) * Math.min(1, (1 - progress) / 0.25)
+  })
+
+  return (
+    <group ref={group} visible={false}>
+      <Trail width={2.5} length={7} color="#c7d2fe" attenuation={(t) => t * t} decay={2}>
+        <mesh
+          onClick={(e) => {
+            e.stopPropagation()
+            if (caughtRef.current) return
+            caughtRef.current = true
+            onCatch?.()
+          }}
+          onPointerOver={() => { document.body.style.cursor = 'pointer' }}
+          onPointerOut={() => { document.body.style.cursor = 'auto' }}
+        >
+          <sphereGeometry args={[0.22, 8, 8]} />
+          <meshBasicMaterial ref={material} color="#e0e7ff" transparent opacity={0} />
+        </mesh>
+      </Trail>
+    </group>
+  )
+}
+
 /**
  * Full-viewport WebGL layer for the home route only.
  * Scroll progress deepens the scene; pointer drives lateral parallax.
  */
-export default function HomeScene({ scrollProgress = 0, approach = 0 }: Props) {
+export default function HomeScene({ scrollProgress = 0, approach = 0, onCatchStar }: Props) {
   const scrollRef = useRef(0)
   const approachRef = useRef(0)
   useEffect(() => {
@@ -140,6 +219,7 @@ export default function HomeScene({ scrollProgress = 0, approach = 0 }: Props) {
       <ScrollSyncedField scrollRef={scrollRef} />
       <Sparkles count={180} scale={11} size={1.8} speed={0.32} color="#818cf8" opacity={0.42} />
       <DistortedCore scrollRef={scrollRef} />
+      <ShootingStar onCatch={onCatchStar} />
       <CameraRig scrollRef={scrollRef} approachRef={approachRef} />
     </Canvas>
   )
