@@ -6,13 +6,10 @@ import { FiArrowLeft, FiExternalLink } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
 import { RECIPES, type Recipe } from '@/lib/recipes'
 
+// Recipe content is Korean-only regardless of site locale — this is a
+// personal recipe box, not translated content.
 function RecipeCard({ recipe }: { recipe: Recipe }) {
-  const { locale } = useLanguage()
   const [open, setOpen] = useState(true)
-  const title = locale === 'en' ? recipe.titleEn : recipe.title
-  const servings = locale === 'en' ? recipe.servingsEn : recipe.servings
-  const measurementNote = locale === 'en' ? recipe.measurementNoteEn : recipe.measurementNote
-  const steps = locale === 'en' ? recipe.stepsEn : recipe.steps
 
   return (
     <article className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6 md:p-8">
@@ -22,9 +19,9 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
         className="flex w-full items-center justify-between gap-4 text-left"
       >
         <div>
-          <h2 className="font-display text-2xl font-bold text-slate-50">{title}</h2>
+          <h2 className="font-display text-2xl font-bold text-slate-50">{recipe.title}</h2>
           <p className="mt-1 text-sm text-slate-500">
-            {servings} · {measurementNote}
+            {recipe.servings} · {recipe.measurementNote}
           </p>
         </div>
         <span className="shrink-0 text-slate-500">{open ? '−' : '+'}</span>
@@ -36,10 +33,10 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
             {recipe.ingredientGroups.map((group) => (
               <div key={group.title}>
                 <h3 className="mb-3 text-xs font-mono uppercase tracking-widest text-slate-500">
-                  {locale === 'en' ? group.titleEn : group.title}
+                  {group.title}
                 </h3>
                 <ul className="space-y-1.5 text-sm text-slate-300">
-                  {(locale === 'en' ? group.itemsEn : group.items).map((item) => (
+                  {group.items.map((item) => (
                     <li key={item} className="flex items-start gap-2">
                       <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-600" />
                       {item}
@@ -52,10 +49,10 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
 
           <div>
             <h3 className="mb-3 text-xs font-mono uppercase tracking-widest text-slate-500">
-              {locale === 'en' ? 'Steps' : '만드는 법'}
+              만드는 법
             </h3>
             <ol className="space-y-3 text-sm text-slate-300">
-              {steps.map((step, i) => (
+              {recipe.steps.map((step, i) => (
                 <li key={i} className="flex items-start gap-3">
                   <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-slate-700 text-[11px] font-mono text-slate-400">
                     {i + 1}
@@ -76,7 +73,7 @@ function RecipeCard({ recipe }: { recipe: Recipe }) {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300"
           >
-            {locale === 'en' ? 'Ingredient source' : '재료 출처'} <FiExternalLink size={11} />
+            재료 출처 <FiExternalLink size={11} />
           </a>
         </div>
       )}
