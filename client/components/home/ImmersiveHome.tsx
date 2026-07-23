@@ -33,6 +33,7 @@ const VisitorGlobe = dynamic(() => import('./VisitorGlobe'), {
 // 메인 화면에서만 노출되는 서브 메뉴 (자주 안 쓰는 항목들을 더보기로 묶음)
 const MORE_ITEMS: Array<{ label: string; labelEn: string; href: string }> = [
   { label: 'RPG', labelEn: 'RPG', href: '/rpg' },
+  { label: '레시피', labelEn: 'Recipes', href: '/recipes' },
   { label: '북마크', labelEn: 'Bookmarks', href: '/bookmarks' },
   { label: '오프라인', labelEn: 'Offline', href: '/offline-posts' },
 ]
