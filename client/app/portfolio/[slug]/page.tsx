@@ -1,15 +1,19 @@
 import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
-import { PORTFOLIO_PROJECTS, getProject } from '@/lib/portfolio-projects'
+import { getProject } from '@/lib/portfolio-projects'
+import { isPortfolioPublic } from '@/lib/site'
 import CaseStudyContent from './CaseStudyContent'
 
 type Props = { params: Promise<{ slug: string }> }
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  return PORTFOLIO_PROJECTS.map((p) => ({ slug: p.slug }))
-}
+/** Match /portfolio index — runtime gate must apply to case-study slugs too. */
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  if (!isPortfolioPublic()) {
+    return {}
+  }
+
   const { slug } = await params
   const project = getProject(slug)
   if (!project) return { title: 'Not Found' }
@@ -20,6 +24,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function CaseStudyPage({ params }: Props) {
+  if (!isPortfolioPublic()) {
+    notFound()
+  }
+
   const { slug } = await params
   const project = getProject(slug)
   if (!project) notFound()
