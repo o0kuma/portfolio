@@ -67,7 +67,7 @@ function ImmersiveHomeInner() {
   }, [starCaught])
 
   return (
-    <div className="relative w-full bg-[#030014]">
+    <div className="dark relative w-full bg-[#030014] text-textPrimary">
       {/* Fixed canvas: stays visible behind hero; posts section uses opaque bg */}
       <div className="fixed inset-0 z-0">
         <Suspense fallback={<div className="h-full w-full bg-[#030014]" aria-hidden />}>

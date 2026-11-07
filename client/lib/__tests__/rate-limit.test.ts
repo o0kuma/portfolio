@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { consumeRateLimit, isRateLimitExemptPath } from '@/lib/rate-limit'
+import { consumeRateLimit, isRateLimitExemptPath, isClientRouterRequest } from '@/lib/rate-limit'
 
 describe('isRateLimitExemptPath', () => {
   test('exempts layout and RPG polling endpoints only', () => {
@@ -22,5 +22,13 @@ describe('consumeRateLimit', () => {
     const blocked = consumeRateLimit(key, limit, windowMs)
     expect(blocked.allowed).toBe(false)
     expect(blocked.retryAfterSeconds).toBeGreaterThan(0)
+  })
+})
+
+describe('isClientRouterRequest', () => {
+  test('detects App Router fetches by the next-url header, never for API routes', () => {
+    expect(isClientRouterRequest('/games', new Headers({ 'next-url': '/' }))).toBe(true)
+    expect(isClientRouterRequest('/games', new Headers())).toBe(false)
+    expect(isClientRouterRequest('/api/posts', new Headers({ 'next-url': '/' }))).toBe(false)
   })
 })

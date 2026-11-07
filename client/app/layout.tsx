@@ -113,7 +113,7 @@ export default function RootLayout({
   const fontVars = `${inter.variable} ${fraunces.variable} ${firaCode.variable}`
 
   return (
-    <html lang="en" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
+    <html lang="ko" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"

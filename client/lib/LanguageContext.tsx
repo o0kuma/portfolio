@@ -15,14 +15,16 @@ interface LanguageContextType {
   toggleLocale: () => void
 }
 
+// Korean is the default — this is a Korean site; English is opt-in via the
+// footer toggle and remembered in localStorage.
 const LanguageContext = createContext<LanguageContextType>({
-  locale: 'en',
-  t: translations.en,
+  locale: 'ko',
+  t: translations.ko,
   toggleLocale: () => {},
 })
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>('en')
+  const [locale, setLocale] = useState<Locale>('ko')
 
   useEffect(() => {
     try {

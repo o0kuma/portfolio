@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 export type GameLeaderboardColumn = {
   key: string
@@ -39,6 +40,8 @@ export default function GameLeaderboard({
   title,
   emptyText = '아직 기록이 없습니다',
 }: Props) {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [entries, setEntries] = useState<LeaderboardRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -84,7 +87,7 @@ export default function GameLeaderboard({
           className="ml-auto text-xs text-slate-500 transition hover:text-amber-400"
           disabled={loading}
         >
-          새로고침
+          {en ? 'Refresh' : '새로고침'}
         </button>
       </div>
 
@@ -92,9 +95,12 @@ export default function GameLeaderboard({
 
       {error && (
         <p className="text-xs text-amber-400/90">
-          {error.includes('마이그레이션') || error.includes('테이블') || error.includes('migration')
-            ? 'DB 마이그레이션이 필요합니다.'
-            : error}
+          {/* API messages are Korean-only; show a generic line in English mode. */}
+          {en
+            ? 'Could not load rankings.'
+            : error.includes('마이그레이션') || error.includes('테이블') || error.includes('migration')
+              ? 'DB 마이그레이션이 필요합니다.'
+              : error}
         </p>
       )}
 

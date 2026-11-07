@@ -128,3 +128,23 @@ const RATE_LIMIT_EXEMPT_PATHS = new Set(['/api/cursors', '/api/rpg-presence'])
 export function isRateLimitExemptPath(pathname: string): boolean {
   return RATE_LIMIT_EXEMPT_PATHS.has(pathname)
 }
+
+/**
+ * In-app router fetches: `<Link>` prefetches and client-side navigations.
+ * A single home page view fires a dozen or more prefetches in the background,
+ * one per visible link segment. Counting them against the general budget
+ * meant an ordinary visitor could exhaust it before clicking anything, and
+ * the click then got a plain-text 429 page.
+ *
+ * Next.js strips its own `rsc` / `next-router-prefetch` headers and the
+ * `_rsc` query before the proxy runs, so those can't be used here. The
+ * `next-url` header (current page path, sent by the App Router on every RSC
+ * fetch) survives and is absent on ordinary document loads and API calls.
+ *
+ * These get their own, larger bucket instead of a free pass, so faking the
+ * header doesn't let a scraper bypass limiting.
+ */
+export function isClientRouterRequest(pathname: string, headers: Headers): boolean {
+  if (pathname.startsWith('/api/')) return false
+  return headers.has('next-url')
+}

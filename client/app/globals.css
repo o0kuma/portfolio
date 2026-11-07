@@ -16,7 +16,11 @@
     --page-shell-max: 80rem;
   }
 
-  html.dark {
+  /* `.dark` on any element (not just <html>) also switches the tokens, so a
+     dark-only page like the home screen keeps dark footer/text colors even
+     when the visitor's OS is in light mode. */
+  html.dark,
+  .dark {
     --color-canvas: 15 23 42;
     --color-surface: 30 41 59;
     --color-surface-elevated: 51 65 85;
@@ -66,22 +70,24 @@
     @apply bg-canvas text-textPrimary antialiased;
   }
 
+  /* Headings inherit their color so dark-only pages (which set a light text
+     color on their root) don't get dark-on-dark titles in OS light mode. */
   h1 {
-    @apply font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-textPrimary;
+    @apply font-display text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight;
   }
 
   h2 {
-    @apply font-display text-3xl md:text-4xl font-semibold tracking-tight text-textPrimary;
+    @apply font-display text-3xl md:text-4xl font-semibold tracking-tight;
   }
 
   h3 {
-    @apply font-display text-xl md:text-2xl font-semibold text-textPrimary;
+    @apply font-display text-xl md:text-2xl font-semibold;
   }
 
   h4,
   h5,
   h6 {
-    @apply font-semibold text-textPrimary;
+    @apply font-semibold;
   }
 }
 

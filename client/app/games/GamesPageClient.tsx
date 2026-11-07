@@ -120,12 +120,12 @@ const GAMES: GameInfo[] = [
 ]
 
 const STATS_EN = [
-  { label: '9 Games', icon: '🎮' },
+  { label: `${GAMES.length} Games`, icon: '🎮' },
   { label: 'Browser-based', icon: '🌐' },
   { label: 'Free to Play', icon: '🆓' },
 ]
 const STATS_KO = [
-  { label: '9개 게임', icon: '🎮' },
+  { label: `${GAMES.length}개 게임`, icon: '🎮' },
   { label: '브라우저 기반', icon: '🌐' },
   { label: '무료 플레이', icon: '🆓' },
 ]

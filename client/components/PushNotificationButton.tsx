@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useLanguage } from '@/lib/LanguageContext'
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
@@ -14,6 +15,8 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export default function PushNotificationButton() {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [supported, setSupported] = useState(false)
   const [subscribed, setSubscribed] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -76,7 +79,7 @@ export default function PushNotificationButton() {
       disabled={loading}
       className="inline-flex items-center gap-2 border border-white/15 bg-white/5 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/70 backdrop-blur-sm transition hover:border-white/30 hover:bg-white/10 disabled:opacity-50"
     >
-      {loading ? '...' : subscribed ? '알림 끄기' : '알림 받기'}
+      {loading ? '...' : subscribed ? (en ? 'Notifications off' : '알림 끄기') : en ? 'Get notified' : '알림 받기'}
     </button>
   )
 }

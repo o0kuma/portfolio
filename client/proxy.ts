@@ -13,6 +13,7 @@ import {
   consumeRateLimit,
   isIpTemporarilyBanned,
   isRateLimitExemptPath,
+  isClientRouterRequest,
 } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
@@ -25,9 +26,13 @@ import {
 /** One hit on a sensitive-path scan (`/wp-admin`, `/.env`, ...) bans the IP for this long. */
 const SENSITIVE_PATH_BAN_MS = 10 * 60 * 1000 // 10 minutes
 
-/** General traffic budget — generous for a real visitor, tight for a script. */
-const GENERAL_RATE_LIMIT = 20
-const GENERAL_RATE_WINDOW_MS = 10 * 1000 // 20 req / 10s per IP
+/**
+ * General traffic budget — generous for a real visitor, tight for a script.
+ * A single page view here already fires ~10 API calls (posts, visitors,
+ * vitals, leaderboards), so 20/10s blocked people clicking through two pages.
+ */
+const GENERAL_RATE_LIMIT = 60
+const GENERAL_RATE_WINDOW_MS = 10 * 1000 // 60 req / 10s per IP
 
 /**
  * China-sourced IPs get a much stricter budget even when traffic doesn't
@@ -37,6 +42,15 @@ const GENERAL_RATE_WINDOW_MS = 10 * 1000 // 20 req / 10s per IP
 const CN_RATE_LIMIT = 5
 const CN_RATE_WINDOW_MS = 10 * 1000 // 5 req / 10s per IP
 const STRICT_COUNTRIES = new Set(['CN'])
+
+/**
+ * Separate budget for in-app router fetches (link prefetches and client-side
+ * navigations) — see isClientRouterRequest(). Sized so one page view plus a
+ * few quick navigations fits comfortably.
+ */
+const ROUTER_RATE_LIMIT = 100
+const CN_ROUTER_RATE_LIMIT = 30
+const ROUTER_RATE_WINDOW_MS = 10 * 1000
 
 function logBlock(reason: string, details: Record<string, unknown>): void {
   console.warn(`[proxy] blocked reason=${reason}`, JSON.stringify(details))
@@ -97,15 +111,26 @@ function applyBotAndRateLimitPolicy(request: NextRequest): NextResponse | null {
 
   const country = getClientCountry(headers)
   const isStrict = Boolean(country && STRICT_COUNTRIES.has(country))
-  const limit = isStrict ? CN_RATE_LIMIT : GENERAL_RATE_LIMIT
-  const windowMs = isStrict ? CN_RATE_WINDOW_MS : GENERAL_RATE_WINDOW_MS
-  const rateKey = `${isStrict ? 'cn' : 'gen'}:${ip}`
+  const isRouterFetch = isClientRouterRequest(pathname, headers)
+  const limit = isRouterFetch
+    ? isStrict
+      ? CN_ROUTER_RATE_LIMIT
+      : ROUTER_RATE_LIMIT
+    : isStrict
+      ? CN_RATE_LIMIT
+      : GENERAL_RATE_LIMIT
+  const windowMs = isRouterFetch
+    ? ROUTER_RATE_WINDOW_MS
+    : isStrict
+      ? CN_RATE_WINDOW_MS
+      : GENERAL_RATE_WINDOW_MS
+  const rateKey = `${isRouterFetch ? 'rt-' : ''}${isStrict ? 'cn' : 'gen'}:${ip}`
 
   // Layout/RPG polling — see isRateLimitExemptPath() for rationale.
   if (!isRateLimitExemptPath(pathname)) {
     const result = consumeRateLimit(rateKey, limit, windowMs)
     if (!result.allowed) {
-      logBlock('rate-limit', { ip, pathname, country, limit, windowMs })
+      logBlock('rate-limit', { ip, pathname, country, limit, windowMs, isRouterFetch })
       return textResponse('Too Many Requests', 429, {
         'retry-after': String(result.retryAfterSeconds),
       })
