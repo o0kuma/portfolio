@@ -43,9 +43,15 @@ module.exports = {
         accentMuted: 'rgb(var(--color-accent-muted) / <alpha-value>)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'Inter', 'sans-serif'],
-        display: ['var(--font-display)', 'Georgia', 'serif'],
-        mono: ['var(--font-mono)', 'Fira Code', 'monospace'],
+        // Pretendard covers Hangul and Latin in one family, so Korean and
+        // English in the same line no longer mix two different typefaces.
+        sans: ['"Pretendard Variable"', 'Pretendard', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+        // Headings use the same family as body text; the serif is reserved
+        // for the "kuuuma" wordmark (font-logo).
+        display: ['"Pretendard Variable"', 'Pretendard', 'var(--font-inter)', 'system-ui', 'sans-serif'],
+        logo: ['var(--font-display)', 'Georgia', 'serif'],
+        // Fira Code has no Hangul; fall back to Pretendard for Korean glyphs.
+        mono: ['var(--font-mono)', 'Fira Code', '"Pretendard Variable"', 'monospace'],
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

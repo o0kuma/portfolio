@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { FiMenu, FiX, FiSearch, FiSettings } from 'react-icons/fi'
-import ThemeToggle from './ThemeToggle'
 import ThemePicker from './ThemePicker'
 import SearchBar from './SearchBar'
 import SearchModal from './SearchModal'
@@ -138,8 +137,6 @@ export default function Header() {
               </button>
 
               <ThemePicker />
-
-              <ThemeToggle />
 
               <button
                 type="button"

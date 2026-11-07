@@ -1348,7 +1348,7 @@ export default function RPGPageClient() {
         <div className="text-center">
           <p className="text-green-500 font-mono text-xs tracking-[0.3em] uppercase mb-3">Portfolio RPG</p>
           <h1 className="text-5xl font-black text-white mb-2" style={{ textShadow: '0 0 30px #4a7' }}>
-            🗺️ kuuuma World
+            kuuuma World
           </h1>
           <p className="text-green-300/60 font-mono text-sm">
             {locale === 'en' ? 'Explore the portfolio through the town' : '마을을 탐험하며 포트폴리오를 둘러보세요'}

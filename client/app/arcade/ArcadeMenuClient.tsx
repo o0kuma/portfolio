@@ -28,7 +28,7 @@ export default function ArcadeMenuClient() {
   const { level, progress } = computeLevel(coins)
 
   return (
-    <div className="min-h-screen bg-[#0a0a12] pb-20 text-white">
+    <div className="min-h-screen bg-canvas pb-20 text-white">
       <header className="sticky top-0 z-30 border-b border-purple-900/40 bg-[#0a0a12]/90 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center gap-3 px-4 py-3">
           {!standalone && (
@@ -45,7 +45,7 @@ export default function ArcadeMenuClient() {
 
       <main className="mx-auto max-w-md px-4 pt-8">
         <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} className="mb-6 text-center">
-          <h1 className="mb-2 text-3xl font-black">🕹️ Pocket Arcade</h1>
+          <h1 className="mb-2 text-3xl font-black">Pocket Arcade</h1>
           <p className="text-sm text-slate-400">Ultra-short mini games you can play one-handed</p>
         </motion.div>
 

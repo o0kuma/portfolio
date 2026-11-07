@@ -468,7 +468,7 @@ export default function PostDetailClient() {
             {post.series && seriesPosts.length > 0 && (
               <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em]">
+                  <h3 className="text-xs text-neutral-500 tracking-wide">
                     {locale === 'en' ? 'More in this series' : '이 시리즈의 다른 글'}
                   </h3>
                   <span className="text-xs font-mono text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
@@ -500,7 +500,7 @@ export default function PostDetailClient() {
             {/* Related posts */}
             {relatedPosts.length > 0 && (
               <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
-                <h3 className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-4">
+                <h3 className="text-xs text-neutral-500 tracking-wide mb-4">
                   {t.postDetail.relatedPosts}
                 </h3>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -538,7 +538,7 @@ export default function PostDetailClient() {
                 style={{ top: '6rem' }}
                 aria-label={t.postDetail.tableOfContents}
               >
-                <p className="text-xs font-mono text-neutral-500 uppercase tracking-[0.2em] mb-3">
+                <p className="text-xs text-neutral-500 tracking-wide mb-3">
                   {t.postDetail.tableOfContents}
                 </p>
                 <ul className="text-xs font-mono text-neutral-600 space-y-1">

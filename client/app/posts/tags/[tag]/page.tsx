@@ -17,7 +17,7 @@ export default async function TagPage({ params }: Props) {
   const posts = Array.isArray(data.posts) ? data.posts : []
 
   return (
-    <main className="min-h-screen bg-neutral-950 text-neutral-50">
+    <main className="min-h-screen bg-canvas text-neutral-50">
       <div className="max-w-3xl mx-auto px-6 py-16">
         <Link href="/posts" className="text-neutral-500 hover:text-neutral-300 text-sm font-mono mb-8 inline-block">
           ← Blog

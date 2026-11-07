@@ -71,7 +71,7 @@ export default function RecentActivity() {
 
   return (
     <section className="mx-auto max-w-2xl px-6 py-8">
-      <h2 className="mb-4 font-mono text-[10px] uppercase tracking-[0.3em] text-neutral-500">
+      <h2 className="mb-4 text-xs tracking-wide text-neutral-500">
         {locale === 'en' ? 'Recent activity' : '최근 활동'}
       </h2>
       <ul className="space-y-2.5">

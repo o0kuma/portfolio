@@ -103,11 +103,11 @@ function ImmersiveHomeInner() {
         <header className="flex items-center justify-between px-5 py-5 md:px-12 md:py-8 pointer-events-auto">
           <Link
             href="/"
-            className="font-display text-lg tracking-tight text-white/95 md:text-xl"
+            className="font-logo text-lg tracking-tight text-white/95 md:text-xl"
           >
             {t.home.brand}
           </Link>
-          <nav className="flex items-center gap-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/55 md:gap-7 md:text-xs">
+          <nav className="flex items-center gap-4 text-[13px] font-medium text-white/60 md:gap-7 md:text-sm">
             <a href="#posts-feed" className="transition-colors hover:text-white">
               {t.home.navPosts}
             </a>
@@ -134,7 +134,7 @@ function ImmersiveHomeInner() {
                 <FiChevronDown size={11} className={`transition-transform ${isMoreOpen ? 'rotate-180' : ''}`} />
               </button>
               {isMoreOpen && (
-                <div className="absolute top-full right-0 z-50 mt-3 w-32 rounded-xl border border-white/10 bg-black/90 py-1 normal-case tracking-normal backdrop-blur-md shadow-xl">
+                <div className="absolute top-full right-0 z-50 mt-3 w-32 rounded-xl border border-white/10 bg-black/90 py-1 backdrop-blur-md shadow-xl">
                   {MORE_ITEMS.map((item) => (
                     <Link
                       key={item.href}
@@ -154,7 +154,7 @@ function ImmersiveHomeInner() {
         <main className="flex flex-1 flex-col items-center justify-center px-6 pb-28 text-center md:pb-36">
           {/* Brand mark — pointer tilt (2) */}
           <h1
-            className="pointer-events-auto mb-6 max-w-[90vw] font-display text-[clamp(3.5rem,18vw,10rem)] font-bold leading-[0.88] tracking-tight transition-transform duration-150 ease-out will-change-transform"
+            className="pointer-events-auto mb-6 max-w-[90vw] font-logo text-[clamp(3.5rem,18vw,10rem)] font-bold leading-[0.88] tracking-tight transition-transform duration-150 ease-out will-change-transform"
             style={
               reduced
                 ? undefined
@@ -164,16 +164,14 @@ function ImmersiveHomeInner() {
                   }
             }
           >
-            <span className="bg-gradient-to-br from-white via-indigo-100 to-violet-300 bg-clip-text text-transparent drop-shadow-[0_0_60px_rgba(99,102,241,0.35)]">
-              {t.home.brand}
-            </span>
+            <span className="text-white">{t.home.brand}</span>
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-white/50 md:text-[15px]">
             {t.home.tagline}
           </p>
           <a
             href="#posts-feed"
-            className="pointer-events-auto mt-12 inline-flex items-center gap-2 border border-white/15 bg-white/5 px-8 py-3 text-xs font-semibold uppercase tracking-[0.22em] text-white/85 backdrop-blur-sm transition hover:border-white/30 hover:bg-white/10"
+            className="pointer-events-auto mt-12 inline-flex items-center gap-2 border border-white/15 bg-white/5 px-8 py-3 text-sm font-medium text-white/85 backdrop-blur-sm transition hover:border-white/30 hover:bg-white/10"
           >
             {t.home.scrollCta}
           </a>
@@ -189,7 +187,7 @@ function ImmersiveHomeInner() {
             className="pointer-events-auto flex flex-col items-center gap-2 text-white/35 transition hover:text-white/55"
           >
             <FiArrowDown className="animate-bounce" size={18} aria-hidden />
-            <span className="text-[10px] uppercase tracking-[0.35em]">{t.home.scrollHint}</span>
+            <span className="text-xs">{t.home.scrollHint}</span>
           </a>
         </footer>
       </section>

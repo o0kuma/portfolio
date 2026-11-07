@@ -319,14 +319,14 @@ export default function LottoPageClient() {
   const canDraw = picked.length === 6 && !drawing && !autoRunning
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20 text-white">
+    <div className="min-h-screen bg-canvas pb-20 text-white">
       {/* nav */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-slate-800 bg-canvas/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white">
             <FiArrowLeft className="h-4 w-4" /> {locale === 'en' ? 'Home' : '메인으로'}
           </Link>
-          <span className="text-sm font-semibold text-slate-200">🎰 {locale === 'en' ? 'Lotto 6/45' : '로또 6/45'}</span>
+          <span className="text-sm font-semibold text-slate-200">{locale === 'en' ? 'Lotto 6/45' : '로또 6/45'}</span>
           <Link href="/games" className="ml-auto text-xs font-semibold text-slate-400 hover:text-white">
             {locale === 'en' ? 'Game Hub →' : '게임 목록 →'}
           </Link>
@@ -336,7 +336,7 @@ export default function LottoPageClient() {
       <main className="mx-auto max-w-3xl px-4 pt-8">
         <div className="mb-6 text-center">
           <h1 className="font-display mb-2 text-4xl font-bold">
-            🎰 {locale === 'en' ? 'Lotto Number Match' : '로또 번호 맞추기'}
+            {locale === 'en' ? 'Lotto Number Match' : '로또 번호 맞추기'}
           </h1>
           <p className="text-sm text-slate-400">
             {locale === 'en' ? 'Pick 6 numbers and try your luck in the draw' : '번호 6개를 고르고 추첨에 도전하세요'}
@@ -379,7 +379,7 @@ export default function LottoPageClient() {
         <div className="mb-5 rounded-2xl border border-amber-700/40 bg-amber-950/10 p-4">
           <div className="mb-3 flex items-center gap-2">
             <span className="text-sm font-semibold text-amber-300">
-              📊 {locale === 'en' ? 'Recommended Numbers' : '추천 번호'}
+              {locale === 'en' ? 'Recommended Numbers' : '추천 번호'}
             </span>
             {statsAvailable && stats?.totalDraws ? (
               <span className="text-[11px] text-slate-500">
@@ -494,7 +494,7 @@ export default function LottoPageClient() {
           <div className="mb-5 rounded-2xl border border-slate-700 bg-slate-900/40 p-4">
             <div className="mb-3 flex items-center justify-between">
               <span className="text-sm font-semibold text-slate-300">
-                🔍 {locale === 'en' ? 'My Combination Analysis' : '내 조합 분석'}
+                {locale === 'en' ? 'My Combination Analysis' : '내 조합 분석'}
               </span>
               <button
                 onClick={saveTicketImage}
@@ -656,7 +656,7 @@ export default function LottoPageClient() {
 
         {/* Leaderboard */}
         <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
-          🏆 {locale === 'en' ? 'Hall of Fame' : '명예의 전당'}
+          {locale === 'en' ? 'Hall of Fame' : '명예의 전당'}
           <button onClick={() => setRefreshKey((k) => k + 1)} className="text-slate-500 hover:text-amber-400"><FiRefreshCw size={14} /></button>
         </h2>
         <LottoLeaderboard refreshKey={refreshKey} />

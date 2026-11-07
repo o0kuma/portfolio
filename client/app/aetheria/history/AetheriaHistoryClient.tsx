@@ -152,7 +152,7 @@ export default function AetheriaHistoryClient() {
   const aliveCount = data?.agents.filter((a) => a.status === 'alive').length ?? 0
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
+    <div className="min-h-screen bg-canvas text-neutral-100">
       <div className="mx-auto max-w-4xl px-5 py-8">
         <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-neutral-500 transition hover:text-neutral-200">
           <FiArrowLeft className="h-4 w-4" /> {tr.back}

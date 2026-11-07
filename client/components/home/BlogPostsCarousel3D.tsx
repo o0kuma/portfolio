@@ -225,7 +225,7 @@ export default function BlogPostsCarousel3D({
 
   return (
     <div className="relative py-4 md:py-8">
-      <p className="mb-6 text-center font-mono text-[10px] uppercase tracking-[0.35em] text-white/35">
+      <p className="mb-6 text-center text-xs tracking-wide text-white/35">
         Drag · wheel · ← →
       </p>
 
@@ -350,11 +350,11 @@ function GlassPostCard({
 
         <div className="relative flex flex-wrap items-center gap-3">
           {post.featured && (
-            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-0.5 font-mono text-[9px] uppercase tracking-[0.25em] text-amber-200/90">
+            <span className="rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-0.5 text-xs tracking-wide text-amber-200/90">
               Featured
             </span>
           )}
-          <span className="rounded-full border border-white/10 px-3 py-0.5 font-mono text-[10px] uppercase tracking-[0.2em] text-white/45">
+          <span className="rounded-full border border-white/10 px-3 py-0.5 text-xs tracking-wide text-white/45">
             {categoryLabel(post.category)}
           </span>
         </div>
@@ -386,7 +386,7 @@ function GlassPostCard({
           ))}
         </div>
 
-        <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/10 pt-6 font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">
+        <div className="relative mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 border-t border-white/10 pt-6 text-xs tracking-wide text-white/35">
           <span className="inline-flex items-center gap-2">
             <FiUser size={12} className="text-white/25" aria-hidden />
             {post.author}
@@ -411,7 +411,7 @@ function GlassPostCard({
 
         <Link
           href={`/posts/${post._id}`}
-          className="relative z-20 mt-8 inline-flex items-center gap-3 border-b border-white/25 pb-1 font-mono text-[11px] tracking-[0.35em] text-white/70 transition hover:border-white/60 hover:text-white"
+          className="relative z-20 mt-8 inline-flex items-center gap-3 border-b border-white/25 pb-1 text-[11px] tracking-wide text-white/70 transition hover:border-white/60 hover:text-white"
           style={{ touchAction: 'auto' }}
           onPointerDown={(e) => e.stopPropagation()}
         >

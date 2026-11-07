@@ -1,26 +1,14 @@
 'use client'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext } from 'react'
 
-type Theme = 'dark' | 'light'
+// The site is dark-only (see app/layout.tsx). The context is kept so existing
+// consumers keep compiling; `toggle` is intentionally a no-op.
+type Theme = 'dark'
 const ThemeContext = createContext<{ theme: Theme; toggle: () => void }>({ theme: 'dark', toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark')
-
-  useEffect(() => {
-    const stored = localStorage.getItem('theme') as Theme | null
-    const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    setTheme(stored ?? preferred)
-  }, [])
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark')
-    document.documentElement.classList.toggle('light', theme === 'light')
-    localStorage.setItem('theme', theme)
-  }, [theme])
-
   return (
-    <ThemeContext.Provider value={{ theme, toggle: () => setTheme(t => t === 'dark' ? 'light' : 'dark') }}>
+    <ThemeContext.Provider value={{ theme: 'dark', toggle: () => {} }}>
       {children}
     </ThemeContext.Provider>
   )

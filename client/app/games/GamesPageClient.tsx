@@ -31,8 +31,8 @@ const GAMES: GameInfo[] = [
     href: '/tower-defense',
     title: 'Tower Defense',
     titleKo: 'Tower Defense',
-    description: 'Strategically place towers to stop the incoming waves of enemies. Resource management and upgrades are key!',
-    descriptionKo: '전략적으로 타워를 배치해 몰려오는 적을 막아라. 자원 관리와 업그레이드가 핵심!',
+    description: 'Place towers to hold off incoming waves. Resource management and upgrade order decide the run.',
+    descriptionKo: '타워를 배치해 몰려오는 적을 막는 게임. 자원 관리와 업그레이드 순서가 승부를 가릅니다.',
     genre: 'Strategy',
     genreKo: '전략',
     difficulty: 3,
@@ -46,8 +46,8 @@ const GAMES: GameInfo[] = [
     href: '/survive',
     title: 'Survive',
     titleKo: 'Survive',
-    description: 'Dodge waves of enemies in this top-down shooter and survive as long as possible. Online multiplayer supported!',
-    descriptionKo: '탑다운 슈터로 밀려오는 적들을 피하며 최대한 오래 생존하라. 온라인 대전 지원!',
+    description: 'A top-down shooter. Dodge the waves and last as long as you can. Online multiplayer included.',
+    descriptionKo: '위에서 내려다보는 슈팅 게임. 밀려오는 적을 피하며 최대한 오래 버팁니다. 온라인 대전도 됩니다.',
     genre: 'Action',
     genreKo: '액션',
     difficulty: 4,
@@ -61,8 +61,8 @@ const GAMES: GameInfo[] = [
     href: '/typing-game',
     title: 'Typing Game',
     titleKo: 'Typing Game',
-    description: 'Type code snippets to measure your WPM and accuracy. Typing practice built for developers!',
-    descriptionKo: '코드 스니펫을 타이핑해 WPM과 정확도를 측정하세요. 개발자를 위한 타이핑 훈련!',
+    description: 'Type real code snippets and track your WPM and accuracy.',
+    descriptionKo: '코드 조각을 따라 쳐서 타수와 정확도를 잽니다. 개발자용 타자 연습.',
     genre: 'Puzzle',
     genreKo: '퍼즐',
     difficulty: 2,
@@ -76,8 +76,8 @@ const GAMES: GameInfo[] = [
     href: '/tetris',
     title: 'Tetris',
     titleKo: 'Tetris',
-    description: 'Classic Tetris! Stack blocks and clear lines to chase the highest score.',
-    descriptionKo: '클래식 테트리스! 블록을 쌓고 라인을 지워 최고 점수에 도전하세요.',
+    description: 'Stack blocks, clear lines, and chase a high score.',
+    descriptionKo: '블록을 쌓고 줄을 지워 최고 점수를 노리는 테트리스.',
     genre: 'Puzzle',
     genreKo: '퍼즐',
     difficulty: 2,
@@ -91,8 +91,8 @@ const GAMES: GameInfo[] = [
     href: '/lotto',
     title: 'Lotto 6/45',
     titleKo: '로또 6/45',
-    description: 'Pick numbers and try the draw! Compare against real past draws, or run infinite auto-purchases until you win 1st prize.',
-    descriptionKo: '번호를 고르고 추첨에 도전! 역대 실제 회차와 비교하거나 1등 나올 때까지 무한 자동 구매.',
+    description: 'Pick numbers and run the draw. Compare with real past draws, or auto-buy until you hit 1st prize.',
+    descriptionKo: '번호를 골라 추첨해 보고 역대 실제 회차와 비교합니다. 1등이 나올 때까지 자동 구매도 됩니다.',
     genre: 'Luck/Sim',
     genreKo: '운/시뮬',
     difficulty: 1,
@@ -119,32 +119,6 @@ const GAMES: GameInfo[] = [
   },
 ]
 
-const STATS_EN = [
-  { label: `${GAMES.length} Games`, icon: '🎮' },
-  { label: 'Browser-based', icon: '🌐' },
-  { label: 'Free to Play', icon: '🆓' },
-]
-const STATS_KO = [
-  { label: `${GAMES.length}개 게임`, icon: '🎮' },
-  { label: '브라우저 기반', icon: '🌐' },
-  { label: '무료 플레이', icon: '🆓' },
-]
-
-function DifficultyStars({ count, locale }: { count: number; locale: string }) {
-  return (
-    <div
-      className="flex items-center gap-0.5"
-      aria-label={locale === 'en' ? `Difficulty ${count} points` : `난이도 ${count}점`}
-    >
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} className={i < count ? 'text-amber-400' : 'text-slate-700'} aria-hidden>
-          ★
-        </span>
-      ))}
-    </div>
-  )
-}
-
 function GameCard({ game, index, locale }: { game: GameInfo; index: number; locale: string }) {
   const en = locale === 'en'
   return (
@@ -161,14 +135,11 @@ function GameCard({ game, index, locale }: { game: GameInfo; index: number; loca
           <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-800/70 text-3xl shadow-inner">
             {game.emoji}
           </div>
-          <div className="flex flex-col items-end gap-1.5">
-            <span
-              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${game.accentColor}`}
-            >
-              {en ? game.genre : game.genreKo}
-            </span>
-            <DifficultyStars count={game.difficulty} locale={locale} />
-          </div>
+          <span
+            className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${game.accentColor}`}
+          >
+            {en ? game.genre : game.genreKo}
+          </span>
         </div>
 
         {/* info */}
@@ -203,12 +174,11 @@ function GameCard({ game, index, locale }: { game: GameInfo; index: number; loca
 export default function GamesPageClient() {
   const { t, locale } = useLanguage()
   const en = locale === 'en'
-  const STATS = en ? STATS_EN : STATS_KO
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-16 text-white">
+    <div className="min-h-screen bg-canvas pb-16 text-white">
       {/* sticky nav */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+      <header className="sticky top-0 z-30 border-b border-slate-800 bg-canvas/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
           <Link
             href="/"
@@ -229,7 +199,7 @@ export default function GamesPageClient() {
               href="/achievements"
               className="inline-flex items-center gap-1.5 rounded-lg border border-amber-700/50 bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-400 transition hover:border-amber-600 hover:text-amber-300"
             >
-              {en ? '🏆 Achievements' : '🏆 업적'}
+              {en ? 'Achievements' : '업적'}
             </Link>
           </div>
         </div>
@@ -241,32 +211,14 @@ export default function GamesPageClient() {
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 text-center"
+          className="mb-10 text-center"
         >
           <h1 className="font-display mb-3 text-5xl font-bold tracking-tight">
-            🎮 Game Hub
+            {en ? 'Games' : '게임'}
           </h1>
           <p className="text-lg text-slate-400">
             {en ? 'Mini games you can play right in your browser' : '브라우저에서 바로 즐기는 미니 게임'}
           </p>
-        </motion.div>
-
-        {/* Stat chips */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mb-10 flex flex-wrap justify-center gap-3"
-        >
-          {STATS.map((s) => (
-            <span
-              key={s.label}
-              className="flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-800/60 px-4 py-1.5 text-sm font-medium text-slate-300"
-            >
-              <span>{s.icon}</span>
-              {s.label}
-            </span>
-          ))}
         </motion.div>
 
         {/* Game cards grid */}
@@ -280,23 +232,23 @@ export default function GamesPageClient() {
         <h2 className="mb-5 text-xl font-bold">{t.games.globalRanking}</h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.tetrisEmoji}</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{en ? 'Tetris' : '테트리스'}</p>
             <TetrisLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.surviveEmoji}</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{en ? 'Survive' : '서바이브'}</p>
             <SurviveLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">{t.games.towerDefenseEmoji}</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{en ? 'Tower Defense' : '타워 디펜스'}</p>
             <TowerDefenseLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">⌨️ Typing Game</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{en ? 'Typing Game' : '타이핑 게임'}</p>
             <TypingLeaderboard />
           </div>
           <div>
-            <p className="mb-3 text-sm font-semibold text-slate-300">🎰 Lotto 6/45</p>
+            <p className="mb-3 text-sm font-semibold text-slate-300">{en ? 'Lotto 6/45' : '로또 6/45'}</p>
             <LottoLeaderboard />
           </div>
         </div>

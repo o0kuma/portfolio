@@ -1,6 +1,6 @@
 'use client'
 
-import { FiGithub, FiMail, FiArrowUp, FiBook, FiCode, FiUser } from 'react-icons/fi'
+import { FiGithub, FiMail, FiArrowUp, FiUser } from 'react-icons/fi'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useLanguage } from '@/lib/LanguageContext'
@@ -80,17 +80,13 @@ export default function BlogFooter() {
         }}
         aria-hidden
       />
-      <div className="pointer-events-none absolute inset-0 opacity-40 dark:opacity-30">
-        <div className="absolute top-0 left-1/4 h-64 w-64 rounded-full bg-purple-500/15 blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 h-64 w-64 rounded-full bg-blue-500/15 blur-3xl" />
-      </div>
 
       <div className="page-shell relative z-10">
         <div className="py-20">
           <div className="grid gap-12 md:grid-cols-3">
             <div className="md:col-span-1">
               <Link href="/">
-                <h3 className="mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text font-display text-3xl font-bold text-transparent">
+                <h3 className="mb-4 font-logo text-3xl font-bold text-textPrimary">
                   {t.blogFooter.brand}
                 </h3>
               </Link>
@@ -113,8 +109,7 @@ export default function BlogFooter() {
             </div>
 
             <div>
-              <h4 className="mb-6 flex items-center gap-2 text-lg font-semibold">
-                <FiBook size={20} className="text-purple-400" />
+              <h4 className="mb-6 text-lg font-semibold">
                 {t.blogFooter.quickLinks}
               </h4>
               <ul className="space-y-3">
@@ -124,7 +119,7 @@ export default function BlogFooter() {
                       href={link.href}
                       className="group flex items-center gap-2 text-textMuted transition-colors hover:text-textPrimary"
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-purple-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
                       {link.name}
                     </Link>
                   </li>
@@ -133,8 +128,7 @@ export default function BlogFooter() {
             </div>
 
             <div>
-              <h4 className="mb-6 flex items-center gap-2 text-lg font-semibold">
-                <FiCode size={20} className="text-blue-400" />
+              <h4 className="mb-6 text-lg font-semibold">
                 {t.blogFooter.categories}
               </h4>
               <ul className="space-y-3">
@@ -144,7 +138,7 @@ export default function BlogFooter() {
                       href={`/posts?category=${cat.id}`}
                       className="group flex items-center gap-2 text-textMuted transition-colors hover:text-textPrimary"
                     >
-                      <span className="h-1.5 w-1.5 rounded-full bg-blue-400 opacity-0 transition-opacity group-hover:opacity-100" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-white/60 opacity-0 transition-opacity group-hover:opacity-100" />
                       {locale === 'ko' ? cat.ko : cat.en}
                     </Link>
                   </li>
@@ -181,10 +175,10 @@ export default function BlogFooter() {
       <button
         type="button"
         onClick={scrollToTop}
-        className="fixed bottom-8 right-8 z-40 flex h-14 w-14 items-center justify-center rounded-full border border-white/20 bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-2xl transition hover:scale-105 active:scale-95"
+        className="fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white backdrop-blur-sm transition hover:bg-white/20"
         aria-label="Scroll to top"
       >
-        <FiArrowUp size={22} />
+        <FiArrowUp size={18} />
       </button>
     </footer>
   )

@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
 import SpaceAtmosphere from '@/components/SpaceAtmosphere'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type ViewMode = 'list' | 'map'
 
@@ -201,12 +202,13 @@ function RestaurantCard({
 export default function FoodClient({
   regions,
   error,
-  errorMessage,
 }: {
   regions: RegionWithItems[]
   error?: boolean
   errorMessage?: string
 }) {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [activeRegion, setActiveRegion] = useState<string>(regions[0]?.id ?? '')
   const [search, setSearch] = useState('')
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
@@ -265,10 +267,10 @@ export default function FoodClient({
         <div className="container-custom">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-8 h-px bg-neutral-700" />
-            <span className="text-neutral-500 text-xs font-mono tracking-[0.2em] uppercase">Food</span>
+            <span className="text-neutral-500 text-xs tracking-wide">{en ? 'Food' : '맛집'}</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-neutral-50">
-            Restaurant List
+            {en ? 'Restaurant List' : '맛집 리스트'}
           </h1>
         </div>
       </div>
@@ -276,8 +278,9 @@ export default function FoodClient({
       <div className="container-custom py-10">
         {error && (
           <div className="py-20 text-center space-y-2">
-            <p className="text-neutral-500 font-mono text-sm">Failed to load Notion data.</p>
-            {errorMessage && <p className="text-red-400 font-mono text-xs">{errorMessage}</p>}
+            <p className="text-neutral-400 text-sm">
+              {en ? "Couldn't load the list. Please try again in a moment." : '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'}
+            </p>
           </div>
         )}
 
@@ -316,7 +319,7 @@ export default function FoodClient({
 
               {/* Desktop: vertical sidebar */}
               <div className="hidden md:block sticky top-24 space-y-0.5">
-                <p className="text-[10px] font-mono text-neutral-600 tracking-widest uppercase px-3 pb-2">
+                <p className="text-xs text-neutral-600 tracking-wide px-3 pb-2">
                   Regions
                 </p>
                 {regions.map((region) => {

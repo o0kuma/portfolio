@@ -33,7 +33,7 @@ export default function AchievementsPage() {
 
       <main className="mx-auto max-w-4xl px-4 pt-10">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold">🏆 업적</h1>
+          <h1 className="mb-2 text-3xl font-bold">업적</h1>
           <p className="mb-4 text-neutral-400">게임을 플레이하며 업적을 달성해보세요</p>
           <div className="mb-2 flex items-center justify-between text-sm">
             <span className="text-neutral-400">{count} / {ACHIEVEMENTS.length} 달성</span>

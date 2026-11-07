@@ -100,7 +100,7 @@ export default function BlogPostsAtmosphere({
         <aside className="shrink-0 lg:sticky lg:top-28 lg:max-w-[13rem]">
           <p
             id="posts-feed-heading"
-            className="font-mono text-[10px] font-medium uppercase leading-relaxed tracking-[0.4em] text-white/35"
+            className="font-mono text-xs font-medium leading-relaxed tracking-wide text-white/35"
           >
             What are you
             <br />
@@ -146,7 +146,7 @@ export default function BlogPostsAtmosphere({
           </nav>
           <Link
             href="/posts"
-            className="mt-12 inline-flex w-full max-w-[15rem] items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-4 py-3 font-mono text-[10px] tracking-[0.28em] text-white/50 backdrop-blur-sm transition hover:border-white/30 hover:text-white/90"
+            className="mt-12 inline-flex w-full max-w-[15rem] items-center justify-center rounded-full border border-white/15 bg-white/[0.03] px-4 py-3 text-xs tracking-wide text-white/50 backdrop-blur-sm transition hover:border-white/30 hover:text-white/90"
           >
             OPEN ARCHIVE…
           </Link>
@@ -160,13 +160,13 @@ export default function BlogPostsAtmosphere({
             </div>
           ) : posts.length === 0 ? (
             <div className="rounded-[2rem] border border-dashed border-white/15 bg-white/[0.03] px-8 py-20 text-center backdrop-blur-sm">
-              <p className="font-mono text-xs tracking-widest text-white/40">NO ENTRIES FOUND</p>
+              <p className="font-mono text-xs tracking-wide text-white/40">NO ENTRIES FOUND</p>
               <p className="mt-4 text-sm text-white/45">
                 {locale === 'en' ? 'Check the API server or try writing a post on the board.' : 'API 서버를 확인하거나 게시판에서 글을 작성해 보세요.'}
               </p>
               <Link
                 href="/posts"
-                className="mt-8 inline-flex items-center gap-2 font-mono text-[11px] tracking-[0.2em] text-fuchsia-300/90 hover:text-white"
+                className="mt-8 inline-flex items-center gap-2 text-[11px] tracking-wide text-fuchsia-300/90 hover:text-white"
               >
                 GO TO /posts <FiArrowRight size={14} aria-hidden />
               </Link>

@@ -148,13 +148,13 @@ export default function AetheriaPageClient() {
 
   // Verifying authentication
   if (checking) {
-    return <div className="flex min-h-screen items-center justify-center bg-[#05070d] text-sm text-slate-500">Checking...</div>
+    return <div className="flex min-h-screen items-center justify-center bg-canvas text-sm text-slate-500">Checking...</div>
   }
 
   // Private — admin access only
   if (!isAdmin) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[#05070d] px-4 text-white">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas px-4 text-white">
         <FiLock className="text-3xl text-slate-600" />
         <h1 className="text-lg font-bold">Project Aetheria</h1>
         <p className="text-center text-xs text-slate-500">
@@ -192,8 +192,8 @@ export default function AetheriaPageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#05070d] pb-20 text-white">
-      <header className="sticky top-0 z-30 border-b border-cyan-900/40 bg-[#05070d]/90 backdrop-blur">
+    <div className="min-h-screen bg-canvas pb-20 text-white">
+      <header className="sticky top-0 z-30 border-b border-cyan-900/40 bg-canvas/90 backdrop-blur">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <Link href="/" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
             <FiArrowLeft className="h-4 w-4" /> Home
@@ -212,7 +212,7 @@ export default function AetheriaPageClient() {
 
       <main className="mx-auto max-w-4xl px-4 pt-8">
         <div className="mb-6 text-center">
-          <h1 className="mb-2 text-3xl font-black">🧠 Project Aetheria</h1>
+          <h1 className="mb-2 text-3xl font-black">Project Aetheria</h1>
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — Autonomous Agent Sandbox Simulation</p>
         </div>
 
@@ -270,7 +270,7 @@ export default function AetheriaPageClient() {
         {/* Model comparison — "which intelligence dominates the ecosystem?" */}
         {modelStats.length > 0 && (
           <div className="mb-8 rounded-xl border border-purple-800/30 bg-purple-950/5 p-4">
-            <h2 className="mb-3 text-sm font-bold text-purple-300">🧬 Model Comparison</h2>
+            <h2 className="mb-3 text-sm font-bold text-purple-300">Model Comparison</h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               {modelStats.map((s) => (
                 <div key={s.model} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
@@ -303,7 +303,7 @@ export default function AetheriaPageClient() {
         {/* Leaderboard */}
         {agents.length > 0 && (
           <div className="mb-8 rounded-xl border border-amber-800/30 bg-amber-950/5 p-4">
-            <h2 className="mb-3 text-sm font-bold text-amber-300">🏆 Gold Ranking</h2>
+            <h2 className="mb-3 text-sm font-bold text-amber-300">Gold Ranking</h2>
             <div className="space-y-1.5">
               {[...agents]
                 .sort((a, b) => b.gold - a.gold)
@@ -360,7 +360,7 @@ export default function AetheriaPageClient() {
         </div>
 
         {/* Log stream */}
-        <h2 className="mb-3 text-sm font-bold text-slate-300">📜 Event Log</h2>
+        <h2 className="mb-3 text-sm font-bold text-slate-300">Event Log</h2>
         <div className="max-h-96 space-y-2 overflow-y-auto rounded-xl border border-slate-800 bg-slate-900/40 p-4">
           {events.length === 0 && <p className="text-center text-xs text-slate-600">No events recorded yet.</p>}
           {events.map((e, i) => (

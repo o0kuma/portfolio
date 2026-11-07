@@ -71,7 +71,7 @@ function FaqItem({ faq, open, onToggle }: { faq: Faq; open: boolean; onToggle: (
   const catClass = CATEGORY_COLOR[faq.category] ?? 'text-slate-400 border-slate-600 bg-slate-800/50'
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-slate-950/60 overflow-hidden">
+    <div className="rounded-2xl border border-slate-800 bg-canvas/60 overflow-hidden">
       <button
         type="button"
         onClick={onToggle}
@@ -121,8 +121,8 @@ export default function FaqPageClient() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-slate-950 pb-20 text-slate-100">
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/90 backdrop-blur">
+    <div className="min-h-screen bg-canvas pb-20 text-slate-100">
+      <header className="sticky top-0 z-30 border-b border-slate-800 bg-canvas/90 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
           <Link
             href="/"
@@ -131,7 +131,7 @@ export default function FaqPageClient() {
             <FiArrowLeft className="h-4 w-4" /> {locale === 'en' ? 'Home' : '메인으로'}
           </Link>
           <span className="text-sm font-semibold text-slate-200">
-            💬 {locale === 'en' ? 'FAQ' : '자주 묻는 질문'}
+            {locale === 'en' ? 'FAQ' : '자주 묻는 질문'}
           </span>
         </div>
       </header>
@@ -139,7 +139,7 @@ export default function FaqPageClient() {
       <main className="mx-auto max-w-3xl px-4 pt-10">
         <div className="mb-10 text-center">
           <h1 className="font-display mb-2 text-4xl font-bold">
-            💬 {locale === 'en' ? 'FAQ' : '자주 묻는 질문'}
+            {locale === 'en' ? 'FAQ' : '자주 묻는 질문'}
           </h1>
           <p className="text-sm text-slate-500">
             {locale === 'en'

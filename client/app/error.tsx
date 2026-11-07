@@ -16,7 +16,7 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-canvas text-neutral-100 flex items-center justify-center p-6">
       <div className="text-center max-w-md">
         <p className="text-6xl font-black text-neutral-800 mb-6">500</p>
         <h1 className="text-2xl font-bold text-neutral-100 mb-3">오류가 발생했습니다</h1>

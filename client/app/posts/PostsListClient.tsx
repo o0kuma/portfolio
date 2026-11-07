@@ -347,7 +347,7 @@ export default function PostsListClient() {
             href="/posts/series"
             className="text-xs font-mono px-3 py-1.5 rounded-lg border border-neutral-700 text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            {locale === 'en' ? '📚 Series' : '📚 시리즈'}
+            {locale === 'en' ? 'Series' : '시리즈'}
           </Link>
         </div>
 

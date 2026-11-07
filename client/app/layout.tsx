@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Inter, Fraunces, Fira_Code } from 'next/font/google'
+import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './globals.css'
 import Providers from '@/components/Providers'
 import ToastContainer from '@/components/Toast'
@@ -113,7 +114,7 @@ export default function RootLayout({
   const fontVars = `${inter.variable} ${fraunces.variable} ${firaCode.variable}`
 
   return (
-    <html lang="ko" className={`scroll-smooth ${fontVars}`} suppressHydrationWarning>
+    <html lang="ko" className={`dark scroll-smooth ${fontVars}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -136,39 +137,21 @@ export default function RootLayout({
           }}
         />
 
-        <meta name="theme-color" content="#0f172a" />
-        <meta name="msapplication-TileColor" content="#0f172a" />
+        <meta name="theme-color" content="#030014" />
+        <meta name="msapplication-TileColor" content="#030014" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
 
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var stored = localStorage.getItem('theme');
-                  var isDark = stored === 'dark' || (!stored && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                  if (isDark) {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                  } else {
-                    document.documentElement.classList.remove('dark');
-                    document.documentElement.classList.add('light');
-                  }
-                } catch (e) {
-                  document.documentElement.classList.add('dark');
-                }
-              })();
-            `,
-          }}
-        />
+        {/* The site is dark-only: every page is designed on a dark background,
+            so the OS light/dark preference is ignored on purpose. */}
+        <meta name="color-scheme" content="dark" />
 
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className={`${inter.className} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <Providers>{children}</Providers>
         <ToastContainer />
         <WebVitals />

@@ -21,10 +21,10 @@
      when the visitor's OS is in light mode. */
   html.dark,
   .dark {
-    --color-canvas: 15 23 42;
-    --color-surface: 30 41 59;
-    --color-surface-elevated: 51 65 85;
-    --color-border: 71 85 105;
+    --color-canvas: 3 0 20;
+    --color-surface: 15 13 36;
+    --color-surface-elevated: 28 25 56;
+    --color-border: 51 48 86;
     --color-text-primary: 248 250 252;
     --color-text-muted: 148 163 184;
     --color-accent: 96 165 250;
@@ -331,7 +331,7 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent dark:from-accent dark:to-purple-400;
+    @apply text-textPrimary;
   }
 
   .bg-gradient-primary {

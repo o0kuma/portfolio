@@ -64,7 +64,7 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ n
   )
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-50">
+    <div className="min-h-screen bg-canvas text-neutral-50">
       <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-800">
         <div className="page-shell py-4">
           <div className="flex items-center space-x-4">
