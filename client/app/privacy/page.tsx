@@ -1,6 +1,8 @@
 'use client'
 
 import React from 'react'
+import PageShell from '@/components/site/PageShell'
+import { Container, PageHeader } from '@/components/site/layout'
 import { useLanguage } from '@/lib/LanguageContext'
 import { SITE_EMAIL } from '@/lib/site'
 
@@ -258,15 +260,9 @@ export default function PrivacyPolicy() {
   const { locale } = useLanguage()
 
   return (
-    <div className="min-h-screen bg-canvas py-12">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-surface shadow-lg rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-neutral-50 mb-8">
-            {locale === 'ko' ? '개인정보처리방침' : 'Privacy Policy'}
-          </h1>
-          {locale === 'ko' ? <PrivacyPolicyKo /> : <PrivacyPolicyEn />}
-        </div>
-      </div>
-    </div>
+    <PageShell>
+      <PageHeader title={locale === 'ko' ? '개인정보처리방침' : 'Privacy Policy'} width="reading" />
+      <Container width="reading">{locale === 'ko' ? <PrivacyPolicyKo /> : <PrivacyPolicyEn />}</Container>
+    </PageShell>
   )
 }

@@ -43,17 +43,12 @@ export default function NightOwlClub() {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: reduced ? 0 : -16 }}
           transition={{ duration: 0.5 }}
-          className="pointer-events-none fixed inset-x-0 top-6 z-[10000] flex justify-center px-4"
+          className="pointer-events-none fixed inset-x-0 top-20 z-[10000] flex justify-center px-4"
           aria-live="polite"
         >
-          <div className="flex items-center gap-2 rounded-full border border-indigo-400/30 bg-[#0a0f24]/90 px-4 py-2 text-sm text-indigo-200 shadow-[0_0_24px_rgba(99,102,241,0.25)] backdrop-blur-sm">
-            <span aria-hidden>🌙</span>
-            <span>
-              {locale === 'en'
-                ? 'Welcome to the 3am club — good to see you out here.'
-                : '새벽 3시 클럽에 가입하셨습니다 — 이 시간에 여기까지 오셨네요.'}
-            </span>
-          </div>
+          <p className="rounded-md border border-line-strong bg-panel px-4 py-2 text-sm text-fg">
+            {locale === 'en' ? 'Welcome to the 3am club. Good to see you up.' : '새벽 3시 클럽입니다. 이 시간까지 깨어 계셨네요.'}
+          </p>
         </motion.div>
       )}
     </AnimatePresence>

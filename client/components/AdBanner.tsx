@@ -38,9 +38,15 @@ export default function AdBanner({
   const [isLoading, setIsLoading] = useState(true)
   const [isClosed, setIsClosed] = useState(false)
 
+  // `postTags` defaults to a fresh [] on every render, so depending on the
+  // array itself re-ran this effect after every state change: an endless
+  // /api/ads/get loop that also tripped the site-wide rate limit. Depend on
+  // its contents instead.
+  const tagsKey = postTags.join(',')
   useEffect(() => {
     loadAd()
-  }, [adType, position, postCategory, postTags])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [adType, position, postCategory, tagsKey])
 
   const loadAd = async () => {
     try {

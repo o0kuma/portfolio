@@ -152,15 +152,19 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          {/* Widgets sit inside Providers so they get the visitor's language
+              and the footer's site settings (sound, companion, cursors). */}
+          <ChatbotWidgetClient />
+          <KuumaCompanionClient />
+          <AmbientSoundtrackClient />
+          <ExplorationBadgeClient />
+          <NightOwlClubClient />
+          <LiveCursorsClient />
+        </Providers>
         <ToastContainer />
         <WebVitals />
-        <ChatbotWidgetClient />
-        <KuumaCompanionClient />
-        <AmbientSoundtrackClient />
-        <ExplorationBadgeClient />
-        <NightOwlClubClient />
-        <LiveCursorsClient />
       </body>
     </html>
   )

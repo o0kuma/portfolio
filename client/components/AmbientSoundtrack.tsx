@@ -1,9 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useLanguage } from '@/lib/LanguageContext'
-
-const STORAGE_KEY = 'ambient_soundtrack_on'
+import { useEffect, useRef } from 'react'
 
 // Am9-ish drone: root, fifth, and a couple of gentle upper voices.
 const PAD_FREQS = [110, 164.81, 220, 277.18]
@@ -15,18 +12,13 @@ const PAD_FREQS = [110, 164.81, 220, 277.18]
  * there's no audio asset to host or license.
  */
 export default function AmbientSoundtrack() {
-  const { locale } = useLanguage()
-  const [on, setOn] = useState(false)
+  // Mounted only while the footer's "배경음" setting is on (see
+  // AmbientSoundtrackClient), so it simply plays for as long as it is mounted.
+  const on = true
   const ctxRef = useRef<AudioContext | null>(null)
   const masterRef = useRef<GainNode | null>(null)
   const oscillatorsRef = useRef<OscillatorNode[]>([])
   const typingTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  useEffect(() => {
-    try {
-      setOn(localStorage.getItem(STORAGE_KEY) === '1')
-    } catch {}
-  }, [])
 
   function scheduleTypingClick(ctx: AudioContext, master: GainNode) {
     const bufferSize = Math.floor(ctx.sampleRate * 0.03)
@@ -126,9 +118,6 @@ export default function AmbientSoundtrack() {
   useEffect(() => {
     if (on) start()
     else stop()
-    try {
-      localStorage.setItem(STORAGE_KEY, on ? '1' : '0')
-    } catch {}
     return () => {
       if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
     }
@@ -156,29 +145,5 @@ export default function AmbientSoundtrack() {
     }
   }, [])
 
-  return (
-    <button
-      type="button"
-      onClick={() => setOn((v) => !v)}
-      aria-pressed={on}
-      aria-label={
-        on
-          ? (locale === 'en' ? 'Turn off ambient soundtrack' : '앰비언트 사운드 끄기')
-          : (locale === 'en' ? 'Turn on ambient soundtrack' : '앰비언트 사운드 켜기')
-      }
-      title={
-        on
-          ? (locale === 'en' ? 'Ambient soundtrack: on' : '앰비언트 사운드: 켜짐')
-          : (locale === 'en' ? 'Ambient soundtrack: off' : '앰비언트 사운드: 꺼짐')
-      }
-      style={{ position: 'fixed', bottom: '76px', left: '24px', zIndex: 10001 }}
-      className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${
-        on
-          ? 'border-cyan-400/60 bg-cyan-950/95 text-cyan-300'
-          : 'border-white/15 bg-black/90 text-white/50 hover:text-white/80'
-      }`}
-    >
-      <span className="text-sm">{on ? '🎧' : '🔈'}</span>
-    </button>
-  )
+  return null
 }

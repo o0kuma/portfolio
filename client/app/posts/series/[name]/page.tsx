@@ -1,6 +1,7 @@
 import Link from 'next/link'
+import PageShell from '@/components/site/PageShell'
+import { Container, PageHeader } from '@/components/site/layout'
 import { notFound } from 'next/navigation'
-import { FiArrowLeft, FiCalendar } from 'react-icons/fi'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import LocaleText from '@/components/LocaleText'
 
@@ -64,55 +65,28 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ n
   )
 
   return (
-    <div className="min-h-screen bg-canvas text-neutral-50">
-      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-800">
-        <div className="page-shell py-4">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/posts/series"
-              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
-            >
-              <FiArrowLeft size={16} />
-              <span><LocaleText ko="시리즈 목록" en="All series" /></span>
-            </Link>
-            <h1 className="text-2xl font-black text-neutral-50 font-mono">{decoded}</h1>
-          </div>
-        </div>
-      </header>
-
-      <div className="page-shell py-12">
-        <div className="mb-8">
-          <p className="text-neutral-500 font-mono text-sm"><LocaleText ko={`총 ${sorted.length}편`} en={`${sorted.length} posts total`} /></p>
-        </div>
-
-        <ol className="space-y-3">
+    <PageShell>
+      <PageHeader
+        eyebrow={<Link href="/posts/series" className="hover:text-fg"><LocaleText ko="시리즈" en="Series" /></Link>}
+        title={decoded}
+        meta={<LocaleText ko={`총 ${sorted.length}편`} en={`${sorted.length} posts`} />}
+      />
+      <Container>
+        <ol className="divide-y divide-line border-y border-line">
           {sorted.map((post, idx) => (
             <li key={post.id}>
-              <Link
-                href={`/posts/${post.id}`}
-                className="flex items-start gap-4 rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 transition-colors p-5"
-              >
-                <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-neutral-800 text-sm font-bold font-mono text-cyan-400">
-                  {idx + 1}
+              <Link href={`/posts/${post.id}`} className="group flex gap-4 py-5">
+                <span className="w-6 shrink-0 pt-0.5 text-right text-sm tabular-nums text-fg-subtle">{idx + 1}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{post.title}</span>
+                  {post.excerpt && <span className="mt-1 block line-clamp-2 text-sm text-fg-muted">{post.excerpt}</span>}
                 </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-mono text-neutral-500 mb-1">Part {idx + 1}</p>
-                  <h2 className="text-neutral-100 font-semibold leading-snug line-clamp-2">
-                    {post.title}
-                  </h2>
-                  {post.excerpt && (
-                    <p className="text-neutral-500 text-sm mt-1 line-clamp-2">{post.excerpt}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 text-neutral-700 text-xs font-mono flex-shrink-0">
-                  <FiCalendar size={11} />
-                  <span>{formatDate(post.created_at)}</span>
-                </div>
+                <span className="shrink-0 text-xs text-fg-subtle">{formatDate(post.created_at)}</span>
               </Link>
             </li>
           ))}
         </ol>
-      </div>
-    </div>
+      </Container>
+    </PageShell>
   )
 }

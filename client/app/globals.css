@@ -417,3 +417,22 @@ html:not(.dark) .portfolio-page .bg-primary-600:hover { background-color: #a2543
   --theme-surface: #1c0f08;
   --theme-border: #9a3412;
 }
+
+/* Renewal: one visible focus ring and selection colour across the site. */
+:focus-visible {
+  outline: 2px solid #f2c46d;
+  outline-offset: 2px;
+}
+::selection {
+  background: rgba(242, 196, 109, 0.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { FiExternalLink } from 'react-icons/fi'
+import PageShell from '@/components/site/PageShell'
+import { Container, EmptyState, PageHeader, TabBar, tabClass, buttonQuiet } from '@/components/site/layout'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useLanguage } from '@/lib/LanguageContext'
 import { getApiBaseUrl } from '@/lib/api-base-url'
@@ -106,12 +109,6 @@ const CATEGORY_LABELS: Record<ResourceCategory, { ko: string; en: string }> = {
   도구: { ko: '도구', en: 'Tools' },
 }
 
-const CATEGORY_COLORS: Record<Exclude<ResourceCategory, '전체'>, string> = {
-  레퍼런스: 'bg-blue-900/50 text-blue-300 border border-blue-800',
-  프레임워크: 'bg-violet-900/50 text-violet-300 border border-violet-800',
-  도구: 'bg-emerald-900/50 text-emerald-300 border border-emerald-800',
-}
-
 type TabType = 'posts' | 'resources'
 
 export default function BookmarksPage() {
@@ -151,131 +148,93 @@ export default function BookmarksPage() {
       ? devResources
       : devResources.filter(r => r.category === categoryFilter)
 
+  const en = locale === 'en'
+
   return (
-    <main className="min-h-screen bg-canvas text-textPrimary">
-      <div className="max-w-3xl mx-auto px-6 py-16">
-        <Link href="/posts" className="text-neutral-500 hover:text-neutral-300 text-sm font-mono transition-colors mb-8 inline-block">
-          ← {locale === 'ko' ? '블로그로' : 'Back to Blog'}
-        </Link>
-        <h1 className="text-3xl font-black mb-8">
-          {locale === 'ko' ? '북마크' : 'Bookmarks'}
-        </h1>
-
-        {/* Tabs */}
-        <div className="flex gap-1 p-1 bg-neutral-900 border border-neutral-800 rounded-xl mb-8 w-fit">
-          <button
-            onClick={() => setActiveTab('posts')}
-            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
-              activeTab === 'posts'
-                ? 'bg-neutral-700 text-neutral-100'
-                : 'text-neutral-500 hover:text-neutral-300'
-            }`}
-          >
-            {locale === 'ko' ? '저장한 포스트' : 'Saved Posts'}
+    <PageShell>
+      <PageHeader title={en ? 'Bookmarks' : '북마크'} description={en ? 'Saved posts and dev links I keep coming back to.' : '저장한 글과 자주 찾는 개발 링크입니다.'} />
+      <Container>
+        <TabBar label={en ? 'Bookmark type' : '북마크 종류'}>
+          <button type="button" role="tab" aria-selected={activeTab === 'posts'} onClick={() => setActiveTab('posts')} className={tabClass(activeTab === 'posts')}>
+            {en ? 'Saved posts' : '저장한 글'}
           </button>
-          <button
-            onClick={() => setActiveTab('resources')}
-            className={`px-4 py-2 text-sm font-mono rounded-lg transition-colors ${
-              activeTab === 'resources'
-                ? 'bg-neutral-700 text-neutral-100'
-                : 'text-neutral-500 hover:text-neutral-300'
-            }`}
-          >
-            {locale === 'ko' ? '개발 리소스' : 'Dev Resources'}
+          <button type="button" role="tab" aria-selected={activeTab === 'resources'} onClick={() => setActiveTab('resources')} className={tabClass(activeTab === 'resources')}>
+            {en ? 'Dev resources' : '개발 리소스'}
           </button>
-        </div>
+        </TabBar>
 
-        {/* Saved Posts Tab */}
         {activeTab === 'posts' && (
-          <div>
+          <div className="mt-2">
             {loading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="h-16 bg-neutral-900 rounded-lg animate-pulse" />
+              <ul className="divide-y divide-line" aria-busy="true">
+                {[1, 2, 3].map((i) => (
+                  <li key={i} className="py-5"><div className="h-5 w-2/3 rounded bg-panel" /></li>
                 ))}
-              </div>
+              </ul>
             ) : posts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3">
-                <span className="text-5xl">🔖</span>
-                <p className="text-neutral-400 font-semibold">
-                  {locale === 'ko' ? '북마크된 포스트가 없습니다.' : 'No bookmarked posts yet.'}
-                </p>
-                <p className="text-neutral-600 text-sm font-mono">
-                  {locale === 'ko' ? '블로그에서 포스트를 북마크해보세요' : 'Bookmark posts from the blog'}
-                </p>
-              </div>
+              <EmptyState
+                message={en ? 'No saved posts yet. Use the bookmark button on any post.' : '저장한 글이 없습니다. 글 본문의 북마크 버튼으로 저장할 수 있습니다.'}
+                action={<Link href="/posts" className={buttonQuiet}>{en ? 'Go to posts' : '글 보러 가기'}</Link>}
+              />
             ) : (
-              <div className="space-y-4">
-                {posts.map(post => {
+              <ul className="divide-y divide-line">
+                {posts.map((post) => {
                   const postId = String(post.id ?? post._id ?? '')
                   const dateStr = post.createdAt ?? post.created_at ?? ''
                   return (
-                    <Link
-                      key={postId}
-                      href={`/posts/${postId}`}
-                      className="block p-4 rounded-xl border border-neutral-800 hover:border-neutral-700 transition-colors"
-                    >
-                      <div className="text-neutral-200 font-semibold">{post.title}</div>
-                      <div className="text-neutral-600 text-xs font-mono mt-1">
-                        {dateStr ? new Date(dateStr).toLocaleDateString() : ''}
-                      </div>
-                    </Link>
+                    <li key={postId}>
+                      <Link href={`/posts/${postId}`} className="group block py-5">
+                        <p className="text-xs text-fg-subtle">{dateStr ? new Date(dateStr).toLocaleDateString(en ? 'en-US' : 'ko-KR') : ''}</p>
+                        <p className="mt-1 text-base font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{post.title}</p>
+                      </Link>
+                    </li>
                   )
                 })}
-              </div>
+              </ul>
             )}
           </div>
         )}
 
-        {/* Dev Resources Tab */}
         {activeTab === 'resources' && (
-          <div>
-            {/* Category filter */}
-            <div className="flex gap-2 flex-wrap mb-6">
-              {CATEGORY_FILTERS.map(cat => (
+          <div className="mt-6">
+            <div className="mb-6 flex flex-wrap gap-2">
+              {CATEGORY_FILTERS.map((cat) => (
                 <button
                   key={cat}
+                  type="button"
                   onClick={() => setCategoryFilter(cat)}
-                  className={`px-3 py-1.5 text-xs font-mono rounded-full transition-colors ${
-                    categoryFilter === cat
-                      ? 'bg-neutral-200 text-neutral-900'
-                      : 'bg-neutral-800 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700'
+                  className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
+                    categoryFilter === cat ? 'border-star/60 text-star' : 'border-line text-fg-muted hover:border-line-strong hover:text-fg'
                   }`}
                 >
-                  {locale === 'en' ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].ko}
+                  {en ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].ko}
                 </button>
               ))}
             </div>
-
-            {/* Resource cards */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {filteredResources.map(resource => (
-                <a
-                  key={resource.name}
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex flex-col gap-2 p-4 rounded-xl border border-neutral-800 hover:border-neutral-600 bg-neutral-900 hover:bg-neutral-800/80 transition-all"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-xl">{resource.icon}</span>
-                      <span className="text-neutral-200 font-semibold text-sm group-hover:text-white transition-colors">
-                        {resource.name}
-                      </span>
-                    </div>
-                    <span className="text-neutral-600 text-xs group-hover:text-neutral-400 transition-colors">↗</span>
-                  </div>
-                  <p className="text-neutral-500 text-xs leading-relaxed">{locale === 'en' ? resource.descriptionEn : resource.description}</p>
-                  <span className={`self-start px-2 py-0.5 rounded-full text-xs font-mono ${CATEGORY_COLORS[resource.category]}`}>
-                    {locale === 'en' ? CATEGORY_LABELS[resource.category].en : CATEGORY_LABELS[resource.category].ko}
-                  </span>
-                </a>
+            <ul className="grid gap-4 sm:grid-cols-2">
+              {filteredResources.map((resource) => (
+                <li key={resource.name}>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex h-full flex-col gap-2 rounded-xl border border-line bg-panel p-5 transition-colors hover:border-line-strong"
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="text-base font-semibold text-fg">{resource.name}</span>
+                      <FiExternalLink size={14} className="text-fg-subtle group-hover:text-fg" aria-hidden />
+                    </span>
+                    <span className="text-sm leading-[1.6] text-fg-muted">{en ? resource.descriptionEn : resource.description}</span>
+                    <span className="mt-auto pt-2 text-xs text-fg-subtle">
+                      {en ? CATEGORY_LABELS[resource.category].en : CATEGORY_LABELS[resource.category].ko}
+                    </span>
+                  </a>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
-      </div>
-    </main>
+      </Container>
+    </PageShell>
   )
 }

@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import PageShell from '@/components/site/PageShell'
+import { Container, buttonSecondary, buttonQuiet } from '@/components/site/layout'
 
 export default function GlobalError({
   error,
@@ -16,25 +17,20 @@ export default function GlobalError({
   }, [error])
 
   return (
-    <div className="min-h-screen bg-canvas text-neutral-100 flex items-center justify-center p-6">
-      <div className="text-center max-w-md">
-        <p className="text-6xl font-black text-neutral-800 mb-6">500</p>
-        <h1 className="text-2xl font-bold text-neutral-100 mb-3">오류가 발생했습니다</h1>
-        <p className="text-neutral-500 mb-8 text-sm leading-relaxed">
-          예상치 못한 오류가 발생했습니다. 잠시 후 다시 시도해주세요.
-        </p>
-        <div className="flex items-center justify-center gap-3">
-          <Button variant="primary" size="md" onClick={reset}>
+    <PageShell>
+      <Container width="reading" className="py-24 md:py-32">
+        <p className="text-xs text-fg-subtle">500</p>
+        <h1 className="mt-3 text-[32px] font-bold leading-[1.3] tracking-[-0.02em] text-fg md:text-[40px]">페이지를 열지 못했습니다</h1>
+        <p className="mt-3 text-base leading-[1.7] text-fg-muted">잠시 후 다시 시도해 주세요.</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <button type="button" onClick={reset} className={buttonSecondary}>
             다시 시도
-          </Button>
-          <Link
-            href="/"
-            className="px-5 py-2.5 rounded-lg border border-neutral-700 text-neutral-300 text-sm font-semibold hover:border-neutral-500 transition-colors"
-          >
-            홈으로
+          </button>
+          <Link href="/" className={buttonQuiet}>
+            메인으로
           </Link>
         </div>
-      </div>
-    </div>
+      </Container>
+    </PageShell>
   )
 }

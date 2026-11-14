@@ -69,7 +69,7 @@ function CommentForm({
         onChange={(e) => setName(e.target.value)}
         placeholder={locale === 'ko' ? '이름' : 'Name'}
         maxLength={100}
-        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-neutral-500"
+        className="w-full bg-panel border border-line-strong rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong"
         required
       />
       <textarea
@@ -78,14 +78,14 @@ function CommentForm({
         placeholder={locale === 'ko' ? '댓글을 입력하세요...' : 'Write a comment...'}
         maxLength={2000}
         rows={3}
-        className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-3 py-2 text-sm text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-neutral-500 resize-none"
+        className="w-full bg-panel border border-line-strong rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong resize-none"
         required
       />
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={loading}
-          className="bg-neutral-800 hover:bg-neutral-700 text-neutral-200 text-xs font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          className="bg-panel-2 hover:bg-panel-2 text-fg text-xs font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
         >
           {loading ? '...' : locale === 'ko' ? '댓글 작성' : 'Post Comment'}
         </button>
@@ -93,7 +93,7 @@ function CommentForm({
           <button
             type="button"
             onClick={onCancel}
-            className="text-neutral-500 text-xs px-3 py-2 hover:text-neutral-300"
+            className="text-fg-subtle text-xs px-3 py-2 hover:text-fg-muted"
           >
             {locale === 'ko' ? '취소' : 'Cancel'}
           </button>
@@ -121,24 +121,24 @@ function CommentItem({
   return (
     <div className="space-y-3">
       <div className="flex gap-3">
-        <div className="w-8 h-8 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-xs text-neutral-400 font-mono shrink-0">
+        <div className="w-8 h-8 rounded-full bg-panel-2 border border-line-strong flex items-center justify-center text-xs text-fg-muted shrink-0">
           {comment.author_name[0]?.toUpperCase()}
         </div>
         <div className="flex-1">
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="text-sm font-semibold text-neutral-200">
+            <span className="text-sm font-semibold text-fg">
               {comment.author_name}
             </span>
-            <span className="text-xs text-neutral-600 font-mono">
+            <span className="text-xs text-fg-subtle ">
               {formatDate(comment.created_at)}
             </span>
           </div>
-          <p className="text-sm text-neutral-400 leading-relaxed whitespace-pre-wrap">
+          <p className="text-sm text-fg-muted leading-relaxed whitespace-pre-wrap">
             {comment.content}
           </p>
           <button
             onClick={() => setReplying((r) => !r)}
-            className="mt-1 text-xs text-neutral-600 hover:text-neutral-400 transition-colors"
+            className="mt-1 text-xs text-fg-subtle hover:text-fg-muted transition-colors"
           >
             {locale === 'ko' ? '답글' : 'Reply'}
           </button>
@@ -158,7 +158,7 @@ function CommentItem({
         </div>
       </div>
       {replies.length > 0 && (
-        <div className="ml-11 border-l border-neutral-800 pl-4 space-y-3">
+        <div className="ml-11 border-l border-line pl-4 space-y-3">
           {replies.map((r) => (
             <CommentItem
               key={r.id}
@@ -198,8 +198,8 @@ export default function CommentSection({ postId }: Props) {
   const topLevel = comments.filter((c) => !c.parent_id)
 
   return (
-    <section className="mt-12 pt-8 border-t border-neutral-800">
-      <h2 className="text-sm font-mono text-neutral-500 uppercase tracking-[0.2em] mb-6">
+    <section>
+      <h2 className="mb-6 text-lg font-semibold text-fg">
         {locale === 'ko'
           ? `댓글 ${comments.length}개`
           : `${comments.length} Comment${comments.length !== 1 ? 's' : ''}`}
@@ -214,12 +214,12 @@ export default function CommentSection({ postId }: Props) {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="h-16 bg-neutral-900 rounded-lg animate-pulse"
+              className="h-16 bg-panel rounded-lg animate-pulse"
             />
           ))}
         </div>
       ) : topLevel.length === 0 ? (
-        <p className="text-neutral-700 text-sm font-mono text-center py-8">
+        <p className="text-fg-subtle text-sm text-center py-8">
           {locale === 'ko' ? '첫 댓글을 작성해보세요.' : 'Be the first to comment.'}
         </p>
       ) : (

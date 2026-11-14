@@ -24,15 +24,10 @@ export default function VisitorCounter() {
 
   return (
     <span
-      className={[
-        'inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/60 backdrop-blur-sm transition-all duration-300',
-        pulse ? 'scale-110 text-white/90' : 'scale-100',
-      ].join(' ')}
+      className={`text-xs tabular-nums text-fg-subtle transition-colors duration-300 ${pulse ? 'text-fg' : ''}`}
       aria-live="polite"
-      aria-label={locale === 'en' ? `${shown} total visitors` : `누적 방문자 ${shown}명`}
     >
-      <span className="text-[10px]" aria-hidden>👁</span>
-      <span>{locale === 'en' ? `${shown} total visitors` : `누적 방문자 ${shown}명`}</span>
+      {locale === 'en' ? `${shown.toLocaleString()} visitors` : `누적 방문자 ${shown.toLocaleString()}명`}
     </span>
   )
 }

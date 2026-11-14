@@ -41,6 +41,24 @@ module.exports = {
         textMuted: 'rgb(var(--color-text-muted) / <alpha-value>)',
         accent: 'rgb(var(--color-accent) / <alpha-value>)',
         accentMuted: 'rgb(var(--color-accent-muted) / <alpha-value>)',
+        // Renewal design tokens (dark only). Pages use these names instead of
+        // raw colours so one change here restyles the whole site.
+        night: '#030014',
+        panel: '#0F0D24',
+        'panel-2': '#1C1938',
+        line: 'rgba(255,255,255,0.08)',
+        'line-strong': 'rgba(255,255,255,0.16)',
+        fg: '#F2F2F5',
+        'fg-muted': '#A3A3B5',
+        'fg-subtle': '#7C7C92',
+        star: '#F2C46D',
+        danger: '#F07178',
+        ok: '#7FD1A8',
+      },
+      maxWidth: {
+        reading: '680px',
+        list: '960px',
+        wide: '1120px',
       },
       fontFamily: {
         // Pretendard covers Hangul and Latin in one family, so Korean and

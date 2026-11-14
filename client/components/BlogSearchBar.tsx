@@ -1,9 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { createPortal } from 'react-dom'
-import { motion, AnimatePresence } from 'framer-motion'
 import { FiSearch, FiX, FiFilter } from 'react-icons/fi'
+import { useLanguage } from '@/lib/LanguageContext'
 
 interface BlogSearchBarProps {
   onSearch: (query: string) => void
@@ -22,11 +21,12 @@ export default function BlogSearchBar({
   filters = {},
   className = ""
 }: BlogSearchBarProps) {
+  const { locale } = useLanguage()
+  const en = locale === 'en'
   const [searchQuery, setSearchQuery] = useState('')
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [, setIsExpanded] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
   const [localFilters, setLocalFilters] = useState(filters)
-  const [mounted, setMounted] = useState(false)
   const searchRef = useRef<HTMLDivElement>(null)
   const filterRef = useRef<HTMLDivElement>(null)
 
@@ -49,38 +49,6 @@ export default function BlogSearchBar({
       onFilterChange(localFilters)
     }
   }, [localFilters, onFilterChange])
-
-  // 컴포넌트 마운트 확인
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // 필터 패널 위치 계산 및 업데이트
-  useEffect(() => {
-    if (!showFilters || !searchRef.current || !filterRef.current) return
-
-    const updatePosition = () => {
-      const searchRect = searchRef.current!.getBoundingClientRect()
-      const filterPanel = filterRef.current!
-      filterPanel.style.position = 'fixed'
-      filterPanel.style.top = `${searchRect.bottom + 12}px`
-      filterPanel.style.left = `${searchRect.left}px`
-      filterPanel.style.width = `${searchRect.width}px`
-      filterPanel.style.maxHeight = `${window.innerHeight - searchRect.bottom - 24}px`
-      filterPanel.style.overflowY = 'auto'
-    }
-
-    updatePosition()
-    
-    // 스크롤 및 리사이즈 시 위치 업데이트
-    window.addEventListener('scroll', updatePosition, true)
-    window.addEventListener('resize', updatePosition)
-    
-    return () => {
-      window.removeEventListener('scroll', updatePosition, true)
-      window.removeEventListener('resize', updatePosition)
-    }
-  }, [showFilters])
 
   // 외부 클릭 시 검색바 축소
   useEffect(() => {
@@ -125,110 +93,78 @@ export default function BlogSearchBar({
 
   const hasActiveFilters = Object.values(localFilters).some(value => value && value !== 'all')
 
+  const dateOptions = [
+    { value: 'all', ko: '전체 기간', en: 'All time' },
+    { value: 'this-year', ko: '올해', en: 'This year' },
+    { value: 'last-year', ko: '작년', en: 'Last year' },
+    { value: 'this-month', ko: '이번 달', en: 'This month' },
+    { value: 'last-month', ko: '지난달', en: 'Last month' },
+  ]
+
   return (
-    <div ref={searchRef} className={`relative z-[100] ${className}`}>
-      <motion.div
-        initial={false}
-        animate={{ width: isExpanded ? '100%' : 'auto' }}
-        className="relative overflow-visible"
-      >
-        <form onSubmit={handleSearch} className="relative">
-          <div className="relative flex items-center">
-            <FiSearch className="absolute left-4 text-gray-400 dark:text-gray-500 z-10" size={20} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsExpanded(true)}
-              placeholder={placeholder}
-              className="w-full pl-12 pr-14 py-4 bg-transparent border-0 focus:ring-0 focus:outline-none dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 text-gray-700 dark:text-gray-300 relative z-10"
-            />
-            
-            <div className="absolute right-3 flex items-center gap-2 z-20">
-              {searchQuery && (
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  type="button"
-                  onClick={handleClear}
-                  aria-label="Clear search"
-                  className="flex h-10 w-10 items-center justify-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-white/20 dark:hover:bg-white/10"
-                >
-                  <FiX size={18} />
-                </motion.button>
-              )}
+    <div ref={searchRef} className={`relative ${className}`}>
+      <form onSubmit={handleSearch} className="relative flex items-center">
+        <FiSearch className="pointer-events-none absolute left-4 text-fg-subtle" size={18} aria-hidden />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          onFocus={() => setIsExpanded(true)}
+          placeholder={placeholder}
+          aria-label={placeholder}
+          className="h-12 w-full rounded-lg border border-line bg-panel pl-11 pr-24 text-base text-fg placeholder:text-fg-subtle focus:border-line-strong focus:outline-none"
+        />
+        <div className="absolute right-1.5 flex items-center gap-1">
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={handleClear}
+              aria-label={en ? 'Clear search' : '검색어 지우기'}
+              className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle transition-colors hover:text-fg"
+            >
+              <FiX size={16} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            aria-expanded={showFilters}
+            aria-label={en ? 'Filters' : '필터'}
+            className={`flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
+              showFilters || hasActiveFilters ? 'text-star' : 'text-fg-subtle hover:text-fg'
+            }`}
+          >
+            <FiFilter size={16} />
+          </button>
+        </div>
+      </form>
 
-              <motion.button
-                type="button"
-                onClick={() => setShowFilters(!showFilters)}
-                aria-label="Toggle filters"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                className={`flex h-10 w-10 items-center justify-center rounded-lg transition-all duration-300 ${
-                  showFilters || hasActiveFilters
-                    ? 'text-purple-600 dark:text-purple-400 bg-purple-100/50 dark:bg-purple-900/30'
-                    : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10'
-                }`}
-              >
-                <FiFilter size={18} />
-              </motion.button>
-            </div>
-          </div>
-        </form>
-
-        {/* 필터 패널 - 글래스모피즘 */}
-        {mounted && (
-          <AnimatePresence>
-            {showFilters && createPortal(
-              <motion.div
-                ref={filterRef}
-                initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="fixed bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl border border-white/40 dark:border-slate-700/40 rounded-2xl shadow-2xl shadow-purple-500/20 dark:shadow-purple-900/30 z-[9999] overflow-hidden"
-              >
-                <div className="p-5 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Filters</h3>
-                    {hasActiveFilters && (
-                      <button
-                        onClick={clearFilters}
-                        className="text-xs font-medium text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 transition-colors"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    {/* 날짜 범위 필터 */}
-                    <div>
-                      <label className="block text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
-                        Date Range
-                      </label>
-                      <select
-                        value={localFilters.dateRange || 'all'}
-                        onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-                        className="w-full px-4 py-2.5 text-sm bg-white/60 dark:bg-slate-700/60 backdrop-blur-xl border border-white/30 dark:border-slate-600/30 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:text-white transition-all duration-300"
-                      >
-                        <option value="all">All Time</option>
-                        <option value="this-year">This Year</option>
-                        <option value="last-year">Last Year</option>
-                        <option value="this-month">This Month</option>
-                        <option value="last-month">Last Month</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>,
-              document.body
+      {showFilters && (
+        <div ref={filterRef} className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border border-line bg-panel p-4 shadow-lg shadow-black/40">
+          <div className="flex items-center justify-between">
+            <label htmlFor="blog-date-range" className="text-xs text-fg-subtle">
+              {en ? 'Date range' : '기간'}
+            </label>
+            {hasActiveFilters && (
+              <button type="button" onClick={clearFilters} className="text-xs text-fg-muted hover:text-fg">
+                {en ? 'Reset' : '초기화'}
+              </button>
             )}
-          </AnimatePresence>
-        )}
-      </motion.div>
+          </div>
+          <select
+            id="blog-date-range"
+            value={localFilters.dateRange || 'all'}
+            onChange={(e) => handleFilterChange('dateRange', e.target.value)}
+            className="mt-2 h-10 w-full rounded-md border border-line bg-night px-3 text-sm text-fg focus:border-line-strong focus:outline-none"
+          >
+            {dateOptions.map((o) => (
+              <option key={o.value} value={o.value}>
+                {en ? o.en : o.ko}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   )
 }
-

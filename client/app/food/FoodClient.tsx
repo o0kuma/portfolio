@@ -5,31 +5,19 @@ import { useState, useMemo } from 'react'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { RestaurantPage, RestaurantItem } from '@/lib/notion'
-import SpaceAtmosphere from '@/components/SpaceAtmosphere'
+import PageShell from '@/components/site/PageShell'
+import { PageHeader } from '@/components/site/layout'
 import { useLanguage } from '@/lib/LanguageContext'
 
 type ViewMode = 'list' | 'map'
 
 type RegionWithItems = RestaurantPage & { items: RestaurantItem[] }
 
-const CATEGORY_COLOR: Record<string, string> = {
-  '한식': 'text-orange-400 border-orange-400/30 bg-orange-400/5',
-  '일식': 'text-blue-400 border-blue-400/30 bg-blue-400/5',
-  '양식': 'text-purple-400 border-purple-400/30 bg-purple-400/5',
-  '중식': 'text-red-400 border-red-400/30 bg-red-400/5',
-  '라멘': 'text-yellow-400 border-yellow-400/30 bg-yellow-400/5',
-  '베트남 음식': 'text-green-400 border-green-400/30 bg-green-400/5',
-  '이탈리안': 'text-purple-400 border-purple-400/30 bg-purple-400/5',
-  '돈까스': 'text-amber-400 border-amber-400/30 bg-amber-400/5',
-  '샐러드': 'text-emerald-400 border-emerald-400/30 bg-emerald-400/5',
-}
-
 const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
 function CategoryBadge({ category }: { category: string }) {
-  const cls = CATEGORY_COLOR[category] ?? 'text-neutral-400 border-neutral-700 bg-neutral-800/50'
   return (
-    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${cls} shrink-0`}>
+    <span className="shrink-0 rounded border border-line px-2 py-0.5 text-xs text-fg-muted">
       {category}
     </span>
   )
@@ -69,7 +57,7 @@ function GoogleMapEmbed({ item }: { item: RestaurantItem }) {
 
   if (!MAPS_KEY) {
     return (
-      <div className="flex items-center justify-center h-full text-neutral-600 font-mono text-xs">
+      <div className="flex items-center justify-center h-full text-fg-subtle text-xs">
         NEXT_PUBLIC_GOOGLE_MAPS_KEY not set
       </div>
     )
@@ -156,8 +144,8 @@ function RestaurantCard({
       onClick={() => onSelect(item)}
       className={`group rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden ${
         selected
-          ? 'border-emerald-500/50 bg-emerald-950/30 ring-1 ring-emerald-500/20'
-          : 'border-neutral-800 bg-neutral-900 hover:border-neutral-600 hover:bg-neutral-800/80'
+          ? 'border-star/60 bg-panel-2'
+          : 'border-line bg-panel hover:border-line-strong hover:bg-panel-2'
       }`}
     >
       {(item.imageUrls && item.imageUrls.length > 0) && (
@@ -165,17 +153,17 @@ function RestaurantCard({
       )}
       <div className="p-4">
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-semibold text-neutral-100 text-sm leading-snug">{item.name}</h3>
+        <h3 className="font-semibold text-fg text-sm leading-snug">{item.name}</h3>
         <div className="flex items-center gap-1.5 shrink-0">
           {item.checked && (
-            <span className="text-[10px] font-mono text-cyan-400 border border-cyan-400/30 bg-cyan-400/5 px-1.5 py-0.5 rounded">
-              Visited
+            <span className="text-xs text-star border border-star/40 px-1.5 py-0.5 rounded">
+              가 본 곳
             </span>
           )}
           {item.category && <CategoryBadge category={item.category} />}
           <span
             className={`flex items-center justify-center transition-colors duration-150 p-0.5 ${
-              selected ? 'text-emerald-400' : 'text-neutral-600 group-hover:text-emerald-400'
+              selected ? 'text-fg' : 'text-fg-subtle group-hover:text-fg'
             }`}
           >
             <MapPinIcon />
@@ -184,14 +172,14 @@ function RestaurantCard({
       </div>
 
       {item.menu && (
-        <p className="text-xs text-neutral-400 leading-relaxed mb-2 line-clamp-2">
+        <p className="text-xs text-fg-muted leading-relaxed mb-2 line-clamp-2">
           {item.menu}
         </p>
       )}
 
       {item.address && (
-        <p className="text-[11px] text-neutral-600 truncate mt-auto">
-          📍 {item.address}
+        <p className="text-xs text-fg-subtle truncate mt-auto">
+          {item.address}
         </p>
       )}
       </div>
@@ -261,31 +249,24 @@ export default function FoodClient({
     : ''
 
   return (
-    <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
-      {/* Header */}
-      <div className="border-b border-white/[0.08] py-12">
-        <div className="container-custom">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-px bg-neutral-700" />
-            <span className="text-neutral-500 text-xs tracking-wide">{en ? 'Food' : '맛집'}</span>
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black text-neutral-50">
-            {en ? 'Restaurant List' : '맛집 리스트'}
-          </h1>
-        </div>
-      </div>
+    <PageShell>
+      <PageHeader
+        title={en ? 'Food' : '맛집'}
+        description={en ? 'Places I have been, by region and type.' : '다녀온 곳을 지역과 종류별로 모아 둡니다.'}
+        width="wide"
+      />
 
-      <div className="container-custom py-10">
+      <div className="mx-auto w-full max-w-wide px-5 md:px-8">
         {error && (
           <div className="py-20 text-center space-y-2">
-            <p className="text-neutral-400 text-sm">
+            <p className="text-fg-muted text-sm">
               {en ? "Couldn't load the list. Please try again in a moment." : '목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.'}
             </p>
           </div>
         )}
 
         {!error && regions.length === 0 && (
-          <p className="text-neutral-500 font-mono text-sm py-20 text-center">No restaurants registered.</p>
+          <p className="py-20 text-center text-sm text-fg-muted">{en ? 'No places yet.' : '아직 등록된 맛집이 없습니다.'}</p>
         )}
 
         {!error && regions.length > 0 && (
@@ -303,13 +284,12 @@ export default function FoodClient({
                       onClick={() => handleRegionChange(region.id)}
                       className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-all duration-150 ${
                         isActive
-                          ? 'bg-neutral-800 text-neutral-100 border-neutral-700'
-                          : 'text-neutral-500 border-neutral-800 hover:text-neutral-200 hover:bg-neutral-900/60'
+                          ? 'bg-panel-2 text-fg border-line-strong'
+                          : 'text-fg-subtle border-line hover:text-fg hover:bg-panel'
                       }`}
                     >
-                      {region.emoji && <span>{region.emoji}</span>}
                       <span>{region.title}</span>
-                      <span className={`text-[10px] font-mono tabular-nums ${isActive ? 'text-neutral-400' : 'text-neutral-700'}`}>
+                      <span className={`text-xs tabular-nums ${isActive ? 'text-fg-muted' : 'text-fg-subtle'}`}>
                         {region.items.length}
                       </span>
                     </button>
@@ -319,8 +299,8 @@ export default function FoodClient({
 
               {/* Desktop: vertical sidebar */}
               <div className="hidden md:block sticky top-24 space-y-0.5">
-                <p className="text-xs text-neutral-600 tracking-wide px-3 pb-2">
-                  Regions
+                <p className="px-3 pb-2 text-xs text-fg-subtle">
+                  {en ? 'Regions' : '지역'}
                 </p>
                 {regions.map((region) => {
                   const isActive = activeRegion === region.id
@@ -331,15 +311,14 @@ export default function FoodClient({
                       onClick={() => handleRegionChange(region.id)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150 flex items-center justify-between gap-2 ${
                         isActive
-                          ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
-                          : 'text-neutral-500 hover:text-neutral-200 hover:bg-neutral-900/60 border border-transparent'
+                          ? 'bg-panel-2 text-fg border border-line-strong'
+                          : 'text-fg-subtle hover:text-fg hover:bg-panel border border-transparent'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
-                        {region.emoji && <span>{region.emoji}</span>}
                         <span className="truncate">{region.title}</span>
                       </span>
-                      <span className={`text-[10px] font-mono shrink-0 tabular-nums ${isActive ? 'text-neutral-400' : 'text-neutral-700'}`}>
+                      <span className={`text-xs shrink-0 tabular-nums ${isActive ? 'text-fg-muted' : 'text-fg-subtle'}`}>
                         {region.items.length}
                       </span>
                     </button>
@@ -361,48 +340,47 @@ export default function FoodClient({
                   >
                     {/* Region header */}
                     <div className="flex items-center justify-between mb-6">
-                      <h2 className="text-lg font-bold text-neutral-200 flex items-center gap-2">
-                        {current.emoji && <span>{current.emoji}</span>}
+                      <h2 className="text-lg font-bold text-fg flex items-center gap-2">
                         <span>{current.title}</span>
                       </h2>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs font-mono text-neutral-600">
-                          {current.items.length} places
+                        <span className="text-xs text-fg-subtle">
+                          {en ? `${current.items.length} places` : `${current.items.length}곳`}
                         </span>
                         {/* View mode toggle */}
-                        <div className="flex items-center border border-neutral-700 rounded-full overflow-hidden">
+                        <div className="flex items-center border border-line-strong rounded-full overflow-hidden">
                           <button
                             type="button"
                             onClick={() => setViewMode('list')}
-                            className={`text-[11px] font-mono px-3 py-1 transition-all duration-150 ${
+                            className={`text-xs px-3 py-1 transition-all duration-150 ${
                               viewMode === 'list'
-                                ? 'bg-neutral-700 text-neutral-100'
-                                : 'text-neutral-500 hover:text-neutral-300'
+                                ? 'bg-panel-2 text-fg'
+                                : 'text-fg-subtle hover:text-fg-muted'
                             }`}
                           >
-                            List
+                            {en ? 'List' : '목록'}
                           </button>
                           <button
                             type="button"
                             onClick={() => { setViewMode('map'); setSelectedItem(null) }}
-                            className={`text-[11px] font-mono px-3 py-1 transition-all duration-150 flex items-center gap-1 ${
+                            className={`text-xs px-3 py-1 transition-all duration-150 flex items-center gap-1 ${
                               viewMode === 'map'
-                                ? 'bg-neutral-700 text-neutral-100'
-                                : 'text-neutral-500 hover:text-neutral-300'
+                                ? 'bg-panel-2 text-fg'
+                                : 'text-fg-subtle hover:text-fg-muted'
                             }`}
                           >
                             <MapPinIcon size={10} />
-                            Map
+                            {en ? 'Map' : '지도'}
                           </button>
                         </div>
                         <a
                           href={regionMapUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hidden sm:flex items-center gap-1 text-[11px] font-mono text-neutral-500 border border-neutral-700 hover:text-emerald-400 hover:border-emerald-400/50 px-2.5 py-1 rounded-full transition-all duration-150"
+                          className="hidden sm:flex items-center gap-1 text-xs text-fg-subtle border border-line-strong hover:text-fg hover:border-line-strong px-2.5 py-1 rounded-full transition-all duration-150"
                         >
                           <MapPinIcon />
-                          <span>Full Map</span>
+                          <span>{en ? 'Full map' : '지도에서 보기'}</span>
                           <ExternalLinkIcon />
                         </a>
                       </div>
@@ -414,8 +392,8 @@ export default function FoodClient({
                         {/* Restaurant list (left) */}
                         <div className="w-64 shrink-0 overflow-y-auto flex flex-col gap-1.5 pr-1 scrollbar-none">
                           {filteredItems.length === 0 ? (
-                            <p className="text-neutral-600 font-mono text-xs py-6 text-center">
-                              No restaurants
+                            <p className="text-fg-subtle text-xs py-6 text-center">
+                              {en ? 'No places' : '맛집이 없습니다'}
                             </p>
                           ) : filteredItems.map((item) => {
                             const isActive = mapItem?.id === item.id
@@ -426,8 +404,8 @@ export default function FoodClient({
                                 onClick={() => setSelectedItem(item)}
                                 className={`text-left px-3 py-2.5 rounded-lg border transition-all duration-150 w-full ${
                                   isActive
-                                    ? 'border-emerald-500/50 bg-emerald-950/40 text-neutral-100'
-                                    : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200'
+                                    ? 'border-star/60 bg-panel-2 text-fg'
+                                    : 'border-line bg-panel text-fg-muted hover:border-line-strong hover:text-fg'
                                 }`}
                               >
                                 <div className="flex items-center gap-1.5 mb-0.5">
@@ -435,10 +413,10 @@ export default function FoodClient({
                                   <span className="text-xs font-semibold truncate">{item.name}</span>
                                 </div>
                                 {item.category && (
-                                  <span className="text-[10px] font-mono text-neutral-600">{item.category}</span>
+                                  <span className="text-xs text-fg-subtle">{item.category}</span>
                                 )}
                                 {item.address && (
-                                  <p className="text-[10px] text-neutral-700 truncate mt-0.5">{item.address}</p>
+                                  <p className="text-xs text-fg-subtle truncate mt-0.5">{item.address}</p>
                                 )}
                               </button>
                             )
@@ -446,15 +424,15 @@ export default function FoodClient({
                         </div>
 
                         {/* Map (right) */}
-                        <div className="flex-1 min-w-0 rounded-xl border border-neutral-800 overflow-hidden bg-neutral-900 flex flex-col">
+                        <div className="flex-1 min-w-0 rounded-xl border border-line overflow-hidden bg-panel flex flex-col">
                           {mapItem ? (
                             <>
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800 shrink-0">
-                                <div className="flex items-center gap-2 text-sm text-neutral-300 min-w-0">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-line shrink-0">
+                                <div className="flex items-center gap-2 text-sm text-fg-muted min-w-0">
                                   <MapPinIcon size={13} />
                                   <span className="font-semibold truncate">{mapItem.name}</span>
                                   {mapItem.address && (
-                                    <span className="text-neutral-600 text-xs truncate hidden sm:block">
+                                    <span className="text-fg-subtle text-xs truncate hidden sm:block">
                                       {mapItem.address}
                                     </span>
                                   )}
@@ -463,9 +441,9 @@ export default function FoodClient({
                                   href={googleMapsUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors shrink-0"
+                                  className="flex items-center gap-1 text-xs text-fg-subtle hover:text-fg transition-colors shrink-0"
                                 >
-                                  Open in Google Maps
+                                  {en ? 'Open in Google Maps' : '구글 지도에서 열기'}
                                   <ExternalLinkIcon />
                                 </a>
                               </div>
@@ -474,8 +452,8 @@ export default function FoodClient({
                               </div>
                             </>
                           ) : (
-                            <div className="flex-1 flex items-center justify-center text-neutral-700 font-mono text-sm">
-                              Select a restaurant
+                            <div className="flex-1 flex items-center justify-center text-fg-subtle text-sm">
+                              {en ? 'Pick a place' : '맛집을 골라 주세요'}
                             </div>
                           )}
                         </div>
@@ -493,14 +471,14 @@ export default function FoodClient({
                               animate={{ opacity: 1, height: 360 }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3, ease: 'easeInOut' as const }}
-                              className="mb-5 overflow-hidden rounded-xl border border-emerald-500/30 bg-neutral-900"
+                              className="mb-5 overflow-hidden rounded-xl border border-line bg-panel"
                             >
-                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">
-                                <div className="flex items-center gap-2 text-sm text-neutral-300">
+                              <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
+                                <div className="flex items-center gap-2 text-sm text-fg-muted">
                                   <MapPinIcon size={14} />
                                   <span className="font-semibold">{selectedItem.name}</span>
                                   {selectedItem.address && (
-                                    <span className="text-neutral-600 text-xs truncate max-w-[200px]">
+                                    <span className="text-fg-subtle text-xs truncate max-w-[200px]">
                                       {selectedItem.address}
                                     </span>
                                   )}
@@ -510,7 +488,7 @@ export default function FoodClient({
                                     href={googleMapsUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1 text-[11px] font-mono text-neutral-500 hover:text-emerald-400 transition-colors"
+                                    className="flex items-center gap-1 text-xs text-fg-subtle hover:text-fg transition-colors"
                                   >
                                     Open in Google Maps
                                     <ExternalLinkIcon />
@@ -518,7 +496,7 @@ export default function FoodClient({
                                   <button
                                     type="button"
                                     onClick={() => setSelectedItem(null)}
-                                    className="text-neutral-600 hover:text-neutral-300 transition-colors p-0.5"
+                                    className="text-fg-subtle hover:text-fg-muted transition-colors p-0.5"
                                   >
                                     <XIcon />
                                   </button>
@@ -537,8 +515,8 @@ export default function FoodClient({
                             type="text"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Search restaurant name..."
-                            className="w-full bg-neutral-900 border border-neutral-800 text-neutral-200 font-mono text-sm rounded-lg px-4 py-2.5 placeholder:text-neutral-600 focus:outline-none focus:border-neutral-600 transition-colors"
+                            placeholder={en ? 'Search by name' : '이름으로 찾기'}
+                            className="w-full bg-panel border border-line text-fg text-sm rounded-lg px-4 py-2.5 placeholder:text-fg-subtle focus:outline-none focus:border-line-strong transition-colors"
                           />
                         </div>
 
@@ -548,26 +526,25 @@ export default function FoodClient({
                             <button
                               type="button"
                               onClick={() => setActiveCategory(null)}
-                              className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                              className={`text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
                                 activeCategory === null
-                                  ? 'bg-neutral-200 text-neutral-900 border-neutral-200'
-                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                                  ? 'border-star/60 text-star'
+                                  : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'
                               }`}
                             >
-                              All
+                              {en ? 'All' : '전체'}
                             </button>
                             {categories.map((cat) => {
                               const isActive = activeCategory === cat
-                              const colorCls = CATEGORY_COLOR[cat] ?? 'text-neutral-400 border-neutral-700'
                               return (
                                 <button
                                   key={cat}
                                   type="button"
                                   onClick={() => setActiveCategory(isActive ? null : cat)}
-                                  className={`text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                                  className={`text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
                                     isActive
-                                      ? `${colorCls} opacity-100`
-                                      : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                                      ? 'border-star/60 text-star'
+                                      : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'
                                   }`}
                                 >
                                   {cat}
@@ -577,24 +554,24 @@ export default function FoodClient({
                             <button
                               type="button"
                               onClick={() => setVisitedOnly((v) => !v)}
-                              className={`ml-auto text-[11px] font-mono px-3 py-1 rounded-full border transition-all duration-150 ${
+                              className={`ml-auto text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
                                 visitedOnly
-                                  ? 'text-cyan-400 border-cyan-400/50 bg-cyan-400/10'
-                                  : 'text-neutral-500 border-neutral-700 hover:text-neutral-300 hover:border-neutral-500'
+                                  ? 'text-star border-star/60'
+                                  : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'
                               }`}
                             >
-                              Visited only
+                              {en ? 'Visited only' : '가 본 곳만'}
                             </button>
                           </div>
                         )}
 
                         {current.items.length === 0 ? (
-                          <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                            No restaurants registered yet.
+                          <p className="text-fg-subtle text-sm py-10 text-center">
+                            {en ? 'No places yet.' : '아직 등록된 맛집이 없습니다.'}
                           </p>
                         ) : filteredItems.length === 0 ? (
-                          <p className="text-neutral-600 font-mono text-sm py-10 text-center">
-                            No restaurants match your filters.
+                          <p className="text-fg-subtle text-sm py-10 text-center">
+                            {en ? 'No places match these filters.' : '조건에 맞는 맛집이 없습니다.'}
                           </p>
                         ) : (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -618,6 +595,6 @@ export default function FoodClient({
           </div>
         )}
       </div>
-    </SpaceAtmosphere>
+    </PageShell>
   )
 }

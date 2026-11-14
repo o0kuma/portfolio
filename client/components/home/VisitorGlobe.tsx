@@ -112,7 +112,8 @@ function GlobeMesh({ locations }: { locations: GeoLocation[] }) {
   )
 }
 
-export default function VisitorGlobe() {
+/** `compact` = the small footer version: a 64px globe, no stats line. */
+export default function VisitorGlobe({ compact = false }: { compact?: boolean } = {}) {
   const [locations, setLocations] = useState<GeoLocation[]>([])
   const [total, setTotal] = useState<number | null>(null)
 
@@ -135,7 +136,7 @@ export default function VisitorGlobe() {
 
   return (
     <div className="flex flex-col items-center gap-2 select-none pointer-events-auto">
-      <div className="w-[180px] h-[180px] md:w-[200px] md:h-[200px]">
+      <div className={compact ? 'h-16 w-16' : 'w-[180px] h-[180px] md:w-[200px] md:h-[200px]'}>
         <Canvas
           camera={{ position: [0, 0, 3.8], fov: 42 }}
           gl={{ antialias: true, alpha: true }}
@@ -148,7 +149,7 @@ export default function VisitorGlobe() {
         </Canvas>
       </div>
 
-      <div className="flex items-center gap-3 font-mono text-[11px] text-white/40">
+      {!compact && <div className="flex items-center gap-3 font-mono text-[11px] text-white/40">
         {total !== null && (
           <span>{total.toLocaleString()} visitors</span>
         )}
@@ -158,7 +159,7 @@ export default function VisitorGlobe() {
             <span>{uniqueCountries} countries</span>
           </>
         )}
-      </div>
+      </div>}
     </div>
   )
 }

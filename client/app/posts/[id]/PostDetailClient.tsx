@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useOptimistic } from 'react'
-import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiClock } from 'react-icons/fi'
+import { useState, useEffect, useOptimistic, type ReactNode } from 'react'
+import ReactMarkdown, { type Components } from 'react-markdown'
+import { FiArrowLeft, FiHeart, FiEdit, FiTrash2 } from 'react-icons/fi'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import AdBanner from '@/components/AdBanner'
@@ -16,8 +17,11 @@ import { interpolate } from '@/lib/i18n'
 import PostShareBar from '@/components/blog/PostShareBar'
 import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
-import { FiChevronDown, FiChevronUp, FiZap } from 'react-icons/fi'
-import SpaceAtmosphere from '@/components/SpaceAtmosphere'
+import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
+import PageShell from '@/components/site/PageShell'
+import { Container, buttonSecondary } from '@/components/site/layout'
+import { hasAdminAccess } from '@/lib/admin-access'
+import { getCategoryLabel } from '@/lib/post-categories'
 
 const API_BASE_URL = getApiBaseUrl()
 
@@ -38,7 +42,8 @@ interface RelatedPost {
 function slugify(text: string): string {
   return text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, '')
+    // Keep Hangul: `\w` is ASCII-only, so Korean headings used to slug to ''.
+    .replace(/[^\w\s\u3131-\u318e\uac00-\ud7a3-]/g, '')
     .trim()
     .replace(/[\s_]+/g, '-')
 }
@@ -58,6 +63,19 @@ function parseHeadings(content: string): TocItem[] {
     }
   }
   return items
+}
+
+function nodeText(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(nodeText).join('')
+  return ''
+}
+
+// Post bodies are Markdown. Headings get the same ids the table of contents
+// links to (see parseHeadings), so its links actually jump.
+const MARKDOWN_COMPONENTS: Components = {
+  h2: ({ children }) => <h2 id={slugify(nodeText(children).trim())} className="scroll-mt-24">{children}</h2>,
+  h3: ({ children }) => <h3 id={slugify(nodeText(children).trim())} className="scroll-mt-24">{children}</h3>,
 }
 
 function calcReadingTime(content: string): number {
@@ -83,6 +101,13 @@ export default function PostDetailClient() {
   const [summaryOpen, setSummaryOpen] = useState(false)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [summary, setSummary] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Edit/delete controls are for the site admin only.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsAdmin(hasAdminAccess())
+  }, [])
 
   const fetchPost = async () => {
     try {
@@ -215,7 +240,7 @@ export default function PostDetailClient() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
+    return new Date(dateString).toLocaleDateString(locale === 'en' ? 'en-US' : 'ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -239,47 +264,35 @@ export default function PostDetailClient() {
     return num.toString()
   }
 
+  const en = locale === 'en'
+
   if (isLoading) {
     return (
-      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
-        <div className="page-shell py-16">
-          <div className="text-center">
-            <div className="inline-block">
-              <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
-              </div>
-              <h3 className="text-xl font-mono text-neutral-400 mb-2">
-                {t.postDetail.loading}
-              </h3>
-            </div>
+      <PageShell>
+        <Container width="reading" className="pt-20" >
+          <div aria-busy="true" aria-label={t.postDetail.loading} className="space-y-4">
+            <div className="h-3 w-40 rounded bg-panel" />
+            <div className="h-9 w-3/4 rounded bg-panel" />
+            <div className="h-4 w-full rounded bg-panel" />
+            <div className="h-4 w-5/6 rounded bg-panel" />
           </div>
-        </div>
-      </SpaceAtmosphere>
+        </Container>
+      </PageShell>
     )
   }
 
   if (!post) {
     return (
-      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
-        <div className="page-shell py-16">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-neutral-100 mb-4">
-              {t.postDetail.notFound}
-            </h2>
-            <p className="text-neutral-500 mb-8">
-              {t.postDetail.notFoundDetail}
-            </p>
-            <Link
-              href="/posts"
-              className="inline-flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
-            >
-              <FiArrowLeft size={16} />
-              <span>{t.postDetail.backToPosts}</span>
-            </Link>
-          </div>
-        </div>
-      </SpaceAtmosphere>
+      <PageShell>
+        <Container width="reading" className="pt-20 text-center">
+          <h1 className="text-2xl font-bold text-fg">{t.postDetail.notFound}</h1>
+          <p className="mt-3 text-fg-muted">{t.postDetail.notFoundDetail}</p>
+          <Link href="/posts" className={`${buttonSecondary} mt-8`}>
+            <FiArrowLeft size={16} aria-hidden />
+            {t.postDetail.backToPosts}
+          </Link>
+        </Container>
+      </PageShell>
     )
   }
 
@@ -306,258 +319,174 @@ export default function PostDetailClient() {
   const tocItems = parseHeadings(post.content)
 
   return (
-    <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
-      <div className="border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur-sm sticky top-0 z-40">
-        <div className="page-shell py-4">
+    <PageShell>
+      <div className="mx-auto flex max-w-wide justify-center gap-12 px-5 pt-12 md:px-8 md:pt-16">
+        <article className="w-full min-w-0 max-w-reading">
           <div className="flex items-center justify-between">
-            <Link
-              href="/posts"
-              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
-            >
-              <FiArrowLeft size={16} />
-              {t.postDetail.backToBoard}
+            <Link href="/posts" className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg">
+              <FiArrowLeft size={14} aria-hidden />
+              {en ? 'Posts' : '글 목록'}
             </Link>
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={() => setShowEditForm(true)}
-                className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
-                title={locale === 'en' ? 'Edit' : '수정'}
-              >
-                <FiEdit size={18} />
-              </button>
-              <button
-                onClick={handleDeletePost}
-                className="p-2 text-neutral-700 hover:text-neutral-400 transition-colors"
-                title={locale === 'en' ? 'Delete' : '삭제'}
-              >
-                <FiTrash2 size={18} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="page-shell py-8">
-        {/* Layout: main content + optional ToC sidebar on xl */}
-        <div className="mx-auto max-w-6xl flex gap-8 items-start">
-          {/* Main content */}
-          <div className="flex-1 min-w-0">
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
-              <div className="flex items-center gap-2 mb-4">
-                {post.featured && (
-                  <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-mono px-2 py-0.5 rounded">
-                    Featured
-                  </span>
-                )}
-                <span className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded uppercase">
-                  {post.category}
-                </span>
+            {isAdmin && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setShowEditForm(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-fg"
+                  aria-label={en ? 'Edit' : '수정'}
+                >
+                  <FiEdit size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeletePost}
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-danger"
+                  aria-label={en ? 'Delete' : '삭제'}
+                >
+                  <FiTrash2 size={16} />
+                </button>
               </div>
+            )}
+          </div>
 
-              <h1 className="text-3xl md:text-4xl font-black text-neutral-50 leading-tight mb-4">
-                {post.title}
-              </h1>
-
-              {/* Share bar below title */}
-              <div className="flex items-center gap-3 mb-4">
+          <header className="mt-8">
+            <p className="text-xs text-fg-subtle">
+              {getCategoryLabel(post.category, locale)} · {formatDate(post.createdAt)} ·{' '}
+              {interpolate(t.postDetail.readingTime, { n: readingTime })}
+            </p>
+            <h1 className="mt-3 text-[32px] font-bold leading-[1.3] tracking-[-0.02em] text-fg md:text-[40px]">{post.title}</h1>
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-subtle">
+              <span>{post.author}</span>
+              <span>{en ? `${formatNumber(post.views)} views` : `조회 ${formatNumber(post.views)}`}</span>
+              <button
+                type="button"
+                onClick={handleLike}
+                disabled={isLiking}
+                className="inline-flex items-center gap-1 transition-colors hover:text-fg disabled:opacity-50"
+                aria-label={en ? 'Like' : '좋아요'}
+              >
+                <FiHeart size={12} aria-hidden />
+                {formatNumber(optimisticLikes)}
+              </button>
+              <span className="ml-auto flex items-center gap-2">
                 <PostShareBar title={post.title} />
                 <BookmarkButton postId={post._id} />
-              </div>
+              </span>
+            </div>
+          </header>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs font-mono text-neutral-600 mb-6">
-                <div className="flex items-center gap-1">
-                  <FiUser size={13} />
-                  <span>{post.author}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FiCalendar size={13} />
-                  <span>{formatDate(post.createdAt)}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FiClock size={13} />
-                  <span>{interpolate(t.postDetail.readingTime, { n: readingTime })}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <FiEye size={13} />
-                  <span>{formatNumber(post.views)}</span>
-                </div>
-                <button
-                  onClick={handleLike}
-                  disabled={isLiking}
-                  className="flex items-center gap-1.5 hover:text-red-400 transition-colors disabled:opacity-50"
-                >
-                  <FiHeart size={13} />
-                  <span>{formatNumber(optimisticLikes)}</span>
-                </button>
-                <div className="flex items-center gap-1">
-                  <FiMessageSquare size={13} />
-                  <span>{formatNumber(post.comments.length)}</span>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-8">
-                {post.tags.map((tag) => (
-                  <Link
-                    key={tag}
-                    href={`/posts/tags/${encodeURIComponent(tag)}`}
-                    className="bg-neutral-800 text-neutral-500 text-xs font-mono px-2.5 py-1 rounded-md flex items-center gap-1 hover:text-neutral-300 transition-colors"
-                  >
-                    <FiTag size={11} />
-                    {tag}
-                  </Link>
-                ))}
-              </div>
-
-              {/* AI Summary Panel */}
-              <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/5 overflow-hidden">
-                <button
-                  onClick={handleToggleSummary}
-                  className="w-full flex items-center justify-between px-4 py-3 text-sm font-mono text-amber-400 hover:text-amber-300 transition-colors"
-                >
-                  <span className="flex items-center gap-2">
-                    <FiZap size={14} />
-                    {locale === 'en' ? '✨ View AI summary' : '✨ AI 요약 보기'}
-                  </span>
-                  {summaryOpen ? <FiChevronUp size={15} /> : <FiChevronDown size={15} />}
-                </button>
-                {summaryOpen && (
-                  <div className="px-4 pb-4">
-                    {summaryLoading ? (
-                      <div className="flex items-center gap-2 text-amber-500/60 text-sm font-mono py-2">
-                        <div className="w-4 h-4 border-2 border-amber-500/40 border-t-amber-400 rounded-full animate-spin" />
-                        {locale === 'en' ? 'Generating summary...' : '요약 생성 중...'}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-neutral-300 leading-relaxed whitespace-pre-line">{summary}</p>
-                    )}
-                    <div className="flex justify-end mt-2">
-                      <span className="text-[10px] text-amber-600/50 font-mono">powered by Claude</span>
-                    </div>
-                  </div>
+          <div className="mt-8 rounded-xl border border-line">
+            <button
+              type="button"
+              onClick={handleToggleSummary}
+              aria-expanded={summaryOpen}
+              className="flex w-full items-center justify-between px-4 py-3 text-sm text-fg-muted transition-colors hover:text-fg"
+            >
+              <span>{en ? 'AI summary' : 'AI 요약 보기'}</span>
+              {summaryOpen ? <FiChevronUp size={15} aria-hidden /> : <FiChevronDown size={15} aria-hidden />}
+            </button>
+            {summaryOpen && (
+              <div className="border-t border-line px-4 pb-4 pt-3">
+                {summaryLoading ? (
+                  <p className="text-sm text-fg-subtle">{en ? 'Writing the summary…' : '요약을 만드는 중입니다…'}</p>
+                ) : (
+                  <p className="whitespace-pre-line text-sm leading-[1.75] text-fg-muted">{summary}</p>
                 )}
               </div>
-
-              <div className="text-neutral-300 leading-relaxed prose prose-invert prose-neutral max-w-none">
-                <div className="mb-8">
-                  <AdBanner
-                    adType="banner"
-                    position="top"
-                    postId={post._id}
-                    postCategory={post.category}
-                    postTags={post.tags}
-                  />
-                </div>
-
-                <div className="whitespace-pre-wrap">
-                  {insertAdsInContent(post.content, post._id, post.category, post.tags)}
-                </div>
-
-                <div className="mt-8">
-                  <AdBanner
-                    adType="banner"
-                    position="bottom"
-                    postId={post._id}
-                    postCategory={post.category}
-                    postTags={post.tags}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Series posts */}
-            {post.series && seriesPosts.length > 0 && (
-              <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-xs text-neutral-500 tracking-wide">
-                    {locale === 'en' ? 'More in this series' : '이 시리즈의 다른 글'}
-                  </h3>
-                  <span className="text-xs font-mono text-cyan-500 bg-cyan-500/10 border border-cyan-500/20 px-2 py-0.5 rounded">
-                    {post.series}
-                  </span>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {seriesPosts.map((sp) => (
-                    <Link
-                      key={sp._id}
-                      href={`/posts/${sp._id}`}
-                      className="block rounded-lg border border-neutral-800 p-4 hover:border-cyan-800 transition-colors group"
-                    >
-                      <h4 className="font-semibold text-neutral-200 group-hover:text-white line-clamp-2 mb-2 text-sm transition-colors">
-                        {sp.title}
-                      </h4>
-                      <p className="text-xs font-mono text-neutral-700 mb-3">
-                        {formatDateShort(sp.createdAt)}
-                      </p>
-                      <span className="text-xs font-mono text-cyan-400 hover:text-cyan-300">
-                        {locale === 'en' ? 'Read' : '읽기'} &rarr;
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
             )}
-
-            {/* Related posts */}
-            {relatedPosts.length > 0 && (
-              <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8 mb-8">
-                <h3 className="text-xs text-neutral-500 tracking-wide mb-4">
-                  {t.postDetail.relatedPosts}
-                </h3>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {relatedPosts.map((rp) => (
-                    <Link
-                      key={rp._id}
-                      href={`/posts/${rp._id}`}
-                      className="block rounded-lg border border-neutral-800 p-4 hover:border-neutral-700 transition-colors group"
-                    >
-                      <h4 className="font-semibold text-neutral-200 group-hover:text-white line-clamp-2 mb-2 text-sm transition-colors">
-                        {rp.title}
-                      </h4>
-                      <p className="text-xs font-mono text-neutral-700 mb-3">
-                        {formatDateShort(rp.createdAt)}
-                      </p>
-                      <span className="text-xs font-mono text-cyan-400 hover:text-cyan-300">
-                        {t.postDetail.readMore}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="bg-neutral-900/50 border border-neutral-800 rounded-xl p-8">
-              <CommentSection postId={postId} />
-            </div>
           </div>
 
-          {/* ToC sidebar — visible only on xl+ */}
-          {tocItems.length > 0 && (
-            <aside className="hidden xl:block w-64 shrink-0">
-              <nav
-                className="sticky rounded-xl bg-neutral-900/50 border border-neutral-800 p-5"
-                style={{ top: '6rem' }}
-                aria-label={t.postDetail.tableOfContents}
-              >
-                <p className="text-xs text-neutral-500 tracking-wide mb-3">
-                  {t.postDetail.tableOfContents}
-                </p>
-                <ul className="text-xs font-mono text-neutral-600 space-y-1">
-                  {tocItems.map((item, idx) => (
-                    <li key={idx} className={item.level === 3 ? 'pl-4' : ''}>
-                      <a
-                        href={`#${item.slug}`}
-                        className="block hover:text-neutral-300 transition-colors py-0.5 truncate"
-                        title={item.text}
-                      >
-                        {item.text}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </nav>
-            </aside>
+          <div className="mt-10">
+            <AdBanner adType="banner" position="top" postId={post._id} postCategory={post.category} postTags={post.tags} />
+          </div>
+
+          <div className="prose prose-invert mt-6 max-w-none text-base leading-[1.75] text-fg prose-headings:tracking-[-0.02em] prose-a:text-fg prose-a:decoration-star">
+            {insertAdsInContent(post.content, post._id, post.category, post.tags).map((chunk, i) =>
+              typeof chunk === 'string' ? (
+                chunk.trim() ? (
+                  <ReactMarkdown key={`md-${i}`} components={MARKDOWN_COMPONENTS}>
+                    {chunk}
+                  </ReactMarkdown>
+                ) : null
+              ) : (
+                chunk
+              ),
+            )}
+          </div>
+
+          <div className="mt-10">
+            <AdBanner adType="banner" position="bottom" postId={post._id} postCategory={post.category} postTags={post.tags} />
+          </div>
+
+          {post.tags.length > 0 && (
+            <div className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-6">
+              {post.tags.map((tag) => (
+                <Link key={tag} href={`/posts/tags/${encodeURIComponent(tag)}`} className="text-sm text-fg-muted hover:text-fg">
+                  #{tag}
+                </Link>
+              ))}
+            </div>
           )}
-        </div>
+
+          {post.series && seriesPosts.length > 0 && (
+            <section className="mt-12">
+              <h2 className="text-xs text-fg-subtle">
+                {en ? 'More in this series' : '이 시리즈의 다른 글'} · {post.series}
+              </h2>
+              <ul className="mt-2 divide-y divide-line">
+                {seriesPosts.map((sp) => (
+                  <li key={sp._id}>
+                    <Link href={`/posts/${sp._id}`} className="group block py-3">
+                      <p className="text-xs text-fg-subtle">{formatDateShort(sp.createdAt)}</p>
+                      <p className="mt-1 text-sm text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{sp.title}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {relatedPosts.length > 0 && (
+            <section className="mt-12">
+              <h2 className="text-xs text-fg-subtle">{t.postDetail.relatedPosts}</h2>
+              <ul className="mt-2 divide-y divide-line">
+                {relatedPosts.map((rp) => (
+                  <li key={rp._id}>
+                    <Link href={`/posts/${rp._id}`} className="group block py-3">
+                      <p className="text-xs text-fg-subtle">{formatDateShort(rp.createdAt)}</p>
+                      <p className="mt-1 text-sm text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{rp.title}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section className="mt-12 border-t border-line pt-8">
+            <CommentSection postId={postId} />
+          </section>
+        </article>
+
+        {tocItems.length > 0 && (
+          <aside className="hidden w-56 shrink-0 xl:block">
+            <nav className="sticky top-24" aria-label={t.postDetail.tableOfContents}>
+              <p className="mb-3 text-xs text-fg-subtle">{t.postDetail.tableOfContents}</p>
+              <ul className="space-y-1 border-l border-line text-sm">
+                {tocItems.map((item, idx) => (
+                  <li key={idx}>
+                    <a
+                      href={`#${item.slug}`}
+                      className={`block truncate py-1 text-fg-muted transition-colors hover:text-fg ${item.level === 3 ? 'pl-7' : 'pl-4'}`}
+                      title={item.text}
+                    >
+                      {item.text}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </aside>
+        )}
       </div>
 
       {post && (
@@ -568,6 +497,6 @@ export default function PostDetailClient() {
           editPost={post}
         />
       )}
-    </SpaceAtmosphere>
+    </PageShell>
   )
 }

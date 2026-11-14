@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { FiArrowLeft, FiBookOpen, FiCalendar } from 'react-icons/fi'
+import PageShell from '@/components/site/PageShell'
+import { Container, EmptyState, PageHeader } from '@/components/site/layout'
 import { getApiBaseUrl } from '@/lib/api-base-url'
 import LocaleText from '@/components/LocaleText'
 
@@ -38,54 +39,30 @@ export default async function SeriesPage() {
   const series = await fetchSeries()
 
   return (
-    <div className="min-h-screen bg-canvas text-neutral-50">
-      <header className="sticky top-0 z-40 bg-neutral-950/90 backdrop-blur-sm border-b border-neutral-800">
-        <div className="page-shell py-4">
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/posts"
-              className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
-            >
-              <FiArrowLeft size={16} />
-              <span><LocaleText ko="글 목록" en="Posts" /></span>
-            </Link>
-            <h1 className="text-2xl font-black text-neutral-50 font-mono"><LocaleText ko="시리즈" en="Series" /></h1>
-          </div>
-        </div>
-      </header>
-
-      <div className="page-shell py-12">
+    <PageShell>
+      <PageHeader
+        eyebrow={<Link href="/posts" className="hover:text-fg"><LocaleText ko="글" en="Posts" /></Link>}
+        title={<LocaleText ko="시리즈" en="Series" />}
+        description={<LocaleText ko="여러 편으로 이어지는 글 묶음입니다." en="Posts written as multi-part series." />}
+      />
+      <Container>
         {series.length === 0 ? (
-          <div className="text-center py-20 text-neutral-600 font-mono">
-            <FiBookOpen size={48} className="mx-auto mb-4 opacity-40" />
-            <p><LocaleText ko="아직 시리즈가 없습니다." en="No series yet." /></p>
-          </div>
+          <EmptyState message={<LocaleText ko="아직 시리즈가 없습니다." en="No series yet." />} />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="divide-y divide-line border-y border-line">
             {series.map((s) => (
-              <Link
-                key={s.name}
-                href={`/posts/series/${encodeURIComponent(s.name)}`}
-                className="block rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 transition-colors p-6"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <FiBookOpen className="text-cyan-400 mt-0.5" size={20} />
-                  <span className="bg-neutral-800 text-neutral-400 text-xs font-mono px-2 py-0.5 rounded">
-                    <LocaleText ko={`${s.count}편`} en={`${s.count} posts`} />
+              <li key={s.name}>
+                <Link href={`/posts/series/${encodeURIComponent(s.name)}`} className="group flex items-baseline justify-between gap-4 py-5">
+                  <span className="text-lg font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{s.name}</span>
+                  <span className="shrink-0 text-xs text-fg-subtle">
+                    <LocaleText ko={`${s.count}편 · 최근 ${formatDate(s.latest)}`} en={`${s.count} posts · ${formatDate(s.latest)}`} />
                   </span>
-                </div>
-                <h2 className="text-neutral-100 font-bold text-lg leading-snug mb-3 line-clamp-2">
-                  {s.name}
-                </h2>
-                <div className="flex items-center gap-1 text-neutral-600 text-xs font-mono">
-                  <FiCalendar size={11} />
-                  <span><LocaleText ko={`최근 ${formatDate(s.latest)}`} en={`Recent ${formatDate(s.latest)}`} /></span>
-                </div>
-              </Link>
+                </Link>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
-      </div>
-    </div>
+      </Container>
+    </PageShell>
   )
 }

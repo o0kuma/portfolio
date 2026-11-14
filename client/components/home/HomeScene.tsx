@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame } from '@react-three/fiber'
-import { Float, MeshDistortMaterial, Sparkles, Stars, Trail, type MeshLineGeometry } from '@react-three/drei'
+import { Sparkles, Stars, Trail, type MeshLineGeometry } from '@react-three/drei'
 import { useEffect, useRef, type MutableRefObject } from 'react'
 import * as THREE from 'three'
 import type { Group } from 'three'
@@ -72,39 +72,6 @@ function ScrollSyncedField({ scrollRef }: { scrollRef: MutableRefObject<number> 
   return (
     <group ref={group}>
       <Stars radius={90} depth={45} count={5000} factor={3.2} saturation={0} fade speed={0.35} />
-    </group>
-  )
-}
-
-function DistortedCore({ scrollRef }: { scrollRef: MutableRefObject<number> }) {
-  const group = useRef<Group>(null)
-
-  useFrame((state) => {
-    const g = group.current
-    if (!g) return
-    const t = state.clock.elapsedTime
-    const sp = scrollRef.current
-    g.rotation.y = t * (0.11 + sp * 0.04)
-    g.rotation.x = Math.sin(t * 0.25) * 0.06
-    g.position.z = -sp * 1.1
-  })
-
-  return (
-    <group ref={group}>
-      <Float speed={1.8} rotationIntensity={0.12} floatIntensity={0.35}>
-        <mesh>
-          <icosahedronGeometry args={[1.12, 7]} />
-          <MeshDistortMaterial
-            color="#4338ca"
-            emissive="#1e1b4b"
-            emissiveIntensity={0.38}
-            roughness={0.12}
-            metalness={0.88}
-            distort={0.42}
-            speed={2}
-          />
-        </mesh>
-      </Float>
     </group>
   )
 }
@@ -265,10 +232,8 @@ export default function HomeScene({ scrollProgress = 0, approach = 0, onCatchSta
       <fog attach="fog" args={['#030014', 7.5, 26]} />
       <ambientLight intensity={0.32} />
       <ApproachLight approachRef={approachRef} />
-      <pointLight position={[-5, -3, -4]} intensity={0.55} color="#6d28d9" />
       <ScrollSyncedField scrollRef={scrollRef} />
-      <Sparkles count={180} scale={11} size={1.8} speed={0.32} color="#818cf8" opacity={0.42} />
-      <DistortedCore scrollRef={scrollRef} />
+      <Sparkles count={120} scale={11} size={1.4} speed={0.25} color="#e7e5f4" opacity={0.3} />
       <ShootingStar onCatch={onCatchStar} />
       <CameraRig scrollRef={scrollRef} approachRef={approachRef} />
     </Canvas>

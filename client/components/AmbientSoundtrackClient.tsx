@@ -1,14 +1,13 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useIdleMount } from '@/lib/useIdleMount'
-import { useHideCornerWidgets } from '@/lib/useHideCornerWidgets'
+import { useSiteSettings } from '@/lib/siteSettings'
 
 const AmbientSoundtrack = dynamic(() => import('@/components/AmbientSoundtrack'), { ssr: false })
 
+/** Plays only while "배경음" is on in the footer's settings row. */
 export default function AmbientSoundtrackClient() {
-  const ready = useIdleMount()
-  const hidden = useHideCornerWidgets()
-  if (!ready || hidden) return null
+  const { settings } = useSiteSettings()
+  if (!settings.sound) return null
   return <AmbientSoundtrack />
 }

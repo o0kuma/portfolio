@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { FiArrowLeft, FiEye, FiHeart, FiMessageSquare, FiCalendar, FiUser, FiTag, FiEdit, FiTrash2, FiPlus, FiClock } from 'react-icons/fi'
+import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi'
 import Link from 'next/link'
 import BlogSearchBar from '../../components/BlogSearchBar'
 import AdBanner from '../../components/AdBanner'
@@ -13,7 +13,9 @@ import { adminAuthHeaders } from '@/lib/admin-token'
 import { hasAdminAccess } from '@/lib/admin-access'
 import { useLanguage } from '@/lib/LanguageContext'
 import { POST_CATEGORIES, getCategoryLabel } from '@/lib/post-categories'
-import SpaceAtmosphere from '@/components/SpaceAtmosphere'
+import PageShell from '@/components/site/PageShell'
+import { Container, EmptyState, PageHeader, TabBar, tabClass, buttonQuiet, buttonSecondary } from '@/components/site/layout'
+import { plainTextExcerpt } from '@/lib/textExcerpt'
 
 const API_BASE_URL = getApiBaseUrl()
 const PAGE_LIMIT = 12
@@ -192,16 +194,11 @@ export default function PostsListClient() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ko-KR', {
+    return new Date(dateString).toLocaleDateString(locale === 'en' ? 'en-US' : 'ko-KR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     })
-  }
-
-  const formatNumber = (num: number) => {
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
-    return num.toString()
   }
 
   const calcReadingTime = (content: string): number => {
@@ -236,21 +233,6 @@ export default function PostsListClient() {
     }
   }
 
-  const handleLikePost = async (postId: string) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/posts/${postId}/like`, {
-        method: 'POST',
-      })
-
-      if (response.ok) {
-        fetchPosts(1, selectedCategory, searchQuery, false)
-        setCurrentPage(1)
-      }
-    } catch (error) {
-      console.error('Error liking post:', error)
-    }
-  }
-
   const handleCreateSuccess = () => {
     fetchPosts(1, selectedCategory, searchQuery, false)
     setCurrentPage(1)
@@ -258,273 +240,155 @@ export default function PostsListClient() {
   }
 
   const isInitialLoad = isLoading && posts.length === 0
-
-  if (isInitialLoad) {
-    return (
-      <SpaceAtmosphere className="theme-locked-dark min-h-screen text-neutral-50">
-        <div className="page-shell py-16">
-          <div className="text-center">
-            <div className="inline-block">
-              <div className="w-16 h-16 mx-auto mb-4 relative">
-                <div className="absolute inset-0 border-4 border-white/10 rounded-full"></div>
-                <div className="absolute inset-0 border-4 border-transparent border-t-cyan-400 border-r-cyan-400 rounded-full animate-spin"></div>
-              </div>
-              <h3 className="text-xl font-mono text-neutral-400 mb-2">
-                {t.postsPage.loading}
-              </h3>
-              <div className="flex items-center justify-center space-x-1">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </SpaceAtmosphere>
-    )
-  }
+  const en = locale === 'en'
 
   return (
-    <SpaceAtmosphere className="theme-locked-dark relative min-h-screen text-neutral-50">
-      <header className="sticky top-0 z-40 bg-[#030014]/80 backdrop-blur-sm border-b border-white/[0.08]">
-        <div className="page-shell py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/"
-                className="flex items-center gap-2 text-neutral-500 hover:text-neutral-300 font-mono text-sm transition-colors"
-              >
-                <FiArrowLeft size={16} />
-                <span>{t.postsPage.home}</span>
-              </Link>
-              <h1 className="text-2xl font-black text-neutral-50 font-mono">
-                {t.postsPage.title}
-              </h1>
-            </div>
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setShowCreateForm(true)}
-                className="inline-flex items-center gap-2 bg-neutral-800 border border-neutral-700 text-neutral-200 text-sm px-3 py-1.5 rounded-lg hover:bg-neutral-700 transition-colors"
-              >
-                <FiPlus size={16} />
-                <span>{t.postsPage.newPost}</span>
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      <div className="page-shell relative z-10 py-12">
-        <div className="relative z-[100] mb-10">
-          <div className="max-w-4xl mx-auto">
-            <BlogSearchBar
-              onSearch={handleSearch}
-              onFilterChange={handleFilterChange}
-              placeholder={t.postsPage.searchPlaceholder}
-              filters={activeFilters}
-              className="max-w-4xl mx-auto"
-            />
-          </div>
-        </div>
-
-        <div className="relative z-10 mb-12 flex flex-wrap justify-center gap-2">
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              type="button"
-              onClick={() => handleCategoryChange(category.id)}
-              className={`text-xs font-mono px-3 py-1.5 rounded-lg transition-colors ${
-                selectedCategory === category.id
-                  ? 'bg-neutral-800 text-neutral-100 border border-neutral-700'
-                  : 'text-neutral-600 hover:text-neutral-400 border border-transparent'
-              }`}
-            >
-              {category.name}
+    <PageShell>
+      <PageHeader
+        title={t.postsPage.title}
+        description={en ? 'Tech, money, travel and food, written down as I go.' : '테크, 경제, 여행, 음식 이야기를 그때그때 적습니다.'}
+        actions={
+          isAdmin ? (
+            <button type="button" onClick={() => setShowCreateForm(true)} className={buttonSecondary}>
+              <FiPlus size={16} aria-hidden />
+              {t.postsPage.newPost}
             </button>
-          ))}
-          <Link
-            href="/posts/series"
-            className="text-xs font-mono px-3 py-1.5 rounded-lg border border-neutral-700 text-cyan-400 hover:text-cyan-300 transition-colors"
-          >
-            {locale === 'en' ? 'Series' : '시리즈'}
-          </Link>
+          ) : undefined
+        }
+      />
+
+      <Container>
+        <BlogSearchBar
+          onSearch={handleSearch}
+          onFilterChange={handleFilterChange}
+          placeholder={t.postsPage.searchPlaceholder}
+          filters={activeFilters}
+        />
+
+        <div className="mt-8">
+          <TabBar label={en ? 'Categories' : '분류'}>
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                type="button"
+                role="tab"
+                aria-selected={selectedCategory === category.id}
+                onClick={() => handleCategoryChange(category.id)}
+                className={tabClass(selectedCategory === category.id)}
+              >
+                {category.name}
+              </button>
+            ))}
+            <Link href="/posts/series" className={`${tabClass(false)} ml-auto`}>
+              {en ? 'Series' : '시리즈'}
+            </Link>
+          </TabBar>
         </div>
 
         {searchQuery && (
-          <div className="mb-10 text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 rounded-lg border border-neutral-800">
-              <p className="text-neutral-500 font-mono text-sm">
-                &quot;<span className="text-cyan-400">{searchQuery}</span>&quot; —{' '}
-                <span className="text-neutral-300">{filteredPosts.length}</span> results
-              </p>
-            </div>
-          </div>
+          <p className="mt-6 text-sm text-fg-muted">
+            {en
+              ? `${filteredPosts.length} results for "${searchQuery}"`
+              : `"${searchQuery}" 검색 결과 ${filteredPosts.length}개`}
+          </p>
         )}
 
-        {/* 포스트 그리드 */}
-        {filteredPosts.length > 0 ? (
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3 mb-12">
+        {isInitialLoad ? (
+          <ul className="mt-2 divide-y divide-line" aria-busy="true" aria-label={t.postsPage.loading}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <li key={i} className="py-6">
+                <div className="h-3 w-40 rounded bg-panel" />
+                <div className="mt-3 h-5 w-2/3 rounded bg-panel" />
+              </li>
+            ))}
+          </ul>
+        ) : filteredPosts.length > 0 ? (
+          <ul className="mt-2 divide-y divide-line">
             {filteredPosts.map((post, index) => (
               <React.Fragment key={post._id}>
-                {/* 3개 포스트마다 광고 삽입 */}
-                {index > 0 && index % 3 === 0 && (
-                  <div className="col-span-full my-6">
-                    <AdBanner
-                      adType="banner"
-                      position="middle"
-                      className="my-4"
-                    />
-                  </div>
-                )}
-                <div className="relative group">
-                  <Link
-                    href={`/posts/${post._id}`}
-                    className="group block rounded-xl border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700 transition-colors overflow-hidden"
-                  >
-                    {/* 포스트 헤더 */}
-                    <div className="p-5">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          {post.featured && (
-                            <span className="bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-[10px] font-mono px-2 py-0.5 rounded">
-                              Featured
-                            </span>
-                          )}
-                          <span className="bg-neutral-800 text-neutral-400 text-[10px] font-mono px-2 py-0.5 rounded uppercase tracking-wider">
-                            {getCategoryLabel(post.category, locale)}
-                          </span>
-                        </div>
-                        {isAdmin && (
-                          <div className="flex items-center space-x-1" onClick={(e) => e.preventDefault()}>
-                            <button
-                              onClick={(e) => { e.preventDefault(); handleEditPost(post) }}
-                              className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
-                              title={locale === 'en' ? 'Edit' : '수정'}
-                            >
-                              <FiEdit size={14} />
-                            </button>
-                            <button
-                              onClick={(e) => { e.preventDefault(); handleDeletePost(post._id) }}
-                              className="p-1 text-neutral-700 hover:text-neutral-400 transition-colors"
-                              title={locale === 'en' ? 'Delete' : '삭제'}
-                            >
-                              <FiTrash2 size={14} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <h3 className="text-neutral-100 font-bold text-base leading-snug group-hover:text-white transition-colors line-clamp-2 mb-2">
-                        {post.title}
-                      </h3>
-
-                      <p className="text-neutral-500 text-sm line-clamp-3 mb-4">
-                        {post.content}
-                      </p>
-
-                      {/* 태그 chips (first 2) */}
-                      {post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1.5 mb-4" onClick={(e) => e.preventDefault()}>
-                          {post.tags.slice(0, 2).map((tag) => (
-                            <Link
-                              key={tag}
-                              href={`/posts/tags/${encodeURIComponent(tag)}`}
-                              className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded flex items-center gap-1 hover:text-neutral-300 transition-colors"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <FiTag size={10} />
-                              {tag}
-                            </Link>
-                          ))}
-                          {post.tags.length > 2 && (
-                            <span className="bg-neutral-800 text-neutral-500 text-[10px] font-mono px-2 py-0.5 rounded">
-                              +{post.tags.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      {/* 메타 정보 */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
-                          <FiUser size={11} />
-                          <span>{post.author}</span>
-                        </div>
-                        <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
-                          <FiCalendar size={11} />
-                          <span>{formatDate(post.createdAt)}</span>
-                        </div>
-                      </div>
-
-                      {/* 통계 + 읽기 시간 */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
-                            <FiEye size={11} />
-                            <span>{formatNumber(post.views)}</span>
-                          </div>
-                          <button
-                            onClick={(e) => { e.preventDefault(); handleLikePost(post._id) }}
-                            className="text-neutral-700 text-xs font-mono flex items-center gap-1 hover:text-red-400 transition-colors"
-                          >
-                            <FiHeart size={11} />
-                            <span>{formatNumber(post.likes)}</span>
-                          </button>
-                          <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
-                            <FiMessageSquare size={11} />
-                            <span>{formatNumber(post.comments.length)}</span>
-                          </div>
-                        </div>
-                        <div className="text-neutral-700 text-xs font-mono flex items-center gap-1">
-                          <FiClock size={11} />
-                          <span>{locale === 'ko' ? `${calcReadingTime(post.content)}분` : `${calcReadingTime(post.content)}m`}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 읽기 버튼 */}
-                    <div className="w-full text-center text-xs font-mono text-neutral-600 hover:text-neutral-300 border-t border-neutral-800 py-2.5 transition-colors">
-                      {t.postsPage.readMore}
-                    </div>
+                <li className="group relative py-6">
+                  {/* Ad slot every third post, inside the row so an empty slot leaves no gap */}
+                  {index > 0 && index % 3 === 0 && <AdBanner adType="banner" position="middle" className="mb-6 empty:hidden" />}
+                  <Link href={`/posts/${post._id}`} className="block">
+                    <p className="text-xs text-fg-subtle">
+                      {formatDate(post.createdAt)} · {getCategoryLabel(post.category, locale)} ·{' '}
+                      {en ? `${calcReadingTime(post.content)} min read` : `${calcReadingTime(post.content)}분`}
+                      {post.featured && <span className="ml-2 text-star">{en ? 'Pinned' : '고정'}</span>}
+                    </p>
+                    <h2 className="mt-2 text-lg font-semibold leading-[1.5] text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4 md:text-xl">
+                      {post.title}
+                    </h2>
+                    <p className="mt-2 line-clamp-2 text-sm leading-[1.7] text-fg-muted">{plainTextExcerpt(post.content, 160)}</p>
                   </Link>
-                </div>
+                  {post.tags.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
+                      {post.tags.slice(0, 3).map((tag) => (
+                        <Link
+                          key={tag}
+                          href={`/posts/tags/${encodeURIComponent(tag)}`}
+                          className="text-xs text-fg-subtle hover:text-fg"
+                        >
+                          #{tag}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                  {isAdmin && (
+                    <div className="absolute right-0 top-6 flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleEditPost(post)}
+                        className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-fg"
+                        aria-label={en ? 'Edit' : '수정'}
+                      >
+                        <FiEdit size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePost(post._id)}
+                        className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-danger"
+                        aria-label={en ? 'Delete' : '삭제'}
+                      >
+                        <FiTrash2 size={14} />
+                      </button>
+                    </div>
+                  )}
+                </li>
               </React.Fragment>
             ))}
-          </div>
+          </ul>
         ) : (
-          <div className="text-neutral-700 font-mono text-sm text-center py-16">
-            <FiMessageSquare size={48} className="mx-auto mb-4 opacity-40" />
-            <p>{t.postsPage.noPosts}</p>
-            <p className="mt-1 text-neutral-800">{t.postsPage.noPostsHint}</p>
-          </div>
+          <EmptyState
+            message={en ? 'No posts match these filters.' : '조건에 맞는 글이 없습니다.'}
+            action={
+              selectedCategory !== 'all' || searchQuery ? (
+                <button type="button" onClick={() => handleCategoryChange('all')} className={buttonQuiet}>
+                  {en ? 'Show all posts' : '전체 글 보기'}
+                </button>
+              ) : undefined
+            }
+          />
         )}
 
-        {/* 무한 스크롤 sentinel */}
         <div ref={sentinelRef} className="h-4" />
 
-        {/* 로딩 스피너 */}
         {isFetchingMore && (
-          <div className="flex justify-center py-8">
-            <div className="w-8 h-8 rounded-full border-2 border-neutral-700 border-t-neutral-400 animate-spin" />
+          <div className="flex justify-center py-8" aria-label={t.postsPage.loading}>
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-fg" />
           </div>
         )}
 
-        {/* 모든 포스트 로드 완료 메시지 */}
         {!hasMore && filteredPosts.length > 0 && (
-          <div className="text-center py-8">
-            <p className="text-neutral-600 font-mono text-xs">{locale === 'en' ? "You've reached the end" : '모든 포스트를 불러왔습니다'}</p>
-          </div>
+          <p className="py-10 text-center text-xs text-fg-subtle">{en ? "That's every post." : '모든 글을 불러왔습니다.'}</p>
         )}
-      </div>
+      </Container>
 
-      {/* 게시글 작성/수정 폼 */}
       <CreatePostForm
         isOpen={showCreateForm}
         onClose={() => { setShowCreateForm(false); setEditingPost(null) }}
         onSuccess={handleCreateSuccess}
         editPost={editingPost}
       />
-    </SpaceAtmosphere>
+    </PageShell>
   )
 }
