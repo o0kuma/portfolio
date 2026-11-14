@@ -12,8 +12,8 @@ export default function BookmarkButton({ postId }: { postId: string }) {
       onClick={() => toggle(postId)}
       type="button"
       aria-pressed={saved}
-      className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs transition-colors ${
-        saved ? 'border-star/60 text-star' : 'border-line text-fg-muted hover:border-line-strong hover:text-fg'
+      className={`inline-flex items-center gap-1.5 rounded-full border-2 border-ink px-3 py-1 text-xs font-extrabold transition-colors ${
+        saved ? 'bg-cat-post text-ink' : 'bg-white text-ink hover:bg-paper'
       }`}
     >
       {saved ? (locale === 'ko' ? '저장됨' : 'Saved') : (locale === 'ko' ? '북마크' : 'Bookmark')}

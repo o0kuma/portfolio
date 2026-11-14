@@ -63,7 +63,7 @@ const FALLBACK_FAQS: Faq[] = [
 
 function FaqItem({ faq, open, onToggle }: { faq: Faq; open: boolean; onToggle: () => void }) {
   return (
-    <li className="border-b border-line">
+    <li className="rounded-xl border-2 border-ink bg-white px-5 shadow-ink-sm">
       <button
         type="button"
         onClick={onToggle}
@@ -71,7 +71,7 @@ function FaqItem({ faq, open, onToggle }: { faq: Faq; open: boolean; onToggle: (
         aria-expanded={open}
       >
         <span className="min-w-0">
-          {faq.category && <span className="mb-1 block text-xs text-fg-subtle">{faq.category}</span>}
+          {faq.category && <span className="mb-1 block text-xs font-bold text-pen">{faq.category}</span>}
           <span className="block text-base font-semibold text-fg md:text-lg">{faq.question}</span>
         </span>
         <FiChevronDown
@@ -116,7 +116,7 @@ export default function FaqPageClient() {
         width="reading"
       />
       <Container width="reading">
-        <ul className="border-t border-line">
+        <ul className="grid gap-3">
           {faqs.map((faq) => (
             <FaqItem
               key={faq.id}

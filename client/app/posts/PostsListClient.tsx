@@ -14,7 +14,7 @@ import { hasAdminAccess } from '@/lib/admin-access'
 import { useLanguage } from '@/lib/LanguageContext'
 import { POST_CATEGORIES, getCategoryLabel } from '@/lib/post-categories'
 import PageShell from '@/components/site/PageShell'
-import { Container, EmptyState, PageHeader, TabBar, tabClass, buttonQuiet, buttonSecondary } from '@/components/site/layout'
+import { Container, EmptyState, PageHeader, TabBar, tabClass, buttonSecondary, cardClass } from '@/components/site/layout'
 import { plainTextExcerpt } from '@/lib/textExcerpt'
 
 const API_BASE_URL = getApiBaseUrl()
@@ -242,6 +242,9 @@ export default function PostsListClient() {
   const isInitialLoad = isLoading && posts.length === 0
   const en = locale === 'en'
 
+  const dayOf = (d: string) => String(new Date(d).getDate()).padStart(2, '0')
+  const monthOf = (d: string) => (en ? new Date(d).toLocaleDateString('en-US', { month: 'short' }) : `${new Date(d).getMonth() + 1}월`)
+
   return (
     <PageShell>
       <PageHeader
@@ -265,7 +268,7 @@ export default function PostsListClient() {
           filters={activeFilters}
         />
 
-        <div className="mt-8">
+        <div className="mt-5">
           <TabBar label={en ? 'Categories' : '분류'}>
             {categories.map((category) => (
               <button
@@ -279,14 +282,14 @@ export default function PostsListClient() {
                 {category.name}
               </button>
             ))}
-            <Link href="/posts/series" className={`${tabClass(false)} ml-auto`}>
+            <Link href="/posts/series" className={tabClass(false)}>
               {en ? 'Series' : '시리즈'}
             </Link>
           </TabBar>
         </div>
 
         {searchQuery && (
-          <p className="mt-6 text-sm text-fg-muted">
+          <p className="mt-5 text-sm font-bold">
             {en
               ? `${filteredPosts.length} results for "${searchQuery}"`
               : `"${searchQuery}" 검색 결과 ${filteredPosts.length}개`}
@@ -294,92 +297,94 @@ export default function PostsListClient() {
         )}
 
         {isInitialLoad ? (
-          <ul className="mt-2 divide-y divide-line" aria-busy="true" aria-label={t.postsPage.loading}>
-            {Array.from({ length: 6 }).map((_, i) => (
-              <li key={i} className="py-6">
-                <div className="h-3 w-40 rounded bg-panel" />
-                <div className="mt-3 h-5 w-2/3 rounded bg-panel" />
-              </li>
+          <ul className="mt-6 grid gap-4" aria-busy="true" aria-label={t.postsPage.loading}>
+            {Array.from({ length: 4 }).map((_, i) => (
+              <li key={i} className={`${cardClass} h-28`} />
             ))}
           </ul>
         ) : filteredPosts.length > 0 ? (
-          <ul className="mt-2 divide-y divide-line">
+          <ul className="mt-6 grid gap-5">
             {filteredPosts.map((post, index) => (
-              <React.Fragment key={post._id}>
-                <li className="group relative py-6">
-                  {/* Ad slot every third post, inside the row so an empty slot leaves no gap */}
-                  {index > 0 && index % 3 === 0 && <AdBanner adType="banner" position="middle" className="mb-6 empty:hidden" />}
-                  <Link href={`/posts/${post._id}`} className="block">
-                    <p className="text-xs text-fg-subtle">
-                      {formatDate(post.createdAt)} · {getCategoryLabel(post.category, locale)} ·{' '}
-                      {en ? `${calcReadingTime(post.content)} min read` : `${calcReadingTime(post.content)}분`}
-                      {post.featured && <span className="ml-2 text-star">{en ? 'Pinned' : '고정'}</span>}
-                    </p>
-                    <h2 className="mt-2 text-lg font-semibold leading-[1.5] text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4 md:text-xl">
-                      {post.title}
-                    </h2>
-                    <p className="mt-2 line-clamp-2 text-sm leading-[1.7] text-fg-muted">{plainTextExcerpt(post.content, 160)}</p>
-                  </Link>
-                  {post.tags.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-                      {post.tags.slice(0, 3).map((tag) => (
-                        <Link
-                          key={tag}
-                          href={`/posts/tags/${encodeURIComponent(tag)}`}
-                          className="text-xs text-fg-subtle hover:text-fg"
+              <li key={post._id}>
+                {index > 0 && index % 3 === 0 && <AdBanner adType="banner" position="middle" className="mb-5 empty:hidden" />}
+                <div className="group relative grid grid-cols-[10px_1fr_auto] overflow-hidden rounded-xl border-2 border-ink bg-white shadow-ink-sm transition-transform duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 motion-reduce:transform-none">
+                  <span className="border-r-2 border-ink bg-cat-post" aria-hidden />
+                  <div
+                    className="min-w-0 px-5 py-4"
+                    style={{ backgroundImage: 'linear-gradient(transparent 31px, #eee6d3 31px)', backgroundSize: '100% 32px' }}
+                  >
+                    <Link href={`/posts/${post._id}`} className="block after:absolute after:inset-0">
+                      <h2 className="break-keep text-lg font-extrabold leading-[1.45] tracking-[-0.02em] md:text-xl">
+                        {post.featured && <span className="mr-2 align-middle text-xs font-black text-pen">{en ? 'Pinned' : '고정'}</span>}
+                        {post.title}
+                      </h2>
+                      <p className="mt-1 line-clamp-2 text-sm leading-[1.7] text-ink-soft">{plainTextExcerpt(post.content, 150)}</p>
+                    </Link>
+                    {post.tags.length > 0 && (
+                      <div className="relative z-10 mt-2 flex flex-wrap gap-x-3 text-xs font-bold text-pen">
+                        {post.tags.slice(0, 3).map((tag) => (
+                          <Link key={tag} href={`/posts/tags/${encodeURIComponent(tag)}`} className="hover:underline">
+                            #{tag}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-4 py-4 text-right text-xs font-bold md:px-5">
+                    <span className="block text-[26px] font-black leading-none tracking-[-0.04em]">{dayOf(post.createdAt)}</span>
+                    <span className="mt-1 block">{monthOf(post.createdAt)}</span>
+                    <span className="block text-ink-soft">{getCategoryLabel(post.category, locale)}</span>
+                    <span className="block text-ink-soft">{en ? `${calcReadingTime(post.content)} min` : `${calcReadingTime(post.content)}분`}</span>
+                    {isAdmin && (
+                      <span className="relative z-10 mt-2 flex justify-end gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleEditPost(post)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white"
+                          aria-label={en ? 'Edit' : '수정'}
                         >
-                          #{tag}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                  {isAdmin && (
-                    <div className="absolute right-0 top-6 flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleEditPost(post)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-fg"
-                        aria-label={en ? 'Edit' : '수정'}
-                      >
-                        <FiEdit size={14} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePost(post._id)}
-                        className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle hover:text-danger"
-                        aria-label={en ? 'Delete' : '삭제'}
-                      >
-                        <FiTrash2 size={14} />
-                      </button>
-                    </div>
-                  )}
-                </li>
-              </React.Fragment>
+                          <FiEdit size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePost(post._id)}
+                          className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-white text-danger"
+                          aria-label={en ? 'Delete' : '삭제'}
+                        >
+                          <FiTrash2 size={13} />
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </li>
             ))}
           </ul>
         ) : (
-          <EmptyState
-            message={en ? 'No posts match these filters.' : '조건에 맞는 글이 없습니다.'}
-            action={
-              selectedCategory !== 'all' || searchQuery ? (
-                <button type="button" onClick={() => handleCategoryChange('all')} className={buttonQuiet}>
-                  {en ? 'Show all posts' : '전체 글 보기'}
-                </button>
-              ) : undefined
-            }
-          />
+          <div className="mt-6">
+            <EmptyState
+              message={en ? 'No posts match these filters.' : '조건에 맞는 글이 없습니다.'}
+              action={
+                selectedCategory !== 'all' || searchQuery ? (
+                  <button type="button" onClick={() => handleCategoryChange('all')} className={buttonSecondary}>
+                    {en ? 'Show all posts' : '전체 글 보기'}
+                  </button>
+                ) : undefined
+              }
+            />
+          </div>
         )}
 
         <div ref={sentinelRef} className="h-4" />
 
         {isFetchingMore && (
           <div className="flex justify-center py-8" aria-label={t.postsPage.loading}>
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-fg" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-ink border-t-transparent" />
           </div>
         )}
 
         {!hasMore && filteredPosts.length > 0 && (
-          <p className="py-10 text-center text-xs text-fg-subtle">{en ? "That's every post." : '모든 글을 불러왔습니다.'}</p>
+          <p className="py-10 text-center font-hand text-2xl text-pen">{en ? "That's every post." : '여기까지가 전부예요'}</p>
         )}
       </Container>
 

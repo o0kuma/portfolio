@@ -56,38 +56,13 @@ export default function SpaceAtmosphere({
   const opacityTransition = reduced ? 'none' : 'opacity 3s ease-in-out'
   const activePalette = PALETTES[timeOfDay]
 
-  return (
-    // Light mode keeps the site's existing light palette (bg-neutral-950 is
-    // remapped to a warm light color by .portfolio-page's light overrides);
-    // the space atmosphere is a dark-mode-only treatment.
-    //
-    // Glow/vignette per time-of-day are rendered as separate always-mounted
-    // layers crossfaded via opacity (transform/opacity are compositor-only —
-    // animating background-image/box-shadow directly repaints the whole
-    // fixed viewport every frame for the 3s transition).
-    <div className={`relative bg-neutral-950 dark:bg-[color:var(--space-base)] ${className}`} style={{ '--space-base': activePalette.base } as React.CSSProperties}>
-      {TIME_ORDER.map((key) => {
-        const palette = PALETTES[key]
-        return (
-          <div
-            key={key}
-            className="pointer-events-none fixed inset-0 z-0 hidden dark:block"
-            aria-hidden
-            style={{
-              backgroundImage: palette.glow,
-              boxShadow: `inset 0 0 160px 60px rgba(0,0,0,${palette.vignette})`,
-              opacity: key === timeOfDay ? 1 : 0,
-              transition: opacityTransition,
-            }}
-          />
-        )
-      })}
-      <div
-        className="pointer-events-none fixed inset-0 z-0 hidden dark:block dark:opacity-[0.09] mix-blend-overlay"
-        aria-hidden
-        style={{ backgroundImage: GRAIN_URL }}
-      />
-      <div className="relative z-10">{children}</div>
-    </div>
-  )
+  // The site is light paper now; this wrapper survives only inside game
+  // screens (which are dark frames) and the private portfolio. The fixed
+  // full-viewport glow layers would tint the whole paper page, so they are
+  // no longer drawn.
+  void reduced
+  void opacityTransition
+  void activePalette
+  return <div className={`relative bg-neutral-950 ${className}`}>{children}</div>
+
 }

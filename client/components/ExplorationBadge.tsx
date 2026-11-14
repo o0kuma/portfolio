@@ -97,12 +97,12 @@ export function ExplorationStatus() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="rounded-md border border-line px-3 py-1.5 text-xs text-fg-muted transition-colors hover:border-line-strong hover:text-fg"
+        className="rounded-full border-2 border-paper px-3 py-1 text-xs font-extrabold text-paper transition-colors hover:bg-white/10"
       >
         {locale === 'en' ? 'Explored' : '탐험'} {count}/{total}
       </button>
       {open && (
-        <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-xl border border-line bg-panel p-3 text-xs shadow-lg shadow-black/40">
+        <div className="absolute bottom-full left-0 z-50 mb-2 w-56 rounded-xl border-2 border-ink bg-white p-3 text-xs text-ink shadow-ink-sm">
           <p className="mb-2 text-fg-muted">
             {locale === 'en' ? 'Sections visited' : '둘러본 곳'} {count}/{total}
           </p>

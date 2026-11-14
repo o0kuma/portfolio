@@ -12,10 +12,6 @@ import PushNotificationButton from '@/components/PushNotificationButton'
 import { MORE_NAV, PRIMARY_NAV } from './nav'
 
 const VisitorCounter = dynamic(() => import('@/components/VisitorCounter'), { ssr: false })
-const VisitorGlobe = dynamic(() => import('@/components/home/VisitorGlobe'), {
-  ssr: false,
-  loading: () => <div className="h-16 w-16" aria-hidden />,
-})
 
 const SETTINGS: { key: SiteSettingKey; ko: string; en: string }[] = [
   { key: 'sound', ko: '배경음', en: 'Ambient sound' },
@@ -23,8 +19,7 @@ const SETTINGS: { key: SiteSettingKey; ko: string; en: string }[] = [
   { key: 'cursors', ko: '다른 방문자 커서', en: "Other visitors' cursors" },
 ]
 
-const chip =
-  'rounded-md border px-3 py-1.5 text-xs transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-star'
+const chip = 'rounded-full border-2 px-3 py-1 text-xs font-extrabold transition-colors'
 
 export default function SiteFooter() {
   const { locale, toggleLocale } = useLanguage()
@@ -42,14 +37,23 @@ export default function SiteFooter() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="mt-24 border-t border-line bg-night text-fg">
+    <footer className="relative mt-24 bg-ink text-paper">
+      {/* torn paper edge */}
+      <div
+        aria-hidden
+        className="absolute -top-[14px] left-0 right-0 h-[15px]"
+        style={{
+          background:
+            'linear-gradient(-45deg, #141414 7px, transparent 0) 0 7px / 14px 14px repeat-x, linear-gradient(45deg, #141414 7px, transparent 0) 0 7px / 14px 14px repeat-x',
+        }}
+      />
       <div className="mx-auto max-w-wide px-5 py-14 md:px-8">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
-            <Link href="/" className="font-logo text-2xl text-fg">
+            <Link href="/" className="text-3xl font-black tracking-[-0.05em] text-paper">
               kuuuma
             </Link>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-fg-muted">
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-[#cfc9bb]">
               {en
                 ? 'Notes, recipes, places and small games, kept by one person.'
                 : '한 사람이 꾸리는 글, 레시피, 맛집, 작은 게임 기록장입니다.'}
@@ -82,53 +86,46 @@ export default function SiteFooter() {
           </FooterColumn>
         </div>
 
-        <div className="mt-12 border-t border-line pt-6">
-          <p className="mb-3 text-xs text-fg-subtle">{en ? 'Site settings' : '사이트 설정'}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            {SETTINGS.map((s) => {
-              const on = settings[s.key]
-              return (
-                <button
-                  key={s.key}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggle(s.key)}
-                  className={`${chip} ${
-                    on ? 'border-star/60 text-star' : 'border-line text-fg-muted hover:border-line-strong hover:text-fg'
-                  }`}
-                >
-                  {en ? s.en : s.ko} {on ? (en ? 'on' : '켜짐') : en ? 'off' : '꺼짐'}
-                </button>
-              )
-            })}
-            <ExplorationStatus />
-            <PushNotificationButton />
-            <button
-              type="button"
-              onClick={toggleLocale}
-              className={`${chip} border-line text-fg-muted hover:border-line-strong hover:text-fg`}
-              aria-label={en ? 'Switch to Korean' : 'Switch to English'}
-            >
-              {en ? '한국어' : 'English'}
-            </button>
-          </div>
+        <div className="mt-12 flex flex-wrap items-center gap-2 border-t border-dashed border-[#555] pt-6">
+          <span className="mr-2 text-xs text-[#a8a294]">{en ? 'Site settings' : '사이트 설정'}</span>
+          {SETTINGS.map((s) => {
+            const on = settings[s.key]
+            return (
+              <button
+                key={s.key}
+                type="button"
+                aria-pressed={on}
+                onClick={() => toggle(s.key)}
+                className={`${chip} ${on ? 'border-cat-post bg-cat-post text-ink' : 'border-paper text-paper hover:bg-white/10'}`}
+              >
+                {en ? s.en : s.ko}
+              </button>
+            )
+          })}
+          <ExplorationStatus />
+          <PushNotificationButton />
+          <button
+            type="button"
+            onClick={toggleLocale}
+            className={`${chip} border-paper text-paper hover:bg-white/10`}
+            aria-label={en ? 'Switch to Korean' : 'Switch to English'}
+          >
+            {en ? '한국어' : 'English'}
+          </button>
         </div>
 
-        <div className="mt-8 flex flex-col gap-4 text-xs text-fg-subtle md:flex-row md:items-center md:justify-between">
+        <div className="mt-8 flex flex-col gap-4 text-xs text-[#a8a294] md:flex-row md:items-center md:justify-between">
           <p>
             © {year} kuuuma.com · {SITE_AUTHOR}
           </p>
           <div className="flex flex-wrap items-center gap-4">
-            <Link href="/privacy" className="hover:text-fg">
+            <Link href="/privacy" className="hover:text-paper">
               {en ? 'Privacy' : '개인정보처리방침'}
             </Link>
-            <Link href="/terms" className="hover:text-fg">
+            <Link href="/terms" className="hover:text-paper">
               {en ? 'Terms' : '이용약관'}
             </Link>
-            <span className="flex items-center gap-2">
-              <VisitorGlobe compact />
-              <VisitorCounter />
-            </span>
+            <VisitorCounter />
           </div>
         </div>
       </div>
@@ -137,7 +134,7 @@ export default function SiteFooter() {
         <button
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-night/80 text-fg backdrop-blur transition-colors hover:bg-panel-2"
+          className="fixed bottom-24 right-6 z-40 flex h-11 w-11 items-center justify-center rounded-full border-2 border-ink bg-white text-ink shadow-ink-sm transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
           aria-label={en ? 'Back to top' : '맨 위로'}
         >
           <FiArrowUp size={18} />
@@ -150,14 +147,14 @@ export default function SiteFooter() {
 function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-3 text-xs text-fg-subtle">{title}</p>
+      <p className="mb-3 text-xs text-[#a8a294]">{title}</p>
       <ul className="space-y-2">{children}</ul>
     </div>
   )
 }
 
 function FooterLink({ href, external, children }: { href: string; external?: boolean; children: React.ReactNode }) {
-  const cls = 'text-sm text-fg-muted transition-colors hover:text-fg'
+  const cls = 'text-[15px] text-paper transition-colors hover:text-cat-post'
   return (
     <li>
       {external ? (

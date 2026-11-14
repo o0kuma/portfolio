@@ -24,7 +24,7 @@ export default function VisitorCounter() {
 
   return (
     <span
-      className={`text-xs tabular-nums text-fg-subtle transition-colors duration-300 ${pulse ? 'text-fg' : ''}`}
+      className={`text-xs tabular-nums transition-opacity duration-300 ${pulse ? 'opacity-100' : 'opacity-90'}`}
       aria-live="polite"
     >
       {locale === 'en' ? `${shown.toLocaleString()} visitors` : `누적 방문자 ${shown.toLocaleString()}명`}

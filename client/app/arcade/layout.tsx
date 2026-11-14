@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next'
+import GameShell from '@/components/site/GameShell'
 
 export const metadata: Metadata = {
   manifest: '/arcade-manifest.json',
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0a0a12',
+  themeColor: '#FFFBF0',
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -23,5 +24,5 @@ export const viewport: Viewport = {
 }
 
 export default function ArcadeLayout({ children }: { children: React.ReactNode }) {
-  return children
+  return <GameShell game="arcade">{children}</GameShell>
 }

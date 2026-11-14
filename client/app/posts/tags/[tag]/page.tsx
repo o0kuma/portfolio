@@ -30,12 +30,12 @@ export default async function TagPage({ params }: Props) {
         {posts.length === 0 ? (
           <EmptyState message={<LocaleText ko="이 태그가 달린 글이 없습니다." en="No posts with this tag." />} />
         ) : (
-          <ul className="divide-y divide-line border-y border-line">
+          <ul className="grid gap-3">
             {posts.map((post) => (
               <li key={post.id}>
-                <Link href={`/posts/${post.id}`} className="group block py-5">
+                <Link href={`/posts/${post.id}`} className="group block rounded-xl border-2 border-ink bg-white px-5 py-4 shadow-ink-sm transition-transform hover:-translate-y-0.5">
                   <span className="block text-xs text-fg-subtle">{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
-                  <span className="mt-1 block text-base font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{post.title}</span>
+                  <span className="mt-1 block text-base font-semibold text-fg group-hover:underline">{post.title}</span>
                 </Link>
               </li>
             ))}

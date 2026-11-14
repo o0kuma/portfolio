@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Fraunces, Fira_Code } from 'next/font/google'
+import { Inter, Fraunces, Fira_Code, Nanum_Pen_Script } from 'next/font/google'
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 import './globals.css'
 import Providers from '@/components/Providers'
@@ -30,6 +30,15 @@ const fraunces = Fraunces({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap',
+})
+
+// Handwritten labels only (see the design doc: short labels, owner's notes).
+const nanumPen = Nanum_Pen_Script({
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-hand',
+  display: 'swap',
+  preload: false,
 })
 
 const firaCode = Fira_Code({
@@ -111,10 +120,10 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const fontVars = `${inter.variable} ${fraunces.variable} ${firaCode.variable}`
+  const fontVars = `${inter.variable} ${fraunces.variable} ${firaCode.variable} ${nanumPen.variable}`
 
   return (
-    <html lang="ko" className={`dark scroll-smooth ${fontVars}`} suppressHydrationWarning>
+    <html lang="ko" className={`light scroll-smooth ${fontVars}`} suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -137,15 +146,15 @@ export default function RootLayout({
           }}
         />
 
-        <meta name="theme-color" content="#030014" />
-        <meta name="msapplication-TileColor" content="#030014" />
+        <meta name="theme-color" content="#FFFBF0" />
+        <meta name="msapplication-TileColor" content="#FFFBF0" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
 
-        {/* The site is dark-only: every page is designed on a dark background,
-            so the OS light/dark preference is ignored on purpose. */}
-        <meta name="color-scheme" content="dark" />
+        {/* The site is light paper only; the OS dark preference is ignored
+            on purpose (see the scrapbook design doc). */}
+        <meta name="color-scheme" content="light" />
 
         <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
         <link rel="apple-touch-icon" href="/favicon.svg" />

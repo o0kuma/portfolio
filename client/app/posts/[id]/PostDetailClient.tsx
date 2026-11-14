@@ -19,7 +19,7 @@ import CommentSection from '@/components/blog/CommentSection'
 import BookmarkButton from '@/components/blog/BookmarkButton'
 import { FiChevronDown, FiChevronUp } from 'react-icons/fi'
 import PageShell from '@/components/site/PageShell'
-import { Container, buttonSecondary } from '@/components/site/layout'
+import { Container, Dot, buttonQuiet, buttonSecondary, cardClass, tagClass } from '@/components/site/layout'
 import { hasAdminAccess } from '@/lib/admin-access'
 import { getCategoryLabel } from '@/lib/post-categories'
 
@@ -320,10 +320,10 @@ export default function PostDetailClient() {
 
   return (
     <PageShell>
-      <div className="mx-auto flex max-w-wide justify-center gap-12 px-5 pt-12 md:px-8 md:pt-16">
+      <div className="mx-auto flex max-w-wide justify-center gap-10 px-5 pt-10 md:px-8 md:pt-14">
         <article className="w-full min-w-0 max-w-reading">
           <div className="flex items-center justify-between">
-            <Link href="/posts" className="inline-flex items-center gap-1.5 text-sm text-fg-muted hover:text-fg">
+            <Link href="/posts" className={buttonQuiet}>
               <FiArrowLeft size={14} aria-hidden />
               {en ? 'Posts' : '글 목록'}
             </Link>
@@ -349,20 +349,25 @@ export default function PostDetailClient() {
             )}
           </div>
 
-          <header className="mt-8">
-            <p className="text-xs text-fg-subtle">
-              {getCategoryLabel(post.category, locale)} · {formatDate(post.createdAt)} ·{' '}
-              {interpolate(t.postDetail.readingTime, { n: readingTime })}
+          {/* The post sits on one sheet of manuscript paper */}
+          <div className="relative mt-6 rounded-md border-2 border-ink bg-white px-6 py-8 pl-10 shadow-ink-lg md:px-12 md:py-12 md:pl-16">
+          <span aria-hidden className="absolute bottom-0 left-[22px] top-0 border-l-2 border-cat-food/60 md:left-[30px]" />
+          <header>
+            <span className={tagClass}>
+              <Dot section="post" />
+              {getCategoryLabel(post.category, locale)}
+            </span>
+            <h1 className="mt-4 break-keep text-[30px] font-black leading-[1.25] tracking-[-0.04em] text-ink md:text-[44px]">{post.title}</h1>
+            <p className="mt-3 text-[13px] font-semibold text-ink-soft">
+              {formatDate(post.createdAt)} · {post.author} · {interpolate(t.postDetail.readingTime, { n: readingTime })}
             </p>
-            <h1 className="mt-3 text-[32px] font-bold leading-[1.3] tracking-[-0.02em] text-fg md:text-[40px]">{post.title}</h1>
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-fg-subtle">
-              <span>{post.author}</span>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-bold text-ink-soft">
               <span>{en ? `${formatNumber(post.views)} views` : `조회 ${formatNumber(post.views)}`}</span>
               <button
                 type="button"
                 onClick={handleLike}
                 disabled={isLiking}
-                className="inline-flex items-center gap-1 transition-colors hover:text-fg disabled:opacity-50"
+                className="inline-flex items-center gap-1 transition-colors hover:text-ink disabled:opacity-50"
                 aria-label={en ? 'Like' : '좋아요'}
               >
                 <FiHeart size={12} aria-hidden />
@@ -375,22 +380,22 @@ export default function PostDetailClient() {
             </div>
           </header>
 
-          <div className="mt-8 rounded-xl border border-line">
+          <div className="mt-8 rounded-xl border-2 border-ink bg-paper">
             <button
               type="button"
               onClick={handleToggleSummary}
               aria-expanded={summaryOpen}
-              className="flex w-full items-center justify-between px-4 py-3 text-sm text-fg-muted transition-colors hover:text-fg"
+              className="flex w-full items-center justify-between px-4 py-3 text-sm font-extrabold text-ink"
             >
               <span>{en ? 'AI summary' : 'AI 요약 보기'}</span>
               {summaryOpen ? <FiChevronUp size={15} aria-hidden /> : <FiChevronDown size={15} aria-hidden />}
             </button>
             {summaryOpen && (
-              <div className="border-t border-line px-4 pb-4 pt-3">
+              <div className="border-t-2 border-ink px-4 pb-4 pt-3">
                 {summaryLoading ? (
-                  <p className="text-sm text-fg-subtle">{en ? 'Writing the summary…' : '요약을 만드는 중입니다…'}</p>
+                  <p className="text-sm text-ink-soft">{en ? 'Writing the summary…' : '요약을 만드는 중입니다…'}</p>
                 ) : (
-                  <p className="whitespace-pre-line text-sm leading-[1.75] text-fg-muted">{summary}</p>
+                  <p className="whitespace-pre-line text-sm leading-[1.75] text-ink">{summary}</p>
                 )}
               </div>
             )}
@@ -400,7 +405,7 @@ export default function PostDetailClient() {
             <AdBanner adType="banner" position="top" postId={post._id} postCategory={post.category} postTags={post.tags} />
           </div>
 
-          <div className="prose prose-invert mt-6 max-w-none text-base leading-[1.75] text-fg prose-headings:tracking-[-0.02em] prose-a:text-fg prose-a:decoration-star">
+          <div className="prose prose-neutral mt-6 max-w-none text-[17px] leading-[1.9] text-ink prose-headings:font-black prose-headings:tracking-[-0.02em] prose-headings:text-ink prose-p:text-ink prose-a:font-bold prose-a:text-ink prose-a:no-underline prose-a:[background:linear-gradient(transparent_58%,#FFD23F_58%,#FFD23F_92%,transparent_92%)] prose-strong:text-ink prose-code:text-ink">
             {insertAdsInContent(post.content, post._id, post.category, post.tags).map((chunk, i) =>
               typeof chunk === 'string' ? (
                 chunk.trim() ? (
@@ -419,26 +424,28 @@ export default function PostDetailClient() {
           </div>
 
           {post.tags.length > 0 && (
-            <div className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t border-line pt-6">
+            <div className="mt-10 flex flex-wrap gap-x-4 gap-y-2 border-t-2 border-dashed border-ink pt-6">
               {post.tags.map((tag) => (
-                <Link key={tag} href={`/posts/tags/${encodeURIComponent(tag)}`} className="text-sm text-fg-muted hover:text-fg">
+                <Link key={tag} href={`/posts/tags/${encodeURIComponent(tag)}`} className="text-sm font-bold text-pen hover:underline">
                   #{tag}
                 </Link>
               ))}
             </div>
           )}
 
+          </div>
+
           {post.series && seriesPosts.length > 0 && (
-            <section className="mt-12">
-              <h2 className="text-xs text-fg-subtle">
+            <section className={`${cardClass} mt-10 p-6`}>
+              <h2 className="text-sm font-extrabold">
                 {en ? 'More in this series' : '이 시리즈의 다른 글'} · {post.series}
               </h2>
-              <ul className="mt-2 divide-y divide-line">
+              <ul className="mt-2">
                 {seriesPosts.map((sp) => (
                   <li key={sp._id}>
-                    <Link href={`/posts/${sp._id}`} className="group block py-3">
-                      <p className="text-xs text-fg-subtle">{formatDateShort(sp.createdAt)}</p>
-                      <p className="mt-1 text-sm text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{sp.title}</p>
+                    <Link href={`/posts/${sp._id}`} className="group block border-t-2 border-ink py-3">
+                      <p className="text-xs text-ink-soft">{formatDateShort(sp.createdAt)}</p>
+                      <p className="mt-1 text-[15px] font-bold group-hover:underline">{sp.title}</p>
                     </Link>
                   </li>
                 ))}
@@ -447,14 +454,14 @@ export default function PostDetailClient() {
           )}
 
           {relatedPosts.length > 0 && (
-            <section className="mt-12">
-              <h2 className="text-xs text-fg-subtle">{t.postDetail.relatedPosts}</h2>
-              <ul className="mt-2 divide-y divide-line">
+            <section className={`${cardClass} mt-8 p-6`}>
+              <h2 className="text-sm font-extrabold">{t.postDetail.relatedPosts}</h2>
+              <ul className="mt-2">
                 {relatedPosts.map((rp) => (
                   <li key={rp._id}>
-                    <Link href={`/posts/${rp._id}`} className="group block py-3">
-                      <p className="text-xs text-fg-subtle">{formatDateShort(rp.createdAt)}</p>
-                      <p className="mt-1 text-sm text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{rp.title}</p>
+                    <Link href={`/posts/${rp._id}`} className="group block border-t-2 border-ink py-3">
+                      <p className="text-xs text-ink-soft">{formatDateShort(rp.createdAt)}</p>
+                      <p className="mt-1 text-[15px] font-bold group-hover:underline">{rp.title}</p>
                     </Link>
                   </li>
                 ))}
@@ -462,21 +469,21 @@ export default function PostDetailClient() {
             </section>
           )}
 
-          <section className="mt-12 border-t border-line pt-8">
+          <section className={`${cardClass} mt-8 p-6 md:p-8`}>
             <CommentSection postId={postId} />
           </section>
         </article>
 
         {tocItems.length > 0 && (
           <aside className="hidden w-56 shrink-0 xl:block">
-            <nav className="sticky top-24" aria-label={t.postDetail.tableOfContents}>
-              <p className="mb-3 text-xs text-fg-subtle">{t.postDetail.tableOfContents}</p>
-              <ul className="space-y-1 border-l border-line text-sm">
+            <nav className="sticky top-28 pt-16" aria-label={t.postDetail.tableOfContents}>
+              <p className="font-hand text-[26px] text-pen">{t.postDetail.tableOfContents}</p>
+              <ul className="mt-2 space-y-1">
                 {tocItems.map((item, idx) => (
                   <li key={idx}>
                     <a
                       href={`#${item.slug}`}
-                      className={`block truncate py-1 text-fg-muted transition-colors hover:text-fg ${item.level === 3 ? 'pl-7' : 'pl-4'}`}
+                      className={`block truncate py-1 font-hand text-[22px] text-pen hover:underline ${item.level === 3 ? 'pl-4' : ''}`}
                       title={item.text}
                     >
                       {item.text}

@@ -43,24 +43,42 @@ module.exports = {
         accentMuted: 'rgb(var(--color-accent-muted) / <alpha-value>)',
         // Renewal design tokens (dark only). Pages use these names instead of
         // raw colours so one change here restyles the whole site.
-        night: '#030014',
-        panel: '#0F0D24',
-        'panel-2': '#1C1938',
-        line: 'rgba(255,255,255,0.08)',
-        'line-strong': 'rgba(255,255,255,0.16)',
-        fg: '#F2F2F5',
-        'fg-muted': '#A3A3B5',
-        'fg-subtle': '#7C7C92',
-        star: '#F2C46D',
-        danger: '#F07178',
-        ok: '#7FD1A8',
+        // Scrapbook theme (light paper only).
+        paper: '#FFFBF0',
+        dot: '#E4DCC8',
+        ink: '#141414',
+        'ink-soft': '#555049',
+        pen: '#2846C8',
+        // One colour per menu: 글 / 레시피 / 맛집 / 게임
+        'cat-post': '#FFD23F',
+        'cat-recipe': '#9FE6C8',
+        'cat-food': '#FF8A66',
+        'cat-game': '#BFD6FF',
+        // Older token names, remapped onto the paper theme.
+        night: '#FFFBF0',
+        panel: '#FFFFFF',
+        'panel-2': '#F6F0E2',
+        line: 'rgba(20,20,20,0.14)',
+        'line-strong': '#141414',
+        fg: '#141414',
+        'fg-muted': '#555049',
+        'fg-subtle': '#6E685E',
+        star: '#2846C8',
+        danger: '#C0362C',
+        ok: '#1E7A52',
       },
       maxWidth: {
-        reading: '680px',
+        reading: '720px',
         list: '960px',
         wide: '1120px',
       },
+      boxShadow: {
+        'ink-sm': '3px 3px 0 #141414',
+        ink: '5px 5px 0 #141414',
+        'ink-lg': '6px 6px 0 #141414',
+      },
       fontFamily: {
+        hand: ['var(--font-hand)', '"Nanum Pen Script"', 'cursive'],
         // Pretendard covers Hangul and Latin in one family, so Korean and
         // English in the same line no longer mix two different typefaces.
         sans: ['"Pretendard Variable"', 'Pretendard', 'var(--font-inter)', 'system-ui', 'sans-serif'],

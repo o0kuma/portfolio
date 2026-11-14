@@ -17,7 +17,7 @@ const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? ''
 
 function CategoryBadge({ category }: { category: string }) {
   return (
-    <span className="shrink-0 rounded border border-line px-2 py-0.5 text-xs text-fg-muted">
+    <span className="shrink-0 rounded-full border-2 border-ink bg-white px-2 py-0.5 text-xs font-extrabold text-ink">
       {category}
     </span>
   )
@@ -142,10 +142,10 @@ function RestaurantCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, delay: index * 0.025 }}
       onClick={() => onSelect(item)}
-      className={`group rounded-xl border transition-all duration-200 cursor-pointer overflow-hidden ${
+      className={`group rounded-xl border-2 border-ink shadow-ink-sm transition-transform duration-150 hover:-translate-y-0.5 cursor-pointer overflow-hidden ${
         selected
-          ? 'border-star/60 bg-panel-2'
-          : 'border-line bg-panel hover:border-line-strong hover:bg-panel-2'
+          ? 'bg-cat-food'
+          : 'bg-white'
       }`}
     >
       {(item.imageUrls && item.imageUrls.length > 0) && (
@@ -156,7 +156,7 @@ function RestaurantCard({
         <h3 className="font-semibold text-fg text-sm leading-snug">{item.name}</h3>
         <div className="flex items-center gap-1.5 shrink-0">
           {item.checked && (
-            <span className="text-xs text-star border border-star/40 px-1.5 py-0.5 rounded">
+            <span className="text-xs text-ink border-2 border-ink bg-cat-food font-extrabold px-1.5 py-0.5 rounded">
               가 본 곳
             </span>
           )}
@@ -284,7 +284,7 @@ export default function FoodClient({
                       onClick={() => handleRegionChange(region.id)}
                       className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-all duration-150 ${
                         isActive
-                          ? 'bg-panel-2 text-fg border-line-strong'
+                          ? 'bg-ink text-paper border-ink'
                           : 'text-fg-subtle border-line hover:text-fg hover:bg-panel'
                       }`}
                     >
@@ -311,8 +311,8 @@ export default function FoodClient({
                       onClick={() => handleRegionChange(region.id)}
                       className={`w-full text-left px-3 py-2.5 rounded-lg text-sm transition-all duration-150 flex items-center justify-between gap-2 ${
                         isActive
-                          ? 'bg-panel-2 text-fg border border-line-strong'
-                          : 'text-fg-subtle hover:text-fg hover:bg-panel border border-transparent'
+                          ? 'bg-ink text-paper border-2 border-ink'
+                          : 'text-fg-subtle hover:text-fg hover:bg-white border-2 border-transparent'
                       }`}
                     >
                       <span className="flex items-center gap-2 truncate">
@@ -348,13 +348,13 @@ export default function FoodClient({
                           {en ? `${current.items.length} places` : `${current.items.length}곳`}
                         </span>
                         {/* View mode toggle */}
-                        <div className="flex items-center border border-line-strong rounded-full overflow-hidden">
+                        <div className="flex items-center border-2 border-ink rounded-full overflow-hidden bg-white">
                           <button
                             type="button"
                             onClick={() => setViewMode('list')}
                             className={`text-xs px-3 py-1 transition-all duration-150 ${
                               viewMode === 'list'
-                                ? 'bg-panel-2 text-fg'
+                                ? 'bg-ink text-paper'
                                 : 'text-fg-subtle hover:text-fg-muted'
                             }`}
                           >
@@ -365,7 +365,7 @@ export default function FoodClient({
                             onClick={() => { setViewMode('map'); setSelectedItem(null) }}
                             className={`text-xs px-3 py-1 transition-all duration-150 flex items-center gap-1 ${
                               viewMode === 'map'
-                                ? 'bg-panel-2 text-fg'
+                                ? 'bg-ink text-paper'
                                 : 'text-fg-subtle hover:text-fg-muted'
                             }`}
                           >
@@ -404,7 +404,7 @@ export default function FoodClient({
                                 onClick={() => setSelectedItem(item)}
                                 className={`text-left px-3 py-2.5 rounded-lg border transition-all duration-150 w-full ${
                                   isActive
-                                    ? 'border-star/60 bg-panel-2 text-fg'
+                                    ? 'border-ink bg-cat-food text-ink'
                                     : 'border-line bg-panel text-fg-muted hover:border-line-strong hover:text-fg'
                                 }`}
                               >
@@ -424,7 +424,7 @@ export default function FoodClient({
                         </div>
 
                         {/* Map (right) */}
-                        <div className="flex-1 min-w-0 rounded-xl border border-line overflow-hidden bg-panel flex flex-col">
+                        <div className="flex-1 min-w-0 rounded-xl border-2 border-ink shadow-ink overflow-hidden bg-white flex flex-col">
                           {mapItem ? (
                             <>
                               <div className="flex items-center justify-between px-4 py-2.5 border-b border-line shrink-0">
@@ -471,7 +471,7 @@ export default function FoodClient({
                               animate={{ opacity: 1, height: 360 }}
                               exit={{ opacity: 0, height: 0 }}
                               transition={{ duration: 0.3, ease: 'easeInOut' as const }}
-                              className="mb-5 overflow-hidden rounded-xl border border-line bg-panel"
+                              className="mb-5 overflow-hidden rounded-xl border-2 border-ink bg-white shadow-ink"
                             >
                               <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
                                 <div className="flex items-center gap-2 text-sm text-fg-muted">
@@ -516,7 +516,7 @@ export default function FoodClient({
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             placeholder={en ? 'Search by name' : '이름으로 찾기'}
-                            className="w-full bg-panel border border-line text-fg text-sm rounded-lg px-4 py-2.5 placeholder:text-fg-subtle focus:outline-none focus:border-line-strong transition-colors"
+                            className="w-full bg-white border-2 border-ink text-ink text-sm rounded-xl px-4 py-2.5 shadow-ink-sm placeholder:text-ink-soft focus:outline-none"
                           />
                         </div>
 
@@ -526,9 +526,9 @@ export default function FoodClient({
                             <button
                               type="button"
                               onClick={() => setActiveCategory(null)}
-                              className={`text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
+                              className={`text-xs px-3 py-1 rounded-full border-2 font-extrabold transition-all duration-150 ${
                                 activeCategory === null
-                                  ? 'border-star/60 text-star'
+                                  ? 'border-ink bg-ink text-paper'
                                   : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'
                               }`}
                             >
@@ -541,9 +541,9 @@ export default function FoodClient({
                                   key={cat}
                                   type="button"
                                   onClick={() => setActiveCategory(isActive ? null : cat)}
-                                  className={`text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
+                                  className={`text-xs px-3 py-1 rounded-full border-2 font-extrabold transition-all duration-150 ${
                                     isActive
-                                      ? 'border-star/60 text-star'
+                                      ? 'border-ink bg-ink text-paper'
                                       : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'
                                   }`}
                                 >
@@ -554,7 +554,7 @@ export default function FoodClient({
                             <button
                               type="button"
                               onClick={() => setVisitedOnly((v) => !v)}
-                              className={`ml-auto text-xs px-3 py-1 rounded-md border transition-all duration-150 ${
+                              className={`ml-auto text-xs px-3 py-1 rounded-full border-2 font-extrabold transition-all duration-150 ${
                                 visitedOnly
                                   ? 'text-star border-star/60'
                                   : 'text-fg-subtle border-line-strong hover:text-fg-muted hover:border-line-strong'

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useState, type ComponentType } from 'react'
 import { FiArrowRight, FiCrosshair, FiGrid, FiHash, FiShield, FiSmartphone, FiType } from 'react-icons/fi'
 import PageShell from '@/components/site/PageShell'
-import { Container, PageHeader, TabBar, tabClass, buttonQuiet } from '@/components/site/layout'
+import { Container, PageHeader, TabBar, tabClass, buttonSecondary } from '@/components/site/layout'
 import TetrisLeaderboard from '@/components/tetris/TetrisLeaderboard'
 import SurviveLeaderboard from '@/components/survive/SurviveLeaderboard'
 import TowerDefenseLeaderboard from '@/components/tower-defense/TowerDefenseLeaderboard'
@@ -108,10 +108,10 @@ export default function GamesPageClient() {
         meta={en ? `${GAMES.length} games` : `게임 ${GAMES.length}개`}
         actions={
           <>
-            <Link href="/games/stats" className={buttonQuiet}>
+            <Link href="/games/stats" className={buttonSecondary}>
               {en ? 'Stats' : '전적'}
             </Link>
-            <Link href="/achievements" className={buttonQuiet}>
+            <Link href="/achievements" className={buttonSecondary}>
               {en ? 'Achievements' : '업적'}
             </Link>
           </>
@@ -119,47 +119,53 @@ export default function GamesPageClient() {
       />
 
       <Container>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {GAMES.map((g) => (
+        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {GAMES.map((g, i) => (
             <li key={g.href}>
               <Link
                 href={g.href}
-                className="group flex h-full flex-col rounded-xl border border-line bg-panel p-6 transition-colors hover:border-line-strong"
+                className={`group flex h-full min-h-[220px] flex-col rounded-xl border-2 border-ink p-6 shadow-ink transition-transform duration-150 hover:-translate-y-[3px] hover:-rotate-1 motion-reduce:transform-none ${
+                  i % 3 === 1 ? 'bg-white' : 'bg-cat-game'
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <g.Icon size={20} className="text-fg-muted" />
-                  <span className="text-xs text-fg-subtle">{en ? g.genreEn : g.genreKo}</span>
-                </div>
-                <h2 className="mt-5 text-[22px] font-semibold leading-[1.4] text-fg">{en ? g.en : g.ko}</h2>
-                <p className="mt-2 flex-1 text-sm leading-[1.7] text-fg-muted">{en ? g.descEn : g.descKo}</p>
-                <span className="mt-5 inline-flex items-center gap-1 text-sm text-fg">
-                  {en ? 'Play' : '플레이'}
-                  <FiArrowRight size={14} className="transition-colors group-hover:text-star" aria-hidden />
+                <span className="self-start rounded-full border-2 border-ink bg-white px-2.5 py-0.5 text-xs font-black">
+                  No.{i + 1} · {en ? g.genreEn : g.genreKo}
+                </span>
+                <h2 className="mt-4 text-[28px] font-black leading-tight tracking-[-0.04em]">{en ? g.en : g.ko}</h2>
+                <p className="mt-2 flex-1 text-sm leading-[1.65]">{en ? g.descEn : g.descKo}</p>
+                <span className="mt-4 flex items-center justify-between border-t-2 border-dashed border-ink pt-3 font-black">
+                  <span className="inline-flex items-center gap-1">
+                    {en ? 'Play' : '플레이'} <FiArrowRight size={14} aria-hidden />
+                  </span>
+                  <g.Icon size={18} aria-hidden />
                 </span>
               </Link>
             </li>
           ))}
         </ul>
 
-        <section className="mt-16">
-          <h2 className="mb-4 text-2xl font-bold tracking-[-0.02em] text-fg md:text-[28px]">{en ? 'Rankings' : '순위'}</h2>
-          <TabBar label={en ? 'Pick a game' : '게임 선택'}>
-            {BOARDS.map((b) => (
-              <button
-                key={b.key}
-                type="button"
-                role="tab"
-                aria-selected={board === b.key}
-                onClick={() => setBoard(b.key)}
-                className={tabClass(board === b.key)}
-              >
-                {en ? b.en : b.ko}
-              </button>
-            ))}
-          </TabBar>
-          <div className="mt-6 max-w-xl">
-            <Active />
+        <section className="mt-16 grid items-start gap-8 lg:grid-cols-[1fr_1.2fr]">
+          <div>
+            <h2 className="text-[40px] font-black tracking-[-0.04em]">{en ? 'Rankings' : '순위표'}</h2>
+            <p className="mt-2 text-ink-soft">{en ? 'Pick a game to see the top scores.' : '게임을 골라 상위 기록을 봅니다.'}</p>
+            <div className="mt-4">
+              <TabBar label={en ? 'Pick a game' : '게임 선택'}>
+                {BOARDS.map((b) => (
+                  <button
+                    key={b.key}
+                    type="button"
+                    role="tab"
+                    aria-selected={board === b.key}
+                    onClick={() => setBoard(b.key)}
+                    className={tabClass(board === b.key)}
+                  >
+                    {en ? b.en : b.ko}
+                  </button>
+                ))}
+              </TabBar>
+            </div>
           </div>
+          <Active />
         </section>
       </Container>
     </PageShell>

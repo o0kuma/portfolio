@@ -76,9 +76,9 @@ export default function ChatbotWidget() {
   return (
     <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
       {isOpen && (
-        <div className="flex h-[480px] w-[min(20rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-xl border border-line-strong bg-panel shadow-lg shadow-black/40">
+        <div className="flex h-[480px] w-[min(20rem,calc(100vw-3rem))] flex-col overflow-hidden rounded-xl border-2 border-ink bg-white shadow-ink">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
+          <div className="flex items-center justify-between border-b-2 border-ink bg-cat-post px-4 py-3">
             <span className="text-sm font-semibold text-fg">{locale === 'en' ? 'Ask about this site' : '사이트에 대해 묻기'}</span>
             <button
               onClick={() => setIsOpen(false)}
@@ -98,7 +98,7 @@ export default function ChatbotWidget() {
               >
                 <div
                   className={`max-w-[85%] rounded-lg px-3 py-2 text-sm leading-[1.6] ${
-                    msg.role === 'user' ? 'bg-panel-2 text-fg' : 'border border-line text-fg-muted'
+                    msg.role === 'user' ? 'border-2 border-ink bg-cat-post text-ink' : 'border-2 border-ink bg-white text-ink'
                   }`}
                 >
                   {msg.content}
@@ -116,7 +116,7 @@ export default function ChatbotWidget() {
           </div>
 
           {/* Input */}
-          <div className="border-t border-line px-3 py-3">
+          <div className="border-t-2 border-ink px-3 py-3">
             <div className="flex items-center gap-2">
               <input
                 type="text"
@@ -124,13 +124,13 @@ export default function ChatbotWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
                 placeholder={locale === 'en' ? 'Type a question' : '질문을 입력하세요'}
-                className="h-10 flex-1 rounded-md border border-line bg-night px-3 text-sm text-fg placeholder:text-fg-subtle focus:border-line-strong focus:outline-none"
+                className="h-10 flex-1 rounded-lg border-2 border-ink bg-paper px-3 text-sm text-ink placeholder:text-ink-soft focus:outline-none"
                 disabled={isLoading}
               />
               <button
                 onClick={sendMessage}
                 disabled={isLoading || !input.trim()}
-                className="flex h-10 w-10 items-center justify-center rounded-md border border-line-strong text-fg transition-colors hover:bg-panel-2 disabled:opacity-40"
+                className="flex h-10 w-10 items-center justify-center rounded-lg border-2 border-ink bg-white text-ink disabled:opacity-40"
                 aria-label={locale === 'en' ? 'Send' : '전송'}
               >
                 <FiSend size={15} />
@@ -143,7 +143,7 @@ export default function ChatbotWidget() {
       {/* Toggle button */}
       <button
         onClick={() => setIsOpen((v) => !v)}
-        className="flex h-12 w-12 items-center justify-center rounded-full border border-line-strong bg-panel text-fg shadow-lg shadow-black/40 transition-colors hover:bg-panel-2"
+        className="flex h-12 w-12 items-center justify-center rounded-full border-2 border-ink bg-white text-ink shadow-ink-sm transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
         aria-label={locale === 'en' ? 'Toggle chatbot' : '챗봇 열기/닫기'}
       >
         {isOpen ? <FiX size={22} /> : <FiMessageCircle size={22} />}

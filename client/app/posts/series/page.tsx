@@ -49,11 +49,11 @@ export default async function SeriesPage() {
         {series.length === 0 ? (
           <EmptyState message={<LocaleText ko="아직 시리즈가 없습니다." en="No series yet." />} />
         ) : (
-          <ul className="divide-y divide-line border-y border-line">
+          <ul className="grid gap-3">
             {series.map((s) => (
               <li key={s.name}>
-                <Link href={`/posts/series/${encodeURIComponent(s.name)}`} className="group flex items-baseline justify-between gap-4 py-5">
-                  <span className="text-lg font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{s.name}</span>
+                <Link href={`/posts/series/${encodeURIComponent(s.name)}`} className="group flex items-baseline justify-between gap-4 rounded-xl border-2 border-ink bg-white px-5 py-4 shadow-ink-sm transition-transform hover:-translate-y-0.5">
+                  <span className="text-lg font-semibold text-fg group-hover:underline">{s.name}</span>
                   <span className="shrink-0 text-xs text-fg-subtle">
                     <LocaleText ko={`${s.count}편 · 최근 ${formatDate(s.latest)}`} en={`${s.count} posts · ${formatDate(s.latest)}`} />
                   </span>

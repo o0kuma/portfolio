@@ -4,21 +4,21 @@
 
 @layer base {
   :root {
-    --color-canvas: 248 250 252;
+    --color-canvas: 255 251 240;
     --color-surface: 255 255 255;
-    --color-surface-elevated: 255 255 255;
-    --color-border: 226 232 240;
-    --color-text-primary: 15 23 42;
-    --color-text-muted: 71 85 105;
+    --color-surface-elevated: 246 240 226;
+    --color-border: 20 20 20;
+    --color-text-primary: 20 20 20;
+    --color-text-muted: 85 80 73;
     --color-accent: 37 99 235;
     --color-accent-muted: 59 130 246;
     --section-padding-y: 4rem;
     --page-shell-max: 80rem;
   }
 
-  /* `.dark` on any element (not just <html>) also switches the tokens, so a
-     dark-only page like the home screen keeps dark footer/text colors even
-     when the visitor's OS is in light mode. */
+  /* `.dark` on an element switches the tokens back to the dark palette for
+     that subtree only. The site is light paper; game screens sit inside a
+     `.dark` frame so their existing dark UI stays readable. */
   html.dark,
   .dark {
     --color-canvas: 3 0 20;
@@ -68,6 +68,9 @@
 
   body {
     @apply bg-canvas text-textPrimary antialiased;
+    /* Dotted notebook paper */
+    background-image: radial-gradient(#e4dcc8 1.1px, transparent 1.1px);
+    background-size: 22px 22px;
   }
 
   /* Headings inherit their color so dark-only pages (which set a light text
@@ -152,8 +155,8 @@
 
 /* Light mode overrides for utility classes */
 .light body {
-  background-color: #fafafa;
-  color: #171717;
+  background-color: #fffbf0;
+  color: #141414;
 }
 .light .bg-neutral-950 { background-color: #ffffff; }
 .light .bg-neutral-900 { background-color: #f5f5f5; }
@@ -420,11 +423,11 @@ html:not(.dark) .portfolio-page .bg-primary-600:hover { background-color: #a2543
 
 /* Renewal: one visible focus ring and selection colour across the site. */
 :focus-visible {
-  outline: 2px solid #f2c46d;
-  outline-offset: 2px;
+  outline: 3px solid #2846c8;
+  outline-offset: 3px;
 }
 ::selection {
-  background: rgba(242, 196, 109, 0.3);
+  background: rgba(255, 210, 63, 0.6);
 }
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -72,13 +72,13 @@ export default async function SeriesDetailPage({ params }: { params: Promise<{ n
         meta={<LocaleText ko={`총 ${sorted.length}편`} en={`${sorted.length} posts`} />}
       />
       <Container>
-        <ol className="divide-y divide-line border-y border-line">
+        <ol className="grid gap-3">
           {sorted.map((post, idx) => (
             <li key={post.id}>
-              <Link href={`/posts/${post.id}`} className="group flex gap-4 py-5">
+              <Link href={`/posts/${post.id}`} className="group flex gap-4 rounded-xl border-2 border-ink bg-white px-5 py-4 shadow-ink-sm transition-transform hover:-translate-y-0.5">
                 <span className="w-6 shrink-0 pt-0.5 text-right text-sm tabular-nums text-fg-subtle">{idx + 1}</span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-base font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{post.title}</span>
+                  <span className="block text-base font-semibold text-fg group-hover:underline">{post.title}</span>
                   {post.excerpt && <span className="mt-1 block line-clamp-2 text-sm text-fg-muted">{post.excerpt}</span>}
                 </span>
                 <span className="shrink-0 text-xs text-fg-subtle">{formatDate(post.created_at)}</span>

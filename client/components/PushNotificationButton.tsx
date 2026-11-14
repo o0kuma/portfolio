@@ -77,7 +77,7 @@ export default function PushNotificationButton() {
     <button
       onClick={handleToggle}
       disabled={loading}
-      className="rounded-md border border-line px-3 py-1.5 text-xs text-fg-muted transition-colors hover:border-line-strong hover:text-fg disabled:opacity-50"
+      className="rounded-full border-2 border-paper px-3 py-1 text-xs font-extrabold text-paper transition-colors hover:bg-white/10 disabled:opacity-50"
     >
       {loading ? '...' : subscribed ? (en ? 'Notifications off' : '알림 끄기') : en ? 'Get notified' : '알림 받기'}
     </button>

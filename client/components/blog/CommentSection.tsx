@@ -69,7 +69,7 @@ function CommentForm({
         onChange={(e) => setName(e.target.value)}
         placeholder={locale === 'ko' ? '이름' : 'Name'}
         maxLength={100}
-        className="w-full bg-panel border border-line-strong rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong"
+        className="w-full bg-panel border-2 border-ink rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong"
         required
       />
       <textarea
@@ -78,14 +78,14 @@ function CommentForm({
         placeholder={locale === 'ko' ? '댓글을 입력하세요...' : 'Write a comment...'}
         maxLength={2000}
         rows={3}
-        className="w-full bg-panel border border-line-strong rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong resize-none"
+        className="w-full bg-panel border-2 border-ink rounded-lg px-3 py-2 text-sm text-fg placeholder:text-fg-subtle focus:outline-none focus:border-line-strong resize-none"
         required
       />
       <div className="flex gap-2">
         <button
           type="submit"
           disabled={loading}
-          className="bg-panel-2 hover:bg-panel-2 text-fg text-xs font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          className="border-2 border-ink bg-white text-ink text-xs font-extrabold px-4 py-2 rounded-xl shadow-ink-sm active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-colors disabled:opacity-50"
         >
           {loading ? '...' : locale === 'ko' ? '댓글 작성' : 'Post Comment'}
         </button>

@@ -31,8 +31,8 @@ export default function AchievementsPage() {
         meta={en ? `${count} of ${total} unlocked` : `${total}개 중 ${count}개 달성`}
       />
       <Container>
-        <div className="mb-10 h-1 w-full overflow-hidden rounded bg-panel-2" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={count}>
-          <div className="h-full bg-star" style={{ width: `${total ? (count / total) * 100 : 0}%` }} />
+        <div className="mb-10 h-4 w-full overflow-hidden rounded-full border-2 border-ink bg-white" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={count}>
+          <div className="h-full bg-cat-game" style={{ width: `${total ? (count / total) * 100 : 0}%` }} />
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {ACHIEVEMENTS.map((ach) => {
@@ -40,9 +40,9 @@ export default function AchievementsPage() {
             return (
               <li
                 key={ach.id}
-                className={`rounded-xl border p-5 ${earnedAt ? 'border-line-strong bg-panel' : 'border-line bg-night'}`}
+                className={`rounded-xl border-2 border-ink p-5 ${earnedAt ? 'bg-cat-game shadow-ink' : 'border-dashed bg-white/60'}`}
               >
-                <FiAward size={18} className={earnedAt ? 'text-star' : 'text-fg-subtle'} aria-hidden />
+                <FiAward size={18} className={earnedAt ? 'text-ink' : 'text-ink-soft'} aria-hidden />
                 <p className={`mt-3 text-base font-semibold ${earnedAt ? 'text-fg' : 'text-fg-muted'}`}>{ach.name}</p>
                 <p className="mt-1 text-sm leading-[1.6] text-fg-subtle">{ach.description}</p>
                 <p className="mt-3 text-xs text-fg-subtle">

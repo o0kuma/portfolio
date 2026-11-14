@@ -104,7 +104,7 @@ export default function BlogSearchBar({
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <form onSubmit={handleSearch} className="relative flex items-center">
-        <FiSearch className="pointer-events-none absolute left-4 text-fg-subtle" size={18} aria-hidden />
+        <FiSearch className="pointer-events-none absolute left-4 text-ink" size={18} aria-hidden />
         <input
           type="search"
           value={searchQuery}
@@ -112,7 +112,7 @@ export default function BlogSearchBar({
           onFocus={() => setIsExpanded(true)}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="h-12 w-full rounded-lg border border-line bg-panel pl-11 pr-24 text-base text-fg placeholder:text-fg-subtle focus:border-line-strong focus:outline-none"
+          className="h-[52px] w-full rounded-xl border-2 border-ink bg-white pl-11 pr-24 text-base text-ink shadow-ink-sm placeholder:text-ink-soft focus:outline-none"
         />
         <div className="absolute right-1.5 flex items-center gap-1">
           {searchQuery && (
@@ -120,7 +120,7 @@ export default function BlogSearchBar({
               type="button"
               onClick={handleClear}
               aria-label={en ? 'Clear search' : '검색어 지우기'}
-              className="flex h-9 w-9 items-center justify-center rounded-md text-fg-subtle transition-colors hover:text-fg"
+              className="flex h-9 w-9 items-center justify-center rounded-md text-ink-soft transition-colors hover:text-ink"
             >
               <FiX size={16} />
             </button>
@@ -131,7 +131,7 @@ export default function BlogSearchBar({
             aria-expanded={showFilters}
             aria-label={en ? 'Filters' : '필터'}
             className={`flex h-9 w-9 items-center justify-center rounded-md transition-colors ${
-              showFilters || hasActiveFilters ? 'text-star' : 'text-fg-subtle hover:text-fg'
+              showFilters || hasActiveFilters ? 'text-pen' : 'text-ink-soft hover:text-ink'
             }`}
           >
             <FiFilter size={16} />
@@ -140,7 +140,7 @@ export default function BlogSearchBar({
       </form>
 
       {showFilters && (
-        <div ref={filterRef} className="absolute left-0 right-0 top-full z-30 mt-2 rounded-xl border border-line bg-panel p-4 shadow-lg shadow-black/40">
+        <div ref={filterRef} className="absolute left-0 right-0 top-full z-30 mt-3 rounded-xl border-2 border-ink bg-white p-4 shadow-ink-sm">
           <div className="flex items-center justify-between">
             <label htmlFor="blog-date-range" className="text-xs text-fg-subtle">
               {en ? 'Date range' : '기간'}
@@ -155,7 +155,7 @@ export default function BlogSearchBar({
             id="blog-date-range"
             value={localFilters.dateRange || 'all'}
             onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-            className="mt-2 h-10 w-full rounded-md border border-line bg-night px-3 text-sm text-fg focus:border-line-strong focus:outline-none"
+            className="mt-2 h-10 w-full rounded-lg border-2 border-ink bg-paper px-3 text-sm text-ink focus:outline-none"
           >
             {dateOptions.map((o) => (
               <option key={o.value} value={o.value}>

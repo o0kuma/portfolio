@@ -166,9 +166,9 @@ export default function BookmarksPage() {
         {activeTab === 'posts' && (
           <div className="mt-2">
             {loading ? (
-              <ul className="divide-y divide-line" aria-busy="true">
+              <ul className="grid gap-3" aria-busy="true">
                 {[1, 2, 3].map((i) => (
-                  <li key={i} className="py-5"><div className="h-5 w-2/3 rounded bg-panel" /></li>
+                  <li key={i} className="h-16 rounded-xl border-2 border-ink bg-white" />
                 ))}
               </ul>
             ) : posts.length === 0 ? (
@@ -177,15 +177,15 @@ export default function BookmarksPage() {
                 action={<Link href="/posts" className={buttonQuiet}>{en ? 'Go to posts' : '글 보러 가기'}</Link>}
               />
             ) : (
-              <ul className="divide-y divide-line">
+              <ul className="grid gap-3">
                 {posts.map((post) => {
                   const postId = String(post.id ?? post._id ?? '')
                   const dateStr = post.createdAt ?? post.created_at ?? ''
                   return (
                     <li key={postId}>
-                      <Link href={`/posts/${postId}`} className="group block py-5">
+                      <Link href={`/posts/${postId}`} className="group block rounded-xl border-2 border-ink bg-white px-5 py-4 shadow-ink-sm transition-transform hover:-translate-y-0.5">
                         <p className="text-xs text-fg-subtle">{dateStr ? new Date(dateStr).toLocaleDateString(en ? 'en-US' : 'ko-KR') : ''}</p>
-                        <p className="mt-1 text-base font-semibold text-fg group-hover:underline group-hover:decoration-star group-hover:underline-offset-4">{post.title}</p>
+                        <p className="mt-1 text-base font-extrabold group-hover:underline">{post.title}</p>
                       </Link>
                     </li>
                   )
@@ -203,8 +203,8 @@ export default function BookmarksPage() {
                   key={cat}
                   type="button"
                   onClick={() => setCategoryFilter(cat)}
-                  className={`rounded-md border px-3 py-1.5 text-xs transition-colors ${
-                    categoryFilter === cat ? 'border-star/60 text-star' : 'border-line text-fg-muted hover:border-line-strong hover:text-fg'
+                  className={`rounded-full border-2 px-3 py-1 text-xs font-extrabold transition-colors ${
+                    categoryFilter === cat ? 'border-ink bg-ink text-paper' : 'border-ink bg-white text-ink hover:bg-paper'
                   }`}
                 >
                   {en ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].ko}
@@ -218,7 +218,7 @@ export default function BookmarksPage() {
                     href={resource.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex h-full flex-col gap-2 rounded-xl border border-line bg-panel p-5 transition-colors hover:border-line-strong"
+                    className="group flex h-full flex-col gap-2 rounded-xl border-2 border-ink bg-white p-5 shadow-ink-sm transition-transform hover:-translate-y-0.5"
                   >
                     <span className="flex items-center justify-between gap-2">
                       <span className="text-base font-semibold text-fg">{resource.name}</span>

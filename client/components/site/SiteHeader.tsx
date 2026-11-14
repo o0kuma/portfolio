@@ -3,30 +3,21 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import { FiChevronDown, FiMenu, FiX } from 'react-icons/fi'
+import { FiChevronDown } from 'react-icons/fi'
 import { useLanguage } from '@/lib/LanguageContext'
+import { Dot, HandNote } from './layout'
 import { MORE_NAV, PRIMARY_NAV, isActive } from './nav'
 
-/**
- * Site-wide top menu. `overlay` = sits transparent over the home hero until
- * the visitor scrolls, then fills in like on every other page.
- */
-export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
+const pill = 'flex items-center gap-2 rounded-full border-2 border-ink px-3.5 py-1.5 text-sm font-extrabold transition-transform duration-150 hover:-translate-y-0.5 motion-reduce:transform-none'
+
+/** Site-wide top menu: wordmark with a handwritten label, round menu buttons. */
+export default function SiteHeader() {
   const pathname = usePathname()
   const { locale } = useLanguage()
   const en = locale === 'en'
-  const [scrolled, setScrolled] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const moreRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!overlay) return
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
-  }, [overlay])
 
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
@@ -36,28 +27,24 @@ export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     return () => document.removeEventListener('mousedown', onDown)
   }, [])
 
-  // Close menus when the page changes.
   useEffect(() => {
+    // Close menus when the page changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMoreOpen(false)
     setMobileOpen(false)
   }, [pathname])
 
-  const solid = !overlay || scrolled || mobileOpen
   const moreActive = MORE_NAV.some((item) => isActive(pathname, item.href))
 
   return (
-    <header
-      className={`sticky top-0 z-40 transition-colors duration-200 ${
-        solid ? 'border-b border-line bg-night/90 backdrop-blur' : 'border-b border-transparent bg-transparent'
-      }`}
-    >
-      <div className="mx-auto flex h-14 max-w-wide items-center justify-between px-5 md:px-8">
-        <Link href="/" className="font-logo text-xl tracking-tight text-fg">
-          kuuuma
+    <header className="sticky top-0 z-40 border-b-2 border-ink bg-paper/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-16 max-w-wide items-center justify-between px-5 md:px-8">
+        <Link href="/" className="flex items-baseline gap-1.5">
+          <span className="text-2xl font-black tracking-[-0.05em] text-ink">kuuuma</span>
+          <HandNote className="-rotate-[4deg] text-[20px]">{en ? 'notebook' : '의 기록장'}</HandNote>
         </Link>
 
-        <nav className="hidden items-center gap-7 sm:flex" aria-label={en ? 'Main' : '주 메뉴'}>
+        <nav className="hidden items-center gap-2 md:flex" aria-label={en ? 'Main' : '주 메뉴'}>
           {PRIMARY_NAV.map((item) => {
             const active = isActive(pathname, item.href)
             return (
@@ -65,10 +52,9 @@ export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? 'page' : undefined}
-                className={`border-b-2 py-1 text-sm transition-colors ${
-                  active ? 'border-star text-fg' : 'border-transparent text-fg-muted hover:text-fg'
-                }`}
+                className={`${pill} ${active ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
               >
+                {item.section && <Dot section={item.section} />}
                 {en ? item.en : item.ko}
               </Link>
             )
@@ -78,20 +64,18 @@ export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
               type="button"
               onClick={() => setMoreOpen((v) => !v)}
               aria-expanded={moreOpen}
-              className={`flex items-center gap-1 border-b-2 py-1 text-sm transition-colors ${
-                moreActive ? 'border-star text-fg' : 'border-transparent text-fg-muted hover:text-fg'
-              }`}
+              className={`${pill} ${moreActive ? 'bg-ink text-paper' : 'bg-paper text-ink'}`}
             >
               {en ? 'More' : '더보기'}
               <FiChevronDown size={14} className={`transition-transform ${moreOpen ? 'rotate-180' : ''}`} aria-hidden />
             </button>
             {moreOpen && (
-              <div className="absolute right-0 top-full z-50 mt-2 w-40 rounded-xl border border-line bg-panel py-1 shadow-lg shadow-black/40">
+              <div className="absolute right-0 top-full z-50 mt-3 w-44 rounded-xl border-2 border-ink bg-white py-1 shadow-ink-sm">
                 {MORE_NAV.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="block px-4 py-2 text-sm text-fg-muted transition-colors hover:bg-panel-2 hover:text-fg"
+                    className="block px-4 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-cat-post"
                   >
                     {en ? item.en : item.ko}
                   </Link>
@@ -105,16 +89,15 @@ export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
           aria-expanded={mobileOpen}
-          aria-label={mobileOpen ? (en ? 'Close menu' : '메뉴 닫기') : en ? 'Open menu' : '메뉴 열기'}
-          className="-mr-2 flex h-11 w-11 items-center justify-center text-fg sm:hidden"
+          className="rounded-xl border-2 border-ink bg-white px-3 py-1.5 text-sm font-extrabold text-ink md:hidden"
         >
-          {mobileOpen ? <FiX size={20} /> : <FiMenu size={20} />}
+          {mobileOpen ? (en ? 'Close' : '닫기') : en ? 'Menu' : '메뉴'}
         </button>
       </div>
 
       {mobileOpen && (
-        <nav className="border-t border-line bg-night px-5 pb-8 pt-4 sm:hidden" aria-label={en ? 'Main' : '주 메뉴'}>
-          <ul className="space-y-1">
+        <nav className="border-t-2 border-ink bg-paper px-5 pb-8 pt-4 md:hidden" aria-label={en ? 'Main' : '주 메뉴'}>
+          <ul className="space-y-2">
             {[...PRIMARY_NAV, ...MORE_NAV].map((item) => {
               const active = isActive(pathname, item.href)
               return (
@@ -122,8 +105,11 @@ export default function SiteHeader({ overlay = false }: { overlay?: boolean }) {
                   <Link
                     href={item.href}
                     aria-current={active ? 'page' : undefined}
-                    className={`block py-3 text-lg ${active ? 'text-star' : 'text-fg'}`}
+                    className={`flex items-center gap-3 rounded-xl border-2 border-ink px-4 py-3 text-lg font-extrabold ${
+                      active ? 'bg-ink text-paper' : 'bg-white text-ink'
+                    }`}
                   >
+                    {item.section && <Dot section={item.section} />}
                     {en ? item.en : item.ko}
                   </Link>
                 </li>
