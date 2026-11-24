@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { FiArrowLeft } from 'react-icons/fi'
 import type { GamesStatsResponse } from '@/app/api/games/stats/route'
 import SpaceAtmosphere from '@/components/SpaceAtmosphere'
 
@@ -78,23 +77,11 @@ export default async function GamesStatsPage() {
   const stats = await fetchStats()
 
   return (
-    <SpaceAtmosphere className="theme-locked-dark min-h-screen pb-16 text-neutral-100">
-      <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-4xl items-center gap-4 px-4 py-3">
-          <Link
-            href="/games"
-            className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-neutral-100"
-          >
-            <FiArrowLeft className="h-4 w-4" aria-hidden />
-            Game List
-          </Link>
-          <span className="text-sm font-semibold text-neutral-100">Game Stats</span>
-        </div>
-      </header>
+    <SpaceAtmosphere className="theme-locked-dark min-h-[60vh] pb-16 text-neutral-100">
 
       <main className="mx-auto max-w-4xl px-4 pt-10">
         <div className="mb-8">
-          <h1 className="mb-2 text-3xl font-bold text-neutral-100">Game Stats</h1>
+          <h2 className="mb-2 text-3xl font-bold text-neutral-100">Game Stats</h2>
           <p className="text-sm text-neutral-400">Overall cumulative score statistics.</p>
         </div>
 

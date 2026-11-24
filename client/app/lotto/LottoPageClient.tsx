@@ -1,8 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import Link from 'next/link'
-import { FiArrowLeft, FiRefreshCw } from 'react-icons/fi'
+import { FiRefreshCw } from 'react-icons/fi'
 import { AnimatePresence, motion } from 'framer-motion'
 import LottoBall, { ballColor } from '@/components/lotto/LottoBall'
 import LottoLeaderboard from '@/components/lotto/LottoLeaderboard'
@@ -319,25 +318,14 @@ export default function LottoPageClient() {
   const canDraw = picked.length === 6 && !drawing && !autoRunning
 
   return (
-    <div className="min-h-screen bg-canvas pb-20 text-white">
+    <div className="min-h-screen break-keep bg-canvas pb-20 text-white">
       {/* nav */}
-      <header className="sticky top-0 z-30 border-b border-slate-800 bg-canvas/90 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-medium text-slate-400 transition hover:text-white">
-            <FiArrowLeft className="h-4 w-4" /> {locale === 'en' ? 'Home' : '메인으로'}
-          </Link>
-          <span className="text-sm font-semibold text-slate-200">{locale === 'en' ? 'Lotto 6/45' : '로또 6/45'}</span>
-          <Link href="/games" className="ml-auto text-xs font-semibold text-slate-400 hover:text-white">
-            {locale === 'en' ? 'Game Hub →' : '게임 목록 →'}
-          </Link>
-        </div>
-      </header>
 
       <main className="mx-auto max-w-3xl px-4 pt-8">
         <div className="mb-6 text-center">
-          <h1 className="font-display mb-2 text-4xl font-bold">
+          <h2 className="font-display mb-2 text-4xl font-bold">
             {locale === 'en' ? 'Lotto Number Match' : '로또 번호 맞추기'}
-          </h1>
+          </h2>
           <p className="text-sm text-slate-400">
             {locale === 'en' ? 'Pick 6 numbers and try your luck in the draw' : '번호 6개를 고르고 추첨에 도전하세요'}
           </p>
@@ -657,7 +645,7 @@ export default function LottoPageClient() {
         {/* Leaderboard */}
         <h2 className="mb-4 flex items-center gap-2 text-lg font-bold">
           {locale === 'en' ? 'Hall of Fame' : '명예의 전당'}
-          <button onClick={() => setRefreshKey((k) => k + 1)} className="text-slate-500 hover:text-amber-400"><FiRefreshCw size={14} /></button>
+          <button type="button" onClick={() => setRefreshKey((k) => k + 1)} aria-label={locale === 'en' ? 'Refresh' : '새로고침'} className="text-slate-500 hover:text-amber-400"><FiRefreshCw size={14} aria-hidden /></button>
         </h2>
         <LottoLeaderboard refreshKey={refreshKey} />
         <p className="mt-3 text-center text-[11px] text-slate-600">

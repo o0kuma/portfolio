@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Blog',
+  title: { default: 'Blog', template: '%s | kuuuma' },
   description: '개발, 기술, 일상에 대한 글을 씁니다.',
   openGraph: {
     title: 'Blog',

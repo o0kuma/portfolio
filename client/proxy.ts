@@ -45,10 +45,11 @@ const STRICT_COUNTRIES = new Set(['CN'])
 
 /**
  * Separate budget for in-app router fetches (link prefetches and client-side
- * navigations) — see isClientRouterRequest(). Sized so one page view plus a
- * few quick navigations fits comfortably.
+ * navigations) — see isClientRouterRequest(). Next 16 prefetches each visible
+ * link in several segment requests, so one page view alone is ~40-50 fetches;
+ * sized so a visitor clicking through several pages quickly still fits.
  */
-const ROUTER_RATE_LIMIT = 100
+const ROUTER_RATE_LIMIT = 300
 const CN_ROUTER_RATE_LIMIT = 30
 const ROUTER_RATE_WINDOW_MS = 10 * 1000
 

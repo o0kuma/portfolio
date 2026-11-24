@@ -156,7 +156,7 @@ export default function AetheriaPageClient() {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-canvas px-4 text-white">
         <FiLock className="text-3xl text-slate-600" />
-        <h1 className="text-lg font-bold">Project Aetheria</h1>
+        <h2 className="text-lg font-bold">Project Aetheria</h2>
         <p className="text-center text-xs text-slate-500">
           This page is private. Admin access only.
         </p>
@@ -212,7 +212,7 @@ export default function AetheriaPageClient() {
 
       <main className="mx-auto max-w-4xl px-4 pt-8">
         <div className="mb-6 text-center">
-          <h1 className="mb-2 text-3xl font-black">Project Aetheria</h1>
+          <h2 className="mb-2 text-3xl font-black">Project Aetheria</h2>
           <p className="text-sm text-slate-400">GPT-4o vs Gemini — Autonomous Agent Sandbox Simulation</p>
         </div>
 

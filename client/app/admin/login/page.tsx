@@ -40,6 +40,7 @@ function AdminLoginForm() {
   }
 
   return (
+    <div className="dark theme-locked-dark">
     <div className="min-h-screen bg-neutral-950 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
@@ -74,12 +75,13 @@ function AdminLoginForm() {
         </form>
       </div>
     </div>
+    </div>
   )
 }
 
 export default function AdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-neutral-950" />}>
+    <Suspense fallback={<div className="dark theme-locked-dark"><div className="min-h-screen bg-neutral-950" /></div>}>
       <AdminLoginForm />
     </Suspense>
   )

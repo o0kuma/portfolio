@@ -1,8 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import Link from 'next/link'
-import { FiArrowLeft } from 'react-icons/fi'
 import { checkAchievements } from '@/lib/achievements'
 import AchievementToast from '@/components/AchievementToast'
 import type { Achievement } from '@/lib/achievements'
@@ -188,26 +186,14 @@ export default function TypingGamePage() {
   const finalAcc = totalTyped > 0 ? Math.round(correctChars / totalTyped * 100) : 100
 
   return (
-    <SpaceAtmosphere className="theme-locked-dark min-h-screen text-white">
-      <header className="sticky top-0 z-30 border-b border-white/[0.08] bg-[#030014]/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-4 py-3">
-          <Link
-            href="/games"
-            className="inline-flex items-center gap-2 text-sm font-medium text-neutral-400 transition hover:text-white"
-          >
-            <FiArrowLeft className="h-4 w-4" aria-hidden />
-            {en ? 'Game List' : '게임 목록'}
-          </Link>
-          <span className="text-sm font-semibold">{en ? 'Typing Game' : '타이핑 게임'}</span>
-        </div>
-      </header>
+    <SpaceAtmosphere className="theme-locked-dark min-h-[70vh] pb-16 text-white">
 
       <main className="mx-auto flex max-w-3xl flex-col items-center px-4 pt-16">
         {/* IDLE */}
         {gameState === 'idle' && (
           <div className="flex flex-col items-center gap-6 text-center">
             <div className="text-6xl">⌨️</div>
-            <h1 className="text-3xl font-bold">{en ? 'Typing Game' : '타이핑 게임'}</h1>
+            <h2 className="text-3xl font-bold">{en ? 'Typing Game' : '타이핑 게임'}</h2>
             <p className="text-neutral-400">
               {en ? 'How fast and accurately can you type code snippets?' : '코드 스니펫을 얼마나 빠르고 정확하게 타이핑할 수 있을까요?'}
             </p>

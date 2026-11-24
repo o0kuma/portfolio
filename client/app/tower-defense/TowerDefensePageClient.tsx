@@ -1,8 +1,7 @@
 'use client'
 
-import Link from 'next/link'
 import { useState, useEffect } from 'react'
-import { FiArrowLeft, FiPause, FiPlay } from 'react-icons/fi'
+import { FiPause, FiPlay } from 'react-icons/fi'
 import TowerDefenseCanvas from '@/components/tower-defense/TowerDefenseCanvas'
 import TowerDefenseHud from '@/components/tower-defense/TowerDefenseHud'
 import TowerDefenseUpgrade from '@/components/tower-defense/TowerDefenseUpgrade'
@@ -71,32 +70,17 @@ export default function TowerDefensePageClient() {
     .sort((a, b) => b[1] - a[1])[0]
 
   return (
-    <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
-      <header className="sticky top-0 z-30 glass-panel border-b border-border">
-        <div
-          className="page-shell flex max-w-4xl items-center gap-4 py-3"
-          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
+    <div className="relative min-h-screen bg-canvas pb-8 text-textPrimary">
+      {status === 'playing' || status === 'paused' ? (
+        <button
+          type="button"
+          onClick={actions.togglePause}
+          className="absolute right-3 top-3 z-30 inline-flex items-center gap-1.5 rounded-lg border border-border bg-canvas/80 px-3 backdrop-blur py-1.5 text-xs font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
         >
-          <Link
-            href="/games"
-            className="inline-flex items-center gap-2 text-sm font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
-          >
-            <FiArrowLeft className="h-4 w-4" aria-hidden />
-            {p.back}
-          </Link>
-          <span className="text-sm font-semibold text-textPrimary">{p.title}</span>
-          {status === 'playing' || status === 'paused' ? (
-            <button
-              type="button"
-              onClick={actions.togglePause}
-              className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
-            >
-              {status === 'paused' ? <FiPlay className="h-3.5 w-3.5" /> : <FiPause className="h-3.5 w-3.5" />}
-              {status === 'paused' ? p.resume : p.pause}
-            </button>
-          ) : null}
-        </div>
-      </header>
+          {status === 'paused' ? <FiPlay className="h-3.5 w-3.5" /> : <FiPause className="h-3.5 w-3.5" />}
+          {status === 'paused' ? p.resume : p.pause}
+        </button>
+      ) : null}
 
       <main className="page-shell max-w-4xl pt-6">
         <div

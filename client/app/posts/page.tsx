@@ -7,7 +7,7 @@ const description = `${SITE_AUTHOR}의 기술 블로그 — React, Next.js, Type
 const ogImage = '/api/og?title=Blog&sub=okuma의+기술+블로그&category=dev'
 
 export const metadata: Metadata = {
-  title: `Blog — ${SITE_NAME}`,
+  title: 'Blog',
   description,
   alternates: { canonical: '/posts' },
   openGraph: {

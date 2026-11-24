@@ -135,12 +135,16 @@ export default function TerminalPage() {
   const [history, setHistory] = useState<string[]>([])
   const [historyIdx, setHistoryIdx] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  // Keep the newest line in view inside the terminal box only — never scroll
+  // the page itself (the site header and title sit above the terminal).
   useEffect(() => {
-    inputRef.current?.focus()
-    bottomRef.current?.scrollIntoView()
+    inputRef.current?.focus({ preventScroll: true })
+    const box = scrollRef.current
+    if (box) box.scrollTop = box.scrollHeight
   }, [lines])
 
   const handleCommand = (raw: string) => {
@@ -207,8 +211,9 @@ export default function TerminalPage() {
 
   return (
     <div
-      className="min-h-screen bg-black text-green-400 font-mono text-sm p-6 cursor-text"
-      onClick={() => inputRef.current?.focus()}
+      ref={scrollRef}
+      className="h-[70vh] min-h-[420px] overflow-y-auto bg-black text-green-400 font-mono text-sm p-6 cursor-text"
+      onClick={() => inputRef.current?.focus({ preventScroll: true })}
     >
       <div className="max-w-3xl mx-auto">
         {/* Title bar */}
@@ -241,13 +246,12 @@ export default function TerminalPage() {
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKey}
             aria-label="Terminal command input"
-            className="flex-1 bg-transparent text-green-300 outline-none caret-green-400"
+            className="flex-1 bg-transparent text-green-300 outline-none caret-green-400 focus-visible:outline-none"
             autoComplete="off"
             spellCheck={false}
           />
         </div>
 
-        <div ref={bottomRef} />
       </div>
     </div>
   )

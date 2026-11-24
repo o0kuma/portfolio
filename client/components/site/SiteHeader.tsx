@@ -23,8 +23,17 @@ export default function SiteHeader() {
     const onDown = (e: MouseEvent) => {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) setMoreOpen(false)
     }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      setMoreOpen(false)
+      setMobileOpen(false)
+    }
     document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [])
 
   useEffect(() => {
@@ -89,6 +98,7 @@ export default function SiteHeader() {
           type="button"
           onClick={() => setMobileOpen((v) => !v)}
           aria-expanded={mobileOpen}
+          aria-controls="mobile-nav"
           className="rounded-xl border-2 border-ink bg-white px-3 py-1.5 text-sm font-extrabold text-ink md:hidden"
         >
           {mobileOpen ? (en ? 'Close' : '닫기') : en ? 'Menu' : '메뉴'}
@@ -96,7 +106,7 @@ export default function SiteHeader() {
       </div>
 
       {mobileOpen && (
-        <nav className="border-t-2 border-ink bg-paper px-5 pb-8 pt-4 md:hidden" aria-label={en ? 'Main' : '주 메뉴'}>
+        <nav id="mobile-nav" className="border-t-2 border-ink bg-paper px-5 pb-8 pt-4 md:hidden" aria-label={en ? 'Main' : '주 메뉴'}>
           <ul className="space-y-2">
             {[...PRIMARY_NAV, ...MORE_NAV].map((item) => {
               const active = isActive(pathname, item.href)

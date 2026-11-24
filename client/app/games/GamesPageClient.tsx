@@ -145,7 +145,7 @@ export default function GamesPageClient() {
         </ul>
 
         <section className="mt-16 grid items-start gap-8 lg:grid-cols-[1fr_1.2fr]">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-[40px] font-black tracking-[-0.04em]">{en ? 'Rankings' : '순위표'}</h2>
             <p className="mt-2 text-ink-soft">{en ? 'Pick a game to see the top scores.' : '게임을 골라 상위 기록을 봅니다.'}</p>
             <div className="mt-4">

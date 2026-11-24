@@ -11,10 +11,8 @@ import { useTetrisGame } from '@/hooks/useTetrisGame'
 import { useLanguage } from '@/lib/LanguageContext'
 import { interpolate } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-import Link from 'next/link'
 import type { GameSnapshot } from '@/lib/tetris/types'
 import { useCallback, useEffect, useRef } from 'react'
-import { FiArrowLeft } from 'react-icons/fi'
 
 function TetrisGameOverOverlay({
   snapshot,
@@ -81,7 +79,7 @@ export default function TetrisPageClient() {
   const surfaceRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    surfaceRef.current?.focus()
+    surfaceRef.current?.focus({ preventScroll: true })
   }, [])
 
   const disabled = snapshot.paused || snapshot.gameOver
@@ -110,28 +108,13 @@ export default function TetrisPageClient() {
 
   return (
     <div className="min-h-screen bg-canvas pb-8 text-textPrimary">
-      <header className="sticky top-0 z-30 glass-panel border-b border-border">
-        <div
-          className="page-shell flex max-w-6xl items-center gap-4 py-3"
-          style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}
-        >
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2 text-sm font-medium text-textMuted transition hover:text-primary-600 dark:hover:text-accent"
-          >
-            <FiArrowLeft className="h-4 w-4" aria-hidden />
-            {t.common.backHome}
-          </Link>
-          <span className="text-sm font-semibold text-textPrimary">{t.tetrisPage.title}</span>
-        </div>
-      </header>
 
       <main className="page-shell max-w-6xl pt-6">
         <div
           ref={surfaceRef}
           tabIndex={-1}
-          onPointerDownCapture={() => surfaceRef.current?.focus()}
-          className="outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-dark-900"
+          onPointerDownCapture={() => surfaceRef.current?.focus({ preventScroll: true })}
+          className="outline-none focus-visible:outline-none"
         >
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
             <div className="flex flex-col items-center lg:items-start">

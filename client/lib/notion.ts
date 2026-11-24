@@ -88,8 +88,12 @@ export type RestaurantItem = {
 }
 
 export async function getRestaurantRegions(): Promise<RestaurantPage[]> {
+  const foodPageId = process.env.NOTION_FOOD_PAGE_ID
+  if (!foodPageId || !process.env.NOTION_API_KEY) {
+    throw new Error('NOTION_FOOD_PAGE_ID / NOTION_API_KEY is not set')
+  }
   const res = await notion.blocks.children.list({
-    block_id: process.env.NOTION_FOOD_PAGE_ID!,
+    block_id: foodPageId,
     page_size: 100,
   })
 

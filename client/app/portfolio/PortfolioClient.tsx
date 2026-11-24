@@ -230,7 +230,7 @@ export default function PortfolioClient() {
               {en ? 'Developer ' : '개발자 '}
               <span className="inline-block -rotate-2 rounded-xl border-[3px] border-ink bg-cat-post px-[0.12em] shadow-ink">okuma</span>
             </h1>
-            <p className="mt-6 max-w-[48ch] whitespace-pre-line text-lg leading-[1.7]">{interpolate(t.hero.description, { years })}</p>
+            <p className="mt-6 max-w-[48ch] break-keep text-lg md:whitespace-pre-line leading-[1.7]">{interpolate(t.hero.description, { years })}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <a href="#projects" className={buttonSecondary}>
                 {t.hero.viewProjects}
@@ -403,7 +403,7 @@ export default function PortfolioClient() {
           <div className="grid items-start gap-6 md:grid-cols-[1fr_1.4fr]">
             <div className={`${cardClass} bg-cat-post p-6`}>
               <Tape className="left-8 -rotate-3" />
-              <p className="whitespace-pre-line text-lg font-bold leading-[1.6]">{t.contact.intro}</p>
+              <p className="whitespace-pre-line break-keep text-lg font-bold leading-[1.6]">{t.contact.intro}</p>
               <dl className="mt-5 space-y-3 text-[15px]">
                 <div>
                   <dt className="text-xs font-extrabold">{en ? 'Email' : '이메일'}</dt>

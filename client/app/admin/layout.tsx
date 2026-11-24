@@ -25,6 +25,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
+    <div className="dark theme-locked-dark">
     <div className="flex min-h-screen bg-neutral-950">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-56 flex-col border-r border-neutral-800 bg-neutral-950 sticky top-0 h-screen shrink-0">
@@ -106,6 +107,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
+    </div>
     </div>
   )
 }

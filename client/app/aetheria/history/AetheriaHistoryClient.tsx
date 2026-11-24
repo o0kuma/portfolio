@@ -159,9 +159,9 @@ export default function AetheriaHistoryClient() {
         </Link>
 
         <header className="mt-6 mb-8">
-          <h1 className="flex items-center gap-2 font-display text-3xl font-bold">
+          <h2 className="flex items-center gap-2 font-display text-3xl font-bold">
             <FiAward className="h-7 w-7 text-amber-400" /> {tr.title}
-          </h1>
+          </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-neutral-400">{tr.subtitle}</p>
         </header>
 
