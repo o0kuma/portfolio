@@ -1,4 +1,5 @@
 import type { Section } from './layout'
+import { PORTFOLIO_PUBLIC } from '@/lib/site'
 
 /** Top-level menu, shared by the header and the footer. */
 export type NavItem = { href: string; ko: string; en: string; section?: Section }
@@ -11,6 +12,7 @@ export const PRIMARY_NAV: NavItem[] = [
 ]
 
 export const MORE_NAV: NavItem[] = [
+  ...(PORTFOLIO_PUBLIC ? [{ href: '/portfolio', ko: '포트폴리오', en: 'Portfolio' }] : []),
   { href: '/bookmarks', ko: '북마크', en: 'Bookmarks' },
   { href: '/faq', ko: 'FAQ', en: 'FAQ' },
   { href: '/rpg', ko: 'RPG 월드', en: 'RPG World' },

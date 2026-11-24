@@ -6,20 +6,18 @@ export function getSiteUrl(): string {
 }
 
 /**
- * Server/runtime gate for /portfolio. Temporarily blocked for everyone at the
- * site owner's request (personal-info exposure concern) — set
- * PORTFOLIO_DISABLED=false to re-open it once resolved.
+ * Server/runtime gate for /portfolio. Public by default; set
+ * PORTFOLIO_DISABLED=true (server env, no rebuild needed) to hide it again.
  */
 export function isPortfolioPublic(): boolean {
-  if (process.env.PORTFOLIO_DISABLED === 'false') return true
-  return false
+  return process.env.PORTFOLIO_DISABLED !== 'true'
 }
 
 /**
- * Client nav visibility — NEXT_PUBLIC_* inlined at build time.
- * Hide nav with NEXT_PUBLIC_PORTFOLIO_DISABLED=true (or legacy NEXT_PUBLIC_PORTFOLIO_ENABLED=false).
+ * Menu link visibility — NEXT_PUBLIC_* is inlined at build time.
+ * Set NEXT_PUBLIC_PORTFOLIO_DISABLED=true to hide the link.
  */
-export const PORTFOLIO_PUBLIC = false
+export const PORTFOLIO_PUBLIC = process.env.NEXT_PUBLIC_PORTFOLIO_DISABLED !== 'true'
 
 export const SITE_NAME = 'kuuuma'
 export const SITE_AUTHOR = 'okuma'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { FiSend, FiZap } from 'react-icons/fi'
+import { FiSend } from 'react-icons/fi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/LanguageContext'
 
@@ -76,20 +76,14 @@ export default function AIInterviewer() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto w-full px-4 py-24">
-      {/* Header */}
-      <div className="mb-10 text-center">
-        <div className="inline-flex items-center gap-2 mb-3 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-400 text-xs font-mono tracking-widest uppercase">
-          <FiZap size={11} />
-          powered by Gemini
-        </div>
-        <h2 className="text-2xl font-bold text-neutral-100 mb-2">{locale === 'en' ? 'AI Interviewer' : 'AI 인터뷰어'}</h2>
-        <p className="text-sm text-neutral-500">{locale === 'en' ? 'An AI assistant for recruiters — ask anything right away' : '채용 담당자를 위한 AI 어시스턴트 — 궁금한 점을 바로 물어보세요'}</p>
-      </div>
+    <div className="max-w-3xl mx-auto w-full px-4 py-10">
+      {/* The section title lives on the portfolio page; only the model
+          credit stays here. */}
+      <p className="mb-6 text-center text-xs text-neutral-500">Gemini</p>
 
       {/* Preset chips */}
       <div className="flex flex-wrap justify-center gap-3 mb-8">
-        {PRESET_QUESTIONS.map(({ label, labelEn, emoji }) => {
+        {PRESET_QUESTIONS.map(({ label, labelEn }) => {
           const text = locale === 'en' ? labelEn : label
           return (
           <button
@@ -102,7 +96,6 @@ export default function AIInterviewer() {
                 : 'border-neutral-700 bg-neutral-900 text-neutral-400 hover:border-indigo-500/60 hover:text-indigo-300 hover:bg-indigo-500/10'
               }`}
           >
-            <span>{emoji}</span>
             <span>{text}</span>
           </button>
           )
